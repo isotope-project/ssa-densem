@@ -1,0 +1,264 @@
+%% Commands for TeXCount
+%TC:macro \cite [option:text,text]
+%TC:macro \citep [option:text,text]
+%TC:macro \citet [option:text,text]
+%TC:envir table 0 1
+%TC:envir table* 0 1
+%TC:envir tabular [ignore] word
+%TC:envir displaymath 0 word
+%TC:envir math 0 word
+%TC:envir comment 0 0
+
+\documentclass[acmsmall,screen,review]{acmart}
+
+\usepackage{syntax}
+\renewcommand{\syntleft}{\normalfont\itshape}
+\renewcommand{\syntright}{\normalfont\itshape}
+
+\usepackage{prftree}
+
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{subcaption}
+\usepackage{fancyvrb}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+%    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\lstset{style=mystyle}
+
+\newcounter{todos}
+\newcommand{\TODO}[1]{{
+  \stepcounter{todos}
+  \begin{center}\large{\textcolor{red}{\textbf{TODO \arabic{todos}:} #1}}\end{center}
+}}
+\newcommand{\sorry}{\textcolor{red}{\textbf{sorry}}}
+
+\newcommand{\todo}[1]{\stepcounter{todos} \textcolor{red}{TODO \arabic{todos}: #1}}
+
+% Math fonts
+\newcommand{\mc}[1]{\ensuremath{\mathcal{#1}}}
+\newcommand{\mb}[1]{\ensuremath{\mathbf{#1}}}
+\newcommand{\ms}[1]{\ensuremath{\mathsf{#1}}}
+
+% Math
+\newcommand{\nats}{\mathbb{N}}
+
+% Syntax atoms
+\newcommand{\lbl}[1]{{`#1}}
+\newcommand{\lto}{\Rightarrow}
+\newcommand{\linl}[1]{\ms{inl}\;{#1}}
+\newcommand{\linr}[1]{\ms{inr}\;{#1}}
+\newcommand{\labort}[1]{\ms{abort}\;{#1}}
+
+% Syntax
+\newcommand{\letexpr}[3]{\ensuremath{\ms{let}\;#1 = #2\;\ms{in}\;#3}}
+\newcommand{\letstmt}[3]{\ensuremath{\ms{let}\;#1 = #2; #3}}
+\newcommand{\brb}[2]{\ms{br}\;#1\;#2}
+\newcommand{\lbrb}[2]{\brb{\lbl{#1}}{#2}}
+\newcommand{\ite}[3]{\ms{if}\;#1\;\{#2\}\;\ms{else}\;\{#3\}}
+\newcommand{\case}[5]{\ms{case}\;#1\;\{\linl{#2} \lto #3, \linr{#4} \lto #5\}}
+\newcommand{\where}[2]{#1\;\ms{where}\;\{#2\}}
+\newcommand{\wbranch}[3]{#1(#2) \lto #3}
+\newcommand{\lwbranch}[3]{\wbranch{\lbl{#1}}{#2}{#3}}
+\newcommand{\bsplice}[3]{#1(#2)\;\{#3\}}
+%\newcommand{\lbsplice}[3]{\bsplice{\lbl{#1}}{#2}{#3}}
+\newcommand{\csplits}[3]{#1 \mapsto #2;#3}
+\newcommand{\cwk}[2]{#1 \mapsto #2}
+\newcommand{\lwk}[2]{#1 \rightsquigarrow #2}
+\newcommand{\tlin}[2]{#2 \subseteq \ms{lin}(#1)}
+\newcommand{\ltlin}[3]{#3 \subseteq \ms{lin}(#1) \cap #2}
+\newcommand{\thyp}[3]{#1: {#2}^{#3}}
+\newcommand{\lhyp}[3]{#1[#2](#3)}
+\newcommand{\llhyp}[3]{\lhyp{\lbl{#1}}{#2}{#3}}
+\newcommand{\rle}[1]{{\scriptsize\textsf{#1}}}
+\newcommand{\taff}{{\{\ms{a}\}}}
+\newcommand{\trel}{{\{\ms{r}\}}}
+\newcommand{\tint}{{\{\ms{a}, \ms{r}\}}}
+\newcommand{\hasty}[5]{#1 \vdash_{#2} #3: {#4}^{#5}}
+\newcommand{\haslb}[3]{#1 \vdash #2 \rhd #3}
+\newcommand{\lhaslb}[3]{#1 \vdash #2 \rhd #3}
+\newcommand{\issubst}[3]{#1: #2 \mapsto #3}
+\newcommand{\lbsubst}[3]{#1: #2 \rightsquigarrow #3}
+\newcommand{\exprletsubst}[2]{{#1};{#2}}
+\newcommand{\stmtletsubst}[2]{{#1};{#2}}
+\newcommand{\mhole}[1]{{#1}^?}
+\newcommand{\lhole}[1]{?#1}
+\newcommand{\mhasty}[6]{#1;#2 \vdash_{#3} #4: {#5}^{#6}}
+\newcommand{\mhaslb}[4]{#1;#2 \vdash #3 \rhd #4}
+\newcommand{\mlhaslb}[4]{#1;#2 \vdash #3 \rhd #4}
+\newcommand{\tyhole}[5]{#1: #2 \mapsto_{#3} {#4}^{#5}}
+\newcommand{\blkhole}[3]{#1: #2 \mapsto #3}
+\newcommand{\cfghole}[3]{#1: #2 \mapsto #3}
+\newcommand{\substctx}[2]{{#1}^{#2}}
+\newcommand{\substlbs}[2]{{#1}^{#2}}
+\newcommand{\restrictsubst}[2]{{#1}_{#2}}
+\newcommand{\subsubst}[2]{#1 \subseteq #2}
+\newcommand{\isrw}[3]{#1: #2 \mapsto #3}
+\newcommand{\mbind}{\mathbin{{>}\hspace{-0.1em}{>}\hspace{-0.1em}{=}}}
+% \newcommand{\strictlbsubst}[3]{#1: #2 \rightsquigarrow_= #3}
+
+% Denotational semantics
+\newcommand{\dnt}[1]{\llbracket{#1}\rrbracket}
+\newcommand{\ednt}[1]{\left\llbracket{#1}\right\rrbracket}
+\newcommand{\upg}[2]{{#1}^{\uparrow #2}}
+
+% Weak memory
+\newcommand{\bufloc}[1]{\overline{#1}}
+
+% Branding
+\newcommand{\isotopessa}{\ms{isotope_{SSA}}}
+
+%% Rights management information.  This information is sent to you
+%% when you complete the rights form.  These commands have SAMPLE
+%% values in them; it is your responsibility as an author to replace
+%% the commands and values with those provided to you when you
+%% complete the rights form.
+\setcopyright{acmcopyright}
+\copyrightyear{2024}
+\acmYear{2024}
+\acmDOI{XXXXXXX.XXXXXXX}
+
+%%
+%% These commands are for a JOURNAL article.
+% \acmJournal{JACM}
+% \acmVolume{37}
+% \acmNumber{4}
+% \acmArticle{111}
+% \acmMonth{8}
+
+%%
+%% Submission ID.
+%% Use this when submitting an article to a sponsored event. You'll
+%% receive a unique submission ID from the organizers
+%% of the event, and this ID should be used as the parameter to this command.
+%%\acmSubmissionID{123-A56-BU3}
+
+\begin{document}
+
+\title{The Denotational Semantics of SSA}
+
+\author{Jad Ghalayini}
+\email{jeg74@cl.cam.ac.uk}
+\orcid{0000-0002-6905-1303}
+
+\author{Neel Krishnaswami}
+\email{nk480@cl.cam.ac.uk}
+\orcid{0000-0003-2838-5865}
+
+\begin{abstract}
+  ...
+\end{abstract}
+
+\begin{CCSXML}
+  <ccs2012>
+  <concept>
+  <concept_id>10003752.10010124.10010131.10010133</concept_id>
+  <concept_desc>Theory of computation~Denotational semantics</concept_desc>
+  <concept_significance>500</concept_significance>
+  </concept>
+  <concept>
+  <concept_id>10003752.10010124.10010131.10010137</concept_id>
+  <concept_desc>Theory of computation~Categorical semantics</concept_desc>
+  <concept_significance>500</concept_significance>
+  </concept>
+  <concept>
+  <concept_id>10003752.10003790.10011740</concept_id>
+  <concept_desc>Theory of computation~Type theory</concept_desc>
+  <concept_significance>500</concept_significance>
+  </concept>
+  <concept>
+  <concept_id>10003752.10003790.10011742</concept_id>
+  <concept_desc>Theory of computation~Separation logic</concept_desc>
+  <concept_significance>300</concept_significance>
+  </concept>
+  </ccs2012>
+\end{CCSXML}
+
+\ccsdesc[500]{Theory of computation~Denotational semantics}
+\ccsdesc[500]{Theory of computation~Categorical semantics}
+\ccsdesc[500]{Theory of computation~Type theory}
+\ccsdesc[300]{Theory of computation~Separation logic}
+
+%%
+%% Keywords. The author(s) should pick words that accurately describe
+%% the work being presented. Separate the keywords with commas.
+\keywords{SSA, Categorical Semantics, Elgot Structure, Effectful Category}
+
+% \received{20 February 2007}
+% \received[revised]{12 March 2009}
+% \received[accepted]{5 June 2009}
+
+\maketitle
+
+\cite{sparky}
+
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{references}
+
+\clearpage 
+
+\appendix
+
+\begin{figure}
+  \begin{center}
+    \begin{grammar}
+      <\(A, B, C\)> ::= 
+      \(X\)
+      \;|\; \(A \otimes B\)
+      \;|\; \(\mathbf{1}\)
+      \;|\; \(A + B\)
+      \;|\; \(\mathbf{0}\)
+
+      <\(a, b, c, e\)> ::= \(x\) 
+      \;|\; \(f\;a\)
+      \;|\; \((a, b)\) 
+      \;|\; \(()\) 
+      \;|\; \(\linl{a}\) 
+      \;|\; \(\linr{a}\)
+      \;|\; \(\labort{a}\)
+      % \;|\; \(\letexpr{x}{a}{e}\)
+      % \;|\; \(\letexpr{(x, y)}{a}{e}\)
+      % \;|\; \(\lbsplice{\ell}{x: A}{t}\)
+      
+      <\(s, t\)> ::= \(\lbrb{\ell}{a}\) 
+      \;|\; \(\case{e}{x}{s}{y}{t}\)
+      \;|\; \(\letstmt{x}{a}{t}\)
+      \;|\; \(\letstmt{(x, y)}{a}{t}\)
+      \;|\; \(\where{t}{L}\)
+
+      <\(L\)> ::= \(\cdot\) \;|\; \(\lwbranch{\ell}{x: A}{t}, L\)
+
+      <\(\Gamma\)> ::= \(\cdot\) \;|\; \(\Gamma, \thyp{x}{A}{\epsilon}\)
+
+      <\(\ms{L}\)> ::= \(\cdot\) \;|\; \(\ms{L}, \lbl{\ell}(A)\)
+    \end{grammar}
+  \end{center}
+  \caption{Grammar for \isotopessa, parametrized over a set of instructions \(f \in \mc{I}\)}
+  \Description{Grammar for isotope-SSA}
+  \label{fig:ssa-grammar}
+\end{figure}
+
+\end{document}
+\endinput
