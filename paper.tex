@@ -212,7 +212,73 @@
 
 \maketitle
 
-\cite{sparky}
+\section{Introduction}
+
+Static single assignment form, or SSA form, has been the dominant
+compiler intermediate representation since its introduction by
+\citet{...} in the later 1980s. Every major compiler -- GCC, Clang,
+MLIR, Cranelift -- uses this representation, because it makes many
+optimizations much easier to do than traditional 3-address code IRs.
+
+The key idea behind SSA is to adapt an idea from functional
+programming: namely, every variable is defined only once. This means
+that substitution is unconditionally valid, without first requiring a
+dataflow analysis to compute where definitions reach. Unlike in
+functional programming, though, scoping of definitions in SSA is
+traditionally not lexical. Instead, scoping is determined by
+\emph{dominance}: every variable occurence must be dominated by a
+single assignment in the control flow graph.
+
+The semantics of SSA has traditionally been handled quite informally,
+because conceptually, it is a simple first-order imperative
+programming language. As a result, whether a rewrite is sound or
+not is usually obvious, without having to do a complex correctness
+argument.
+
+Unfortunately, computers are no longer as simple as they were in the
+late 1980s. Modern computers are typically multicore, and feature many
+levels of caching, and as a result the semantics of memory is no
+longer correctly modelled as a big array of bytes. Finding good
+semantics for modern weak memory systems remains an ongoing challenge.
+
+As a result, it is not correct to justify compiler optimizations in
+terms of a simple imperative model, and it is an open question which
+equations should hold of an SSA program. This is a particularly
+fraught question, because it is also unclear which equations weak
+memory models should satisfy.
+
+What we would like to know which equations any SSA representation
+should satisfy. This would let us establish a contract between
+compiler writers and hardware designers. The compiler writers could
+rely upon the equational theory of SSA when justifying optimizations,
+without needing to know all the details of the memory model at all
+times.  Conversely, memory models could be validated by seeing if they
+satisfy the equations of SSA, without needing to study every possible
+compiler optimization.
+
+To do so, we proceed as follows.
+
+First, we give a type-theoretic presentation of SSA, with both typing
+rules and an equational theory for well-typed terms. Next, we give a
+categorical semantics for this type theory, in terms of distributive
+Elgot categories. We show that any denotational model with this
+categorical structure is also a model of SSA. This shows that all of
+the equations we give are sound with respect to the categorical
+structure, and we show that our equations are complete by proving that
+the syntax quotiented by the equational theory yields the initial
+distributive Elgot category.
+
+We show that this denotational axiomatization is useful in practice,
+by giving a variety of concrete models, including a model of TSO weak
+memory based on~\cite{sparky}. This demonstrates that it is possible
+to give realistic weak memory models which do not disturb the structure
+of SSA in fundamental ways.
+
+Finally, we have substantially mechanized our proofs. We have
+mechanized proofs of substitution for our type theory, as well as
+proofs that the syntax forms the initial model, and that the SPARC TSO
+semantics forms a valid model of SSA. The denotational semantics and
+its proof of the soundness of substitution are done on paper. 
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references}
