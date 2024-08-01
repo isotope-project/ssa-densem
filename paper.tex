@@ -256,29 +256,37 @@ times.  Conversely, memory models could be validated by seeing if they
 satisfy the equations of SSA, without needing to study every possible
 compiler optimization.
 
-To do so, we proceed as follows.
+Concretely, our contributions are as follows: 
 
-First, we give a type-theoretic presentation of SSA, with both typing
-rules and an equational theory for well-typed terms. Next, we give a
-categorical semantics for this type theory, in terms of distributive
-Elgot categories. We show that any denotational model with this
-categorical structure is also a model of SSA. This shows that all of
-the equations we give are sound with respect to the categorical
-structure, and we show that our equations are complete by proving that
-the syntax quotiented by the equational theory yields the initial
-distributive Elgot category.
+\begin{itemize}
+\item First, we give a type-theoretic presentation of SSA, with both typing
+  rules and an equational theory for well-typed terms. We also prove the
+  correctness of suitable substitution properties for this calculus. 
+  
+\item Next, we give a categorical semantics for this type theory, in
+  terms of distributive Elgot categories. We show that any
+  denotational model with this categorical structure is also a model
+  of SSA. This shows that all of the equations we give are sound with
+  respect to the categorical structure. 
 
-We show that this denotational axiomatization is useful in practice,
-by giving a variety of concrete models, including a model of TSO weak
-memory based on~\cite{sparky}. This demonstrates that it is possible
-to give realistic weak memory models which do not disturb the structure
-of SSA in fundamental ways.
+\item We also show that syntax quotiented by the equational theory
+  yields the initial distributive Elgot category. This establishes
+  that our set of syntactic equations is complete, and that there are
+  no equations which the denotational semantics validates, but which
+  cannot be proved syntactically. 
 
-Finally, we have substantially mechanized our proofs. We have
-mechanized proofs of substitution for our type theory, as well as
-proofs that the syntax forms the initial model, and that the SPARC TSO
-semantics forms a valid model of SSA. The denotational semantics and
-its proof of the soundness of substitution are done on paper. 
+\item We show that this denotational axiomatization is useful in
+  practice, by giving a variety of concrete models, including a model
+  of TSO weak memory based on~\cite{sparky}. This demonstrates that it
+  is possible to give realistic weak memory models which do not
+  disturb the structure of SSA in fundamental ways.
+
+\item Finally, we have substantially mechanized our proofs. We have
+  mechanized proofs of substitution for our type theory, as well as
+  proofs that the syntax forms the initial model, and that the SPARC TSO
+  semantics forms a valid model of SSA. The denotational semantics and
+  its proof of the soundness of substitution are done on paper. 
+\end{itemize}
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references}
