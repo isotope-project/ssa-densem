@@ -74,61 +74,36 @@
 
 % Syntax
 \newcommand{\letexpr}[3]{\ensuremath{\ms{let}\;#1 = #2\;\ms{in}\;#3}}
+\newcommand{\caseexpr}[5]{\ms{case}\;#1\;\{\linl{#2} \lto #3, \linr{#4} \lto #5\}}
 \newcommand{\letstmt}[3]{\ensuremath{\ms{let}\;#1 = #2; #3}}
 \newcommand{\brb}[2]{\ms{br}\;#1\;#2}
 \newcommand{\lbrb}[2]{\brb{\lbl{#1}}{#2}}
 \newcommand{\ite}[3]{\ms{if}\;#1\;\{#2\}\;\ms{else}\;\{#3\}}
-\newcommand{\case}[5]{\ms{case}\;#1\;\{\linl{#2} \lto #3, \linr{#4} \lto #5\}}
+\newcommand{\casestmt}[5]{\ms{case}\;#1\;\{\linl{#2} \lto #3, \linr{#4} \lto #5\}}
 \newcommand{\where}[2]{#1\;\ms{where}\;\{#2\}}
 \newcommand{\wbranch}[3]{#1(#2) \lto #3}
 \newcommand{\lwbranch}[3]{\wbranch{\lbl{#1}}{#2}{#3}}
-\newcommand{\bsplice}[3]{#1(#2)\;\{#3\}}
-%\newcommand{\lbsplice}[3]{\bsplice{\lbl{#1}}{#2}{#3}}
-\newcommand{\csplits}[3]{#1 \mapsto #2;#3}
+
+% Judgements
 \newcommand{\cwk}[2]{#1 \mapsto #2}
 \newcommand{\lwk}[2]{#1 \rightsquigarrow #2}
-\newcommand{\tlin}[2]{#2 \subseteq \ms{lin}(#1)}
-\newcommand{\ltlin}[3]{#3 \subseteq \ms{lin}(#1) \cap #2}
-\newcommand{\thyp}[3]{#1: {#2}^{#3}}
-\newcommand{\lhyp}[3]{#1[#2](#3)}
-\newcommand{\llhyp}[3]{\lhyp{\lbl{#1}}{#2}{#3}}
+\newcommand{\thyp}[3]{#1 : {#2}^{#3}}
+\newcommand{\bhyp}[2]{#1 : #2}
+\newcommand{\lhyp}[2]{#1(#2)}
+\newcommand{\llhyp}[2]{\lhyp{\lbl{#1}}{#2}}
 \newcommand{\rle}[1]{{\scriptsize\textsf{#1}}}
-\newcommand{\taff}{{\{\ms{a}\}}}
-\newcommand{\trel}{{\{\ms{r}\}}}
-\newcommand{\tint}{{\{\ms{a}, \ms{r}\}}}
-\newcommand{\hasty}[5]{#1 \vdash_{#2} #3: {#4}^{#5}}
+\newcommand{\hasty}[4]{#1 \vdash_{#2} #3: {#4}}
 \newcommand{\haslb}[3]{#1 \vdash #2 \rhd #3}
-\newcommand{\lhaslb}[3]{#1 \vdash #2 \rhd #3}
+\newcommand{\isop}[4]{#1: #2 \to_{#4} #3}
 \newcommand{\issubst}[3]{#1: #2 \mapsto #3}
 \newcommand{\lbsubst}[3]{#1: #2 \rightsquigarrow #3}
-\newcommand{\exprletsubst}[2]{{#1};{#2}}
-\newcommand{\stmtletsubst}[2]{{#1};{#2}}
-\newcommand{\mhole}[1]{{#1}^?}
-\newcommand{\lhole}[1]{?#1}
-\newcommand{\mhasty}[6]{#1;#2 \vdash_{#3} #4: {#5}^{#6}}
-\newcommand{\mhaslb}[4]{#1;#2 \vdash #3 \rhd #4}
-\newcommand{\mlhaslb}[4]{#1;#2 \vdash #3 \rhd #4}
-\newcommand{\tyhole}[5]{#1: #2 \mapsto_{#3} {#4}^{#5}}
-\newcommand{\blkhole}[3]{#1: #2 \mapsto #3}
-\newcommand{\cfghole}[3]{#1: #2 \mapsto #3}
-\newcommand{\substctx}[2]{{#1}^{#2}}
-\newcommand{\substlbs}[2]{{#1}^{#2}}
-\newcommand{\restrictsubst}[2]{{#1}_{#2}}
-\newcommand{\subsubst}[2]{#1 \subseteq #2}
-\newcommand{\isrw}[3]{#1: #2 \mapsto #3}
-\newcommand{\mbind}{\mathbin{{>}\hspace{-0.1em}{>}\hspace{-0.1em}{=}}}
-% \newcommand{\strictlbsubst}[3]{#1: #2 \rightsquigarrow_= #3}
 
 % Denotational semantics
 \newcommand{\dnt}[1]{\llbracket{#1}\rrbracket}
 \newcommand{\ednt}[1]{\left\llbracket{#1}\right\rrbracket}
-\newcommand{\upg}[2]{{#1}^{\uparrow #2}}
-
-% Weak memory
-\newcommand{\bufloc}[1]{\overline{#1}}
 
 % Branding
-\newcommand{\isotopessa}{\ms{isotope_{SSA}}}
+\newcommand{\isotopessa}{\(\lambda_{\ms{SSA}}\)}
 
 %% Rights management information.  This information is sent to you
 %% when you complete the rights form.  These commands have SAMPLE
@@ -188,18 +163,12 @@
   <concept_desc>Theory of computation~Type theory</concept_desc>
   <concept_significance>500</concept_significance>
   </concept>
-  <concept>
-  <concept_id>10003752.10003790.10011742</concept_id>
-  <concept_desc>Theory of computation~Separation logic</concept_desc>
-  <concept_significance>300</concept_significance>
-  </concept>
   </ccs2012>
 \end{CCSXML}
 
 \ccsdesc[500]{Theory of computation~Denotational semantics}
 \ccsdesc[500]{Theory of computation~Categorical semantics}
 \ccsdesc[500]{Theory of computation~Type theory}
-\ccsdesc[300]{Theory of computation~Separation logic}
 
 %%
 %% Keywords. The author(s) should pick words that accurately describe
@@ -216,7 +185,7 @@
 
 Static single assignment form, or SSA form, has been the dominant
 compiler intermediate representation since its introduction by
-\citet{...} in the later 1980s. Every major compiler -- GCC, Clang,
+\citet{ssa-intro} in the later 1980s. Every major compiler -- GCC, Clang,
 MLIR, Cranelift -- uses this representation, because it makes many
 optimizations much easier to do than traditional 3-address code IRs.
 
@@ -259,33 +228,30 @@ compiler optimization.
 Concretely, our contributions are as follows: 
 
 \begin{itemize}
-\item First, we give a type-theoretic presentation of SSA, with both typing
-  rules and an equational theory for well-typed terms. We also prove the
-  correctness of suitable substitution properties for this calculus. 
+\item First, we give a type-theoretic presentation of SSA, with both typing rules and an equational
+  theory for well-typed terms. We also prove the correctness of suitable substitution properties for
+  this calculus. 
   
-\item Next, we give a categorical semantics for this type theory, in
-  terms of distributive Elgot categories. We show that any
-  denotational model with this categorical structure is also a model
-  of SSA. This shows that all of the equations we give are sound with
-  respect to the categorical structure. 
+\item Next, we give a categorical semantics for this type theory, in terms of distributive Elgot
+  categories. We show that any denotational model with this categorical structure is also a model of
+  SSA. This shows that all of the equations we give are sound with respect to the categorical
+  structure. 
 
-\item We also show that syntax quotiented by the equational theory
-  yields the initial distributive Elgot category. This establishes
-  that our set of syntactic equations is complete, and that there are
-  no equations which the denotational semantics validates, but which
-  cannot be proved syntactically. 
+\item We also show that syntax quotiented by the equational theory yields the initial distributive
+  Elgot category. This establishes that our set of syntactic equations is complete, and that there
+  are no equations which the denotational semantics validates, but which cannot be proved
+  syntactically. 
 
-\item We show that this denotational axiomatization is useful in
-  practice, by giving a variety of concrete models, including a model
-  of TSO weak memory based on~\cite{sparky}. This demonstrates that it
-  is possible to give realistic weak memory models which do not
-  disturb the structure of SSA in fundamental ways.
+\item We show that this denotational axiomatization is useful in practice, by giving a variety of
+  concrete models, including a model of TSO weak memory based on~\cite{sparky}. This demonstrates
+  that it is possible to give realistic weak memory models which do not disturb the structure of SSA
+  in fundamental ways.
 
-\item Finally, we have substantially mechanized our proofs. We have
-  mechanized proofs of substitution for our type theory, as well as
-  proofs that the syntax forms the initial model, and that the SPARC TSO
-  semantics forms a valid model of SSA. The denotational semantics and
-  its proof of the soundness of substitution are done on paper. 
+\item Finally, we have substantially mechanized our proofs using the Lean 4 proof assistant. We have
+  mechanized proofs of substitution for our type theory, as well as proofs that the syntax forms the
+  initial model, and that the SPARC TSO semantics forms a valid model of SSA. The denotational
+  semantics and its proof of the soundness of substitution are done on paper. 
+
 \end{itemize}
 
 \bibliographystyle{ACM-Reference-Format}
@@ -295,7 +261,9 @@ Concretely, our contributions are as follows:
 
 \appendix
 
-\begin{figure}
+\section{Syntax and Typing Rules}
+
+\begin{figure}[H]
   \begin{center}
     \begin{grammar}
       <\(A, B, C\)> ::= 
@@ -306,33 +274,198 @@ Concretely, our contributions are as follows:
       \;|\; \(\mathbf{0}\)
 
       <\(a, b, c, e\)> ::= \(x\) 
-      \;|\; \(f\;a\)
-      \;|\; \((a, b)\) 
-      \;|\; \(()\) 
-      \;|\; \(\linl{a}\) 
+      \;|\;  \(f\;a\)
+      \;|\; \(\letexpr{x}{a}{e}\)
+      \alt  \(()\)
+      \;|\; \((a, b)\)
+      \;|\; \(\letexpr{(x, y)}{a}{e}\)
+      \alt  \(\linl{a}\) 
       \;|\; \(\linr{a}\)
       \;|\; \(\labort{a}\)
-      % \;|\; \(\letexpr{x}{a}{e}\)
-      % \;|\; \(\letexpr{(x, y)}{a}{e}\)
-      % \;|\; \(\lbsplice{\ell}{x: A}{t}\)
+      \;|\; \(\caseexpr{e}{x}{s}{y}{t}\)
       
       <\(s, t\)> ::= \(\lbrb{\ell}{a}\) 
-      \;|\; \(\case{e}{x}{s}{y}{t}\)
-      \;|\; \(\letstmt{x}{a}{t}\)
+      \alt  \(\letstmt{x}{a}{t}\)
       \;|\; \(\letstmt{(x, y)}{a}{t}\)
-      \;|\; \(\where{t}{L}\)
-
-      <\(L\)> ::= \(\cdot\) \;|\; \(\lwbranch{\ell}{x: A}{t}, L\)
+      \;|\; \(\casestmt{e}{x}{s}{y}{t}\)
+      \alt  \(\where{t}{(\lwbranch{\ell_i}{x_i: A_i}{t_i},)_i}\)
 
       <\(\Gamma\)> ::= \(\cdot\) \;|\; \(\Gamma, \thyp{x}{A}{\epsilon}\)
 
-      <\(\ms{L}\)> ::= \(\cdot\) \;|\; \(\ms{L}, \lbl{\ell}(A)\)
+      <\(\ms{L}\)> ::= \(\cdot\) \;|\; \(\ms{L}, \llhyp{\ell}{A}\)
     \end{grammar}
   \end{center}
   \caption{Grammar for \isotopessa, parametrized over a set of instructions \(f \in \mc{I}\)}
   \Description{Grammar for isotope-SSA}
   \label{fig:ssa-grammar}
 \end{figure}
+
+\begin{figure}[H]
+  \begin{gather*}
+    \prftree[r]{\rle{var}}{\Gamma\;x \leq (A, \epsilon)}{\hasty{\Gamma}{\epsilon}{x}{A}} \qquad
+    \prftree[r]{\rle{op}}{\isop{f}{A}{B}{\epsilon}}{\hasty{\Gamma}{\epsilon}{a}{A}}
+      {\hasty{\Gamma}{\epsilon}{f\;a}{B}} \qquad
+    \prftree[r]{\rle{let$_1$}}
+      {\hasty{\Gamma}{\epsilon}{a}{A}}
+      {\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{b}{B}}
+      {\hasty{\Gamma}{\epsilon}{\letexpr{x}{a}{b}}{B}} \\
+    \prftree[r]{\rle{unit}}{\hasty{\Gamma}{\epsilon}{()}{\mb{1}}} \qquad
+    \prftree[r]{\rle{pair}}{\hasty{\Gamma}{\epsilon}{a}{A}}{\hasty{\Gamma}{\epsilon}{b}{B}}
+      {\hasty{\Gamma}{\epsilon}{(A, B)}{A \otimes B}} \\
+    \prftree[r]{\rle{let$_2$}}
+      {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
+      {\hasty{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{\epsilon}{c}{C}}
+      {\hasty{\Gamma}{\epsilon}{\letexpr{(x, y)}{e}{c}}{C}} \\
+    \prftree[r]{\rle{inl}}{\hasty{\Gamma}{\epsilon}{a}{A}}
+      {\hasty{\Gamma}{\epsilon}{\linl{a}}{A + B}} \qquad
+    \prftree[r]{\rle{inr}}{\hasty{\Gamma}{\epsilon}{b}{B}}
+      {\hasty{\Gamma}{\epsilon}{\linr{b}}{A + B}} \qquad
+    \prftree[r]{\rle{abort}}{\hasty{\Gamma}{\epsilon}{a}{\mb{0}}}
+      {\hasty{\Gamma}{\epsilon}{\labort{a}}{A}} \\
+    \prftree[r]{\rle{case}}
+      {\hasty{\Gamma}{\epsilon}{e}{A + B}}
+      {\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{a}{C}}
+      {\hasty{\Gamma, \bhyp{y}{A}}{\epsilon}{b}{C}}
+      {\hasty{\Gamma}{\epsilon}{\caseexpr{e}{x}{a}{y}{b}}{C}}
+  \end{gather*}
+  \caption{Rules for typing \isotopessa terms}
+  \Description{Rules for typing isotope-SSA terms}
+  \label{fig:ssa-term-rules}
+\end{figure}
+
+\begin{figure}[H]
+  \begin{gather*}
+    \prftree[r]{\rle{br}}{\hasty{\Gamma}{\bot}{a}{A}}{\ms{L}\;\lbl{\ell} = A}
+      {\haslb{\Gamma}{\lbrb{\ell}{a}}{\ms{L}}} \qquad
+    \prftree[r]{\rle{let$_1$-r}}
+      {\hasty{\Gamma}{\epsilon}{a}{A}}
+      {\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
+      {\haslb{\Gamma}{\letstmt{x}{a}{r}}{\ms{L}}} \\
+    \prftree[r]{\rle{let$_2$-r}}
+      {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
+      {\haslb{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{r}{\ms{L}}}
+      {\haslb{\Gamma}{\letstmt{(x, y)}{e}{r}}{\ms{L}}} \\
+    \prftree[r]{\rle{case-r}}
+      {\hasty{\Gamma}{\epsilon}{e}{A + B}}
+      {\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
+      {\haslb{\Gamma, \bhyp{y}{B}}{s}{\ms{L}}}
+      {\haslb{\Gamma}{\casestmt{e}{x}{r}{y}{s}}{\ms{L}}} \\
+    \prftree[r]{\rle{cfg}}
+      {\haslb{\Gamma}{\beta}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
+      {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{\beta}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+      {\haslb{\Gamma}{\where{\beta}{(\lwbranch{\ell_i}{x_i: A_i}{t_i},)_i}}{\ms{L}}}
+  \end{gather*}
+  \caption{Rules for typing \isotopessa regions}
+  \Description{Rules for typing isotope-SSA regions}
+  \label{fig:ssa-reg-rules}
+\end{figure}
+
+\begin{figure}[H]
+  \TODO{this}
+  \caption{Rules for typing \isotopessa substitutions}
+  \Description{Rules for typing isotope-SSA substitutions}
+  \label{fig:ssa-vsubst-rules}
+\end{figure}
+
+\begin{figure}[H]
+  \TODO{this}
+  \caption{Rules for typing \isotopessa label-substitutions}
+  \Description{Rules for typing isotope-SSA label-substitutions}
+  \label{fig:ssa-lsubst-rules}
+\end{figure}
+
+\begin{figure}[H]
+  \TODO{this}
+  \caption{Syntax and typing for \isotopessa composition}
+  \Description{Syntax and typing for isotope-SSA composition}
+  \label{fig:ssa-compose}
+\end{figure}
+
+\section{Denotational Semantics}
+
+
+\begin{figure}[H]
+  \TODO{this}
+  \caption{Denotational semantics for \isotopessa types and contexts}
+  \Description{Denotational semantics for isotope-SSA types and contexts}
+  \label{fig:ssa-ty-sem}
+\end{figure}
+
+\begin{figure}[H]
+  \begin{equation*}
+    \boxed{\dnt{\hasty{\Gamma}{\epsilon}{a}{A}} : \dnt{\Gamma} \to_\epsilon \dnt{A}}
+  \end{equation*}
+  \TODO{this}
+  \caption{Denotational semantics for \isotopessa terms}
+  \Description{Denotational semantics for isotope-SSA terms}
+  \label{fig:ssa-term-sem}
+\end{figure}
+
+\begin{figure}[H]
+  \begin{equation*}
+    \boxed{\dnt{\haslb{\Gamma}{r}{\ms{L}}} : \dnt{\Gamma} \to \dnt{\ms{L}}}
+  \end{equation*}
+  \TODO{this}
+  \caption{Denotational semantics for \isotopessa regions}
+  \Description{Denotational semantics for isotope-SSA regions}
+  \label{fig:ssa-reg-sem}
+\end{figure}
+
+\begin{figure}[H]
+  \begin{equation*}
+    \boxed{\dnt{\issubst{\gamma}{\Gamma}{\Delta}} 
+      : \dnt{\Gamma} \to_{\epsilon_\Delta} \dnt{\Delta}}
+  \end{equation*}
+  \TODO{this}
+  \caption{Denotational semantics for \isotopessa substitutions}
+  \Description{Denotational semantics for isotope-SSA substitutions}
+  \label{fig:ssa-vsubst-sem}
+\end{figure}
+
+\begin{figure}[H]
+  \begin{equation*}
+    \boxed{\dnt{\lbsubst{\kappa}{\ms{L}}{\ms{K}}} 
+      : \dnt{\ms{L}} \to \dnt{\ms{K}}}
+  \end{equation*}
+  \TODO{this}
+  \caption{Denotational semantics for \isotopessa label-substitutions}
+  \Description{Denotational semantics for isotope-SSA label-substitutions}
+  \label{fig:ssa-lsubst-sem}
+\end{figure}
+
+\section{Equational Theory}
+
+\begin{figure}[H]
+  \TODO{this}
+  \caption{Equational theory for \isotopessa terms}
+  \Description{Equational theory for isotope-SSA terms}
+  \label{fig:ssa-term-rw}
+\end{figure}
+
+\begin{figure}[H]
+  \TODO{this}
+  \caption{Equational theory for \isotopessa regions}
+  \Description{Equational theory for isotope-SSA regions}
+  \label{fig:ssa-reg-rw}
+\end{figure}
+
+\TODO{soundness of term equational theory (diagrams?)}
+
+\TODO{soundness of region equational theory (diagrams?)}
+
+\section{Normalization}
+
+\TODO{to Expr...}
+
+\TODO{to BBRegion...}
+
+\TODO{to TRegion ...}
+
+\TODO{to ContRegion ...}
+
+\section{Böhm–Jacopini}
+
+\TODO{this...}
 
 \end{document}
 \endinput
