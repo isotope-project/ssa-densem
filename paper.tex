@@ -97,6 +97,8 @@
 \newcommand{\isop}[4]{#1: #2 \to_{#4} #3}
 \newcommand{\issubst}[3]{#1: #2 \mapsto #3}
 \newcommand{\lbsubst}[3]{#1: #2 \rightsquigarrow #3}
+\newcommand{\teqv}{\approx}
+\newcommand{\tmeq}[5]{#1 \vdash_{#2} #3 \teqv #4 : {#5}}
 
 % Denotational semantics
 \newcommand{\dnt}[1]{\llbracket{#1}\rrbracket}
@@ -435,12 +437,205 @@ Concretely, our contributions are as follows:
 
 \section{Equational Theory}
 
+\subsection{Terms}
+
+\TODO{write nicer fused version?}
+
+\TODO{\textit{formalize} nicer fused version?}
+
 \begin{figure}[H]
-  \TODO{this}
-  \caption{Equational theory for \isotopessa terms}
-  \Description{Equational theory for isotope-SSA terms}
-  \label{fig:ssa-term-rw}
+  \begin{gather*}
+    \prftree[r]{\rle{refl}}{\hasty{\Gamma}{\epsilon}{a}{A}}{\tmeq{\Gamma}{\epsilon}{a}{a}{A}} \qquad
+    \prftree[r]{\rle{trans}}
+      {\tmeq{\Gamma}{\epsilon}{a}{b}{A}}
+      {\tmeq{\Gamma}{\epsilon}{b}{c}{A}} 
+      {\tmeq{\Gamma}{\epsilon}{a}{c}{A}} \qquad
+    \prftree[r]{\rle{symm}}
+      {\tmeq{\Gamma}{\epsilon}{a}{b}{A}}
+      {\tmeq{\Gamma}{\epsilon}{b}{a}{A}}
+    \\
+    \prftree[r]{\rle{let$_1$-bind}}
+      {\tmeq{\Gamma}{\epsilon}{a}{a'}{A}}
+      {\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{b}{B}}
+      {\tmeq{\Gamma}{\epsilon}{\letexpr{x}{a}{b}}{\letexpr{x}{a'}{b}}{B}} 
+    \\
+    \prftree[r]{\rle{let$_1$-bound}}
+      {\hasty{\Gamma}{\epsilon}{a}{A}}
+      {\tmeq{\Gamma, \bhyp{x}{A}}{\epsilon}{b}{b'}{B}}
+      {\tmeq{\Gamma}{\epsilon}{\letexpr{x}{a}{b}}{\letexpr{x}{a}{b'}}{B}}
+    \\
+    \prftree[r]{\rle{pair-l}}
+      {\tmeq{\Gamma}{\epsilon}{a}{a'}{A}}
+      {\hasty{\Gamma}{\epsilon}{b}{B}}
+      {\tmeq{\Gamma}{\epsilon}{(a, b)}{(a', b)}{A \otimes B}} \qquad
+    \prftree[r]{\rle{pair-r}}
+      {\hasty{\Gamma}{\epsilon}{a}{A}}
+      {\tmeq{\Gamma}{\epsilon}{b}{b'}{B}}
+      {\tmeq{\Gamma}{\epsilon}{(a, b)}{(a, b')}{A \otimes B}}
+    \\
+    \prftree[r]{\rle{let$_2$-bind}}
+      {\tmeq{\Gamma}{\epsilon}{e}{e'}{A \otimes B}}
+      {\hasty{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{\epsilon}{c}{C}}
+      {\tmeq{\Gamma}{\epsilon}{\letexpr{(x, y)}{e}{c}}{\letexpr{(x, y)}{e'}{c}}{C}}
+    \\
+    \prftree[r]{\rle{let$_2$-bound}}
+      {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
+      {\tmeq{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{\epsilon}{c}{c'}{C}}
+      {\tmeq{\Gamma}{\epsilon}{\letexpr{(x, y)}{e}{c}}{\letexpr{(x, y)}{e}{c'}}{C}}
+    \\
+    \prftree[r]{\rle{inl}}
+      {\tmeq{\Gamma}{\epsilon}{a}{a'}{A}}
+      {\tmeq{\Gamma}{\epsilon}{\linl{a}}{\linl{a'}}{A + B}} \qquad
+    \prftree[r]{\rle{inr}}
+      {\tmeq{\Gamma}{\epsilon}{b}{b'}{B}}
+      {\tmeq{\Gamma}{\epsilon}{\linr{b}}{\linr{b'}}{A + B}} \qquad
+    \\
+    \prftree[r]{\rle{abort}}
+      {\tmeq{\Gamma}{\epsilon}{a}{a'}{\mb{0}}}
+      {\tmeq{\Gamma}{\epsilon}{\labort{a}}{\labort{a'}}{A}}
+    \\
+    \prftree[r]{\rle{case-d}}
+      {\tmeq{\Gamma}{\epsilon}{e}{e'}{A + B}}
+      {\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{a}{C}}
+      {\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{b}{C}}
+      {\tmeq{\Gamma}{\epsilon}{\caseexpr{e}{x}{a}{y}{b}}{\caseexpr{e'}{x}{a}{y}{b}}{C}}
+    \\
+    \prftree[r]{\rle{case-l}}
+      {\hasty{\Gamma}{\epsilon}{e}{A + B}}
+      {\tmeq{\Gamma, \bhyp{x}{A}}{\epsilon}{a}{a'}{C}}
+      {\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{b}{C}}
+      {\tmeq{\Gamma}{\epsilon}{\caseexpr{e}{x}{a}{y}{b}}{\caseexpr{e'}{x}{a'}{y}{b}}{C}}
+    \\
+    \prftree[r]{\rle{case-r}}
+      {\hasty{\Gamma}{\epsilon}{e}{A + B}}
+      {\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{a}{C}}
+      {\tmeq{\Gamma, \bhyp{y}{B}}{\epsilon}{b}{b'}{C}}
+      {\tmeq{\Gamma}{\epsilon}{\caseexpr{e}{x}{a}{y}{b}}{\caseexpr{e'}{x}{a}{y}{b'}}{C}}
+  \end{gather*}
+  \caption{Congruence for \isotopessa terms}
+  \Description{Congruence for isotope-SSA terms}
+  \label{fig:ssa-term-cong}
 \end{figure}
+
+
+\begin{gather*}
+  \prftree[r]{\rle{let$_1$-$\beta$}}
+    {\hasty{\Gamma}{\bot}{a}{A}}
+    {\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{b}{B}}
+    {\tmeq{\Gamma}{\epsilon}{\letexpr{x}{a}{b}}{[b/x]a}{B}}
+  \qquad
+  \prftree[r]{\rle{let$_1$-$\eta$}}
+    {\hasty{\Gamma}{\epsilon}{a}{A}}
+    {\tmeq{\Gamma}{\epsilon}{\letexpr{x}{a}{x}}{a}{A}}
+\end{gather*}
+
+\begin{gather*}
+  \prftree[r]{\rle{let$_1$-op}}
+    {\isop{f}{A}{B}{\epsilon}}
+    {\hasty{\Gamma}{\epsilon}{a}{A}}
+    {\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{c}{C}}
+    {\tmeq{\Gamma}{\epsilon}{\letexpr{y}{f\;a}{c}}{\letexpr{x}{a}{\letexpr{f\;x}{y}{c}}}{C}}
+  \\
+  \prftree[r]{\rle{let$_1$-let$_1$}}
+    {\hasty{\Gamma}{\epsilon}{a}{A}}
+    {\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{b}{B}}
+    {\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{c}{C}}
+    {\tmeq{\Gamma}{\epsilon}
+      {\letexpr{y}{(\letexpr{x}{a}{b})}{c}}
+      {\letexpr{x}{a}{\letexpr{y}{b}{c}}}{C}}
+  \\
+  \prftree[r]{\rle{let$_1$-let$_2$}}
+    {\hasty{\Gamma}{\epsilon}{e}{A \times B}}
+    {\hasty{\Gamma, \bhyp{x}{A}, \bhyp{y}{C}}{\epsilon}{c}{C}}
+    {\hasty{\Gamma, \bhyp{z}{C}}{\epsilon}{d}{D}}
+    {\tmeq{\Gamma}{\epsilon}
+      {\letexpr{z}{(\letexpr{(x, y)}{e}{c})}{d}}
+      {\letexpr{(x, y)}{e}{\letexpr{z}{c}{d}}}{C}}
+  \\
+  \prftree[r]{\rle{let$_1$-inl}}
+    {\hasty{\Gamma}{\epsilon}{a}{A}}
+    {\hasty{\Gamma, \bhyp{x}{A + B}}{\epsilon}{c}{C}}
+    {\hasty{\Gamma, \bhyp{y}{C}}{\epsilon}{d}{D}}
+    {\tmeq{\Gamma}{\epsilon}{\letexpr{y}{\linl{a}}{c}}{\letexpr{x}{a}{\letexpr{\linl{x}}{y}{c}}}{C}}
+  \\
+  \prftree[r]{\rle{let$_1$-inr}}
+    {\hasty{\Gamma}{\epsilon}{b}{B}}
+    {\hasty{\Gamma, \bhyp{x}{A + B}}{\epsilon}{c}{C}}
+    {\hasty{\Gamma, \bhyp{y}{C}}{\epsilon}{d}{D}}
+    {\tmeq{\Gamma}{\epsilon}{\letexpr{y}{\linr{b}}{c}}{\letexpr{x}{b}{\letexpr{\linr{x}}{y}{c}}}{C}}
+  \\
+  \prftree[r]{\rle{let$_1$-abort}}
+    {\hasty{\Gamma}{\epsilon}{a}{\mb{0}}}
+    {\hasty{\Gamma, \bhyp{y}{A}}{\epsilon}{b}{B}}
+    {\tmeq{\Gamma}{\epsilon}
+      {\letexpr{y}{\labort{b}}{b}}
+      {\letexpr{x}{a}{\letexpr{y}{\labort{x}}{b}}}{B}}
+  \\
+  \prftree[r]{\rle{let$_1$-case}}
+    {\hasty{\Gamma}{\epsilon}{e}{A + B}}
+    {\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{a}{C}}
+    {\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{b}{C}}
+    {\hasty{\Gamma, \bhyp{z}{C}}{\epsilon}{d}{D}}
+    { 
+      \prfStackPremises
+      {\Gamma \vdash_\epsilon \letexpr{z}{(\caseexpr{e}{x}{a}{y}{b})}{d}}
+      {\hspace{6em} \teqv \caseexpr{e}{x}{\letexpr{z}{a}{d}}{\letexpr{z}{b}{d}}{b} : D}
+    }
+\end{gather*}
+
+\begin{gather*}
+  \prftree[r]{\rle{let$_2$-$\eta$}}
+    {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
+    {\tmeq{\Gamma}{\epsilon}{\letexpr{(x, y)}{e}{(x, y)}}{e}{A \otimes B}} 
+  \\
+  \prftree[r]{\rle{let$_2$-pair}}
+    {\hasty{\Gamma}{\epsilon}{a}{A}}
+    {\hasty{\Gamma}{\epsilon}{b}{B}}
+    {\hasty{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{\epsilon}{c}{C}}
+    {\tmeq{\Gamma}{\epsilon}{\letexpr{(x, y)}{(a, b)}{c}}{\letexpr{x}{a}{\letexpr{y}{b}{c}}}{C}}
+  \\
+  \prftree[r]{\rle{let$_2$-bind}}
+    {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
+    {\hasty{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{\epsilon}{c}{C}}
+    {\tmeq{\Gamma}{\epsilon}
+      {\letexpr{(x, y)}{e}{c}}
+      {\letexpr{z}{e}{\letexpr{z}{e}{c}}}{C}}
+\end{gather*}
+
+\begin{gather*}
+  \prftree[r]{\rle{case-inl}}
+    {\hasty{\Gamma}{\epsilon}{a}{A}}
+    {\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{c}{C}}
+    {\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{d}{C}}
+    {\tmeq{\Gamma}{\epsilon}{\caseexpr{\linl{a}}{x}{c}{y}{d}}{\letexpr{x}{a}{c}}{C}}
+  \\
+  \prftree[r]{\rle{case-inr}}
+    {\hasty{\Gamma}{\epsilon}{b}{B}}
+    {\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{c}{C}}
+    {\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{d}{C}}
+    {\tmeq{\Gamma}{\epsilon}{\caseexpr{\linr{b}}{x}{c}{y}{d}}{\letexpr{y}{b}{d}}{C}}
+\end{gather*}
+
+\TODO{case theory}
+
+\begin{gather*}
+  \prftree[r]{\rle{initial}} 
+    {\hasty{\Gamma}{\bot}{a}{A}}
+    {\hasty{\Gamma}{\bot}{a'}{A}}
+    {\exists x, \Gamma\;x = \mb{0}}
+    {\tmeq{\Gamma}{\epsilon}{a}{a'}{A}}
+    \qquad
+  \prftree[r]{\rle{terminal}}
+    {\hasty{\Gamma}{\bot}{a}{\mb{1}}}
+    {\hasty{\Gamma}{\bot}{a'}{\mb{1}}}
+    {\tmeq{\Gamma}{\epsilon}{a}{a'}{\mb{1}}}
+\end{gather*}
+
+\TODO{soundness of term equational theory (diagrams?)}
+
+\TODO{notes on completeness? derivable equations?}
+
+\subsection{Regions}
 
 \begin{figure}[H]
   \TODO{this}
@@ -449,9 +644,9 @@ Concretely, our contributions are as follows:
   \label{fig:ssa-reg-rw}
 \end{figure}
 
-\TODO{soundness of term equational theory (diagrams?)}
-
 \TODO{soundness of region equational theory (diagrams?)}
+
+\TODO{notes on completeness? derivable equations?}
 
 \section{Normalization}
 
