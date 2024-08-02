@@ -73,7 +73,7 @@
 \newcommand{\labort}[1]{\ms{abort}\;{#1}}
 
 % Syntax
-\newcommand{\letexpr}[3]{\ensuremath{\ms{let}\;#1 = #2\;\ms{in}\;#3}}
+\newcommand{\letexpr}[3]{\ensuremath{\ms{let}\;#1 = #2;\;#3}}
 \newcommand{\caseexpr}[5]{\ms{case}\;#1\;\{\linl{#2} \lto #3, \linr{#4} \lto #5\}}
 \newcommand{\letstmt}[3]{\ensuremath{\ms{let}\;#1 = #2; #3}}
 \newcommand{\brb}[2]{\ms{br}\;#1\;#2}
@@ -614,9 +614,128 @@ Concretely, our contributions are as follows:
     {\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{c}{C}}
     {\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{d}{C}}
     {\tmeq{\Gamma}{\epsilon}{\caseexpr{\linr{b}}{x}{c}{y}{d}}{\letexpr{y}{b}{d}}{C}}
+  \\
+  \prftree[r]{\rle{case-$\eta$}}
+    {\hasty{\Gamma}{\epsilon}{e}{A + B}}
+    {\tmeq{\Gamma}{\epsilon}{\caseexpr{e}{x}{\linl{x}}{y}{\linr{y}}}{e}{A + B}}
+  \\
+  \prftree[r]{\rle{case-bind}}
+    {\hasty{\Gamma}{\epsilon}{e}{A + B}}
+    {\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{c}{C}}
+    {\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{d}{C}}
+    {\tmeq{\Gamma}{\epsilon}{\caseexpr{e}{x}{c}{y}{d}}{\letexpr{z}{e}{\caseexpr{z}{x}{c}{y}{d}}}{C}}
 \end{gather*}
 
-\TODO{case theory}
+\begin{gather*}
+  \prftree[r]{\rle{let$_1$-case}}
+    {\hasty{\Gamma}{\epsilon}{a}{A + B}}
+    {\hasty{\Gamma, \bhyp{x}{A + B}}{\epsilon}{c}{C}}
+    {
+      \prfStackPremises
+      {\hasty{\Gamma, \bhyp{x}{A + B}, \bhyp{y}{C}, \bhyp{z}{A}}{\epsilon}{d}{D}}
+      {\hasty{\Gamma, \bhyp{x}{A + B}, \bhyp{y}{C}, \bhyp{z'}{B}}{\epsilon}{d'}{D}}
+    }
+    {
+      \prfStackPremises
+      {\Gamma \vdash_\epsilon \letexpr{x}{a}{\letexpr{y}{c}{\caseexpr{x}{z}{d}{z'}{d'}}}}
+      {\hspace{6em} \teqv \letexpr{x}{a}{\caseexpr{x}{z}{\letexpr{y}{c}{d}}{z'}{\letexpr{y}{c}{d'}}} 
+      : D}
+    }
+  \\
+  \prftree[r]{\rle{let$_2$-case}}
+    {\hasty{\Gamma}{\epsilon}{a}{A + B}}
+    {\hasty{\Gamma, \bhyp{x}{A + B}}{\epsilon}{c}{C \otimes D}}
+    {
+      \prfStackPremises
+      {\hasty{\Gamma, \bhyp{x}{A + B}, \bhyp{y}{C}, \bhyp{z}{D}, \bhyp{w}{A}}{\epsilon}{e}{E}}
+      {\hasty{\Gamma, \bhyp{x}{A + B}, \bhyp{y}{C}, \bhyp{z}{D}, \bhyp{w'}{B}}{\epsilon}{e'}{E}}
+    }
+    {
+      \prfStackPremises
+      {\Gamma \vdash_\epsilon \letexpr{x}{a}{\letexpr{(y, z)}{c}{\caseexpr{x}{w}{e}{w'}{e'}}}}
+      {\hspace{5em} \teqv \letexpr{x}{a}
+        {\caseexpr{x}
+          {w}{\letexpr{(y, z)}{c}{e}}
+          {w'}{\letexpr{(y, z)}{c}{e'}}} 
+      : E}
+    }
+  \\
+  \prftree[r]{\rle{case-case}}
+    {\hasty{\Gamma}{\epsilon}{a}{A_1 + A_2}}
+    {\hasty{\Gamma, \bhyp{x}{A + B}}{\epsilon}{b}{B_1 + B_2}}
+    {
+      \forall i j.
+      \hasty{\Gamma, \bhyp{x}{A_1 + A_2}, \bhyp{y_i}{B_i}, \bhyp{z_j}{A_j}}{\epsilon}
+            {c_{ij}}{C}
+    }
+    {
+      \prfStackPremises
+      {\Gamma \vdash_\epsilon 
+        \ms{let}\;x = a;
+        \ms{case}\;b\;\{\ms{inl}\;y_1 \Rightarrow \caseexpr{x}{z_1}{e_{11}}{z_2}{e_{12}}
+      }
+      {
+        \hspace{10em} \ms{inr}\;y_2 \Rightarrow \caseexpr{x}{z_1}{e_{21}}{z_2}{e_{22}} \}
+      }
+      {\hspace{1.3em} \teqv
+        \ms{let}\;x = a;
+        \ms{case}\;x\;\{\ms{inl}\;z_1 \Rightarrow \caseexpr{b}{y_1}{e_{11}}{y_2}{e_{21}}
+      }
+      {
+        \hspace{10em} \ms{inr}\;z_2 \Rightarrow \caseexpr{b}{y_1}{e_{12}}{y_2}{e_{22}} \}
+      }
+    }
+  \\
+  \prftree[r]{\rle{op-case}}
+    {\hasty{\Gamma}{\epsilon}{e}{A + B}}
+    {\isop{f}{C}{D}{\epsilon}}
+    {\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{c}{C}}
+    {\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{c'}{C}}
+    {\tmeq{\Gamma}{\epsilon}{\caseexpr{e}{x}{f\;c}{y}{f\;c'}}{f\;\caseexpr{e}{x}{c}{y}{c'}}{D}}
+  \\
+  \prftree[r]{\rle{inl-case}}
+    {\hasty{\Gamma}{\epsilon}{e}{A + B}}
+    {\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{c}{C}}
+    {\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{c'}{C}}
+    {\tmeq{\Gamma}{\epsilon}
+      {\caseexpr{e}{x}{\linl{c}}{y}{\linl{c'}}}
+      {\linl{\caseexpr{e}{x}{c}{y}{c'}}}
+      {C + D}}
+  \\
+  \prftree[r]{\rle{inr-case}}
+    {\hasty{\Gamma}{\epsilon}{e}{A + B}}
+    {\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{d}{D}}
+    {\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{d'}{D}}
+    {\tmeq{\Gamma}{\epsilon}
+      {\caseexpr{e}{x}{\linr{d}}{y}{\linr{d'}}}
+      {\linr{\caseexpr{e}{x}{d}{y}{d'}}}
+      {C + D}}
+  \\
+  \prftree[r]{\rle{abort-case}}
+  {\hasty{\Gamma}{\epsilon}{e}{A + B}}
+  {\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{c}{\mb{0}}}
+  {\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{c'}{\mb{0}}}
+  {
+    \prfStackPremises
+    {\Gamma \vdash_\epsilon \caseexpr{e}{x}{\labort{c}}{y}{\labort{c'}}}
+    {\approx \labort{\caseexpr{e}{x}{c}{y}{c'}} : C}
+  }
+  \\
+  \prftree[r]{\rle{pair-case}}
+    {\hasty{\Gamma}{\epsilon}{e}{A_1 + A_2}}
+    {\forall i, \hasty{\Gamma, \bhyp{x_i}{A_i}}{\epsilon}{b_{ij}}{B_j}}
+    {
+      \prfStackPremises
+      {\Gamma \vdash_\epsilon \caseexpr{e}{x}{(b_{11}, b_{12})}{y}{(b_{21}, b_{22})}}
+      {\approx (\caseexpr{e}{x}{b_{11}}{y}{b_{21}}, \caseexpr{e}{x}{b_{12}}{y}{b_{22}}) 
+      : B_1 \otimes B_2}
+    }
+  \\
+  \prftree[r]{\rle{case$_0$}}
+    {\hasty{\Gamma}{\epsilon}{e}{A_1 + A_2}}
+    {\hasty{\Gamma}{\epsilon}{a}{A}}
+    {\tmeq{\Gamma}{\epsilon}{\caseexpr{e}{x}{a}{y}{a}}{a}{A}}
+\end{gather*}
 
 \begin{gather*}
   \prftree[r]{\rle{initial}} 
