@@ -83,6 +83,8 @@
 \newcommand{\where}[2]{#1\;\ms{where}\;\{#2\}}
 \newcommand{\wbranch}[3]{#1(#2) \lto #3}
 \newcommand{\lwbranch}[3]{\wbranch{\lbl{#1}}{#2}{#3}}
+\newcommand{\cfgsubst}[1]{\ms{cfgs}\;\{#1\}}
+\newcommand{\wseq}[2]{{#1} \mathbin{{;}{;}} {#2}}
 
 % Judgements
 \newcommand{\cwk}[2]{#1 \mapsto #2}
@@ -356,7 +358,7 @@ Concretely, our contributions are as follows:
     \prftree[r]{\rle{cfg}}
       {\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
       {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
-      {\haslb{\Gamma}{\where{r}{(\lwbranch{\ell_i}{x_i: A_i}{t_i},)_i}}{\ms{L}}}
+      {\haslb{\Gamma}{\where{r}{(\lwbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}}
   \end{gather*}
   \caption{Rules for typing \isotopessa regions}
   \Description{Rules for typing isotope-SSA regions}
@@ -799,17 +801,276 @@ Concretely, our contributions are as follows:
     }
 \end{gather*}
 
-\TODO{let1-beta, let1-equiv}
+\begin{gather*}
+  \prftree[r]{\rle{let$_1$-$\beta$}}
+    {\hasty{\Gamma}{\bot}{a}{A}}
+    {\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
+    {\lbeq{\Gamma}{\letstmt{x}{a}{r}}{[r/x]a}{\ms{L}}}
+  \qquad
+  \prftree[r]{\rle{let$_1$-$\eta$}}
+    {\hasty{\Gamma}{\epsilon}{a}{\ms{L}}}
+    {\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
+    {\lbeq{\Gamma}{\letstmt{x}{a}{r}}{\letstmt{y}{a}{\letstmt{x}{y}{r}}}{\ms{L}}}
+  \\
+  \prftree[r]{\rle{let$_{1\approx}$}}
+    {\tmeq{\Gamma}{\epsilon}{a}{a'}{A}}
+    {\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
+    {\lbeq{\Gamma}{\letstmt{x}{a}{r}}{\letstmt{x}{a'}{r}}{\ms{L}}}
+  \qquad
+  \prftree[r]{\rle{initial}}
+    {\haslb{\Gamma}{r}{\ms{L}}}
+    {\haslb{\Gamma}{s}{\ms{L}}}
+    {\exists x, \Gamma\;x = \mb{0}}
+    {\lbeq{\Gamma}{r}{s}{\ms{L}}}
+\end{gather*}
 
-\TODO{let1 theory}
+\begin{gather*}
+  \prftree[r]{\rle{let$_1$-op}}
+    {\isop{f}{A}{B}{\epsilon}}
+    {\hasty{\Gamma}{\epsilon}{a}{A}}
+    {\haslb{\Gamma, \bhyp{y}{B}}{r}{\ms{L}}}
+    {\lbeq{\Gamma}{\letstmt{y}{f\;a}{r}}{\letstmt{x}{a}{\letstmt{y}{f\;x}{r}}}{\ms{L}}}
+  \\
+  \prftree[r]{\rle{let$_{1}$-let$_1$}}
+    {\hasty{\Gamma}{\epsilon}{a}{A}}
+    {\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{b}{B}}
+    {\haslb{\Gamma, \bhyp{y}{B}}{r}{\ms{L}}}
+    {\lbeq{\Gamma}{\letstmt{y}{(\letexpr{x}{a}{b})}{r}}{\letstmt{x}{a}{\letstmt{y}{b}{r}}}{\ms{L}}}
+  \\
+  \prftree[r]{\rle{let$_1$-pair}}
+    {\hasty{\Gamma}{\epsilon}{a}{A}}
+    {\hasty{\Gamma}{\epsilon}{b}{B}}
+    {\haslb{\Gamma, \bhyp{z}{A \otimes B}}{r}{\ms{L}}}
+    {\lbeq{\Gamma}
+      {\letstmt{z}{(a, b)}{r}}
+      {\letstmt{x}{a}{\letstmt{y}{b}{\letstmt{z}{(x, y)}{r}}}}
+      {\ms{L}}}
+  \\
+  \prftree[r]{\rle{let$_{1}$-let$_2$}}
+    {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
+    {\hasty{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{\epsilon}{c}{C}}
+    {\haslb{\Gamma, \bhyp{z}{C}}{r}{\ms{L}}}
+    {\lbeq{\Gamma}
+      {\letstmt{z}{(\letexpr{(x, y)}{e}{c})}{r}}
+      {\letstmt{(x, y)}{e}{\letstmt{z}{c}{r}}}
+      {\ms{L}}}
+  \\
+  \prftree[r]{\rle{let$_1$-inl}}
+    {\hasty{\Gamma}{\epsilon}{a}{A}}
+    {\haslb{\Gamma, \bhyp{y}{A + B}}{r}{\ms{L}}}
+    {\lbeq{\Gamma}{\letstmt{y}{\linl{a}}{r}}{\letstmt{x}{a}{\letstmt{\linl{x}}{y}{r}}}{\ms{L}}}
+  \\
+  \prftree[r]{\rle{let$_1$-inr}}
+    {\hasty{\Gamma}{\epsilon}{b}{B}}
+    {\haslb{\Gamma, \bhyp{y}{A + B}}{r}{\ms{L}}}
+    {\lbeq{\Gamma}{\letstmt{y}{\linr{b}}{r}}{\letstmt{x}{b}{\letstmt{\linr{x}}{y}{r}}}{\ms{L}}}
+  \\
+  \prftree[r]{\rle{let$_1$-abort}}
+    {\hasty{\Gamma}{\epsilon}{a}{\mb{0}}}
+    {\haslb{\Gamma, \bhyp{y}{A}}{r}{\ms{L}}}
+    {\lbeq{\Gamma}{\letstmt{y}{\labort{a}}{r}}{\letstmt{x}{a}{\letstmt{y}{\labort{x}}{r}}}{\ms{L}}}
+\end{gather*}
 
-\TODO{let2 theory}
+\begin{gather*}
+  \prftree[r]{\rle{let$_2$-bind}}
+    {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
+    {\haslb{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{r}{\ms{L}}}
+    {\lbeq{\Gamma}{\letstmt{(x, y)}{e}{r}}{\letstmt{z}{e}{\letstmt{(x, y)}{z}{r}}}{\ms{L}}}
+  \\
+  \prftree[r]{\rle{let$_2$-pair}}
+    {\hasty{\Gamma}{\epsilon}{a}{A}}
+    {\hasty{\Gamma}{\epsilon}{b}{B}}
+    {\haslb{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{r}{\ms{L}}}
+    {\lbeq{\Gamma}{\letstmt{(x, y)}{(a, b)}{r}}{\letstmt{x}{a}{\letstmt{y}{b}{r}}}{\ms{L}}}
+  \\
+  \prftree[r]{\rle{let$_2$-$\eta$}}
+    {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
+    {\haslb{\Gamma, \bhyp{z}{A \otimes B}}{r}{\ms{L}}}
+    {\lbeq{\Gamma}{\letstmt{(x, y)}{e}{\letstmt{z}{(x, y)}{r}}}{\letstmt{z}{e}{r}}{\ms{L}}}
+\end{gather*}
 
-\TODO{case theory}
+\begin{gather*}
+  \prftree[r]{\rle{case-bind}}
+    {\hasty{\Gamma}{\epsilon}{e}{A + B}}
+    {\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
+    {\haslb{\Gamma, \bhyp{y}{B}}{s}{\ms{L}}}
+    {\lbeq{\Gamma}{\caseexpr{e}{x}{r}{y}{s}}{\letstmt{z}{e}{\caseexpr{z}{x}{r}{y}{s}}}{\ms{L}}}
+  \\
+  \prftree[r]{\rle{case-inl}}
+    {\hasty{\Gamma}{\epsilon}{a}{A}}
+    {\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
+    {\haslb{\Gamma, \bhyp{y}{B}}{s}{\ms{L}}}
+    {\lbeq{\Gamma}{\caseexpr{\linl{a}}{x}{r}{y}{s}}{\letstmt{x}{a}{r}}{\ms{L}}}
+  \\
+  \prftree[r]{\rle{case-inr}}
+    {\hasty{\Gamma}{\epsilon}{b}{B}}
+    {\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
+    {\haslb{\Gamma, \bhyp{y}{B}}{s}{\ms{L}}}
+    {\lbeq{\Gamma}{\caseexpr{\linr{b}}{x}{r}{y}{s}}{\letstmt{y}{b}{s}}{\ms{L}}}
+  \\
+  \prftree[r]{\rle{let$_{11}$-case}}
+    {\hasty{\Gamma}{\epsilon}{a}{A_1 + A_2}}
+    {\hasty{\Gamma, \bhyp{x}{A_1 + A_2}}{\epsilon}{b}{B}}
+    {
+    \forall i. \haslb{\Gamma, \bhyp{x}{A_1 + A_2}, \bhyp{y}{B}, \bhyp{z_i}{A_i}}{r_i}{\ms{L}}
+    }
+    {
+      \prfStackPremises
+      {\Gamma \vdash \letstmt{x}{a}{\letstmt{y}{c}{\casestmt{x}{z_1}{r_1}{z_2}{r_2}}}}
+      {\hspace{6em} \approx 
+        \letstmt{x}{a}{\casestmt{x}{z_1}{\letstmt{y}{c}{r_1}}{z_2}{\letstmt{y}{c}{r_2}}} 
+        : \ms{L}}
+    }
+  \\
+  \prftree[r]{\rle{let$_{12}$-case}}
+    {\hasty{\Gamma}{\epsilon}{a}{A_1 + A_2}}
+    {\hasty{\Gamma, \bhyp{x}{A_1 + A_2}}{\epsilon}{b}{B \otimes C}}
+    {
+    \forall i. 
+      \haslb{\Gamma, \bhyp{x}{A_1 + A_2}, \bhyp{y}{B}, \bhyp{z}{C}, \bhyp{w_i}{A_i}}{r_i}{\ms{L}}
+    }
+    {
+      \prfStackPremises
+      {\Gamma \vdash \letstmt{x}{a}{\letstmt{(y, z)}{c}{\casestmt{x}{w_1}{r_1}{w_2}{r_2}}}}
+      {\hspace{5em} \approx 
+        \letstmt{x}{a}{\casestmt{x}{w_1}{\letstmt{(y, z)}{b}{r_1}}{w_2}{\letstmt{(y, z)}{b}{r_2}}} 
+        : \ms{L}}
+    }
+  \\
+  \prftree[r]{\rle{case-case}}
+    {\hasty{\Gamma}{\epsilon}{a}{A_1 + A_2}}
+    {\hasty{\Gamma, \bhyp{x}{A_1 + A_2}}{\epsilon}{b}{B_1 + B_2}}
+    {
+    \forall i j. 
+      \haslb{\Gamma, \bhyp{x}{A_1 + A_2}, \bhyp{y_i}{B_i}, \bhyp{z_j}{A_j}}{r_{ij}}{\ms{L}}
+    }
+    {
+      \prfStackPremises
+      {\Gamma \vdash \ms{let}\;x = a; \ms{case}\;b\;\{
+        \linl{y_1} \Rightarrow \casestmt{x}{z_1}{r_{11}}{z_2}{r_{21}}
+      }
+      {
+        \hspace{10em} \linr{y_2} \Rightarrow \casestmt{x}{z_1}{r_{12}}{z_2}{r_{22}}\}
+      }
+      {
+        \hspace{1.3em} \approx \ms{let}\;x = a; \ms{case}\;x\;\{
+        \linl{z_1} \Rightarrow \casestmt{b}{y_1}{r_{11}}{y_2}{r_{21}}
+      }
+      {
+        \hspace{10em} \linr{z_2} \Rightarrow \casestmt{b}{y_1}{r_{12}}{y_2}{r_{22}}\}
+      }
+    }
+\end{gather*}
 
-\TODO{cfg theory}
+\begin{gather*}
+    \prftree[r]{\rle{cfg-$<$}}
+      {\hasty{\Gamma}{\bot}{a}{A_k}}
+      {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+      {\lbeq{\Gamma}
+        {\where{\lbrb{\ell_k}{a}}{(\lwbranch{\ell_i}{x_i}{t_i},)_i}}
+        {\where{(\letstmt{x_k}{a}{t_k})}{(\lwbranch{\ell_i}{x_i}{t_i},)_i}}
+        {\ms{L}}}
+    \\
+    \prftree[r]{\rle{cfg$_1$}}
+      {\hasty{\Gamma}{\epsilon}{a}{A}}
+      {\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+      {\forall i. \haslb{\Gamma, \bhyp{y_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+      {\lbeq{\Gamma}
+        {\where{(\letstmt{x}{a}{r})}{(\lwbranch{\ell_i}{y_i}{t_i},)_i}}
+        {\letstmt{x}{a}{(\where{r}{(\lwbranch{\ell_i}{y_i}{t_i},)_i})}}
+        {\ms{L}}}
+    \\
+    \prftree[r]{\rle{cfg$_2$}}
+      {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
+      {\haslb{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{r}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+      {\forall i. \haslb{\Gamma, \bhyp{z_i}{C_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+      {\lbeq{\Gamma}
+        {\where{(\letstmt{(x, y)}{e}{r})}{(\lwbranch{\ell_i}{z_i}{t_i},)_i}}
+        {\letstmt{(x, y)}{e}{(\where{r}{(\lwbranch{\ell_i}{z_i}{t_i},)_i})}}
+        {\ms{L}}}
+    \\
+    \prftree[r]{\rle{cfg-case}}
+      {\hasty{\Gamma}{\epsilon}{a}{A_1 + A_2}}
+      {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{r_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+      {\forall i. \haslb{\Gamma, \bhyp{y_i}{B_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+      {
+        \prfStackPremises
+        {\Gamma \vdash \where{(\casestmt{a}{x_1}{r_1}{x_2}{r_2})}
+          {(\lwbranch{\ell_i}{y_i}{t_i},)_i} }
+        {\approx \casestmt{a}
+          {x_1}{(\where{r_1}{(\lwbranch{\ell_i}{y_i}{t_i},)_i})}
+          {x_2}{\where{r_2}{(\lwbranch{\ell_i}{y_i}{t_i},)_i}} : \ms{L}}
+      }
+    \\
+    \prftree[r]{\rle{cfg-cfg}}
+      {}
+    \\
+    % TODO: probably derivable
+    \prftree[r]{\rle{cfg$_0$}}
+      {}
+    \\
+    % TODO: note difference between this and wk-cfg; fused in nameland...
+    \prftree[r]{\rle{dead-cfg}}
+      {}
+\end{gather*}
 
-\TODO{uniformity, codiagonal, ucfg}
+...
+
+\begin{equation*}
+  \cfgsubst{(\lwbranch{\ell_i}{x_i}{t_i},)_i}\;\kappa\;a
+  := \where{\lbrb{\kappa}{a}}{(\lwbranch{\ell_i}{x_i}{t_i},)_i}
+\end{equation*}
+
+...
+
+\begin{equation*}
+  \prftree[r]{\rle{cfgsubst}}
+    {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+    {\lbsubst{\cfgsubst{(\lwbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}{\ms{L}}}
+\end{equation*}
+
+...
+
+\begin{gather*}
+  \prftree[r]{\rle{ucfg}}
+    {\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
+    {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+    {
+      \lbeq{\Gamma}
+        {\where{r}{(\lwbranch{\ell_i}{x_i}{t_i},)_i}}
+        {[\cfgsubst{(\lwbranch{\ell_i}{x_i}{t_i},)_i}]r}
+        {\ms{L}}
+    }
+  \\
+  % NOTE: in the development, it's (ret e) wseq s_0, not [e/x] s_0
+  \prftree[r]{\rle{uni}}
+    {
+      \prfStackPremises
+      {\hasty{\Gamma, \bhyp{x}{A}}{\bot}{e}{B}}
+      {\haslb{\Gamma}{r}{\ms{L}, \ell(A)}}
+    }
+    {
+      \prfStackPremises
+      {\haslb{\Gamma, \bhyp{y}{B}}{s}{\ms{L}, \kappa(B)}}
+      {\haslb{\Gamma, \bhyp{x}{A}}{t}{\ms{L}, \ell(A)}}
+    }
+    {
+      \lbeq{\Gamma, \bhyp{x}{A}}
+        {[e/y]s}
+        {\where{t}{\lwbranch{\ell}{x}{\lbrb{\kappa}{e}}}}
+        {\ms{L}, \kappa(B)}
+    }
+    {
+      \lbeq{\Gamma}
+        {\where{(\where{r}{\lwbranch{\ell}{x}{\lbrb{\kappa}{e}}})}
+          {\lwbranch{\kappa}{y}{s}}}
+        {\where{r}{t}}
+        {\ms{L}}
+    }
+  \\
+  \prftree[r]{\rle{codiag}}
+    {}
+\end{gather*}
 
 \TODO{soundness of region equational theory (diagrams?)}
 
