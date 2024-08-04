@@ -1003,15 +1003,45 @@ Concretely, our contributions are as follows:
       }
     \\
     \prftree[r]{\rle{cfg-cfg}}
-      {}
+      {\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
+      {
+        \prfStackPremises
+        {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}
+          {s_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j, (\lhyp{\kappa_k}{B_k},)_k}}
+        {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}} 
+      }
+      {
+        \prfStackPremises
+        {\Gamma \vdash \where{(\where{r}{(\lwbranch{\kappa_i}{x_i}{s_i},)_i})}
+          {(\lwbranch{\ell_i}{y_j}{t_j},)_j}}
+        {\approx \where{r}{(\lwbranch{\kappa_i}{x_i}{s_i},)_i(\lwbranch{\ell_i}{y_j}{t_j},)_j} 
+          : \ms{L}}
+      }
     \\
-    % TODO: probably derivable
+    % TODO: maybe derivable?
     \prftree[r]{\rle{cfg$_0$}}
-      {}
+      {\haslb{\Gamma}{r}{\ms{L}}}
+      {\lbeq{\Gamma}{\where{r}{}}{r}{\ms{L}}}
     \\
-    % TODO: note difference between this and wk-cfg; fused in nameland...
+    \prftree[r]{\rle{wk-cfg}}
+      {\haslb{\Gamma}{[\ell_i \mapsto \ell_{\rho\;i}]r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
+      {\forall i, \haslb{\Gamma, \bhyp{x_i}{A_i}}
+        {[\ell_i \mapsto \ell_{\rho\;i}]t_i}
+        {\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+      {\lbeq{\Gamma}
+        {\where{[\ell_i \mapsto \ell_{\rho i}]r}
+          {(\lwbranch{\ell_i}{x_i}{[\ell_i \mapsto \ell_{\rho\;i}]r})_i}}
+        {\where{r}{(\lwbranch{\ell_{\rho\;i}}{x_i}{r})_i}}
+        {\ms{L}}}
+    \\
+    % TODO: note difference between this and wk-cfg
     \prftree[r]{\rle{dead-cfg}}
-      {}
+      {\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
+      {\forall i, \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+      {\lbeq{\Gamma}{\where{r}{
+          (\lwbranch{\ell_i}{x_i}{s_i},)_i
+          (\lwbranch{\kappa_j}{y_j}{t_j},)_j}}
+        {\where{r}{(\lwbranch{\ell_i}{x_i}{s_i},)_i}}{\ms{L}}}
 \end{gather*}
 
 ...
@@ -1069,7 +1099,12 @@ Concretely, our contributions are as follows:
     }
   \\
   \prftree[r]{\rle{codiag}}
-    {}
+    {\haslb{\Gamma}{r}{\ms{L}, \ell(A)}}
+    {\haslb{\Gamma, \bhyp{y}{A}}{s}{\ms{L}, \ell(A), \kappa(A)}}
+    {\lbeq{\Gamma}{\where{r}{\lwbranch{\ell}{x}{\where{\lbrb{\kappa}{x}}
+      {\lwbranch{\kappa}{y}{s}}}}}
+    {\where{r}{\lwbranch{\ell}{y}{[\ell/\kappa]s}}}
+    {\ms{L}}}
 \end{gather*}
 
 \TODO{soundness of region equational theory (diagrams?)}
