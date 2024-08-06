@@ -400,7 +400,42 @@ Concretely, our contributions are as follows:
   \begin{equation*}
     \boxed{\dnt{\hasty{\Gamma}{\epsilon}{a}{A}} : \dnt{\Gamma} \to_\epsilon \dnt{A}}
   \end{equation*}
-  \TODO{this}
+  \begin{align*}
+    \dnt{\hasty{\Gamma}{\epsilon}{x}{A}} &= \pi_{\Gamma, x} \\
+    \dnt{\hasty{\Gamma}{\epsilon}{f\;a}{B}} 
+      &= \dnt{\hasty{\Gamma}{\epsilon}{a}{A}} ; \dnt{\isop{f}{A}{B}{\epsilon}} \\
+    \dnt{\hasty{\Gamma}{\epsilon}{\letexpr{x}{a}{b}}{B}}
+      &= \Delta_{\dnt{\Gamma}}
+      ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{a}{A}};
+      \\&\quad\; 
+      \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{b}{B}}
+      \\
+    \dnt{\hasty{\Gamma}{\epsilon}{(a, b)}{A \otimes B}} 
+      &= \Delta_{\dnt{\Gamma}}
+      ; \dnt{\hasty{\Gamma}{\epsilon}{a}{A}} \ltimes \dnt{\hasty{\Gamma}{\epsilon}{b}{B}}
+      % ; \dnt{\hasty{\Gamma}{\epsilon}{a}{A}} \otimes \dnt{\Gamma} 
+      % ; \dnt{A} \otimes \dnt{\hasty{\Gamma}{\epsilon}{b}{B}}
+      \\
+    \dnt{\hasty{\Gamma}{\epsilon}{\letexpr{(x, y)}{e}{c}}{C}}
+      &= \Delta_{\dnt{\Gamma}}
+      ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A \otimes B}} ;
+      \\&\quad\; 
+      \dnt{\hasty{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{\epsilon}{c}{C}}
+      \\
+    \dnt{\hasty{\Gamma}{\epsilon}{()}{\mb{1}}} &= 1_{\dnt{\Gamma}} \\
+    \dnt{\hasty{\Gamma}{\epsilon}{\linl{a}}{A + B}}
+      &= \dnt{\hasty{\Gamma}{\epsilon}{a}{A}} ; \iota_l \\
+    \dnt{\hasty{\Gamma}{\epsilon}{\linr{b}}{A + B}}
+      &= \dnt{\hasty{\Gamma}{\epsilon}{b}{B}} ; \iota_r \\
+    \dnt{\hasty{\Gamma}{\epsilon}{\caseexpr{e}{x}{a}{y}{b}}{C}}
+      &= \dnt{\hasty{\Gamma}{\epsilon}{e}{A + B}}
+      ; \\& \quad\; 
+      \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{a}{A}}
+      + \dnt{\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{b}{B}}
+      \\
+    \dnt{\hasty{\Gamma}{\epsilon}{\labort{a}}{A}} 
+      &= \dnt{\hasty{\Gamma}{\epsilon}{a}{\mb{0}}} ; 0_{\dnt{A}}
+  \end{align*}
   \caption{Denotational semantics for \isotopessa terms}
   \Description{Denotational semantics for isotope-SSA terms}
   \label{fig:ssa-term-sem}
@@ -410,7 +445,43 @@ Concretely, our contributions are as follows:
   \begin{equation*}
     \boxed{\dnt{\haslb{\Gamma}{r}{\ms{L}}} : \dnt{\Gamma} \to \dnt{\ms{L}}}
   \end{equation*}
-  \TODO{this}
+  \begin{align*}
+    \dnt{\haslb{\Gamma}{\lbrb{\ell}{a}}{\ms{L}}} 
+      &= \dnt{\hasty{\Gamma}{\bot}{a}{A}} ; \iota_{\ms{L}, \ell}
+      \\
+    \dnt{\haslb{\Gamma}{\letstmt{x}{a}{r}}{\ms{L}}}
+      &= \Delta_{\dnt{\Gamma}}
+      ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{a}{A}}
+      ; \dnt{\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}} 
+      \\
+    \dnt{\haslb{\Gamma}{\letstmt{(x, y)}{e}{r}}{\ms{L}}}
+      &= \Delta_{\dnt{\Gamma}}
+      ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
+      ; \dnt{\haslb{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{r}{\ms{L}}} 
+      \\ 
+    \dnt{\haslb{\Gamma}{\casestmt{e}{x}{r}{y}{s}}{\ms{L}}}
+      &= \Delta_{\dnt{\Gamma}}
+      ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A + B}}
+      ; \delta^{-1} ;
+      \\&\quad\;
+      \dnt{\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
+      + \dnt{\haslb{\Gamma, \bhyp{y}{B}}{s}{\ms{L}}}
+      \\
+    \dnt{\haslb{\Gamma}{\where{r}{(\lwbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}}
+      &=  
+      \Delta_{\dnt{\Gamma}}
+      ; \dnt{\Gamma} \otimes \dnt{\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}} 
+      ; \delta^{-1} ;
+      \alpha^+_{}
+      \\ &\quad\;
+      (
+        \Sigma_i (\Delta_{\dnt{\Gamma}} 
+          ; \dnt{\Gamma} \otimes 
+            \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+          ; 
+          )
+      )^\dagger
+  \end{align*}
   \caption{Denotational semantics for \isotopessa regions}
   \Description{Denotational semantics for isotope-SSA regions}
   \label{fig:ssa-reg-sem}
@@ -424,7 +495,7 @@ Concretely, our contributions are as follows:
   \TODO{this}
   \caption{Denotational semantics for \isotopessa substitutions}
   \Description{Denotational semantics for isotope-SSA substitutions}
-  \label{fig:ssa-vsubst-sem}
+  \label{fig:ssa-vsubst-sem} 
 \end{figure}
 
 \begin{figure}[H]
