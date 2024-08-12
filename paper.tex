@@ -1309,24 +1309,25 @@ A compiler might translate this to SSA as follows:
           : \ms{L}}
       }
     \\
-    % % TODO: derivable, but prove this!
+    % % TODO: derivable from ucfg, but prove this!
     % \prftree[r]{\rle{cfg$_0$}}
     %   {\haslb{\Gamma}{r}{\ms{L}}}
     %   {\lbeq{\Gamma}{\where{r}{}}{r}{\ms{L}}}
     % \\
-    % TODO: derivable from dinaturality?
-    \prftree[r]{\rle{wk-cfg}}
-      {\haslb{\Gamma}{[\ell_i \mapsto \ell_{\rho\;i}]r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
-      {\forall i, \haslb{\Gamma, \bhyp{x_i}{A_i}}
-        {[\ell_i \mapsto \ell_{\rho\;i}]t_i}
-        {\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
-      {\lbeq{\Gamma}
-        {\where{[\ell_i \mapsto \ell_{\rho i}]r}
-          {(\lwbranch{\ell_i}{x_i}{[\ell_i \mapsto \ell_{\rho\;i}]r})_i}}
-        {\where{r}{(\lwbranch{\ell_{\rho\;i}}{x_i}{r})_i}}
-        {\ms{L}}}
-    \\
+    % TODO: probably derivable from dinaturality? but prove...
+    % \prftree[r]{\rle{wk-cfg}}
+    %   {\haslb{\Gamma}{[\ell_i \mapsto \ell_{\rho\;i}]r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
+    %   {\forall i, \haslb{\Gamma, \bhyp{x_i}{A_i}}
+    %     {[\ell_i \mapsto \ell_{\rho\;i}]t_i}
+    %     {\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+    %   {\lbeq{\Gamma}
+    %     {\where{[\ell_i \mapsto \ell_{\rho i}]r}
+    %       {(\lwbranch{\ell_i}{x_i}{[\ell_i \mapsto \ell_{\rho\;i}]r})_i}}
+    %     {\where{r}{(\lwbranch{\ell_{\rho\;i}}{x_i}{r})_i}}
+    %     {\ms{L}}}
+    % \\
     % TODO: note difference between this and wk-cfg
+    % TODO: think about whether _this_ is derivable... maybe from dinaturality too?
     \prftree[r]{\rle{dead-cfg}}
       {\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
       {\forall i, \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
