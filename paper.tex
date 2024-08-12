@@ -1309,11 +1309,12 @@ A compiler might translate this to SSA as follows:
           : \ms{L}}
       }
     \\
-    % TODO: maybe derivable?
-    \prftree[r]{\rle{cfg$_0$}}
-      {\haslb{\Gamma}{r}{\ms{L}}}
-      {\lbeq{\Gamma}{\where{r}{}}{r}{\ms{L}}}
-    \\
+    % % TODO: derivable, but prove this!
+    % \prftree[r]{\rle{cfg$_0$}}
+    %   {\haslb{\Gamma}{r}{\ms{L}}}
+    %   {\lbeq{\Gamma}{\where{r}{}}{r}{\ms{L}}}
+    % \\
+    % TODO: derivable from dinaturality?
     \prftree[r]{\rle{wk-cfg}}
       {\haslb{\Gamma}{[\ell_i \mapsto \ell_{\rho\;i}]r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
       {\forall i, \haslb{\Gamma, \bhyp{x_i}{A_i}}
@@ -1395,6 +1396,18 @@ A compiler might translate this to SSA as follows:
     {\lbeq{\Gamma}{\where{r}{\lwbranch{\ell}{x}{\where{\lbrb{\kappa}{x}}
       {\lwbranch{\kappa}{y}{s}}}}}
     {\where{r}{\lwbranch{\ell}{y}{[\ell/\kappa]s}}}
+    {\ms{L}}}
+  \\
+  \prftree[r]{\rle{dinat}}
+  {\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
+  {\forall i, \haslb{\Gamma, \bhyp{x_i}{B_i}}
+    {t_i}
+    {\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+  {\lbsubst{\sigma}{(\lhyp{\ell_i}{A_i},)_i}{\ms{L}, (\lhyp{\kappa_i}{B_i},)_i}}
+  {\lbeq{\Gamma}
+    {\where{[\sigma]r}
+      {(\lwbranch{\kappa_i}{x_i}{[\sigma]t_i},)_i}}
+    {\where{r}{(\lwbranch{\ell_{i}}{x_i}{[(\lwbranch{\kappa_j}{x_j}{t_j},)_j](\sigma_i)})_i}}
     {\ms{L}}}
 \end{gather*}
 
