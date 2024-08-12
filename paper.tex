@@ -80,8 +80,8 @@
 \newcommand{\lbrb}[2]{\brb{\lbl{#1}}{#2}}
 \newcommand{\ite}[3]{\ms{if}\;#1\;\{#2\}\;\ms{else}\;\{#3\}}
 \newcommand{\casestmt}[5]{\ms{case}\;#1\;\{\linl{#2} \lto #3, \linr{#4} \lto #5\}}
-\newcommand{\where}[2]{#1\;\ms{where}\;\{#2\}}
-\newcommand{\wbranch}[3]{#1(#2) \lto #3}
+\newcommand{\where}[2]{#1\;\ms{where}\;#2}
+\newcommand{\wbranch}[3]{#1(#2) \lto \{#3\}}
 \newcommand{\lwbranch}[3]{\wbranch{\lbl{#1}}{#2}{#3}}
 \newcommand{\cfgsubst}[1]{\ms{cfgs}\;\{#1\}}
 \newcommand{\wseq}[2]{{#1} \mathbin{{;}{;}} {#2}}
@@ -257,6 +257,226 @@ Concretely, our contributions are as follows:
   initial model, and that the SPARC TSO semantics forms a valid model of SSA. The denotational
   semantics and its proof of the soundness of substitution are done on paper. 
 
+\end{itemize}
+
+\section{Static Single Assignment Form}
+
+Consider the following simple program to compute $10!$
+\begin{align*}
+  & \ms{let}\;n = 10; \\
+  & \ms{let\;mut}\;i = 1; \\
+  & \ms{let\;mut}\;a = 1; \\
+  & \ms{while}\;i_0 < n\;\{ \\
+  & \quad i = i + 1; \\
+  & \quad a = a * i \\
+  & \} \\
+  & \ms{ret}\;a
+\end{align*}
+A compiler might translate this to SSA as follows:
+\begin{align*}
+  \ms{start}:\quad & \ms{let}\;n = 10; \\
+  & \ms{br}\;\ms{loop} \\
+  \ms{loop}: \quad  & i_0 = \phi(\ms{start}: 1, \ms{body}: i_1) \\
+                    & a_0 = \phi(\ms{start}: 1, \ms{body}: a_1) \\
+                    & \ms{if}\;i_0 < n\;
+                      \{\;\ms{br}\;\ms{body}\;\}\;
+                      \ms{else}\;\{\;\ms{ret}\;a_0\;\} \\
+  \ms{body}: \quad  & i_1 = i_0 + 1 \\
+                    & a_1 = a_0 * i_1 \\
+                    & \ms{br}\;\ms{loop}
+\end{align*}
+
+\begin{itemize}
+  \item Introduce $\phi$ to avoid redefinition of $i$, $a$, due to single definition principle
+  \item Otherwise, number definitions
+  \item $\phi$ is a bit confusing to write, but is isomorphic to using basic-blocks with arguments
+  instead:
+\end{itemize}
+
+\begin{align*}
+  \ms{start}:\quad & \ms{let}\;n = 10; \\
+  & \ms{br}\;\ms{loop}(1, 1) \\
+  \ms{loop}(i_0, a_0): \quad & \ms{if}\;i_0 < n\;
+                      \{\;\ms{br}\;\ms{body}\;\}\;
+                      \ms{else}\;\{\;\ms{ret}\;a_0\;\} \\
+  \ms{body}: \quad  & i_1 = i_0 + 1 \\
+                    & a_1 = a_0 * i_1 \\
+                    & \ms{br}\;\ms{loop}(i_1, a_1)
+\end{align*}
+
+\begin{itemize}
+  \item Isomorphism is trivial: we just move the definition from the $\phi$ to the call-site
+  \item This makes scoping a lot more clear:
+  \item In SSA, to use a variable, it must be defined once we reach the use-point, or else UB
+  \item Variables can only be defined at exactly one point
+  \item Safe approximation: all paths to the use point must cross the definition point at least once
+  \item i.e. use point must \textit{dominate} definition point
+  \item \begin{itemize}
+    \item Can recover UB/undef behaviour, or something else, via args, if you really want to
+    \item Probably don't even bother mentioning this...
+  \end{itemize}
+  \item Within a basic block: later variables use earlier ones
+  \item Between basic blocks: all paths through the cfg to the use-block must pass through the def
+        block
+  \item i.e. use-block must \textit{strictly dominate} def-block (all blocks dominate themselves,
+  but see "within BB" rule)
+  \item Examples: \begin{itemize}
+    \item start strictly dominates loop
+    \item loop strictly dominates body
+    \item loop does not strictly dominate loop since loop $=$ loop
+    \item body does not strictly dominate loop since we can get to loop via start, without passing
+    body
+  \end{itemize}
+  \item In general, dominance always forms a tree (explain? cite?)
+  \item Can topologically sort CFG by dominance tree, and then insert brackets for lexical scoping:
+\end{itemize}
+
+\begin{align*}
+  & \ms{let}\;n = 10; \\
+  & \ms{br}\;\ms{loop}(1, 1) \\
+  & \ms{loop}(i_0, a_0): \{\\
+  & \quad \ms{if}\;i_0 < n\;
+              \{\;\ms{br}\;\ms{body}\;\}\;
+                  \ms{else}\;\{\;\ms{ret}\;a_0\;\} \\
+  & \quad \ms{body}: \{\\ 
+  & \qquad i_1 = i_0 + 1 \\
+  & \qquad a_1 = a_0 * i_1 \\
+  & \qquad \ms{br}\;\ms{loop}(i_1, a_1) \\
+  & \quad \} \\
+  & \}
+\end{align*}
+
+\begin{itemize}
+  \item Interconversion is easy:
+  \begin{itemize}
+    \item Remove brackets to go to SSA
+    \item Add brackets to go to lexical-SSA; a consistent bracketing always exists because a
+    dominance tree always exists
+    \item Different consistent bracketings must be semantically equivalent
+  \end{itemize}
+
+  \item Now that we have lexical scoping, we want a nice equational theory. Need:
+  \begin{itemize}
+    \item \textit{Control-flow rewriting}, e.g. jump-threading, fusing redundant branches...
+    \item \textit{Substitution}, to allow \textit{algebraic reasoning}, which is half the point of
+    SSA...
+  \end{itemize}
+
+  \item In current format, this still a pain to express. Can allow if-then-else to jump to code,
+        rather than just a branch, likeso:
+\end{itemize}
+
+\begin{align*}
+  & \ms{let}\;n = 10; \\
+  & \ms{br}\;\ms{loop}(1, 1) \\
+  & \ms{loop}(i_0, a_0): \{\\
+  & \quad \ms{if}\;i_0 < n\;\{ \\
+  & \qquad i_1 = i_0 + 1 \\
+  & \qquad a_1 = a_0 * i_1 \\
+  & \qquad \ms{br}\;\ms{loop}(i_1, a_1) \\
+  & \quad \}\;\ms{else}\;\{ \\
+  & \qquad \ms{ret}\;a_0 \\
+  & \quad \} \\
+  & \}
+\end{align*}
+
+\begin{itemize}
+  \item This can trivially be seen to add no additional expressive power: can be eliminated by
+        introducing anonymous basic blocks for branches and jumping to them
+  \item We now have essentially ANF, cite this
+  \item Can generalize to TSSA (like MNF but not higher-order); by adding an \textit{expression
+  language}
+  \item This lets us state \textit{substitutions}, like
+\end{itemize}
+
+\begin{align*}
+  & \ms{let}\;n = 10; \\
+  & \ms{br}\;\ms{loop}(1, 1) \\
+  & \ms{loop}(i_0, a_0): \{\\
+  & \quad \ms{if}\;i_0 < n\;\{ \\
+  & \qquad \ms{br}\;\ms{loop}(i_0 + 1, a_0 * (i_0 + 1)) \\
+  & \quad \}\;\ms{else}\;\{ \\
+  & \qquad \ms{ret}\;a_0 \\
+  & \quad \} \\
+  & \}
+\end{align*}
+
+\begin{itemize}
+  \item We can then do \textit{algebra}, for example, we know that:
+  \item \begin{itemize}
+    \item $(i_0 + 1, a_0 * (i_0 + 1)) 
+      = (\ms{let}\;(x, y) = (i_0, a_0)\;\ms{in}\;(x + 1, y * (x + 1)))$
+    \item $(1, 1)
+    = (\ms{let}\;(x, y) = (0, 1)\;\ms{in}\;(x + 1, y * (x + 1)))$
+  \end{itemize}
+  \item So therefore the program above is
+\end{itemize}
+
+\begin{align*}
+  & \ms{let}\;n = 10; \\
+  & \ms{br}\;\ms{loop}(\ms{let}\;(x, y) = (0, 1)\;\ms{in}\;(x + 1, y * (x + 1))) \\
+  & \ms{loop}(i_0, a_0): \{\\
+  & \quad \ms{if}\;i_0 < n\;\{ \\
+  & \qquad \ms{br}\;\ms{loop}(
+    \ms{let}\;(x, y) = (i_0, a_0)\;\ms{in}\;(x + 1, y * (x + 1))) \\
+  & \quad \}\;\ms{else}\;\{ \\
+  & \qquad \ms{ret}\;a_0 \\
+  & \quad \} \\
+  & \}
+\end{align*}
+
+\begin{itemize}
+  \item which by \textit{uniformity} is equal to
+\end{itemize}
+
+\begin{align*}
+  & \ms{let}\;n = 10; \\
+  & \ms{br}\;\ms{loop}\;(0, 1) \\
+  & \ms{loop}(x, y): \{\\
+  & \quad \ms{let}\;i_0 = x + 1; \\
+  & \quad \ms{let}\;a_0 = y * (x + 1); \\
+  & \quad \ms{if}\;i_0 < n\;\{ \\
+  & \qquad \ms{br}\;\ms{loop}(i_0, a_0) \\
+  & \quad \}\;\ms{else}\;\{ \\
+  & \qquad \ms{ret}\;a_0 \\
+  & \quad \} \\
+  & \}
+\end{align*}
+
+\begin{itemize}
+  \item or, by further substitution,
+\end{itemize}
+
+
+\begin{align*}
+  & \ms{let}\;n = 10; \\
+  & \ms{br}\;\ms{loop}\;(0, 1) \\
+  & \ms{loop}(x, y): \{\\
+  & \quad \ms{let}\;i_0 = x + 1; \\
+  & \quad \ms{let}\;a_0 = y * i_0; \\
+  & \quad \ms{if}\;i_0 < n\;\{ \\
+  & \qquad \ms{br}\;\ms{loop}(i_0, a_0) \\
+  & \quad \}\;\ms{else}\;\{ \\
+  & \qquad \ms{ret}\;a_0 \\
+  & \quad \} \\
+  & \}
+\end{align*}
+
+\begin{itemize}
+  \item In other words, we can do \textit{complex}, \textit{error-prone} loop and control-flow graph
+        optimizations by breaking them down into closed set of simple algebraic steps
+  \item We can justify each such step is sound rigorously via our denotational semantics
+  \item We can show that our steps are \textit{complete} by showing that quotienting by them gives
+        a model of our denotational semantics
+  \item That's why we use TSSA
+  \item But we gain no additional power: SSA $\subseteq$ TSSA; this is a retraction
+  (embedding-projection)
+  \item In particular, using the steps, every TSSA program can be converted to an SSA program with
+        equivalent semantics, while every SSA program is already a TSSA program (just add brackets!)
+  \item Unproven conjecture: this should take \~linear time, and the resuling program should be
+  \~linearly sized. Do on paper?
+  \item TODO: this transformation backwards would actually eliminate an unnecessary MUL, rather than
+  add one. Pedantry?
 \end{itemize}
 
 \bibliographystyle{ACM-Reference-Format}
