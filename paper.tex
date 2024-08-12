@@ -272,6 +272,7 @@ Consider the following simple program to compute $10!$
   & \} \\
   & \ms{ret}\;a
 \end{align*}
+
 A compiler might translate this to SSA as follows:
 \begin{align*}
   \ms{start}:\quad & \ms{let}\;n = 10; \\
@@ -285,7 +286,7 @@ A compiler might translate this to SSA as follows:
                     & a_1 = a_0 * i_1 \\
                     & \ms{br}\;\ms{loop}
 \end{align*}
-
+\TODO{Explain informally what is going on in SSA}
 \begin{itemize}
   \item Introduce $\phi$ to avoid redefinition of $i$, $a$, due to single definition principle
   \item Otherwise, number definitions
@@ -293,6 +294,8 @@ A compiler might translate this to SSA as follows:
   instead:
 \end{itemize}
 
+
+\TODO{Introduce a figure with SSA and BBA side-by-side. Suggestion: Add arrows showing how the arguments and phi-functions correspond, maybe with arrows connecting the two (use \texttt{tikzmark} package). }
 \begin{align*}
   \ms{start}:\quad & \ms{let}\;n = 10; \\
   & \ms{br}\;\ms{loop}(1, 1) \\
@@ -304,9 +307,23 @@ A compiler might translate this to SSA as follows:
                     & \ms{br}\;\ms{loop}(i_1, a_1)
 \end{align*}
 
+
+\TODO{After introducing BBA, recall Appel's SSA is FP paper, and then
+  note that there is a mismatch wrt scoping. Then explain dominance
+  based scoping.}
+
+\TODO{After introducing where and showing how it turns the dominator
+  tree into lexical scoping, then show how \texttt{e where f = e'} is the
+  same as \texttt{let f = e' in e} and then talk about the SSA-ANF
+  paper. Here also talk about full if-expressions.}
+
+\TODO{Once we have ANF, observe that ANF has good scoping properties,
+  but lacks a good substitution property, since substituting a value
+  for a variable can take you out of ANF. So we relax things again to
+  allow full expressions.}
 \begin{itemize}
   \item Isomorphism is trivial: we just move the definition from the $\phi$ to the call-site
-  \item This makes scoping a lot more clear:
+  \item This makes semantics of blocks and scoping a lot more clear:
   \item In SSA, to use a variable, it must be defined once we reach the use-point, or else UB
   \item Variables can only be defined at exactly one point
   \item Safe approximation: all paths to the use point must cross the definition point at least once
@@ -327,7 +344,7 @@ A compiler might translate this to SSA as follows:
     \item body does not strictly dominate loop since we can get to loop via start, without passing
     body
   \end{itemize}
-  \item In general, dominance always forms a tree (explain? cite?)
+  \item In general, dominance always forms a tree (explain? cite? \TODO{Cytron paper})
   \item Can topologically sort CFG by dominance tree, and then insert brackets for lexical scoping:
 \end{itemize}
 
