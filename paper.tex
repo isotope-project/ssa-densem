@@ -19,6 +19,7 @@
 
 \usepackage{listings}
 \usepackage{xcolor}
+\usepackage{caption}
 \usepackage{subcaption}
 \usepackage{fancyvrb}
 
@@ -261,6 +262,11 @@ Concretely, our contributions are as follows:
 
 \section{Static Single Assignment Form}
 
+\begin{itemize}
+  \item Intro + overview
+  \item State ``we will introduce TSSA''
+\end{itemize}
+
 Consider the following simple program to compute $10!$
 \begin{align*}
   & \ms{let}\;n = 10; \\
@@ -277,13 +283,13 @@ A compiler might translate this to SSA as follows:
 \begin{align*}
   \ms{start}:\quad & \ms{let}\;n = 10; \\
   & \ms{br}\;\ms{loop} \\
-  \ms{loop}: \quad  & i_0 = \phi(\ms{start}: 1, \ms{body}: i_1) \\
-                    & a_0 = \phi(\ms{start}: 1, \ms{body}: a_1) \\
+  \ms{loop}: \quad  & \ms{let}\;i_0 = \phi(\ms{start}: 1, \ms{body}: i_1) \\
+                    & \ms{let}\;a_0 = \phi(\ms{start}: 1, \ms{body}: a_1) \\
                     & \ms{if}\;i_0 < n\;
                       \{\;\ms{br}\;\ms{body}\;\}\;
                       \ms{else}\;\{\;\ms{ret}\;a_0\;\} \\
-  \ms{body}: \quad  & i_1 = i_0 + 1 \\
-                    & a_1 = a_0 * i_1 \\
+  \ms{body}: \quad  & \ms{let}\;i_1 = i_0 + 1 \\
+                    & \ms{let}\;a_1 = a_0 * i_1 \\
                     & \ms{br}\;\ms{loop}
 \end{align*}
 \TODO{Explain informally what is going on in SSA}
@@ -294,33 +300,49 @@ A compiler might translate this to SSA as follows:
   instead:
 \end{itemize}
 
+\TODO{Introduce a figure with SSA and BBA side-by-side. Suggestion: Add arrows showing how the
+arguments and $\phi$-functions correspond, maybe with arrows connecting the two (use \texttt{tikzmark}
+package). }
 
-\TODO{Introduce a figure with SSA and BBA side-by-side. Suggestion: Add arrows showing how the arguments and phi-functions correspond, maybe with arrows connecting the two (use \texttt{tikzmark} package). }
-\begin{align*}
-  \ms{start}:\quad & \ms{let}\;n = 10; \\
-  & \ms{br}\;\ms{loop}(1, 1) \\
-  \ms{loop}(i_0, a_0): \quad & \ms{if}\;i_0 < n\;
-                      \{\;\ms{br}\;\ms{body}\;\}\;
-                      \ms{else}\;\{\;\ms{ret}\;a_0\;\} \\
-  \ms{body}: \quad  & i_1 = i_0 + 1 \\
-                    & a_1 = a_0 * i_1 \\
-                    & \ms{br}\;\ms{loop}(i_1, a_1)
-\end{align*}
+\begin{figure}
+  \centering
+  \begin{subfigure}[t]{.5\textwidth}
+    \begin{align*}
+      \ms{start}:\quad  & \ms{let}\;n = 10; \\
+                        & \ms{br}\;\ms{loop} \\
+      \ms{loop}: \quad  & \ms{let}\;i_0 = \phi(\ms{start}: 1, \ms{body}: i_1) \\
+                        & \ms{let}\;a_0 = \phi(\ms{start}: 1, \ms{body}: a_1) \\
+                        & \ms{if}\;i_0 < n\;\{\;\ms{br}\;\ms{body}\;\} \\
+                        & \ms{else}\;\{\;\ms{ret}\;a_0\;\} \\
+      \ms{body}: \quad  & \ms{let}\;i_1 = i_0 + 1 \\
+                        & \ms{let}\;a_1 = a_0 * i_1 \\
+                        & \ms{br}\;\ms{loop}
+    \end{align*}
+  \end{subfigure}%
+  \begin{subfigure}[t]{.5\textwidth}
+    \begin{align*}
+      \ms{start}:\quad            & \ms{let}\;n = 10; \\
+                                  & \ms{br}\;\ms{loop}(1, 1) \\
+      \ms{loop}(i_0, a_0): \quad  & \ms{if}\;i_0 < n\; \{\;\ms{br}\;\ms{body}\;\} \\
+                                  & \ms{else}\;\{\;\ms{ret}\;a_0\;\} \\
+      \ms{body}: \quad            & \ms{let}\;i_1 = i_0 + 1 \\
+                                  & \ms{let}\;a_1 = a_0 * i_1 \\
+                                  & \ms{br}\;\ms{loop}(i_1, a_1)
+    \end{align*}
+  \end{subfigure}
+\end{figure}
 
+\TODO{After introducing BBA, recall Appel's SSA is FP paper \cite{appel-ssa}, and then note that
+  there is a mismatch wrt scoping. Then explain dominance based scoping.}
 
-\TODO{After introducing BBA, recall Appel's SSA is FP paper, and then
-  note that there is a mismatch wrt scoping. Then explain dominance
-  based scoping.}
+\TODO{After introducing where and showing how it turns the dominator tree into lexical scoping, then
+  show how \texttt{e where f = e'} is the same as \texttt{let f = e' in e} and then talk about the
+  SSA-ANF paper \cite{chakravarty-functional-ssa-2003}. Here also talk about full if-expressions.}
 
-\TODO{After introducing where and showing how it turns the dominator
-  tree into lexical scoping, then show how \texttt{e where f = e'} is the
-  same as \texttt{let f = e' in e} and then talk about the SSA-ANF
-  paper. Here also talk about full if-expressions.}
+\TODO{Once we have ANF, observe that ANF has good scoping properties, but lacks a good substitution
+  property, since substituting a value for a variable can take you out of ANF. So we relax things
+  again to allow full expressions.}
 
-\TODO{Once we have ANF, observe that ANF has good scoping properties,
-  but lacks a good substitution property, since substituting a value
-  for a variable can take you out of ANF. So we relax things again to
-  allow full expressions.}
 \begin{itemize}
   \item Isomorphism is trivial: we just move the definition from the $\phi$ to the call-site
   \item This makes semantics of blocks and scoping a lot more clear:
@@ -328,10 +350,6 @@ A compiler might translate this to SSA as follows:
   \item Variables can only be defined at exactly one point
   \item Safe approximation: all paths to the use point must cross the definition point at least once
   \item i.e. use point must \textit{dominate} definition point
-  \item \begin{itemize}
-    \item Can recover UB/undef behaviour, or something else, via args, if you really want to
-    \item Probably don't even bother mentioning this...
-  \end{itemize}
   \item Within a basic block: later variables use earlier ones
   \item Between basic blocks: all paths through the cfg to the use-block must pass through the def
         block
@@ -344,31 +362,46 @@ A compiler might translate this to SSA as follows:
     \item body does not strictly dominate loop since we can get to loop via start, without passing
     body
   \end{itemize}
-  \item In general, dominance always forms a tree (explain? cite? \TODO{Cytron paper})
+  \item In general, dominance always forms a tree (explain? cite? \cite{ssa-intro})
   \item Can topologically sort CFG by dominance tree, and then insert brackets for lexical scoping:
 \end{itemize}
 
-\begin{align*}
-  & \ms{let}\;n = 10; \\
-  & \ms{br}\;\ms{loop}(1, 1) \\
-  & \ms{loop}(i_0, a_0): \{\\
-  & \quad \ms{if}\;i_0 < n\;
-              \{\;\ms{br}\;\ms{body}\;\}\;
-                  \ms{else}\;\{\;\ms{ret}\;a_0\;\} \\
-  & \quad \ms{body}: \{\\ 
-  & \qquad i_1 = i_0 + 1 \\
-  & \qquad a_1 = a_0 * i_1 \\
-  & \qquad \ms{br}\;\ms{loop}(i_1, a_1) \\
-  & \quad \} \\
-  & \}
-\end{align*}
+\begin{figure}
+  \centering
+  \begin{subfigure}[t]{.5\textwidth}
+    \begin{align*}
+      \ms{start}:\quad            & \ms{let}\;n = 10; \\
+                                  & \ms{br}\;\ms{loop}(1, 1) \\
+      \ms{loop}(i_0, a_0): \quad  & \ms{if}\;i_0 < n\; \{\;\ms{br}\;\ms{body}\;\} \\
+                                  & \ms{else}\;\{\;\ms{ret}\;a_0\;\} \\
+      \ms{body}: \quad            & i_1 = i_0 + 1 \\
+                                  & a_1 = a_0 * i_1 \\
+                                  & \ms{br}\;\ms{loop}(i_1, a_1)
+    \end{align*}
+  \end{subfigure}%
+  \begin{subfigure}[t]{.5\textwidth}
+    \begin{align*}
+      & \ms{let}\;n = 10; \\
+      & \ms{br}\;\ms{loop}(1, 1) \\
+      & \ms{where}\;\ms{loop}(i_0, a_0): \{ \\
+      & \quad \ms{if}\;i_0 < n\;\{\;\ms{br}\;\ms{body}\;\} \\
+      & \quad \ms{else}\;\{\;\ms{ret}\;a_0\;\} \\
+      & \quad \ms{where}\;\ms{body}: \{\\ 
+      & \qquad i_1 = i_0 + 1 \\
+      & \qquad a_1 = a_0 * i_1 \\
+      & \qquad \ms{br}\;\ms{loop}(i_1, a_1) \\
+      & \quad \} \\
+      & \}
+    \end{align*}
+  \end{subfigure}
+\end{figure}
 
 \begin{itemize}
   \item Interconversion is easy:
   \begin{itemize}
-    \item Remove brackets to go to SSA
-    \item Add brackets to go to lexical-SSA; a consistent bracketing always exists because a
-    dominance tree always exists
+    \item Remove brackets and ``\ms{where}'' to go to SSA
+    \item Add brackets and ``\ms{where}'' to go to lexical-SSA; a consistent bracketing always
+    exists because a dominance tree always exists
     \item Different consistent bracketings must be semantically equivalent
   \end{itemize}
 
@@ -383,19 +416,39 @@ A compiler might translate this to SSA as follows:
         rather than just a branch, likeso:
 \end{itemize}
 
-\begin{align*}
-  & \ms{let}\;n = 10; \\
-  & \ms{br}\;\ms{loop}(1, 1) \\
-  & \ms{loop}(i_0, a_0): \{\\
-  & \quad \ms{if}\;i_0 < n\;\{ \\
-  & \qquad i_1 = i_0 + 1 \\
-  & \qquad a_1 = a_0 * i_1 \\
-  & \qquad \ms{br}\;\ms{loop}(i_1, a_1) \\
-  & \quad \}\;\ms{else}\;\{ \\
-  & \qquad \ms{ret}\;a_0 \\
-  & \quad \} \\
-  & \}
-\end{align*}
+\begin{figure}
+  \centering
+  \begin{subfigure}[t]{.5\textwidth}
+    \begin{align*}
+      & \ms{let}\;n = 10; \\
+      & \ms{br}\;\ms{loop}(1, 1) \\
+      & \ms{where}\;\ms{loop}(i_0, a_0): \{ \\
+      & \quad \ms{if}\;i_0 < n\;\{\;\ms{br}\;\ms{body}\;\} \\
+      & \quad \ms{else}\;\{\;\ms{ret}\;a_0\;\} \\
+      & \quad \ms{where}\;\ms{body}: \{\\ 
+      & \qquad i_1 = i_0 + 1 \\
+      & \qquad a_1 = a_0 * i_1 \\
+      & \qquad \ms{br}\;\ms{loop}(i_1, a_1) \\
+      & \quad \} \\
+      & \}
+    \end{align*}
+  \end{subfigure}%
+  \begin{subfigure}[t]{.5\textwidth}
+    \begin{align*}
+      & \ms{let}\;n = 10; \\
+      & \ms{br}\;\ms{loop}(1, 1) \\
+      & \ms{where}\;\ms{loop}(i_0, a_0): \{\\
+      & \quad \ms{if}\;i_0 < n\;\{ \\
+      & \qquad i_1 = i_0 + 1 \\
+      & \qquad a_1 = a_0 * i_1 \\
+      & \qquad \ms{br}\;\ms{loop}(i_1, a_1) \\
+      & \quad \}\;\ms{else}\;\{ \\
+      & \qquad \ms{ret}\;a_0 \\
+      & \quad \} \\
+      & \}
+    \end{align*}
+  \end{subfigure}
+\end{figure}
 
 \begin{itemize}
   \item This can trivially be seen to add no additional expressive power: can be eliminated by
@@ -406,17 +459,102 @@ A compiler might translate this to SSA as follows:
   \item This lets us state \textit{substitutions}, like
 \end{itemize}
 
-\begin{align*}
-  & \ms{let}\;n = 10; \\
-  & \ms{br}\;\ms{loop}(1, 1) \\
-  & \ms{loop}(i_0, a_0): \{\\
-  & \quad \ms{if}\;i_0 < n\;\{ \\
-  & \qquad \ms{br}\;\ms{loop}(i_0 + 1, a_0 * (i_0 + 1)) \\
-  & \quad \}\;\ms{else}\;\{ \\
-  & \qquad \ms{ret}\;a_0 \\
-  & \quad \} \\
-  & \}
-\end{align*}
+\begin{figure}
+  \centering
+  \begin{subfigure}[t]{.32\textwidth}
+    \begin{align*}
+      & \ms{let}\;n = 10; \\
+      & \ms{br}\;\ms{loop}(1, 1) \\
+      & \ms{where}\;\ms{loop}(i_0, a_0): \{\\
+      & \quad \ms{if}\;i_0 < n\;\{ \\
+      & \qquad i_1 = i_0 + 1 \\
+      & \qquad a_1 = a_0 * i_1 \\
+      & \qquad \ms{br}\;\ms{loop}(i_1, a_1) \\
+      & \quad \}\;\ms{else}\;\{ \\
+      & \qquad \ms{ret}\;a_0 \\
+      & \quad \} \\
+      & \}
+    \end{align*}
+  \end{subfigure}%
+  \begin{subfigure}[t]{.32\textwidth}
+    \begin{align*}
+      & \ms{let}\;n = 10; \\
+      & \ms{br}\;\ms{loop}(1, 1) \\
+      & \ms{where}\;\ms{loop}(i_0, a_0): \{\\
+      & \quad \ms{if}\;i_0 < n\;\{ \\
+      & \qquad \ms{let}\;i_1 = i_0 + 1 \\
+      & \qquad \ms{br}\;\ms{loop}(i_1, a_0 * i_1) \\
+      & \quad \}\;\ms{else}\;\{ \\
+      & \qquad \ms{ret}\;a_0 \\
+      & \quad \} \\
+      & \}
+    \end{align*}
+  \end{subfigure}%
+  \begin{subfigure}[t]{.35\textwidth}
+    \begin{align*}
+      & \ms{let}\;n = 10; \\
+      & \ms{br}\;\ms{loop}(1, 1) \\
+      & \ms{where}\;\ms{loop}(i_0, a_0): \{\\
+      & \quad \ms{if}\;i_0 < n\;\{ \\
+      & \qquad \ms{br}\;\ms{loop}(i_0 + 1, a_0 * (i_0 + 1)) \\
+      & \quad \}\;\ms{else}\;\{ \\
+      & \qquad \ms{ret}\;a_0 \\
+      & \quad \} \\
+      & \}
+    \end{align*}
+  \end{subfigure}
+\end{figure}
+
+\begin{figure}
+  \begin{minipage}{.5\textwidth}
+    \begin{subfigure}{\textwidth}
+      \begin{align*}
+        & \ms{let}\;n = 10; \\
+        & \ms{br}\;\ms{loop}(1, 1) \\
+        & \ms{where}\;\ms{loop}(i_0, a_0): \{\\
+        & \quad \ms{if}\;i_0 < n\;\{ \\
+        & \qquad \ms{br}\;\ms{loop}(i_0 + 1, a_0 * (i_0 + 1)) \\
+        & \quad \}\;\ms{else}\;\{ \\
+        & \qquad \ms{ret}\;a_0 \\
+        & \quad \} \\
+        & \}
+      \end{align*}
+    \end{subfigure}
+    \begin{subfigure}{\textwidth}
+      \begin{align*}
+        & \ms{let}\;n = 10; \\
+        & \ms{br}\;\ms{loop}\;(0, 1) \\
+        & \ms{where}\;\ms{loop}(x, y): \{\\
+        & \quad \ms{let}\;(i_0, a_0) = (x + 1, y * (x + 1)); \\
+        & \quad \ms{if}\;i_0 < n\;\{ \\
+        & \qquad \ms{br}\;\ms{loop}(i_0, a_0) \\
+        & \quad \}\;\ms{else}\;\{ \\
+        & \qquad \ms{ret}\;a_0 \\
+        & \quad \} \\
+        & \}
+      \end{align*}
+    \end{subfigure}
+  \end{minipage}%
+  \begin{subfigure}[c]{.5\textwidth}
+    \begin{align*}
+      & \ms{let}\;n = 10; \\
+      & \ms{br}\;\ms{loop}( \\
+      & \quad \ms{let}\;(x, y) = (0, 1); \\
+      & \quad(x + 1, y * (x + 1)) \\
+      & ) \\
+      & \ms{where}\;\ms{loop}(i_0, a_0): \{\\
+      & \quad \ms{if}\;i_0 < n\;\{ \\
+      & \qquad \ms{br}\;\ms{loop}( \\
+      & \qquad \quad \ms{let}\;(x, y) = (i_0, a_0); \\
+      & \qquad \quad (x + 1, y * (x + 1)) \\ 
+      & \qquad ) \\
+      & \quad \}\;\ms{else}\;\{ \\
+      & \qquad \ms{ret}\;a_0 \\
+      & \quad \} \\
+      & \}
+    \end{align*}
+  \end{subfigure}
+\end{figure}
 
 \begin{itemize}
   \item We can then do \textit{algebra}, for example, we know that:
@@ -429,54 +567,11 @@ A compiler might translate this to SSA as follows:
   \item So therefore the program above is
 \end{itemize}
 
-\begin{align*}
-  & \ms{let}\;n = 10; \\
-  & \ms{br}\;\ms{loop}(\ms{let}\;(x, y) = (0, 1)\;\ms{in}\;(x + 1, y * (x + 1))) \\
-  & \ms{loop}(i_0, a_0): \{\\
-  & \quad \ms{if}\;i_0 < n\;\{ \\
-  & \qquad \ms{br}\;\ms{loop}(
-    \ms{let}\;(x, y) = (i_0, a_0)\;\ms{in}\;(x + 1, y * (x + 1))) \\
-  & \quad \}\;\ms{else}\;\{ \\
-  & \qquad \ms{ret}\;a_0 \\
-  & \quad \} \\
-  & \}
-\end{align*}
-
 \begin{itemize}
-  \item which by \textit{uniformity} is equal to
+  \item which by \textit{dinaturality} is equal to
 \end{itemize}
 
 \begin{align*}
-  & \ms{let}\;n = 10; \\
-  & \ms{br}\;\ms{loop}\;(0, 1) \\
-  & \ms{loop}(x, y): \{\\
-  & \quad \ms{let}\;i_0 = x + 1; \\
-  & \quad \ms{let}\;a_0 = y * (x + 1); \\
-  & \quad \ms{if}\;i_0 < n\;\{ \\
-  & \qquad \ms{br}\;\ms{loop}(i_0, a_0) \\
-  & \quad \}\;\ms{else}\;\{ \\
-  & \qquad \ms{ret}\;a_0 \\
-  & \quad \} \\
-  & \}
-\end{align*}
-
-\begin{itemize}
-  \item or, by further substitution,
-\end{itemize}
-
-
-\begin{align*}
-  & \ms{let}\;n = 10; \\
-  & \ms{br}\;\ms{loop}\;(0, 1) \\
-  & \ms{loop}(x, y): \{\\
-  & \quad \ms{let}\;i_0 = x + 1; \\
-  & \quad \ms{let}\;a_0 = y * i_0; \\
-  & \quad \ms{if}\;i_0 < n\;\{ \\
-  & \qquad \ms{br}\;\ms{loop}(i_0, a_0) \\
-  & \quad \}\;\ms{else}\;\{ \\
-  & \qquad \ms{ret}\;a_0 \\
-  & \quad \} \\
-  & \}
 \end{align*}
 
 \begin{itemize}
@@ -492,9 +587,27 @@ A compiler might translate this to SSA as follows:
         equivalent semantics, while every SSA program is already a TSSA program (just add brackets!)
   \item Unproven conjecture: this should take \~linear time, and the resuling program should be
   \~linearly sized. Do on paper?
-  \item TODO: this transformation backwards would actually eliminate an unnecessary MUL, rather than
-  add one. Pedantry?
 \end{itemize}
+
+\section{Type Theory}
+
+\TODO{this...}
+
+\section{Equational Theory}
+
+\TODO{this...}
+
+\section{Denotational Semantics}
+
+\TODO{this...}
+
+\section{TSO weak memory}
+
+\TODO{this...}
+
+\section{Discussion and Related Work}
+
+\TODO{this...}
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references}
