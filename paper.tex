@@ -97,7 +97,7 @@
 \newcommand{\rle}[1]{{\scriptsize\textsf{#1}}}
 \newcommand{\hasty}[4]{#1 \vdash_{#2} #3: {#4}}
 \newcommand{\haslb}[3]{#1 \vdash #2 \rhd #3}
-\newcommand{\isop}[4]{#1: #2 \to_{#4} #3}
+\newcommand{\isop}[4]{#1 \in \mc{I}_{#4}(#2, #3)}
 \newcommand{\issubst}[3]{#1: #2 \mapsto #3}
 \newcommand{\lbsubst}[3]{#1: #2 \rightsquigarrow #3}
 \newcommand{\teqv}{\approx}
@@ -269,8 +269,8 @@ amenable to standard type-theoretic treatment. We will then generalize this form
 branching to arbitrary code, rather than only labels, to obtain \textit{A-normal form}, or ANF,
 analogously to~\citet{anf}; a straightforward argument shows that this adds no expressive power.
 Finally, to allow for substitution, we will further generalize our syntax to allow for arbitrary
-expression nesting, as well as let-expressions, to obtain \textit{type-theoretic SSA}, or TSSA,
-which will be the subject of the rest of this paper.
+expression nesting, as well as let-expressions, to obtain \textit{type-theoretic SSA}, or
+\isotopessa, which will be the subject of the rest of this paper.
 
 As a running example, consider the simple imperative program to compute $10!$ given in
 Figure~\ref{fig:ten-fact-program}. In SSA form, it might be written as in
@@ -498,7 +498,7 @@ Figure~\ref{fig:ten-fact-ssa}.
   \item This can trivially be seen to add no additional expressive power: can be eliminated by
         introducing anonymous basic blocks for branches and jumping to them
   \item We now have essentially ANF, cite this
-  \item Can generalize to TSSA (like MNF but not higher-order); by adding an \textit{expression
+  \item Can generalize to \isotopessa (like MNF but not higher-order); by adding an \textit{expression
   language}
   \item This lets us state \textit{substitutions}, like
 \end{itemize}
@@ -635,41 +635,158 @@ Figure~\ref{fig:ten-fact-ssa}.
   \item We can justify each such step is sound rigorously via our denotational semantics
   \item We can show that our steps are \textit{complete} by showing that quotienting by them gives
         a model of our denotational semantics
-  \item That's why we use TSSA
-  \item But we gain no additional power: SSA $\subseteq$ TSSA; this is a retraction
+  \item That's why we use \isotopessa
+  \item But we gain no additional power: SSA $\subseteq$ \isotopessa; this is a retraction
   (embedding-projection)
-  \item In particular, using the steps, every TSSA program can be converted to an SSA program with
-        equivalent semantics, while every SSA program is already a TSSA program (just add brackets!)
+  \item In particular, using the steps, every \isotopessa program can be converted to an SSA program with
+        equivalent semantics, while every SSA program is already a \isotopessa program (just add brackets!)
   \item Unproven conjecture: this should take \~linear time, and the resuling program should be
   \~linearly sized. Do on paper?
 \end{itemize}
 
 \section{Type Theory}
 
+We now give a formal account of \isotopessa, starting with the types. Our types are first order, and
+consists of binary sums $A + B$, products $A \otimes B$, the unit type $\mathbf{1}$, and the empty
+type $\mb{0}$, all parametrized over a set of base types $X \in \mc{T}$. We write our set of types
+as $\ms{Ty}(X)$. We also parametrize over:
+\begin{itemize}
+  
+  \item A set of effects $\epsilon \in \mc{E}$, forming a join-semilattice with bottom element $\bot
+  \in \mc{E}$
+  
+  \item For each pair $A, B \in \ms{Ty}(X)$ and effect $\epsilon \in \mc{E}$, a set of
+  \textit{instructions} $f \in \mc{I}_\epsilon(A, B)$, where $\epsilon \leq \epsilon' \implies
+  \mc{I}_\epsilon(A, B) \subseteq \mc{I}_{\epsilon'}(A, B)$. 
+  
+  We write $\mc{I}(A, B) = \bigcup_\epsilon\mc{I}_\epsilon(A, B)$, $\mc{I}_\epsilon = \bigcup_{A,
+  B}\mc{I}_\epsilon(A, B)$, and $\mc{I} = \bigcup_\epsilon\mc{I}_\epsilon$.
 
-\TODO{
-  \begin{enumerate}
-  \item Explain the grammar of types (mention it's first-order)
-  \item Give the syntax, and explain it is split into expressions and
-    regions. Explain what each bit does. 
-  \item Explain the grammar of contexts. $\Gamma$ is easy, spend time on $\mathsf{L}$ since it is the list of labels you can jump to. 
-  \item Describe rule-by-rule expression typing. This should be pretty
-    fast, since all the rules are standard, except for the effect typing. 
-  \item Explain what region typing is like, and note that because no region returns, you have no return value. Instead you have the targets a region may jump into. (return is just a distinguished label).
-  \end{enumerate}
-}
+\end{itemize}
 
-\TODO{introduce judgement for terms}
+A \textit{context} $\Gamma$ is a list of \textit{typing hypotheses} $\thyp{x}{A}{\epsilon}$, where
+$x$ is a variable name, $A$ is the type of that variable, and $\epsilon$ is the effect of using that
+variable (used when filling holes with effectful expressions). If $\epsilon = \bot$, we often omit
+it, writing $\bhyp{x}{A}$. Similarly, we define a \textit{label-context} to be a list of
+\textit{labels} $\llhyp{\ell}{A}$, where $A$ is the parameter type that must be passed on a jump to
+the label $\ell$. This is summarized in the following grammar:
 
-\TODO{basic term rules}
+\begin{figure}[H]
+  \begin{center}
+    \begin{minipage}{.5\textwidth}
+      \begin{grammar}
+        <\(A, B, C\)> ::= 
+        \(X\)
+        \;|\; \(A \otimes B\)
+        \;|\; \(\mathbf{1}\)
+        \;|\; \(A + B\)
+        \;|\; \(\mathbf{0}\)
+      \end{grammar}
+    \end{minipage}%
+    \begin{minipage}{.25\textwidth}
+      \begin{grammar}
+        <\(\Gamma\)> ::= \(\cdot\) \;|\; \(\Gamma, \thyp{x}{A}{\epsilon}\)
+      \end{grammar}
+    \end{minipage}%
+    \begin{minipage}{.25\textwidth}
+      \begin{grammar}
+        <\(\ms{L}\)> ::= \(\cdot\) \;|\; \(\ms{L}, \llhyp{\ell}{A}\)
+      \end{grammar}
+    \end{minipage}
+  \end{center}
+  \caption{Grammar for \isotopessa types, contexts, and label-contexts}
+  \label{fig:ssa-ty-grammar}
+  \Description{}
+\end{figure}
 
-\TODO{let expressions and case expressions}
+A \isotopessa \textit{expression} $a$ is typed with the judgement $\hasty{\Gamma}{\epsilon}{a}{A}$,
+which says that under the typing context $\Gamma$, the expression $a$ has type $A$ and effect
+$\epsilon$. The typing rules for expressions are given in Figure~\ref{fig:ssa-expr-rules}.
 
-\TODO{introduce judgement for regions}
+\begin{figure}[H]
+  \begin{gather*}
+    \prftree[r]{\rle{var}}{\Gamma\;x \leq (A, \epsilon)}{\hasty{\Gamma}{\epsilon}{x}{A}} \qquad
+    \prftree[r]{\rle{op}}{\isop{f}{A}{B}{\epsilon}}{\hasty{\Gamma}{\epsilon}{a}{A}}
+      {\hasty{\Gamma}{\epsilon}{f\;a}{B}} \qquad
+    \prftree[r]{\rle{let$_1$}}
+      {\hasty{\Gamma}{\epsilon}{a}{A}}
+      {\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{b}{B}}
+      {\hasty{\Gamma}{\epsilon}{\letexpr{x}{a}{b}}{B}} \\
+    \prftree[r]{\rle{unit}}{\hasty{\Gamma}{\epsilon}{()}{\mb{1}}} \qquad
+    \prftree[r]{\rle{pair}}{\hasty{\Gamma}{\epsilon}{a}{A}}{\hasty{\Gamma}{\epsilon}{b}{B}}
+      {\hasty{\Gamma}{\epsilon}{(A, B)}{A \otimes B}} \\
+    \prftree[r]{\rle{let$_2$}}
+      {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
+      {\hasty{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{\epsilon}{c}{C}}
+      {\hasty{\Gamma}{\epsilon}{\letexpr{(x, y)}{e}{c}}{C}} \\
+    \prftree[r]{\rle{inl}}{\hasty{\Gamma}{\epsilon}{a}{A}}
+      {\hasty{\Gamma}{\epsilon}{\linl{a}}{A + B}} \qquad
+    \prftree[r]{\rle{inr}}{\hasty{\Gamma}{\epsilon}{b}{B}}
+      {\hasty{\Gamma}{\epsilon}{\linr{b}}{A + B}} \qquad
+    \prftree[r]{\rle{abort}}{\hasty{\Gamma}{\epsilon}{a}{\mb{0}}}
+      {\hasty{\Gamma}{\epsilon}{\labort{a}}{A}} \\
+    \prftree[r]{\rle{case}}
+      {\hasty{\Gamma}{\epsilon}{e}{A + B}}
+      {\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{a}{C}}
+      {\hasty{\Gamma, \bhyp{y}{A}}{\epsilon}{b}{C}}
+      {\hasty{\Gamma}{\epsilon}{\caseexpr{e}{x}{a}{y}{b}}{C}}
+  \end{gather*}
+  \caption{Rules for typing \isotopessa expressions}
+  \Description{Rules for typing isotope-SSA expressions}
+  \label{fig:ssa-expr-rules}
+\end{figure}
 
-\TODO{region rules up to cfg}
+In particular...
 
-\TODO{cfg rule, detailed explanation}
+\TODO{rule-by-rule expression typing}
+
+A \isotopessa \textit{region} is typed with the judgement $\haslb{\Gamma}{r}{\ms{L}}$, which says
+that under the typing context $\Gamma$, the region $r$ targets the label-context $\ms{L}$. In
+particular, this can be interpreted as saying that if the variables in $\Gamma$ are live on entry to
+$r$, then $r$ will either loop forever or terminate by branching to one of the external labels in
+$\mc{L}$ with the appropriate argument.
+
+\begin{figure}[H]
+  \begin{gather*}
+    \prftree[r]{\rle{br}}{\hasty{\Gamma}{\bot}{a}{A}}{\ms{L}\;\lbl{\ell} = A}
+      {\haslb{\Gamma}{\lbrb{\ell}{a}}{\ms{L}}} \qquad
+    \prftree[r]{\rle{let$_1$-r}}
+      {\hasty{\Gamma}{\epsilon}{a}{A}}
+      {\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
+      {\haslb{\Gamma}{\letstmt{x}{a}{r}}{\ms{L}}} \\
+    \prftree[r]{\rle{let$_2$-r}}
+      {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
+      {\haslb{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{r}{\ms{L}}}
+      {\haslb{\Gamma}{\letstmt{(x, y)}{e}{r}}{\ms{L}}} \\
+    \prftree[r]{\rle{case-r}}
+      {\hasty{\Gamma}{\epsilon}{e}{A + B}}
+      {\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
+      {\haslb{\Gamma, \bhyp{y}{B}}{s}{\ms{L}}}
+      {\haslb{\Gamma}{\casestmt{e}{x}{r}{y}{s}}{\ms{L}}} \\
+    \prftree[r]{\rle{cfg}}
+      {\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
+      {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+      {\haslb{\Gamma}{\where{r}{(\lwbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}}
+  \end{gather*}
+  \caption{Rules for typing \isotopessa regions}
+  \Description{Rules for typing isotope-SSA regions}
+  \label{fig:ssa-reg-rules}
+\end{figure}
+
+In particular...
+
+\TODO{br rule lore}
+
+\TODO{Note that ``returning'' is implemented by simply branching to a distinguished label
+$\ms{ret}$, with $\ms{ret}\;a$ simply being an abbreviation for $\ms{br}\;\ms{ret}\;a$.}
+
+\TODO{let rules}
+
+\TODO{case rule}
+
+\TODO{where rule}
+
+\TODO{notes about binding precedence of where}
 
 \TODO{metatheory: weakening}
 
@@ -735,66 +852,6 @@ Figure~\ref{fig:ten-fact-ssa}.
   \caption{Grammar for \isotopessa, parametrized over a set of instructions \(f \in \mc{I}\)}
   \Description{Grammar for isotope-SSA}
   \label{fig:ssa-grammar}
-\end{figure}
-
-\begin{figure}[H]
-  \begin{gather*}
-    \prftree[r]{\rle{var}}{\Gamma\;x \leq (A, \epsilon)}{\hasty{\Gamma}{\epsilon}{x}{A}} \qquad
-    \prftree[r]{\rle{op}}{\isop{f}{A}{B}{\epsilon}}{\hasty{\Gamma}{\epsilon}{a}{A}}
-      {\hasty{\Gamma}{\epsilon}{f\;a}{B}} \qquad
-    \prftree[r]{\rle{let$_1$}}
-      {\hasty{\Gamma}{\epsilon}{a}{A}}
-      {\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{b}{B}}
-      {\hasty{\Gamma}{\epsilon}{\letexpr{x}{a}{b}}{B}} \\
-    \prftree[r]{\rle{unit}}{\hasty{\Gamma}{\epsilon}{()}{\mb{1}}} \qquad
-    \prftree[r]{\rle{pair}}{\hasty{\Gamma}{\epsilon}{a}{A}}{\hasty{\Gamma}{\epsilon}{b}{B}}
-      {\hasty{\Gamma}{\epsilon}{(A, B)}{A \otimes B}} \\
-    \prftree[r]{\rle{let$_2$}}
-      {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
-      {\hasty{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{\epsilon}{c}{C}}
-      {\hasty{\Gamma}{\epsilon}{\letexpr{(x, y)}{e}{c}}{C}} \\
-    \prftree[r]{\rle{inl}}{\hasty{\Gamma}{\epsilon}{a}{A}}
-      {\hasty{\Gamma}{\epsilon}{\linl{a}}{A + B}} \qquad
-    \prftree[r]{\rle{inr}}{\hasty{\Gamma}{\epsilon}{b}{B}}
-      {\hasty{\Gamma}{\epsilon}{\linr{b}}{A + B}} \qquad
-    \prftree[r]{\rle{abort}}{\hasty{\Gamma}{\epsilon}{a}{\mb{0}}}
-      {\hasty{\Gamma}{\epsilon}{\labort{a}}{A}} \\
-    \prftree[r]{\rle{case}}
-      {\hasty{\Gamma}{\epsilon}{e}{A + B}}
-      {\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{a}{C}}
-      {\hasty{\Gamma, \bhyp{y}{A}}{\epsilon}{b}{C}}
-      {\hasty{\Gamma}{\epsilon}{\caseexpr{e}{x}{a}{y}{b}}{C}}
-  \end{gather*}
-  \caption{Rules for typing \isotopessa terms}
-  \Description{Rules for typing isotope-SSA terms}
-  \label{fig:ssa-term-rules}
-\end{figure}
-
-\begin{figure}[H]
-  \begin{gather*}
-    \prftree[r]{\rle{br}}{\hasty{\Gamma}{\bot}{a}{A}}{\ms{L}\;\lbl{\ell} = A}
-      {\haslb{\Gamma}{\lbrb{\ell}{a}}{\ms{L}}} \qquad
-    \prftree[r]{\rle{let$_1$-r}}
-      {\hasty{\Gamma}{\epsilon}{a}{A}}
-      {\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
-      {\haslb{\Gamma}{\letstmt{x}{a}{r}}{\ms{L}}} \\
-    \prftree[r]{\rle{let$_2$-r}}
-      {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
-      {\haslb{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{r}{\ms{L}}}
-      {\haslb{\Gamma}{\letstmt{(x, y)}{e}{r}}{\ms{L}}} \\
-    \prftree[r]{\rle{case-r}}
-      {\hasty{\Gamma}{\epsilon}{e}{A + B}}
-      {\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
-      {\haslb{\Gamma, \bhyp{y}{B}}{s}{\ms{L}}}
-      {\haslb{\Gamma}{\casestmt{e}{x}{r}{y}{s}}{\ms{L}}} \\
-    \prftree[r]{\rle{cfg}}
-      {\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
-      {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
-      {\haslb{\Gamma}{\where{r}{(\lwbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}}
-  \end{gather*}
-  \caption{Rules for typing \isotopessa regions}
-  \Description{Rules for typing isotope-SSA regions}
-  \label{fig:ssa-reg-rules}
 \end{figure}
 
 \begin{figure}[H]
