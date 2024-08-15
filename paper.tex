@@ -222,7 +222,7 @@ equations should hold of an SSA program. This is a particularly
 fraught question, because it is also unclear which equations weak
 memory models should satisfy.
 
-What we would like to know which equations any SSA representation
+What we would like to know is which equations any SSA representation
 should satisfy. This would let us establish a contract between
 compiler writers and hardware designers. The compiler writers could
 rely upon the equational theory of SSA when justifying optimizations,
@@ -262,37 +262,20 @@ Concretely, our contributions are as follows:
 
 \section{Static Single Assignment Form}
 
-\begin{itemize}
-  \item Intro + overview
-  \item State ``we will introduce TSSA''
-\end{itemize}
+In this section, we will describe SSA form and the isomorphism between the standard $\phi$-node
+based presentation and the more functional basic-blocks with arguments format. We will then discuss
+standard dominance-based scoping, and how this can be recast as lexical scoping to make it more
+amenable to standard type-theoretic treatment. We will then generalize this format to allow
+branching to arbitrary code, rather than only labels, to obtain \textit{A-normal form}, or ANF,
+analogously to~\citet{anf}; a straightforward argument shows that this adds no expressive power.
+Finally, to allow for substitution, we will further generalize our syntax to allow for arbitrary
+expression nesting, as well as let-expressions, to obtain \textit{type-theoretic SSA}, or TSSA,
+which will be the subject of the rest of this paper.
 
-Consider the following simple program to compute $10!$
-\begin{align*}
-  & \ms{let}\;n = 10; \\
-  & \ms{let\;mut}\;i = 1; \\
-  & \ms{let\;mut}\;a = 1; \\
-  & \ms{while}\;i_0 < n\;\{ \\
-  & \quad i = i + 1; \\
-  & \quad a = a * i \\
-  & \} \\
-  & \ms{ret}\;a
-\end{align*}
+As a running example, consider the simple imperative program to compute $10!$ given in
+Figure~\ref{fig:ten-fact-program}. In SSA form, it might be written as in
+Figure~\ref{fig:ten-fact-ssa}.
 
-A compiler might translate this to SSA as follows:
-\begin{align*}
-  \ms{start}:\quad & \ms{let}\;n = 10; \\
-  & \ms{br}\;\ms{loop} \\
-  \ms{loop}: \quad  & \ms{let}\;i_0 = \phi(\ms{start}: 1,
-                                           \ms{body}: i_1) \\
-                    & \ms{let}\;a_0 = \phi(\ms{start}: 1, \ms{body}: a_1) \\
-                    & \ms{if}\;i_0 < n\;
-                      \{\;\ms{br}\;\ms{body}\;\}\;
-                      \ms{else}\;\{\;\ms{ret}\;a_0\;\} \\
-  \ms{body}: \quad  & \ms{let}\;i_1 = i_0 + 1 \\
-                    & \ms{let}\;a_1 = a_0 * i_1 \\
-                    & \ms{br}\;\ms{loop}
-\end{align*}
 \TODO{Explain informally what is going on in SSA}
 \begin{itemize}
   \item Introduce $\phi$ to avoid redefinition of $i$, $a$, due to single definition principle
@@ -301,52 +284,97 @@ A compiler might translate this to SSA as follows:
   instead:
 \end{itemize}
 
-\TODO{Introduce a figure with SSA and BBA side-by-side. Suggestion: Add arrows showing how the
-arguments and $\phi$-functions correspond, maybe with arrows connecting the two (use \texttt{tikzmark}
-package). }
+\begin{figure}
+  \begin{subfigure}[t]{.5\textwidth}
+    \begin{align*}
+      & \ms{let}\;n = 10; \\
+      & \ms{let\;mut}\;i = 1; \\
+      & \ms{let\;mut}\;a = 1; \\
+      & \ms{while}\;i_0 < n\;\{ \\
+      & \quad i = i + 1; \\
+      & \quad a = a * i \\
+      & \} \\
+      & \ms{ret}\;a
+    \end{align*}
+    \caption{As an imperative program}
+    \label{fig:ten-fact-program-imp}
+  \end{subfigure}%
+  \begin{subfigure}[t]{.5\textwidth}
+    \begin{align*}
+      \ms{start}:\quad & \ms{let}\;n = 10; \\
+      & \ms{br}\;\ms{loop} \\
+      \ms{loop}: \quad  & \ms{let}\;i_0 = \phi(\ms{start}: 1, \ms{body}: i_1) \\
+                        & \ms{let}\;a_0 = \phi(\ms{start}: 1, \ms{body}: a_1) \\
+                        & \ms{if}\;i_0 < n\;
+                          \{\;\ms{br}\;\ms{body}\;\}\;
+                          \ms{else}\;\{\;\ms{ret}\;a_0\;\} \\
+      \ms{body}: \quad  & \ms{let}\;i_1 = i_0 + 1 \\
+                        & \ms{let}\;a_1 = a_0 * i_1 \\
+                        & \ms{br}\;\ms{loop}
+    \end{align*}
+    \caption{In SSA form}
+    \label{fig:ten-fact-ssa}
+  \end{subfigure}
+  \caption{
+    A simple program to compute $10!$ via multiplication in a loop
+  }
+  \Description{}
+  \label{fig:ten-fact-program}
+\end{figure}
 
 \begin{figure}
-  \centering
   \begin{subfigure}[t]{.5\textwidth}
+    \centering
     \begin{align*}
       \ms{start}:\quad  & \ms{let}\;n = 10; \\
                         & \ms{br}\;\ms{loop} \\
-      \ms{loop}: \quad  & \ms{let}\;i_0 = \phi(\ms{start}: 1, \ms{body}: i_1) \\
-                        & \ms{let}\;a_0 = \phi(\ms{start}: 1, \ms{body}: a_1) \\
+      \ms{loop}: \quad  & \begingroup \color{red}
+                          \ms{let}\;i_0 = \phi(\ms{start}: 1, \ms{body}: i_1) 
+                          \endgroup \\
+                        & \begingroup \color{blue}
+                          \ms{let}\;a_0 = \phi(\ms{start}: 1, \ms{body}: a_1) 
+                          \endgroup \\
                         & \ms{if}\;i_0 < n\;\{\;\ms{br}\;\ms{body}\;\} \\
                         & \ms{else}\;\{\;\ms{ret}\;a_0\;\} \\
       \ms{body}: \quad  & \ms{let}\;i_1 = i_0 + 1 \\
                         & \ms{let}\;a_1 = a_0 * i_1 \\
                         & \ms{br}\;\ms{loop}
     \end{align*}
+    \caption{With $\phi$-nodes}
   \end{subfigure}%
   \begin{subfigure}[t]{.5\textwidth}
+    \centering
     \begin{align*}
       \ms{start}:\quad            & \ms{let}\;n = 10; \\
-                                  & \ms{br}\;\ms{loop}(1, 1) \\
-      \ms{loop}(i_0, a_0): \quad  & \ms{if}\;i_0 < n\; \{\;\ms{br}\;\ms{body}\;\} \\
+                                  & \ms{br}\;\ms{loop}(\textcolor{red}{1}, \textcolor{blue}{1}) \\
+      \ms{loop}(\textcolor{red}{i_0}, \textcolor{blue}{a_0}): \quad  
+                                  & \ms{if}\;i_0 < n\; \{\;\ms{br}\;\ms{body}\;\} \\
                                   & \ms{else}\;\{\;\ms{ret}\;a_0\;\} \\
       \ms{body}: \quad            & \ms{let}\;i_1 = i_0 + 1 \\
                                   & \ms{let}\;a_1 = a_0 * i_1 \\
-                                  & \ms{br}\;\ms{loop}(i_1, a_1)
+                                  & \ms{br}\;\ms{loop}(\textcolor{red}{i_1}, \textcolor{blue}{a_1}) 
+                                  \\ \\
     \end{align*}
+    \caption{Basic-blocks with arguments}
   \end{subfigure}
+
+  \TODO{Add arrows with \texttt{tikzmark}?}
+  
+  \caption{ The program in Figure \ref{fig:ten-fact-program} written in standard SSA (using $\phi$
+    nodes), like in LLVM, and in basic-blocks with arguments SSA, like in MLIR and Cranelift. The
+    arguments $i_0, a_0$ corresponding to the $\phi$-nodes $i_0, a_0$ are colored in
+    \textcolor{red}{red} and \textcolor{blue}{blue}, respectively. }
+
+  \Description{}
 \end{figure}
 
-\TODO{After introducing BBA, recall Appel's SSA is FP paper \cite{appel-ssa}, and then note that
-  there is a mismatch wrt scoping. Then explain dominance based scoping.}
-
-\TODO{After introducing where and showing how it turns the dominator tree into lexical scoping, then
-  show how \texttt{e where f = e'} is the same as \texttt{let f = e' in e} and then talk about the
-  SSA-ANF paper \cite{chakravarty-functional-ssa-2003}. Here also talk about full if-expressions.}
-
-\TODO{Once we have ANF, observe that ANF has good scoping properties, but lacks a good substitution
-  property, since substituting a value for a variable can take you out of ANF. So we relax things
-  again to allow full expressions.}
+\TODO{cite LLVM, MLIR, Cranelift?}
 
 \begin{itemize}
   \item Isomorphism is trivial: we just move the definition from the $\phi$ to the call-site
   \item This makes semantics of blocks and scoping a lot more clear:
+  \item {\TODO{After introducing BBA, recall Appel's SSA is FP paper \cite{appel-ssa}, and then note
+    that there is a mismatch wrt scoping. Then explain dominance based scoping.}}
   \item In SSA, to use a variable, it must be defined once we reach the use-point, or else UB
   \item Variables can only be defined at exactly one point
   \item Safe approximation: all paths to the use point must cross the definition point at least once
@@ -377,8 +405,9 @@ package). }
                                   & \ms{else}\;\{\;\ms{ret}\;a_0\;\} \\
       \ms{body}: \quad            & i_1 = i_0 + 1 \\
                                   & a_1 = a_0 * i_1 \\
-                                  & \ms{br}\;\ms{loop}(i_1, a_1)
+                                  & \ms{br}\;\ms{loop}(i_1, a_1) \\ \\ \\ \\ 
     \end{align*}
+    \caption{Dominance-based scoping}
   \end{subfigure}%
   \begin{subfigure}[t]{.5\textwidth}
     \begin{align*}
@@ -394,7 +423,10 @@ package). }
       & \quad \} \\
       & \}
     \end{align*}
+    \caption{Lexical scoping}
   \end{subfigure}
+  \caption{Conversion of an SSA program from dominance-based scoping to explicit lexical scoping}
+  \Description{}
 \end{figure}
 
 \begin{itemize}
@@ -415,6 +447,15 @@ package). }
 
   \item In current format, this still a pain to express. Can allow if-then-else to jump to code,
         rather than just a branch, likeso:
+
+  \item {\TODO{After introducing where and showing how it turns the dominator tree into lexical
+  scoping, then show how \texttt{e where f = e'} is the same as \texttt{let f = e' in e} and then
+  talk about the
+  SSA-ANF paper \cite{chakravarty-functional-ssa-2003}. Here also talk about full if-expressions.}}
+
+  \item {\TODO{Once we have ANF, observe that ANF has good scoping properties, but lacks a good substitution
+    property, since substituting a value for a variable can take you out of ANF. So we relax things
+    again to allow full expressions.}}
 \end{itemize}
 
 \begin{figure}
@@ -449,6 +490,8 @@ package). }
       & \}
     \end{align*}
   \end{subfigure}
+  \caption{Allowing if-statements to jump to arbitrary instructions, rather than a terminator}
+  \Description{}
 \end{figure}
 
 \begin{itemize}
@@ -476,6 +519,7 @@ package). }
       & \quad \} \\
       & \}
     \end{align*}
+    \caption{Program in ANF}
   \end{subfigure}%
   \begin{subfigure}[t]{.32\textwidth}
     \begin{align*}
@@ -488,8 +532,11 @@ package). }
       & \quad \}\;\ms{else}\;\{ \\
       & \qquad \ms{ret}\;a_0 \\
       & \quad \} \\
-      & \}
+      & \}  \\
     \end{align*}
+    \caption{
+      Program without redundant let-bindings; equivalent via substitution but no longer in ANF
+    }
   \end{subfigure}%
   \begin{subfigure}[t]{.35\textwidth}
     \begin{align*}
@@ -501,9 +548,13 @@ package). }
       & \quad \}\;\ms{else}\;\{ \\
       & \qquad \ms{ret}\;a_0 \\
       & \quad \} \\
-      & \}
+      & \} \\ \\
     \end{align*}
+    \caption{...}
+    \label{fig:fully-substituted-fact}
   \end{subfigure}
+  \caption{Adding support for expressions, allowing us to perform substitutions}
+  \Description{}
 \end{figure}
 
 \begin{figure}
@@ -520,6 +571,7 @@ package). }
         & \quad \} \\
         & \}
       \end{align*}
+      \caption{Original program from Figure \ref{fig:fully-substituted-fact}}
     \end{subfigure}
     \begin{subfigure}{\textwidth}
       \begin{align*}
@@ -555,6 +607,8 @@ package). }
       & \}
     \end{align*}
   \end{subfigure}
+  \caption{Decomposing multi-block rewrites into simple algebraic steps}
+  \Description{}
 \end{figure}
 
 \begin{itemize}
@@ -592,6 +646,7 @@ package). }
 
 \section{Type Theory}
 
+
 \TODO{
   \begin{enumerate}
   \item Explain the grammar of types (mention it's first-order)
@@ -603,6 +658,22 @@ package). }
   \item Explain what region typing is like, and note that because no region returns, you have no return value. Instead you have the targets a region may jump into. (return is just a distinguished label).
   \end{enumerate}
 }
+
+\TODO{introduce judgement for terms}
+
+\TODO{basic term rules}
+
+\TODO{let expressions and case expressions}
+
+\TODO{introduce judgement for regions}
+
+\TODO{region rules up to cfg}
+
+\TODO{cfg rule, detailed explanation}
+
+\TODO{metatheory: weakening}
+
+\TODO{metatheory: substitution; substitution composes and weakens}
 
 \section{Equational Theory}
 
