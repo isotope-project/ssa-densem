@@ -274,7 +274,14 @@ expression nesting, as well as let-expressions, to obtain \textit{type-theoretic
 
 As a running example, consider the simple imperative program to compute $10!$ given in
 Figure~\ref{fig:ten-fact-program}. In SSA form, it might be written as in
-Figure~\ref{fig:ten-fact-ssa}.
+Figure~\ref{fig:ten-fact-ssa}. Let's break down what changes we've made:
+\begin{itemize}
+  \item We've moved from structured control flow in terms of \ms{while} to
+  unstructured jumps between the basic blocks \ms{start} (the entry block),
+  \ms{loop}, and \ms{body}. If this is all we did, we would have converted our
+  program to \textit{3-address code}.
+  \item 
+\end{itemize}
 
 \TODO{Explain informally what is going on in SSA}
 \begin{itemize}
@@ -291,8 +298,8 @@ Figure~\ref{fig:ten-fact-ssa}.
       & \ms{let\;mut}\;i = 1; \\
       & \ms{let\;mut}\;a = 1; \\
       & \ms{while}\;i_0 < n\;\{ \\
+      & \quad a = a * (i + 1) \\
       & \quad i = i + 1; \\
-      & \quad a = a * i \\
       & \} \\
       & \ms{ret}\;a
     \end{align*}
@@ -308,15 +315,16 @@ Figure~\ref{fig:ten-fact-ssa}.
                         & \ms{if}\;i_0 < n\;
                           \{\;\ms{br}\;\ms{body}\;\}\;
                           \ms{else}\;\{\;\ms{ret}\;a_0\;\} \\
-      \ms{body}: \quad  & \ms{let}\;i_1 = i_0 + 1 \\
-                        & \ms{let}\;a_1 = a_0 * i_1 \\
+      \ms{body}: \quad  & \ms{let}\;t = i_0 + 1 \\
+                        & \ms{let}\;a_1 = a_0 * t \\
+                        & \ms{let}\;i_1 = i_0 + 1 \\
                         & \ms{br}\;\ms{loop}
     \end{align*}
     \caption{In SSA form}
     \label{fig:ten-fact-ssa}
   \end{subfigure}
   \caption{
-    A simple program to compute $10!$ via multiplication in a loop
+    A simple, slightly suboptimal program to compute $10!$ via multiplication in a loop
   }
   \Description{}
   \label{fig:ten-fact-program}
@@ -336,8 +344,9 @@ Figure~\ref{fig:ten-fact-ssa}.
                           \endgroup \\
                         & \ms{if}\;i_0 < n\;\{\;\ms{br}\;\ms{body}\;\} \\
                         & \ms{else}\;\{\;\ms{ret}\;a_0\;\} \\
-      \ms{body}: \quad  & \ms{let}\;i_1 = i_0 + 1 \\
-                        & \ms{let}\;a_1 = a_0 * i_1 \\
+      \ms{body}: \quad  & \ms{let}\;t = i_0 + 1 \\
+                        & \ms{let}\;a_1 = a_0 * t \\
+                        & \ms{let}\;i_1 = i_0 + 1 \\
                         & \ms{br}\;\ms{loop}
     \end{align*}
     \caption{With $\phi$-nodes}
@@ -350,8 +359,9 @@ Figure~\ref{fig:ten-fact-ssa}.
       \ms{loop}(\textcolor{red}{i_0}, \textcolor{blue}{a_0}): \quad  
                                   & \ms{if}\;i_0 < n\; \{\;\ms{br}\;\ms{body}\;\} \\
                                   & \ms{else}\;\{\;\ms{ret}\;a_0\;\} \\
-      \ms{body}: \quad            & \ms{let}\;i_1 = i_0 + 1 \\
-                                  & \ms{let}\;a_1 = a_0 * i_1 \\
+      \ms{body}: \quad            & \ms{let}\;t = i_0 + 1 \\
+                                  & \ms{let}\;a_1 = a_0 * t \\
+                                  & \ms{let}\;i_1 = i_0 + 1 \\
                                   & \ms{br}\;\ms{loop}(\textcolor{red}{i_1}, \textcolor{blue}{a_1}) 
                                   \\ \\
     \end{align*}
@@ -403,8 +413,9 @@ Figure~\ref{fig:ten-fact-ssa}.
                                   & \ms{br}\;\ms{loop}(1, 1) \\
       \ms{loop}(i_0, a_0): \quad  & \ms{if}\;i_0 < n\; \{\;\ms{br}\;\ms{body}\;\} \\
                                   & \ms{else}\;\{\;\ms{ret}\;a_0\;\} \\
-      \ms{body}: \quad            & i_1 = i_0 + 1 \\
-                                  & a_1 = a_0 * i_1 \\
+      \ms{body}: \quad            & \ms{let}\;t = i_0 + 1 \\
+                                  & \ms{let}\;a_1 = a_0 * t \\
+                                  & \ms{let}\;i_1 = i_0 + 1 \\
                                   & \ms{br}\;\ms{loop}(i_1, a_1) \\ \\ \\ \\ 
     \end{align*}
     \caption{Dominance-based scoping}
@@ -417,8 +428,9 @@ Figure~\ref{fig:ten-fact-ssa}.
       & \quad \ms{if}\;i_0 < n\;\{\;\ms{br}\;\ms{body}\;\} \\
       & \quad \ms{else}\;\{\;\ms{ret}\;a_0\;\} \\
       & \quad \ms{where}\;\ms{body}: \{\\ 
-      & \qquad i_1 = i_0 + 1 \\
-      & \qquad a_1 = a_0 * i_1 \\
+      & \qquad \ms{let}\;t = i_0 + 1 \\
+      & \qquad \ms{let}\;a_1 = a_0 * t \\
+      & \qquad \ms{let}\;i_1 = i_0 + 1 \\
       & \qquad \ms{br}\;\ms{loop}(i_1, a_1) \\
       & \quad \} \\
       & \}
@@ -468,8 +480,9 @@ Figure~\ref{fig:ten-fact-ssa}.
       & \quad \ms{if}\;i_0 < n\;\{\;\ms{br}\;\ms{body}\;\} \\
       & \quad \ms{else}\;\{\;\ms{ret}\;a_0\;\} \\
       & \quad \ms{where}\;\ms{body}: \{\\ 
-      & \qquad i_1 = i_0 + 1 \\
-      & \qquad a_1 = a_0 * i_1 \\
+      & \qquad \ms{let}\;t = i_0 + 1 \\
+      & \qquad \ms{let}\;a_1 = a_0 * t \\
+      & \qquad \ms{let}\;i_1 = i_0 + 1 \\
       & \qquad \ms{br}\;\ms{loop}(i_1, a_1) \\
       & \quad \} \\
       & \}
@@ -481,8 +494,9 @@ Figure~\ref{fig:ten-fact-ssa}.
       & \ms{br}\;\ms{loop}(1, 1) \\
       & \ms{where}\;\ms{loop}(i_0, a_0): \{\\
       & \quad \ms{if}\;i_0 < n\;\{ \\
-      & \qquad i_1 = i_0 + 1 \\
-      & \qquad a_1 = a_0 * i_1 \\
+      & \qquad \ms{let}\;t = i_0 + 1 \\
+      & \qquad \ms{let}\;a_1 = a_0 * t \\
+      & \qquad \ms{let}\;i_1 = i_0 + 1 \\
       & \qquad \ms{br}\;\ms{loop}(i_1, a_1) \\
       & \quad \}\;\ms{else}\;\{ \\
       & \qquad \ms{ret}\;a_0 \\
@@ -505,14 +519,15 @@ Figure~\ref{fig:ten-fact-ssa}.
 
 \begin{figure}
   \centering
-  \begin{subfigure}[t]{.32\textwidth}
+  \begin{subfigure}[t]{.31\textwidth}
     \begin{align*}
       & \ms{let}\;n = 10; \\
       & \ms{br}\;\ms{loop}(1, 1) \\
       & \ms{where}\;\ms{loop}(i_0, a_0): \{\\
       & \quad \ms{if}\;i_0 < n\;\{ \\
-      & \qquad i_1 = i_0 + 1 \\
-      & \qquad a_1 = a_0 * i_1 \\
+      & \qquad \ms{let}\;t = i_0 + 1 \\
+      & \qquad \ms{let}\;a_1 = a_0 * t \\
+      & \qquad \ms{let}\;i_1 = i_0 + 1 \\
       & \qquad \ms{br}\;\ms{loop}(i_1, a_1) \\
       & \quad \}\;\ms{else}\;\{ \\
       & \qquad \ms{ret}\;a_0 \\
@@ -520,23 +535,7 @@ Figure~\ref{fig:ten-fact-ssa}.
       & \}
     \end{align*}
     \caption{Program in ANF}
-  \end{subfigure}%
-  \begin{subfigure}[t]{.32\textwidth}
-    \begin{align*}
-      & \ms{let}\;n = 10; \\
-      & \ms{br}\;\ms{loop}(1, 1) \\
-      & \ms{where}\;\ms{loop}(i_0, a_0): \{\\
-      & \quad \ms{if}\;i_0 < n\;\{ \\
-      & \qquad \ms{let}\;i_1 = i_0 + 1 \\
-      & \qquad \ms{br}\;\ms{loop}(i_1, a_0 * i_1) \\
-      & \quad \}\;\ms{else}\;\{ \\
-      & \qquad \ms{ret}\;a_0 \\
-      & \quad \} \\
-      & \}  \\
-    \end{align*}
-    \caption{
-      Program without redundant let-bindings; equivalent via substitution but no longer in ANF
-    }
+    \label{fig:fact-anf}
   \end{subfigure}%
   \begin{subfigure}[t]{.35\textwidth}
     \begin{align*}
@@ -548,12 +547,36 @@ Figure~\ref{fig:ten-fact-ssa}.
       & \quad \}\;\ms{else}\;\{ \\
       & \qquad \ms{ret}\;a_0 \\
       & \quad \} \\
-      & \} \\ \\
+      & \}  \\ \\ \\
     \end{align*}
-    \caption{...}
+    \caption{
+      Programs \ref{fig:fact-anf} and \ref{fig:fully-substituted-fact} after substitution;
+      since the result is the same, both programs must be equivalent.
+    }
+    \label{fig:fact-opt}
+  \end{subfigure}\hspace{1em}%
+  \begin{subfigure}[t]{.31\textwidth}
+    \begin{align*}
+      & \ms{let}\;n = 10; \\
+      & \ms{br}\;\ms{loop}(1, 1) \\
+      & \ms{where}\;\ms{loop}(i_0, a_0): \{\\
+      & \quad \ms{if}\;i_0 < n\;\{ \\
+      & \qquad \ms{let}\;i_1 = i_0 + 1 \\
+      & \qquad \ms{let}\;a_1 = a_0 * i_1 \\
+      & \qquad \ms{br}\;\ms{loop}(i_1, a_1) \\
+      & \quad \}\;\ms{else}\;\{ \\
+      & \qquad \ms{ret}\;a_0 \\
+      & \quad \} \\
+      & \} \\
+    \end{align*}
+    \caption{Optimized ANF program}
     \label{fig:fully-substituted-fact}
   \end{subfigure}
-  \caption{Adding support for expressions, allowing us to perform substitutions}
+  \caption{
+    Adding support for expressions, allowing us to perform substitutions of (pure) expressions.
+    Optimizations such as common subexpression elimination can be built using substitution as a
+    building block.
+  }
   \Description{}
 \end{figure}
 
@@ -571,7 +594,8 @@ Figure~\ref{fig:ten-fact-ssa}.
         & \quad \} \\
         & \}
       \end{align*}
-      \caption{Original program from Figure \ref{fig:fully-substituted-fact}}
+      \caption{Substituted program from Figure \ref{fig:fully-substituted-fact}}
+      \label{fig:fully-substituted-fact2}
     \end{subfigure}
     \begin{subfigure}{\textwidth}
       \begin{align*}
@@ -586,6 +610,8 @@ Figure~\ref{fig:ten-fact-ssa}.
         & \quad \} \\
         & \}
       \end{align*}
+      \caption{Equivalent to Figure \ref{fig:fully-substituted-let} by \textit{dinaturality}}
+      \label{fig:suboptimal-fact2}
     \end{subfigure}
   \end{minipage}%
   \begin{subfigure}[c]{.5\textwidth}
@@ -606,8 +632,15 @@ Figure~\ref{fig:ten-fact-ssa}.
       & \quad \} \\
       & \}
     \end{align*}
+    \caption{Equivalent to Figure \ref{fig:fully-substituted-fact2} by substitution}
+    \label{fig:fully-substituted-let}
   \end{subfigure}
-  \caption{Decomposing multi-block rewrites into simple algebraic steps}
+  \caption{
+    Decomposing multi-block rewrites (from \ref{fig:suboptimal-fact2} to
+    \ref{fig:fully-substituted-fact2}, and therefore to the more optimal program 
+    \ref{fig:fact-opt}) into simple algebraic steps. By verifying each step, we can
+    verify complex optimizations through decomposition.
+  } 
   \Description{}
 \end{figure}
 
@@ -625,9 +658,6 @@ Figure~\ref{fig:ten-fact-ssa}.
 \begin{itemize}
   \item which by \textit{dinaturality} is equal to
 \end{itemize}
-
-\begin{align*}
-\end{align*}
 
 \begin{itemize}
   \item In other words, we can do \textit{complex}, \textit{error-prone} loop and control-flow graph
