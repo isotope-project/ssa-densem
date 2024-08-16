@@ -276,26 +276,31 @@ As a running example, consider the simple imperative program to compute $10!$ gi
 Figure~\ref{fig:ten-fact-program}. In SSA form, it might be written as in
 Figure~\ref{fig:ten-fact-ssa}. In particular,
 \begin{itemize}
-  \item We've moved from structured control flow in terms of \ms{while} to
+  \item We have moved from structured control flow in terms of \ms{while} to
   unstructured jumps between the basic blocks \ms{start} (the entry block),
   \ms{loop}, and \ms{body}. 
-  \item Replace subexpressions like $i + 1$ in $a * (i + 1)$ with let-bindings,
+  \item We have replaced subexpressions like $i + 1$ in $a * (i + 1)$ with let-bindings,
   so that every expression in our program is atomic. 
 \end{itemize}
+\TODO{Add a IMP$\to$3ADR, 3ADR$\to$SSA, cite SSA-intro}
+  
+
 If this is all we did, we would have converted our program to \textit{3-address
 code}. Unfortunately, many optimizations are quite difficult to express in this
 format, since a variable's value may have been set by many different definitions
-throughout the exectuion of the program. To improve our ability to reason about
+throughout the execution of the program. To improve our ability to reason about
 programs, we introduce the \textit{static-single assignment} restriction, which
 says that every variable must be defined at exactly one point in the program. We
 can intuitively represent this as every variable being given by an immutable
-\ms{let}-binding. Unfortunately, it is difficult to express programs with loops
+\ms{let}-binding. \todo{Explain why SSA is useful -- i.e., say substitution, even
+though it is not totally true\ldots} Unfortunately, it is difficult to express programs with loops
 in this format, since the value of a variable may change on each iteration of the
 loop.
 
 The classical solution to this issue is to introduce \textit{$\phi$-nodes},
 which evaluate to a different value depending on which block we
-\textit{previously} came from. For example, in \ms{loop}, $i_0$ evaluates to 1
+\textit{previously} came from. For example, in basic block \ms{loop} in Figure~\ref{fig:ten-fact-ssa},
+$i_0$ evaluates to 1
 if we came from \ms{start}, and to $i_1$ if we came from \ms{body}. Similarly,
 $a_0$ evaluates to 1 if we came from \ms{start}, and to $a_1$ if we came from
 \ms{body}. This allows us to express the fact that the values of $i_0, a_0$ are
@@ -350,7 +355,7 @@ time spent in compilers courses trying to build up the requisite intuition.
 \end{figure}
 
 One solution to this issue is to transition to an isomorphic syntax called basic
-block arguments (BBA), as illustrated in Figure \ref{fig:ten-fact-bba}. In this
+blocks with arguments (BBA), as illustrated in Figure \ref{fig:ten-fact-bba}. In this
 approach, each $\phi$-node, which lacks side effects and whose scope depends
 solely on the originating basic blocks rather than its position within its own
 block, can be moved to the top of the block. This reorganization allows us to
@@ -359,7 +364,7 @@ the corresponding values passed at the jump site. Conversely, converting a
 program from BBA format back to standard SSA form with $\phi$-nodes is
 straightforward: introduce a $\phi$-node for each argument of a basic block, and
 then, for each branch corresponding to the $\phi$-node, add an argument to the
-jump instruction from the appropriate source block.
+jump instruction from the appropriate source block. 
 
 One insight that BBA format give us is, as described in~\citet{appel-ssa}, a
 program in SSA can be viewed as a set of tail-recursive functions (corresponding
@@ -368,7 +373,8 @@ tail-call. This gives us a natural way to give a semantics to SSA and to reason
 about optimizations, but there is a slight mismatch between the scoping rules of
 this format and how SSA is actually scoped.
 
-\TODO{cite earlier paper as well, streamline...}
+\TODO{cite A Correspondence between Continuation Passing Style and
+  Static Single Assignment Form by Richard A. Kelsey }
 
 \begin{figure}
   \begin{subfigure}[t]{.5\textwidth}
@@ -442,7 +448,8 @@ the usage point is the definition point).
     body
   \end{itemize}
   \item In general, dominance always forms a tree (explain? cite? \cite{ssa-intro})
-  \item Can topologically sort CFG by dominance tree, and then insert brackets for lexical scoping:
+  \item Can topologically sort CFG by dominance tree, and then insert brackets for lexical scoping
+    \todo{Cite SSA-ANF paper}
 \end{itemize}
 
 \begin{figure}
