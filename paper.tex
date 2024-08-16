@@ -305,11 +305,10 @@ control-flow dependent while still maintaining the single-definition principle
 Note, however that $i_1, a_0$ are defined \textit{later} in the program than the
 $\phi$-nodes $i_0, a_0$, which would normally be seen as using an undefined
 value. We hence need to use the rather confusing scoping rule that the variables
-in a branch of a $\phi$-node must be defined \textit{when coming from that
-particular block}, even if they are undefined when coming from other blocks.
-This in general makes giving SSA an operational semantics quite confusing, and
-with much time spent in compilers courses trying to build up the requisite
-intuition.
+in a branch of a $\phi$-node must be defined \textit{at the end of the source
+basic block for that branch}, even if they are undefined when coming from other blocks. This in
+general makes giving SSA an operational semantics quite confusing, and with much
+time spent in compilers courses trying to build up the requisite intuition.
 
 \begin{figure}
   \begin{subfigure}[t]{.5\textwidth}
@@ -350,44 +349,26 @@ intuition.
   \label{fig:ten-fact-program}
 \end{figure}
 
-One solution to this issue is to transition to an alternative, but isomorphic
-syntax: \textit{basic blocks with arguments}, as in Figure
-\ref{fig:bba-ten-fact}.
+One solution to this issue is to transition to an isomorphic syntax called basic
+block arguments (BBA), as illustrated in Figure \ref{fig:ten-fact-bba}. In this
+approach, each $\phi$-node, which lacks side effects and whose scope depends
+solely on the originating basic blocks rather than its position within its own
+block, can be moved to the top of the block. This reorganization allows us to
+treat each $\phi$-node as equivalent to an argument for the basic block, with
+the corresponding values passed at the jump site. Conversely, converting a
+program from BBA format back to standard SSA form with $\phi$-nodes is
+straightforward: introduce a $\phi$-node for each argument of a basic block, and
+then, for each branch corresponding to the $\phi$-node, add an argument to the
+jump instruction from the appropriate source block.
 
-\TODO{what is BBA; \cite{appel-ssa} and earlier paper}
+One insight that BBA format give us is, as described in~\citet{appel-ssa}, a
+program in SSA can be viewed as a set of tail-recursive functions (corresponding
+to the basic blocks in the original program), with each branch interpreted as a
+tail-call. This gives us a natural way to give a semantics to SSA and to reason
+about optimizations, but there is a slight mismatch between the scoping rules of
+this format and how SSA is actually scoped.
 
-\TODO{what is the isomorphism}
-
-\TODO{focus on easier scoping and tail-call semantics}
-
-\TODO{mismatch wrt. scoping between functional programming and \cite{appel-ssa}}
-
-\TODO{what \textit{exactly} is scoping: dominance lore}
-
-\begin{itemize}
-  \item Isomorphism is trivial: we just move the definition from the $\phi$ to the call-site
-  \item This makes semantics of blocks and scoping a lot more clear:
-  \item {\TODO{After introducing BBA, recall Appel's SSA is FP paper \cite{appel-ssa}, and then note
-    that there is a mismatch wrt scoping. Then explain dominance based scoping.}}
-  \item In SSA, to use a variable, it must be defined once we reach the use-point, or else UB
-  \item Variables can only be defined at exactly one point
-  \item Safe approximation: all paths to the use point must cross the definition point at least once
-  \item i.e. use point must \textit{dominate} definition point
-  \item Within a basic block: later variables use earlier ones
-  \item Between basic blocks: all paths through the cfg to the use-block must pass through the def
-        block
-  \item i.e. use-block must \textit{strictly dominate} def-block (all blocks dominate themselves,
-  but see "within BB" rule)
-  \item Examples: \begin{itemize}
-    \item start strictly dominates loop
-    \item loop strictly dominates body
-    \item loop does not strictly dominate loop since loop $=$ loop
-    \item body does not strictly dominate loop since we can get to loop via start, without passing
-    body
-  \end{itemize}
-  \item In general, dominance always forms a tree (explain? cite? \cite{ssa-intro})
-  \item Can topologically sort CFG by dominance tree, and then insert brackets for lexical scoping:
-\end{itemize}
+\TODO{cite earlier paper as well, streamline...}
 
 \begin{figure}
   \begin{subfigure}[t]{.5\textwidth}
@@ -425,7 +406,7 @@ syntax: \textit{basic blocks with arguments}, as in Figure
                                   \\ \\
     \end{align*}
     \caption{Basic-blocks with arguments}
-    \label{fig:bba-ten-fact}
+    \label{fig:ten-fact-bba}
   \end{subfigure}
 
   \TODO{Add arrows with \texttt{tikzmark}?}
@@ -439,6 +420,30 @@ syntax: \textit{basic blocks with arguments}, as in Figure
 
   \Description{}
 \end{figure}
+
+In particular, while functional languages are usually \textit{lexically} scoped,
+SSA is instead scoped via \textit{dominance}: a variable is in scope at a given
+point if all paths from the entry point to that point pass through the
+variable's (unique) definition; i.e, if the usage point is \textit{strictly
+dominated} by the definition point (as we disallow recursive definitions, where
+the usage point is the definition point).
+
+\begin{itemize}
+  \item Within a basic block: later variables use earlier ones
+  \item Between basic blocks: all paths through the cfg to the use-block must pass through the def
+        block
+  \item i.e. use-block must \textit{strictly dominate} def-block (all blocks dominate themselves,
+  but see "within BB" rule)
+  \item Examples: \begin{itemize}
+    \item start strictly dominates loop
+    \item loop strictly dominates body
+    \item loop does not strictly dominate loop since loop $=$ loop
+    \item body does not strictly dominate loop since we can get to loop via start, without passing
+    body
+  \end{itemize}
+  \item In general, dominance always forms a tree (explain? cite? \cite{ssa-intro})
+  \item Can topologically sort CFG by dominance tree, and then insert brackets for lexical scoping:
+\end{itemize}
 
 \begin{figure}
   \centering
