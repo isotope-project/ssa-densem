@@ -273,39 +273,78 @@ expression nesting, as well as let-expressions, to obtain \textit{type-theoretic
 \isotopessa, which will be the subject of the rest of this paper.
 
 As a running example, consider the simple imperative program to compute $10!$ given in
-Figure~\ref{fig:ten-fact-program}. In SSA form, it might be written as in
-Figure~\ref{fig:ten-fact-ssa}. In particular,
+Figure~\ref{fig:fact-program}. Operating directly on an imperative language can be challenging,
+since having a uniform representation of code friendly to mechanized optimization and analysis is
+often in tension with features designed to improve readability and programmer productivity, such as
+syntax sugar. We might therefore normalize our code into \textit{3-address code}, as in
+Figure~\ref{fig:fact-3addr}, by doing the following:
 \begin{itemize}
-  \item We have moved from structured control flow in terms of \ms{while} to
-  unstructured jumps between the basic blocks \ms{start} (the entry block),
-  \ms{loop}, and \ms{body}. 
-  \item We have replaced subexpressions like $i + 1$ in $a * (i + 1)$ with let-bindings,
-  so that every expression in our program is atomic. 
+  \item Converting structured control flow in terms of (e.g.) \ms{while} to unstructured jumps
+  between the basic blocks \ms{start} (the entry block), \ms{loop}, and \ms{body}, which now have
+  explicit labels. 
+  \item Replacing subexpressions like $i + 1$ in $a * (i + 1)$ with let-bindings, so that every
+  expression in our program is atomic. 
 \end{itemize}
-\TODO{Add a IMP$\to$3ADR, 3ADR$\to$SSA, cite SSA-intro}
-  
 
-If this is all we did, we would have converted our program to \textit{3-address
-code}. Unfortunately, many optimizations are quite difficult to express in this
-format, since a variable's value may have been set by many different definitions
-throughout the execution of the program. To improve our ability to reason about
-programs, we introduce the \textit{static-single assignment} restriction, which
-says that every variable must be defined at exactly one point in the program. We
-can intuitively represent this as every variable being given by an immutable
-\ms{let}-binding. \todo{Explain why SSA is useful -- i.e., say substitution, even
-though it is not totally true\ldots} Unfortunately, it is difficult to express programs with loops
-in this format, since the value of a variable may change on each iteration of the
-loop.
+\begin{figure}
+  \begin{subfigure}[t]{.5\textwidth}
+    \begin{align*}
+      & \ms{let}\;n = 10; \\
+      & \ms{let\;mut}\;i = 1; \\
+      & \ms{let\;mut}\;a = 1; \\
+      & \ms{while}\;i_0 < n\;\{ \\
+      & \quad a = a * (i + 1) \\
+      & \quad i = i + 1; \\
+      & \} \\
+      & \ms{ret}\;a \\
+    \end{align*}
+    \caption{As an imperative program}
+    \label{fig:fact-imp}
+  \end{subfigure}%
+  \begin{subfigure}[t]{.5\textwidth}
+    \begin{align*}
+      \ms{start}:\quad  & \ms{let}\;n = 10; \\
+                        & \ms{let\;mut}\;i = 1; \\
+                        & \ms{let\;mut}\;a = 1; \\
+                        & \ms{br}\;\ms{loop} \\
+      \ms{loop}: \quad  & \ms{if}\;i < n\;
+                          \{\;\ms{br}\;\ms{body}\;\}\;
+                          \ms{else}\;\{\;\ms{ret}\;a\;\} \\
+      \ms{body}: \quad  & \ms{let}\;t = i + 1; \\
+                        & a = a * t; \\
+                        & i = i + 1; \\
+                        & \ms{br}\;\ms{loop}
+    \end{align*}
+    \caption{As 3-address code}
+    \label{fig:fact-3addr}
+  \end{subfigure}
+  \caption{
+    A simple, slightly suboptimal program to compute $10!$ via multiplication in a loop, represented
+    as typical imperative code and in 3-address code.
+  }
+  \Description{}
+  \label{fig:fact-program}
+\end{figure}
 
-The classical solution to this issue is to introduce \textit{$\phi$-nodes},
-which evaluate to a different value depending on which block we
-\textit{previously} came from. For example, in basic block \ms{loop} in Figure~\ref{fig:ten-fact-ssa},
-$i_0$ evaluates to 1
-if we came from \ms{start}, and to $i_1$ if we came from \ms{body}. Similarly,
-$a_0$ evaluates to 1 if we came from \ms{start}, and to $a_1$ if we came from
-\ms{body}. This allows us to express the fact that the values of $i_0, a_0$ are
-control-flow dependent while still maintaining the single-definition principle
-(as otherwise, we would need a new definition for $i$ overriding the old one).
+Unfortunately, many optimizations are still quite difficult to express in this format, since a
+variable's value may have been set by many different definitions throughout the execution of the
+program. To improve our ability to reason about programs, we introduce the \textit{static-single
+assignment} restriction, which says that every variable must be defined at exactly one point in the
+program. We can intuitively represent this as every variable being given by an immutable
+\ms{let}-binding.
+
+
+\todo{Explain why SSA is useful -- i.e., say substitution, even though it is not totally true\ldots}
+
+Unfortunately, it is difficult to express programs with loops in this format, since the value of a
+variable may change on each iteration of the loop. The classical solution to this issue is to
+introduce \textit{$\phi$-nodes}, which evaluate to a different value depending on which block we
+\textit{previously} came from. For example, in basic block \ms{loop} in
+Figure~\ref{fig:fact-ssa}, $i_0$ evaluates to 1 if we came from \ms{start}, and to $i_1$ if we
+came from \ms{body}. Similarly, $a_0$ evaluates to 1 if we came from \ms{start}, and to $a_1$ if we
+came from \ms{body}. This allows us to express the fact that the values of $i_0, a_0$ are
+control-flow dependent while still maintaining the single-definition principle (as otherwise, we
+would need a new definition for $i$ overriding the old one).
 
 Note, however that $i_1, a_0$ are defined \textit{later} in the program than the
 $\phi$-nodes $i_0, a_0$, which would normally be seen as using an undefined
@@ -318,17 +357,19 @@ time spent in compilers courses trying to build up the requisite intuition.
 \begin{figure}
   \begin{subfigure}[t]{.5\textwidth}
     \begin{align*}
-      & \ms{let}\;n = 10; \\
-      & \ms{let\;mut}\;i = 1; \\
-      & \ms{let\;mut}\;a = 1; \\
-      & \ms{while}\;i_0 < n\;\{ \\
-      & \quad a = a * (i + 1) \\
-      & \quad i = i + 1; \\
-      & \} \\
-      & \ms{ret}\;a
+      \ms{start}:\quad  & \ms{let}\;n = 10; \\
+                        & \ms{let\;mut}\;i = 1; \\
+                        & \ms{let\;mut}\;a = 1; \\
+                        & \ms{br}\;\ms{loop} \\
+      \ms{loop}: \quad  & \ms{if}\;i < n\;
+                          \{\;\ms{br}\;\ms{body}\;\}\;
+                          \ms{else}\;\{\;\ms{ret}\;a\;\} \\
+      \ms{body}: \quad  & \ms{let}\;t = i + 1; \\
+                        & a = a * t; \\
+                        & i = i + 1; \\
+                        & \ms{br}\;\ms{loop}
     \end{align*}
-    \caption{As an imperative program}
-    \label{fig:ten-fact-program-imp}
+    \caption{3-address code}
   \end{subfigure}%
   \begin{subfigure}[t]{.5\textwidth}
     \begin{align*}
@@ -344,18 +385,21 @@ time spent in compilers courses trying to build up the requisite intuition.
                         & \ms{let}\;i_1 = i_0 + 1 \\
                         & \ms{br}\;\ms{loop}
     \end{align*}
-    \caption{In SSA form}
-    \label{fig:ten-fact-ssa}
+    \caption{Converted to SSA form}
+    \label{fig:fact-ssa}
   \end{subfigure}
+  \todo{add diagram showing correspondence between $\phi$-nodes and mutable bindings?}
   \caption{
-    A simple, slightly suboptimal program to compute $10!$ via multiplication in a loop
+    Conversion of three address code for the program in Figure~\ref{fig:fact-program} to SSA 
+    form, requring the insertion of $\phi$-nodes for $i$ and $a$ due to control-flow dependent
+    updates. Note how SSA-form can be viewed as ``three address code in which all 
+    \ms{let}-bindings are immutable.''
   }
   \Description{}
-  \label{fig:ten-fact-program}
 \end{figure}
 
 One solution to this issue is to transition to an isomorphic syntax called basic
-blocks with arguments (BBA), as illustrated in Figure \ref{fig:ten-fact-bba}. In this
+blocks with arguments (BBA), as illustrated in Figure \ref{fig:fact-bba}. In this
 approach, each $\phi$-node, which lacks side effects and whose scope depends
 solely on the originating basic blocks rather than its position within its own
 block, can be moved to the top of the block. This reorganization allows us to
@@ -373,8 +417,7 @@ tail-call. This gives us a natural way to give a semantics to SSA and to reason
 about optimizations, but there is a slight mismatch between the scoping rules of
 this format and how SSA is actually scoped.
 
-\TODO{cite A Correspondence between Continuation Passing Style and
-  Static Single Assignment Form by Richard A. Kelsey }
+\TODO{Cite \citet{kelsey-95-cps} earlier?}
 
 \begin{figure}
   \begin{subfigure}[t]{.5\textwidth}
@@ -412,17 +455,17 @@ this format and how SSA is actually scoped.
                                   \\ \\
     \end{align*}
     \caption{Basic-blocks with arguments}
-    \label{fig:ten-fact-bba}
+    \label{fig:fact-bba}
   \end{subfigure}
 
   \TODO{Add arrows with \texttt{tikzmark}?}
-
-  \TODO{cite LLVM, MLIR, Cranelift?}
   
-  \caption{ The program in Figure \ref{fig:ten-fact-program} written in standard SSA (using $\phi$
-    nodes), like in LLVM, and in basic-blocks with arguments SSA, like in MLIR and Cranelift. The
-    arguments $i_0, a_0$ corresponding to the $\phi$-nodes $i_0, a_0$ are colored in
-    \textcolor{red}{red} and \textcolor{blue}{blue}, respectively. }
+  \caption{
+    The program in Figure \ref{fig:fact-program} written in standard SSA (using $\phi$ nodes),
+    like in LLVM \cite{llvm}, and in basic-blocks with arguments SSA, like in MLIR \cite{mlir} and
+    Cranelift \cite{cranelift}. The arguments $i_0, a_0$ corresponding to the $\phi$-nodes $i_0,
+    a_0$ are colored in \textcolor{red}{red} and \textcolor{blue}{blue}, respectively.
+  }
 
   \Description{}
 \end{figure}
@@ -434,22 +477,18 @@ variable's (unique) definition; i.e, if the usage point is \textit{strictly
 dominated} by the definition point (as we disallow recursive definitions, where
 the usage point is the definition point).
 
+In terms of basic blocks, this translates to a variable being visible \textit{within} the block it
+is defined after the instruction which defines it, and thereafter being visible in all basic blocks
+which strictly dominate the block $D$ in which it is defined in the control-flow graph (that is, all
+basic blocks $B \neq D$ such that every path from the entry block to $B$ passes through $D$). For
+example, in Figure~\ref{fig:fact-bba},
 \begin{itemize}
-  \item Within a basic block: later variables use earlier ones
-  \item Between basic blocks: all paths through the cfg to the use-block must pass through the def
-        block
-  \item i.e. use-block must \textit{strictly dominate} def-block (all blocks dominate themselves,
-  but see "within BB" rule)
-  \item Examples: \begin{itemize}
-    \item start strictly dominates loop
-    \item loop strictly dominates body
-    \item loop does not strictly dominate loop since loop $=$ loop
-    \item body does not strictly dominate loop since we can get to loop via start, without passing
-    body
-  \end{itemize}
-  \item In general, dominance always forms a tree (explain? cite? \cite{ssa-intro})
-  \item Can topologically sort CFG by dominance tree, and then insert brackets for lexical scoping
-    \todo{Cite SSA-ANF paper}
+  \item \ms{start} strictly dominates \ms{loop} and \ms{body}; so, for example, the variable $n$
+  defined in \ms{start} is visible in \ms{loop}
+  \item \ms{loop} strictly dominates \ms{body}, so the parameterts $i_0, a_0$ to \ms{loop} are
+  visible, rather than needing to be passed in as parameters themselves as well
+  \item \ms{body} does \textit{not} strictly dominate \ms{loop}, since there is trivially a path
+  from \ms{start} to \ms{loop} which does not go through \ms{body}
 \end{itemize}
 
 \begin{figure}
@@ -486,16 +525,26 @@ the usage point is the definition point).
   \end{subfigure}
   \caption{Conversion of an SSA program from dominance-based scoping to explicit lexical scoping}
   \Description{}
+  \label{fig:dominance-to-lexical}
 \end{figure}
 
+In general, the relation ``$A$ strictly dominates $B$'' intersected with the relation ``$A$ jumps
+directly to $B$'' forms a tree, called the \textit{dominance tree} of the control-flow graph, which
+can be computed in nearly linear time in the size of the tree \cite{ssa-intro}. If we topologically
+sort the basic blocks in a CFG by the corresponding partial order on blocks, we can insert brackets
+according to the dominance tree to convert from dominance-based scoping to lexical scoping, as shown
+in Figure~\ref{fig:dominance-to-lexical}. This is a simple transformation, and it is easy to see
+that it forms an isomorphism, since we can recover standard SSA by simply removing the inserted
+``\ms{where}-blocks."
+
+The result of doing so looks a lot like the correspondence between CPS and SSA described in
+\citet{kelsey-95-cps}. 
+
+\TODO{why are these similar? explain?}
+
+\TODO{talk about type-theoretic benefits of lexical scoping}
+
 \begin{itemize}
-  \item Interconversion is easy:
-  \begin{itemize}
-    \item Remove brackets and ``\ms{where}'' to go to SSA
-    \item Add brackets and ``\ms{where}'' to go to lexical-SSA; a consistent bracketing always
-    exists because a dominance tree always exists
-    \item Different consistent bracketings must be semantically equivalent
-  \end{itemize}
 
   \item Now that we have lexical scoping, we want a nice equational theory. Need:
   \begin{itemize}
@@ -559,9 +608,11 @@ the usage point is the definition point).
   \item This can trivially be seen to add no additional expressive power: can be eliminated by
         introducing anonymous basic blocks for branches and jumping to them
   \item We now have essentially ANF, cite this
-  \item Can generalize to \isotopessa (like MNF but not higher-order); by adding an \textit{expression
-  language}
-  \item This lets us state \textit{substitutions}, like
+  \item Can generalize to \isotopessa (like MNF but not higher-order); by adding an
+  \textit{expression language}
+  \item Again, obviously no additional expressive power
+  \item This lets us state \textit{substitutions}, like, in Figure~\ref{fig:fact-cse}, which can be
+  used to build up optimizations such as \textit{common-subexpression elimination}.
 \end{itemize}
 
 \begin{figure}
@@ -597,10 +648,10 @@ the usage point is the definition point).
       & \}  \\ \\ \\
     \end{align*}
     \caption{
-      Programs \ref{fig:fact-anf} and \ref{fig:fully-substituted-fact} after substitution;
+      Programs \ref{fig:fact-anf} and \ref{fig:fact-subst} after substitution;
       since the result is the same, both programs must be equivalent.
     }
-    \label{fig:fact-opt}
+    \label{fig:fact-subst}
   \end{subfigure}\hspace{1em}%
   \begin{subfigure}[t]{.31\textwidth}
     \begin{align*}
@@ -617,7 +668,7 @@ the usage point is the definition point).
       & \} \\
     \end{align*}
     \caption{Optimized ANF program}
-    \label{fig:fully-substituted-fact}
+    \label{fig:fact-opt}
   \end{subfigure}
   \caption{
     Adding support for expressions, allowing us to perform substitutions of (pure) expressions.
@@ -625,7 +676,34 @@ the usage point is the definition point).
     building block.
   }
   \Description{}
+  \label{fig:fact-cse}
 \end{figure}
+
+\begin{itemize}
+  \item Substitution, in particular, lets us do algebra \textit{algebra}, for example, we know that:
+  \item \begin{itemize}
+    \item $(i_0 + 1, a_0 * (i_0 + 1)) 
+      = (\ms{let}\;(x, y) = (i_0, a_0)\;\ms{in}\;(x + 1, y * (x + 1)))$
+    \item $(1, 1)
+    = (\ms{let}\;(x, y) = (0, 1)\;\ms{in}\;(x + 1, y * (x + 1)))$
+  \end{itemize}
+  \item So therefore we can rewrite \ref{fig:fact-subst-2} to \ref{fig:fact-dinat} by substitution
+  \item Which we can combine with control-flow rewrites, such as \textit{dinaturality}
+  (\todo{explain}, cite Elgot lore?) to build up complex optimizations, such as rewriting
+  \ref{fig:fact-zero} to \ref{fig:fact-opt}.
+  \item In other words, we can do \textit{complex}, \textit{error-prone} loop and control-flow graph
+        optimizations by breaking them down into closed set of simple algebraic steps
+  \item We can justify each such step is sound rigorously via our denotational semantics
+  \item We can show that our steps are \textit{complete} by showing that quotienting by them gives
+        a model of our denotational semantics
+  \item That's why we use \isotopessa
+  \item But we gain no additional power: SSA $\subseteq$ \isotopessa; this is a retraction
+  (embedding-projection)
+  \item In particular, using the steps, every \isotopessa program can be converted to an SSA program with
+        equivalent semantics, while every SSA program is already a \isotopessa program (just add brackets!)
+  \item Unproven conjecture: this should take \~linear time, and the resuling program should be
+  \~linearly sized. Do on paper?
+\end{itemize}
 
 \begin{figure}
   \begin{minipage}{.5\textwidth}
@@ -641,8 +719,8 @@ the usage point is the definition point).
         & \quad \} \\
         & \}
       \end{align*}
-      \caption{Substituted program from Figure \ref{fig:fully-substituted-fact}}
-      \label{fig:fully-substituted-fact2}
+      \caption{Substituted program from Figure \ref{fig:fact-subst}}
+      \label{fig:fact-subst-2}
     \end{subfigure}
     \begin{subfigure}{\textwidth}
       \begin{align*}
@@ -657,8 +735,8 @@ the usage point is the definition point).
         & \quad \} \\
         & \}
       \end{align*}
-      \caption{Equivalent to Figure \ref{fig:fully-substituted-let} by \textit{dinaturality}}
-      \label{fig:suboptimal-fact2}
+      \caption{Equivalent to Figure \ref{fig:fact-dinat} by \textit{dinaturality}}
+      \label{fig:fact-dinat}
     \end{subfigure}
   \end{minipage}%
   \begin{subfigure}[c]{.5\textwidth}
@@ -679,47 +757,18 @@ the usage point is the definition point).
       & \quad \} \\
       & \}
     \end{align*}
-    \caption{Equivalent to Figure \ref{fig:fully-substituted-fact2} by substitution}
-    \label{fig:fully-substituted-let}
+    \caption{Equivalent to Figure \ref{fig:fact-subst-2} by substitution}
+    \label{fig:fact-zero}
   \end{subfigure}
+  \TODO{add arrows via \texttt{tikzmark}}
   \caption{
-    Decomposing multi-block rewrites (from \ref{fig:suboptimal-fact2} to
-    \ref{fig:fully-substituted-fact2}, and therefore to the more optimal program 
+    Decomposing multi-block rewrites (from \ref{fig:fact-zero} to
+    \ref{fig:fact-subst-2}, and therefore to the more optimal program 
     \ref{fig:fact-opt}) into simple algebraic steps. By verifying each step, we can
     verify complex optimizations through decomposition.
   } 
   \Description{}
 \end{figure}
-
-\begin{itemize}
-  \item We can then do \textit{algebra}, for example, we know that:
-  \item \begin{itemize}
-    \item $(i_0 + 1, a_0 * (i_0 + 1)) 
-      = (\ms{let}\;(x, y) = (i_0, a_0)\;\ms{in}\;(x + 1, y * (x + 1)))$
-    \item $(1, 1)
-    = (\ms{let}\;(x, y) = (0, 1)\;\ms{in}\;(x + 1, y * (x + 1)))$
-  \end{itemize}
-  \item So therefore the program above is
-\end{itemize}
-
-\begin{itemize}
-  \item which by \textit{dinaturality} is equal to
-\end{itemize}
-
-\begin{itemize}
-  \item In other words, we can do \textit{complex}, \textit{error-prone} loop and control-flow graph
-        optimizations by breaking them down into closed set of simple algebraic steps
-  \item We can justify each such step is sound rigorously via our denotational semantics
-  \item We can show that our steps are \textit{complete} by showing that quotienting by them gives
-        a model of our denotational semantics
-  \item That's why we use \isotopessa
-  \item But we gain no additional power: SSA $\subseteq$ \isotopessa; this is a retraction
-  (embedding-projection)
-  \item In particular, using the steps, every \isotopessa program can be converted to an SSA program with
-        equivalent semantics, while every SSA program is already a \isotopessa program (just add brackets!)
-  \item Unproven conjecture: this should take \~linear time, and the resuling program should be
-  \~linearly sized. Do on paper?
-\end{itemize}
 
 \section{Type Theory}
 
