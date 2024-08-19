@@ -266,18 +266,24 @@ In this section, we will describe SSA form and the isomorphism between the stand
 based presentation and the more functional basic-blocks with arguments format. We will then discuss
 standard dominance-based scoping, and how this can be recast as lexical scoping to make it more
 amenable to standard type-theoretic treatment. We will then generalize this format to allow
-branching to arbitrary code, rather than only labels, to obtain \textit{A-normal form}, or ANF,
-analogously to~\citet{anf}; a straightforward argument shows that this adds no expressive power.
-Finally, to allow for substitution, we will further generalize our syntax to allow for arbitrary
-expression nesting, as well as let-expressions, to obtain \textit{type-theoretic SSA}, or
-\isotopessa, which will be the subject of the rest of this paper.
+branching to arbitrary code, rather than only labels, to obtain \textit{A-normal form}, or ANF
+\cite{flanagan-93-anf}, analogously to~\citet{chakravarty-functional-ssa-2003}; a straightforward
+argument shows that this adds no expressive power. Finally, to allow for substitution, we will
+further generalize our syntax to allow for arbitrary expression nesting, as well as let-expressions,
+to obtain \textit{type-theoretic SSA}, or \isotopessa, which will be the subject of the rest of this
+paper.
 
 As a running example, consider the simple imperative program to compute $10!$ given in
-Figure~\ref{fig:fact-program}. Operating directly on an imperative language can be challenging,
-since having a uniform representation of code friendly to mechanized optimization and analysis is
-often in tension with features designed to improve readability and programmer productivity, such as
-syntax sugar. We might therefore normalize our code into \textit{3-address code}, as in
-Figure~\ref{fig:fact-3addr}, by doing the following:
+Figure~\ref{fig:fact-program}. 
+
+\TODO{3 address code was one of the first IRs; cite Frances Allen? Perhaps also cite
+\cite{allen-70-cfa} for dominance lore?}
+
+Operating directly on an imperative language can be challenging, since having a uniform
+representation of code friendly to mechanized optimization and analysis is often in tension with
+features designed to improve readability and programmer productivity, such as syntax sugar. We might
+therefore normalize our code into \textit{3-address code}, as in Figure~\ref{fig:fact-3addr}, by
+doing the following:
 \begin{itemize}
   \item Converting structured control flow in terms of (e.g.) \ms{while} to unstructured jumps
   between the basic blocks \ms{start} (the entry block), \ms{loop}, and \ms{body}, which now have
@@ -326,6 +332,8 @@ Figure~\ref{fig:fact-3addr}, by doing the following:
   \label{fig:fact-program}
 \end{figure}
 
+\TODO{better segue}
+
 Unfortunately, many optimizations are still quite difficult to express in this format, since a
 variable's value may have been set by many different definitions throughout the execution of the
 program. To improve our ability to reason about programs, we introduce the \textit{static-single
@@ -333,10 +341,11 @@ assignment} restriction, which says that every variable must be defined at exact
 program. We can intuitively represent this as every variable being given by an immutable
 \ms{let}-binding.
 
+\TODO{a bit more SSA history; \citet{ssa-intro} again; also look at \citet{ssa-original}}
 
 \todo{Explain why SSA is useful -- i.e., say substitution, even though it is not totally true\ldots}
 
-Unfortunately, it is difficult to express programs with loops in this format, since the value of a
+It is difficult to express programs with loops in this format, since the value of a
 variable may change on each iteration of the loop. The classical solution to this issue is to
 introduce \textit{$\phi$-nodes}, which evaluate to a different value depending on which block we
 \textit{previously} came from. For example, in basic block \ms{loop} in
@@ -398,26 +407,15 @@ time spent in compilers courses trying to build up the requisite intuition.
   \Description{}
 \end{figure}
 
-One solution to this issue is to transition to an isomorphic syntax called basic
-blocks with arguments (BBA), as illustrated in Figure \ref{fig:fact-bba}. In this
-approach, each $\phi$-node, which lacks side effects and whose scope depends
-solely on the originating basic blocks rather than its position within its own
-block, can be moved to the top of the block. This reorganization allows us to
-treat each $\phi$-node as equivalent to an argument for the basic block, with
-the corresponding values passed at the jump site. Conversely, converting a
-program from BBA format back to standard SSA form with $\phi$-nodes is
-straightforward: introduce a $\phi$-node for each argument of a basic block, and
-then, for each branch corresponding to the $\phi$-node, add an argument to the
+One solution to this issue is to transition to an isomorphic syntax called basic blocks with
+arguments (BBA), as illustrated in Figure \ref{fig:fact-bba}. In this approach, each $\phi$-node,
+which lacks side effects and whose scope depends solely on the originating basic blocks rather than
+its position within its own block, can be moved to the top of the block. This reorganization allows
+us to treat each $\phi$-node as equivalent to an argument for the basic block, with the
+corresponding values passed at the jump site. Conversely, converting a program from BBA format back
+to standard SSA form with $\phi$-nodes is straightforward: introduce a $\phi$-node for each argument
+of a basic block, and then, for each branch corresponding to the $\phi$-node, add an argument to the
 jump instruction from the appropriate source block. 
-
-One insight that BBA format give us is, as described in~\citet{appel-ssa}, a
-program in SSA can be viewed as a set of tail-recursive functions (corresponding
-to the basic blocks in the original program), with each branch interpreted as a
-tail-call. This gives us a natural way to give a semantics to SSA and to reason
-about optimizations, but there is a slight mismatch between the scoping rules of
-this format and how SSA is actually scoped.
-
-\TODO{Cite \citet{kelsey-95-cps} earlier?}
 
 \begin{figure}
   \begin{subfigure}[t]{.5\textwidth}
@@ -470,18 +468,26 @@ this format and how SSA is actually scoped.
   \Description{}
 \end{figure}
 
-In particular, while functional languages are usually \textit{lexically} scoped,
-SSA is instead scoped via \textit{dominance}: a variable is in scope at a given
-point if all paths from the entry point to that point pass through the
-variable's (unique) definition; i.e, if the usage point is \textit{strictly
-dominated} by the definition point (as we disallow recursive definitions, where
-the usage point is the definition point).
+An important insight provided by the BBA format, as discussed in \citet{appel-ssa}, is that a
+program in SSA form may be interpreted as a collection of tail-recursive functions, where each
+basic-block and branch correspond to a function and tail call respectively. This interpretation
+offers a natural framework for defining the semantics of SSA and reasoning about optimizations.
+However, there is a subtle difference between the scoping rules in this format and the actual
+scoping used in traditional SSA, which requires careful consideration.
 
-In terms of basic blocks, this translates to a variable being visible \textit{within} the block it
-is defined after the instruction which defines it, and thereafter being visible in all basic blocks
-which strictly dominate the block $D$ in which it is defined in the control-flow graph (that is, all
-basic blocks $B \neq D$ such that every path from the entry block to $B$ passes through $D$). For
-example, in Figure~\ref{fig:fact-bba},
+\TODO{Cite \citet{kelsey-95-cps} in paragraph above?}
+
+In particular, while functional languages typically rely on \textit{lexical scoping}, where the
+scope of a variable is determined by its position within the code's nested structure, SSA form
+introduces a different scoping mechanism based on dominance. In SSA, a variable is considered to be
+in scope at a specific point $P$ if and only if all execution paths from the program's entry point
+to that point pass through the variable's unique definition $D$. In this case, we say that $P$ is
+\textit{strictly dominated} by $D$.
+
+When considering basic blocks, this translates to a variable being visible within the block $D$
+where it is defined, starting from the point of its definition, and continuing to be visible in all
+subsequent blocks $P$ strictly dominated by $D$ in the control-flow graph. For example, in
+Figure~\ref{fig:fact-bba},
 \begin{itemize}
   \item \ms{start} strictly dominates \ms{loop} and \ms{body}; so, for example, the variable $n$
   defined in \ms{start} is visible in \ms{loop}
@@ -490,6 +496,16 @@ example, in Figure~\ref{fig:fact-bba},
   \item \ms{body} does \textit{not} strictly dominate \ms{loop}, since there is trivially a path
   from \ms{start} to \ms{loop} which does not go through \ms{body}
 \end{itemize}
+
+In general, the relation ``$A$ strictly dominates $B$'' intersected with the relation ``$A$ jumps
+directly to $B$'' (i.e. ``$A$ is a \textit{direct predecessor} of $B$'') forms a tree, called the
+\textit{dominance tree} of the control-flow graph. This tree can be computed in nearly linear time
+in the size of the CFG \cite{ssa-intro}. If we topologically sort the basic blocks in a CFG by the
+corresponding partial order on blocks, we can insert brackets according to the dominance tree such
+that a variable is in lexical scope if and only if it is in scope under dominance-based scoping, as
+shown in Figure~\ref{fig:dominance-to-lexical}. This is a simple transformation, and it is easy to
+see that it forms an isomorphism, as standard SSA can be recovered by simply removing the inserted
+``\ms{where}-blocks."
 
 \begin{figure}
   \centering
@@ -527,15 +543,6 @@ example, in Figure~\ref{fig:fact-bba},
   \Description{}
   \label{fig:dominance-to-lexical}
 \end{figure}
-
-In general, the relation ``$A$ strictly dominates $B$'' intersected with the relation ``$A$ jumps
-directly to $B$'' forms a tree, called the \textit{dominance tree} of the control-flow graph, which
-can be computed in nearly linear time in the size of the tree \cite{ssa-intro}. If we topologically
-sort the basic blocks in a CFG by the corresponding partial order on blocks, we can insert brackets
-according to the dominance tree to convert from dominance-based scoping to lexical scoping, as shown
-in Figure~\ref{fig:dominance-to-lexical}. This is a simple transformation, and it is easy to see
-that it forms an isomorphism, since we can recover standard SSA by simply removing the inserted
-``\ms{where}-blocks."
 
 \TODO{rework below:}
 
