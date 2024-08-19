@@ -936,9 +936,36 @@ $\ms{ret}$, with $\ms{ret}\;a$ simply being an abbreviation for $\ms{br}\;\ms{re
 
 \TODO{notes about binding precedence of where}
 
-\TODO{metatheory: weakening}
+\TODO{text}
 
-\TODO{metatheory: substitution; substitution composes and weakens}
+\TODO{weakening rules}
+
+\begin{theorem}[Weakening]
+  Given $\Gamma \leq \Delta$, $\epsilon \leq \epsilon'$, and $\ms{L} \leq \ms{K}$, we have that
+  $\hasty{\Delta}{\epsilon}{a}{A} \implies \hasty{\Gamma}{\epsilon'}{a}{A}$ and
+  $\haslb{\Delta}{r}{\ms{L}} \implies \haslb{\Gamma}{r}{\ms{K}}$
+\end{theorem}
+
+\TODO{text}
+
+\TODO{substitution rules}
+
+\begin{theorem}[Substitution]
+  Given $\issubst{\gamma}{\Gamma}{\Delta}$, we have that $\hasty{\Delta}{\epsilon}{a}{A} \implies
+  \hasty{\Gamma}{\epsilon}{[\gamma]a}{A}$ and $\haslb{\Delta}{r}{\ms{L}} \implies
+  \haslb{\Gamma}{[\gamma]r}{\ms{L}}$
+\end{theorem}
+
+\TODO{text}
+
+\TODO{label substitution rules}
+
+\begin{theorem}[Label substitution]
+  Given $\lbsubst{\sigma}{\ms{L}}{\ms{K}}$, we have that
+  $\haslb{\Gamma}{r}{\ms{L}} \implies \haslb{\Gamma}{[\sigma]r}{\ms{K}}$
+\end{theorem}
+
+\TODO{text}
 
 \section{Equational Theory}
 
@@ -946,85 +973,13 @@ $\ms{ret}$, with $\ms{ret}\;a$ simply being an abbreviation for $\ms{br}\;\ms{re
 
 \section{Denotational Semantics}
 
-\TODO{this...}
+\TODO{premonoidal category lore}
 
-\section{TSO weak memory}
+\TODO{Freyd category lore}
 
-\TODO{this...}
+\TODO{distributivity lore}
 
-\section{Discussion and Related Work}
-
-\TODO{this...}
-
-\bibliographystyle{ACM-Reference-Format}
-\bibliography{references}
-
-\clearpage 
-
-\appendix
-
-\section{Syntax and Typing Rules}
-
-\begin{figure}[H]
-  \begin{center}
-    \begin{grammar}
-      <\(A, B, C\)> ::= 
-      \(X\)
-      \;|\; \(A \otimes B\)
-      \;|\; \(\mathbf{1}\)
-      \;|\; \(A + B\)
-      \;|\; \(\mathbf{0}\)
-
-      <\(a, b, c, e\)> ::= \(x\) 
-      \;|\;  \(f\;a\)
-      \;|\; \(\letexpr{x}{a}{e}\)
-      \alt  \(()\)
-      \;|\; \((a, b)\)
-      \;|\; \(\letexpr{(x, y)}{a}{e}\)
-      \alt  \(\linl{a}\) 
-      \;|\; \(\linr{a}\)
-      \;|\; \(\labort{a}\)
-      \;|\; \(\caseexpr{e}{x}{s}{y}{t}\)
-      
-      <\(s, t\)> ::= \(\lbrb{\ell}{a}\) 
-      \alt  \(\letstmt{x}{a}{t}\)
-      \;|\; \(\letstmt{(x, y)}{a}{t}\)
-      \;|\; \(\casestmt{e}{x}{s}{y}{t}\)
-      \alt  \(\where{t}{(\lwbranch{\ell_i}{x_i: A_i}{t_i},)_i}\)
-
-      <\(\Gamma\)> ::= \(\cdot\) \;|\; \(\Gamma, \thyp{x}{A}{\epsilon}\)
-
-      <\(\ms{L}\)> ::= \(\cdot\) \;|\; \(\ms{L}, \llhyp{\ell}{A}\)
-    \end{grammar}
-  \end{center}
-  \caption{Grammar for \isotopessa, parametrized over a set of instructions \(f \in \mc{I}\)}
-  \Description{Grammar for isotope-SSA}
-  \label{fig:ssa-grammar}
-\end{figure}
-
-\begin{figure}[H]
-  \TODO{this}
-  \caption{Rules for typing \isotopessa substitutions}
-  \Description{Rules for typing isotope-SSA substitutions}
-  \label{fig:ssa-vsubst-rules}
-\end{figure}
-
-\begin{figure}[H]
-  \TODO{this}
-  \caption{Rules for typing \isotopessa label-substitutions}
-  \Description{Rules for typing isotope-SSA label-substitutions}
-  \label{fig:ssa-lsubst-rules}
-\end{figure}
-
-\begin{figure}[H]
-  \TODO{this}
-  \caption{Syntax and typing for \isotopessa composition}
-  \Description{Syntax and typing for isotope-SSA composition}
-  \label{fig:ssa-compose}
-\end{figure}
-
-\section{Denotational Semantics}
-
+\TODO{Elgot category lore; strength}
 
 \begin{figure}[H]
   \TODO{this}
@@ -1126,6 +1081,17 @@ $\ms{ret}$, with $\ms{ret}\;a$ simply being an abbreviation for $\ms{br}\;\ms{re
 
 \begin{figure}[H]
   \begin{equation*}
+    \boxed{\dnt{\Gamma \leq \Delta} 
+      : \dnt{\Gamma} \to_{\bot} \dnt{\Delta}}
+  \end{equation*}
+  \TODO{this}
+  \caption{Denotational semantics for \isotopessa weakenings}
+  \Description{Denotational semantics for isotope-SSA weakenings}
+  \label{fig:ssa-vsubst-sem} 
+\end{figure} 
+
+\begin{figure}[H]
+  \begin{equation*}
     \boxed{\dnt{\issubst{\gamma}{\Gamma}{\Delta}} 
       : \dnt{\Gamma} \to_{\epsilon_\Delta} \dnt{\Delta}}
   \end{equation*}
@@ -1144,6 +1110,101 @@ $\ms{ret}$, with $\ms{ret}\;a$ simply being an abbreviation for $\ms{br}\;\ms{re
   \caption{Denotational semantics for \isotopessa label-substitutions}
   \Description{Denotational semantics for isotope-SSA label-substitutions}
   \label{fig:ssa-lsubst-sem}
+\end{figure}
+
+\TODO{equational theory lore}
+
+\TODO{completeness}
+
+\section{Concrete Models}
+
+\TODO{(strong) Elgot monad lore $\implies$ every strong Elgot monad over a Cartesian category is an
+\isotopessa model}
+
+\TODO{\cite{goncharov-16-complete-elgot}, \cite{goncharov-21-uniform-elgot},
+\cite{goncharov-guarded-unguarded}}
+
+\TODO{trace models; infinite monoids (need a name for these...)}
+
+\TODO{monad transformers: state; reader; writer}
+
+\TODO{Cite how we're doing \citet{liang-95-interpreters}}
+
+\TODO{submonads}
+
+\section{TSO weak memory}
+
+\TODO{this...}
+
+\section{Discussion and Related Work}
+
+\TODO{this...}
+
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{references}
+
+\clearpage 
+
+\appendix
+
+\section{Syntax and Typing Rules}
+
+\begin{figure}[H]
+  \begin{center}
+    \begin{grammar}
+      <\(A, B, C\)> ::= 
+      \(X\)
+      \;|\; \(A \otimes B\)
+      \;|\; \(\mathbf{1}\)
+      \;|\; \(A + B\)
+      \;|\; \(\mathbf{0}\)
+
+      <\(a, b, c, e\)> ::= \(x\) 
+      \;|\;  \(f\;a\)
+      \;|\; \(\letexpr{x}{a}{e}\)
+      \alt  \(()\)
+      \;|\; \((a, b)\)
+      \;|\; \(\letexpr{(x, y)}{a}{e}\)
+      \alt  \(\linl{a}\) 
+      \;|\; \(\linr{a}\)
+      \;|\; \(\labort{a}\)
+      \;|\; \(\caseexpr{e}{x}{s}{y}{t}\)
+      
+      <\(s, t\)> ::= \(\lbrb{\ell}{a}\) 
+      \alt  \(\letstmt{x}{a}{t}\)
+      \;|\; \(\letstmt{(x, y)}{a}{t}\)
+      \;|\; \(\casestmt{e}{x}{s}{y}{t}\)
+      \alt  \(\where{t}{(\lwbranch{\ell_i}{x_i: A_i}{t_i},)_i}\)
+
+      <\(\Gamma\)> ::= \(\cdot\) \;|\; \(\Gamma, \thyp{x}{A}{\epsilon}\)
+
+      <\(\ms{L}\)> ::= \(\cdot\) \;|\; \(\ms{L}, \llhyp{\ell}{A}\)
+    \end{grammar}
+  \end{center}
+  \caption{Grammar for \isotopessa, parametrized over a set of instructions \(f \in \mc{I}\)}
+  \Description{Grammar for isotope-SSA}
+  \label{fig:ssa-grammar}
+\end{figure}
+
+\begin{figure}[H]
+  \TODO{this}
+  \caption{Rules for typing \isotopessa substitutions}
+  \Description{Rules for typing isotope-SSA substitutions}
+  \label{fig:ssa-vsubst-rules}
+\end{figure}
+
+\begin{figure}[H]
+  \TODO{this}
+  \caption{Rules for typing \isotopessa label-substitutions}
+  \Description{Rules for typing isotope-SSA label-substitutions}
+  \label{fig:ssa-lsubst-rules}
+\end{figure}
+
+\begin{figure}[H]
+  \TODO{this}
+  \caption{Syntax and typing for \isotopessa composition}
+  \Description{Syntax and typing for isotope-SSA composition}
+  \label{fig:ssa-compose}
 \end{figure}
 
 \section{Equational Theory}
