@@ -68,7 +68,7 @@
 
 % Syntax atoms
 \newcommand{\lbl}[1]{{`#1}}
-\newcommand{\lto}{\Rightarrow}
+\newcommand{\lto}{:}
 \newcommand{\linl}[1]{\ms{inl}\;{#1}}
 \newcommand{\linr}[1]{\ms{inr}\;{#1}}
 \newcommand{\labort}[1]{\ms{abort}\;{#1}}
@@ -537,34 +537,40 @@ in Figure~\ref{fig:dominance-to-lexical}. This is a simple transformation, and i
 that it forms an isomorphism, since we can recover standard SSA by simply removing the inserted
 ``\ms{where}-blocks."
 
-The result of doing so looks a lot like the correspondence between CPS and SSA described in
-\citet{kelsey-95-cps}. 
+\TODO{rework below:}
 
-\TODO{why are these similar? explain?}
-
-\TODO{talk about type-theoretic benefits of lexical scoping}
-
+Lexical scoping allows us to apply many of the techniques developed in theoretical computer science
+and functional programming for reasoning about and developing optimizations and analysis passes. In
+particular, the result of our conversion to lexical scoping looks a lot like the correspondence
+between CPS and SSA described in \citet{kelsey-95-cps}. In particular, we can now begin to develop
+an \textit{equational theory} for SSA programs to reason about complex rewriting operations in a
+compositional way. In particular, we'd like to be able to reason about:
 \begin{itemize}
-
-  \item Now that we have lexical scoping, we want a nice equational theory. Need:
-  \begin{itemize}
-    \item \textit{Control-flow rewriting}, e.g. jump-threading, fusing redundant branches...
-    \item \textit{Substitution}, to allow \textit{algebraic reasoning}, which is half the point of
-    SSA...
-  \end{itemize}
-
-  \item In current format, this still a pain to express. Can allow if-then-else to jump to code,
-        rather than just a branch, likeso:
-
-  \item {\TODO{After introducing where and showing how it turns the dominator tree into lexical
-  scoping, then show how \texttt{e where f = e'} is the same as \texttt{let f = e' in e} and then
-  talk about the
-  SSA-ANF paper \cite{chakravarty-functional-ssa-2003}. Here also talk about full if-expressions.}}
-
-  \item {\TODO{Once we have ANF, observe that ANF has good scoping properties, but lacks a good substitution
-    property, since substituting a value for a variable can take you out of ANF. So we relax things
-    again to allow full expressions.}}
+  \item \textit{Control-flow rewrites}, such as jump-threading or fusing two identical branches of
+  an \ms{if}-statement
+  \item \textit{Algebraic rewrites}, such as simplifying arithmetic expressions
+  \item Combinations of the two, such as rewriting $\ms{if}\;x > 0\;\ms{then}\;1 - x\;\ms{else}\;1 +
+  x$ to $1 + \ms{abs}(x)$.
 \end{itemize}
+
+We can work towards making these easier to express by generalizing our syntax to allow the branches
+of if-statements to contain arbitrary code, rather than just unconditional branches, as in
+Figure~\ref{fig:bba-to-anf}. This clearly adds no additional expressive power, since:
+\begin{itemize}
+  \item This syntax clearly generalizes the previous syntax, so no conversion into it is necessary
+  \item To revert back to the less general syntax, one must simply introduce new anonymous basic
+  blocks for each branch of the if-statement, likeso:
+  \begin{equation}
+    \ms{if}\;e\;\{s\}\;\ms{else}\;\{t\}
+    \to (\ms{if}\;e\;\{\ms{br}\;\ell_\top\}\;\ms{else}\;\{\ms{br}\;\ell_\bot\})\;
+        \ms{where}\;\ell_\top: \{s\},\;\ell_\bot: \{t\}
+  \end{equation}
+\end{itemize}
+
+What we end up with is something which looks a lot like
+\textit{administrative normal form} (ANF), with our transformation analogous to that described in
+\citet{chakravarty-functional-ssa-2003}. The key difference is that, in our format (which is
+strictly first order), we require an explicit \ms{ret} instruction (rather than adopting an expression-oriented language), and write ``$\ms{let\;rec}\;f(x) = e; t$" as ``$t\;\ms{where}\;f(x) : \{e\}$."
 
 \begin{figure}
   \centering
@@ -602,18 +608,22 @@ The result of doing so looks a lot like the correspondence between CPS and SSA d
   \end{subfigure}
   \caption{Allowing if-statements to jump to arbitrary instructions, rather than a terminator}
   \Description{}
+  \label{fig:bba-to-anf}
 \end{figure}
 
-\begin{itemize}
-  \item This can trivially be seen to add no additional expressive power: can be eliminated by
-        introducing anonymous basic blocks for branches and jumping to them
-  \item We now have essentially ANF, cite this
-  \item Can generalize to \isotopessa (like MNF but not higher-order); by adding an
-  \textit{expression language}
-  \item Again, obviously no additional expressive power
-  \item This lets us state \textit{substitutions}, like, in Figure~\ref{fig:fact-cse}, which can be
-  used to build up optimizations such as \textit{common-subexpression elimination}.
-\end{itemize}
+ANF, however, still lacks a good substitution property, since substituting a value for a variable
+can take you out of ANF, making it difficult to express optimizations like $(i + 1) - 1 \to i$ as
+rewrite rules. To fix this, we can simply relax the restriction that expressions in a program must
+be atomic. This can again trivially be seen to add no excessive power, since we can always introduce
+temporary variables via \ms{let}-bindings to make any expression atomic. For full generality, we
+will also allow \ms{let}-bindings and \ms{if}-statements \textit{inside} expressions, which again
+can be eliminated in the obvious manner, such as by taking
+\begin{align*}
+  \ms{let}\;x = (\ms{if}\;e\;\{a\}\;\ms{else}\;\{b\}); t &
+    \to \ms{if}\;e\;\{\ms{let}\;x = a; t\}\;\ms{else}\;\{\ms{let}\;x = b; t\} \\ 
+  & \to \ms{if}\;e\;\{\ms{br}\;\ell(x)\}\;\ms{else}\;\{\ms{br}\;\ell(x)\}\;
+        \ms{where}\;\ell(x): \{t\}
+\end{align*}
 
 \begin{figure}
   \centering
@@ -679,31 +689,36 @@ The result of doing so looks a lot like the correspondence between CPS and SSA d
   \label{fig:fact-cse}
 \end{figure}
 
-\begin{itemize}
-  \item Substitution, in particular, lets us do algebra \textit{algebra}, for example, we know that:
-  \item \begin{itemize}
-    \item $(i_0 + 1, a_0 * (i_0 + 1)) 
-      = (\ms{let}\;(x, y) = (i_0, a_0)\;\ms{in}\;(x + 1, y * (x + 1)))$
-    \item $(1, 1)
-    = (\ms{let}\;(x, y) = (0, 1)\;\ms{in}\;(x + 1, y * (x + 1)))$
-  \end{itemize}
-  \item So therefore we can rewrite \ref{fig:fact-subst-2} to \ref{fig:fact-dinat} by substitution
-  \item Which we can combine with control-flow rewrites, such as \textit{dinaturality}
-  (\todo{explain}, cite Elgot lore?) to build up complex optimizations, such as rewriting
-  \ref{fig:fact-zero} to \ref{fig:fact-opt}.
-  \item In other words, we can do \textit{complex}, \textit{error-prone} loop and control-flow graph
-        optimizations by breaking them down into closed set of simple algebraic steps
-  \item We can justify each such step is sound rigorously via our denotational semantics
-  \item We can show that our steps are \textit{complete} by showing that quotienting by them gives
-        a model of our denotational semantics
-  \item That's why we use \isotopessa
-  \item But we gain no additional power: SSA $\subseteq$ \isotopessa; this is a retraction
-  (embedding-projection)
-  \item In particular, using the steps, every \isotopessa program can be converted to an SSA program with
-        equivalent semantics, while every SSA program is already a \isotopessa program (just add brackets!)
-  \item Unproven conjecture: this should take \~linear time, and the resuling program should be
-  \~linearly sized. Do on paper?
-\end{itemize}
+
+This gives us our final \isotopessa language. We can now state \textit{substitutions}, like, in
+Figure~\ref{fig:fact-cse}, which can be used to build up optimizations such as
+\textit{common-subexpression elimination}. Substitution, in particular, lets us do algebra
+\textit{algebra}, for example, since we know that:
+\begin{align*}
+  (i_0 + 1, a_0 * (i_0 + 1)) &= (\ms{let}\;(x, y) = (i_0, a_0)\;\ms{in}\;(x + 1, y * (x + 1))) \\
+  (1, 1) &= (\ms{let}\;(x, y) = (0, 1)\;\ms{in}\;(x + 1, y * (x + 1)))
+\end{align*} 
+we can rewrite the program in Figure~\ref{fig:fact-subst-2} to that in Figure~\ref{fig:fact-dinat}.
+We can then apply general rewrite rules such as \textit{dinaturality} (\todo{explain}, cite Elgot
+lore?) to rewrite Figure~\ref{fig:fact-dinat} to Figure~\ref{fig:fact-zero}. This allows us to build
+up justifications for complex optimizations, such as rewriting \ref{fig:fact-zero} to
+\ref{fig:fact-opt}, in terms of simple rewriting steps. In particular, we can do \textit{complex},
+\textit{error-prone} loop and control-flow graph optimizations by breaking them down into closed set
+of simple algebraic steps, with each step rigorously justified via our denotational semantics
+
+% \begin{itemize}
+%   \item 
+%   \item We can 
+%   \item We can show that our steps are \textit{complete} by showing that quotienting by them gives
+%         a model of our denotational semantics
+%   \item That's why we use \isotopessa
+%   \item But we gain no additional power: SSA $\subseteq$ \isotopessa; this is a retraction
+%   (embedding-projection)
+%   \item In particular, using the steps, every \isotopessa program can be converted to an SSA program with
+%         equivalent semantics, while every SSA program is already a \isotopessa program (just add brackets!)
+%   \item Unproven conjecture: this should take \~linear time, and the resuling program should be
+%   \~linearly sized. Do on paper?
+% \end{itemize}
 
 \begin{figure}
   \begin{minipage}{.5\textwidth}
@@ -1356,17 +1371,17 @@ $\ms{ret}$, with $\ms{ret}\;a$ simply being an abbreviation for $\ms{br}\;\ms{re
       \prfStackPremises
       {\Gamma \vdash_\epsilon 
         \ms{let}\;x = a;
-        \ms{case}\;b\;\{\ms{inl}\;y_1 \Rightarrow \caseexpr{x}{z_1}{e_{11}}{z_2}{e_{12}}
+        \ms{case}\;b\;\{\ms{inl}\;y_1 \lto \caseexpr{x}{z_1}{e_{11}}{z_2}{e_{12}}
       }
       {
-        \hspace{10em} \ms{inr}\;y_2 \Rightarrow \caseexpr{x}{z_1}{e_{21}}{z_2}{e_{22}} \}
+        \hspace{10em} \ms{inr}\;y_2 \lto \caseexpr{x}{z_1}{e_{21}}{z_2}{e_{22}} \}
       }
       {\hspace{1.3em} \teqv
         \ms{let}\;x = a;
-        \ms{case}\;x\;\{\ms{inl}\;z_1 \Rightarrow \caseexpr{b}{y_1}{e_{11}}{y_2}{e_{21}}
+        \ms{case}\;x\;\{\ms{inl}\;z_1 \lto \caseexpr{b}{y_1}{e_{11}}{y_2}{e_{21}}
       }
       {
-        \hspace{10em} \ms{inr}\;z_2 \Rightarrow \caseexpr{b}{y_1}{e_{12}}{y_2}{e_{22}} \}
+        \hspace{10em} \ms{inr}\;z_2 \lto \caseexpr{b}{y_1}{e_{12}}{y_2}{e_{22}} \}
       }
     }
   \\
@@ -1633,17 +1648,17 @@ $\ms{ret}$, with $\ms{ret}\;a$ simply being an abbreviation for $\ms{br}\;\ms{re
     {
       \prfStackPremises
       {\Gamma \vdash \ms{let}\;x = a; \ms{case}\;b\;\{
-        \linl{y_1} \Rightarrow \casestmt{x}{z_1}{r_{11}}{z_2}{r_{21}}
+        \linl{y_1} \lto \casestmt{x}{z_1}{r_{11}}{z_2}{r_{21}}
       }
       {
-        \hspace{10em} \linr{y_2} \Rightarrow \casestmt{x}{z_1}{r_{12}}{z_2}{r_{22}}\}
+        \hspace{10em} \linr{y_2} \lto \casestmt{x}{z_1}{r_{12}}{z_2}{r_{22}}\}
       }
       {
         \hspace{1.3em} \approx \ms{let}\;x = a; \ms{case}\;x\;\{
-        \linl{z_1} \Rightarrow \casestmt{b}{y_1}{r_{11}}{y_2}{r_{21}}
+        \linl{z_1} \lto \casestmt{b}{y_1}{r_{11}}{y_2}{r_{21}}
       }
       {
-        \hspace{10em} \linr{z_2} \Rightarrow \casestmt{b}{y_1}{r_{12}}{y_2}{r_{22}}\}
+        \hspace{10em} \linr{z_2} \lto \casestmt{b}{y_1}{r_{12}}{y_2}{r_{22}}\}
       }
     }
 \end{gather*}
