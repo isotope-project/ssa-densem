@@ -1136,12 +1136,17 @@ a premonoidal, or in fact a Freyd category}
   an operator $(-)^\dagger$ taking every morphism $f : A \to B + A$ to a morphism $f^\dagger : A \to
   B$, the \emph{fixpoint} of $f$, satisfying the following axioms:
   \begin{itemize}
-    \item \emph{Fixpoint:} $f^\dagger = f;[\ms{id}, f^\dagger]$
-    \item \emph{Naturality:} $(f;g + \ms{id})^\dagger = f^\dagger;g$
-    \item \emph{Codiagonal:} $(f^\dagger)^\dagger = (f;[\ms{id}, \iota_r])^\dagger$
-    \item \emph{Uniformity:} $\forall h, h;f = g;\ms{id} + h \implies h;f^\dagger = g^\dagger$
+    \item \emph{Fixpoint:} $\forall f : A \to B + A, f^\dagger = f;[\ms{id}, f^\dagger]$
+    \item \emph{Naturality:} $\forall f : A \to B + A, \forall g : B \to C, 
+      (f;g + \ms{id})^\dagger = f^\dagger;g : A \to C$
+    \item \emph{Codiagonal:} $\forall f : A \to (B + A) + A, 
+      (f^\dagger)^\dagger = (f;[\ms{id}, \iota_r])^\dagger : A \to B$
+    \item \emph{Uniformity:} 
+    $
+      \forall f : A' \to B + A', \forall g : A \to B + A \forall h : A \to A', 
+        h;f = g;\ms{id} + h \implies h;f^\dagger = g^\dagger
+    $
   \end{itemize}
-  \TODO{type these?}
   If $\mc{C}$ is distributive, we say it has a \emph{strong Elgot structure} if
   $
   \forall f: A \to B + A, (f \otimes C ; \delta^{-1})^\dagger = f^\dagger \otimes C
