@@ -107,6 +107,8 @@
 % Denotational semantics
 \newcommand{\dnt}[1]{\llbracket{#1}\rrbracket}
 \newcommand{\ednt}[1]{\left\llbracket{#1}\right\rrbracket}
+\newcommand{\tmor}[1]{{!}_{#1}}
+\newcommand{\dmor}[1]{{\Delta}_{#1}}
 
 % Branding
 \newcommand{\isotopessa}{\(\lambda_{\ms{SSA}}\)}
@@ -940,8 +942,6 @@ $\ms{ret}$, with $\ms{ret}\;a$ simply being an abbreviation for $\ms{br}\;\ms{re
 
 \TODO{notes about binding precedence of where}
 
-
-
 \begin{figure}[H]
   \begin{gather*}
     \boxed{\Gamma \leq \Delta} \\
@@ -961,14 +961,15 @@ $\ms{ret}$, with $\ms{ret}\;a$ simply being an abbreviation for $\ms{br}\;\ms{re
     \prftree[r]{\rle{sb-cons}}{\issubst{\gamma}{\Gamma}{\Delta}}{\hasty{\Gamma}{\epsilon}{e}{A}}
       {\issubst{\gamma, x \mapsto e}{\Gamma}{\Delta, \thyp{x}{A}{\epsilon}}} \\
     \boxed{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}} \\
-    \prftree[r]{\rle{ls-nil}}{}{\lbsubst{\Gamma}{\cdot}{\cdot}{\ms{K}}} \qquad
+    \prftree[r]{\rle{ls-nil}}{}{\lbsubst{\Gamma}{\cdot}{\cdot}{\ms{K}}} 
+    \qquad
     \prftree[r]{\rle{ls-skip}}
       {\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}}
       {\lbsubst{\Gamma}{\sigma, \ell(x) \mapsto r}{\ms{L}}{\ms{K}}} \\
     \prftree[r]{\rle{ls-cons}}
       {\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}}{\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{K}}}
       {\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}}
-      {\lbsubst{\Gamma}{\sigma, \ell(x) \mapsto r}{\ms{L}}{\ms{K}, \lhyp{\ell}{A}}}
+      {\lbsubst{\Gamma}{\sigma, \ell(x) \mapsto r}{\ms{L}, \lhyp{\ell}{A}}{\ms{K}}}
   \end{gather*}
   \caption{Rules for typing \isotopessa weakening and substitution}
   \Description{}
@@ -1146,7 +1147,7 @@ a premonoidal, or in fact a Freyd category}
   \forall f: A \to B + A, (f \otimes C ; \delta^{-1})^\dagger = f^\dagger \otimes C
   $
   We say a monad is Elgot if its Kliesli category has an Elgot structure. Similarly, we say a
-  \emph{strong} moand is strong Elgot if its Kliesli category has a strong Elgot structure.
+  \emph{strong} monad is strong Elgot if its Kliesli category has a strong Elgot structure.
 \end{definition}
 
 \TODO{note squaring and dinaturality are derivable by Lemma 31 of
@@ -1195,13 +1196,19 @@ $\mc{C}$ is in fact Cartesian.
     & \dnt{\cdot} = 0 \qquad
       \dnt{\ms{L}, \lhyp{\ell}{A}} = \dnt{\ms{L}} + \dnt{A} \\
   \end{align*}
+  \begin{equation*}
+    \boxed{\dnt{\Gamma \leq \Delta} : \dnt{\Gamma} \to_\bot \dnt{\Delta}}
+  \end{equation*}
   \begin{gather*}
-    \boxed{\dnt{\Gamma \leq \Delta} : \dnt{\Gamma} \to_\bot \dnt{\Delta}} \\
     \dnt{\cdot \leq \cdot} = \ms{id}_I \qquad
     \dnt{\Gamma, \thyp{x}{A}{\epsilon} \leq \Delta} = \pi_l;\dnt{\Gamma \leq \Delta} \qquad
-    \dnt{\Gamma, \thyp{x}{A}{\epsilon} \leq \Delta, \thyp{x}{A}{\epsilon}} 
+    \dnt{\Gamma, \thyp{x}{A}{\epsilon} \leq \Delta, \thyp{x}{A}{\epsilon}}
     = \dnt{\Gamma \leq \Delta} \otimes \dnt{A} \\ \\
-    \boxed{\dnt{\ms{L} \leq \ms{K}} : \dnt{\ms{L}} \to_\bot \dnt{\ms{K}}} \\
+  \end{gather*}
+  \begin{equation*}
+    \boxed{\dnt{\ms{L} \leq \ms{K}} : \dnt{\ms{L}} \to_\bot \dnt{\ms{K}}}
+  \end{equation*}
+  \begin{gather*}
     \dnt{\cdot \leq \cdot} = \ms{id}_{\mb{0}} \qquad
     \dnt{\ms{L} \leq \ms{K}, \lhyp{\ell}{A}} = \dnt{\ms{L} \leq \ms{K}};\iota_\ell \qquad
     \dnt{\ms{L}, \lhyp{\ell}{A} \leq \ms{K}, \lhyp{\ell}{A}}
@@ -1303,27 +1310,93 @@ $\mc{C}$ is in fact Cartesian.
   \label{fig:ssa-reg-sem}
 \end{figure}
 
-\begin{figure}[H]
-  \begin{gather*}
-    \boxed{\dnt{\issubst{\gamma}{\Gamma}{\Delta}} 
-      : \dnt{\Gamma} \to \dnt{\Delta}} \\
-    \dnt{\Gamma}
-  \end{gather*}
-  \caption{Denotational semantics for \isotopessa substitutions}
-  \Description{Denotational semantics for isotope-SSA substitutions}
-  \label{fig:ssa-vsubst-sem} 
-\end{figure}
+\TODO{text}
+
+\begin{theorem}[(Label) Weakening]
+  Given $\Gamma \leq \Gamma'$ and $\ms{L}' \leq \ms{L}$, $\ms{K}' \leq \ms{K}$, we have
+  \begin{enumerate}
+    \item $\dnt{\Gamma \leq \Delta} = \dnt{\Gamma \leq \Gamma'};\dnt{\Gamma' \leq \Delta}$
+    \item $\dnt{\ms{L}' \leq \ms{K}} = \dnt{\ms{L}' \leq \ms{L}};\dnt{\ms{L} \leq \ms{K}}$
+    \item $\dnt{\hasty{\Gamma}{\epsilon}{a}{A}} 
+      = \dnt{\Gamma \leq \Gamma'};\dnt{\hasty{\Gamma'}{\epsilon}{a}{A}}$
+    \item $\dnt{\haslb{\Gamma}{r}{\ms{L}}}
+      = \dnt{\Gamma \leq \Gamma'}
+      ; \dnt{\haslb{\Gamma'}{r}{\ms{L}'}}
+      ; \dnt{\ms{L}' \leq \ms{L}}$
+    \item $\dnt{\issubst{\gamma}{\Gamma}{\Delta}}
+      = \dnt{\Gamma \leq \Gamma'};\dnt{\issubst{\gamma}{\Gamma'}{\Delta}}$
+    \item $\dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}}
+      = \dnt{\Gamma \leq \Gamma'} \otimes \dnt{\ms{L}}
+      ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}'}}
+      ; \dnt{\ms{K}' \leq \ms{K}}
+      $
+  \end{enumerate}
+\end{theorem}
 
 \begin{figure}[H]
+  \begin{equation*}
+    \boxed{\dnt{\issubst{\gamma}{\Gamma}{\Delta}} 
+      : \dnt{\Gamma} \to \dnt{\Delta}}
+  \end{equation*}
+  \begin{gather*}
+    \dnt{\issubst{\cdot}{\Gamma}{\cdot}} = \tmor{\dnt{\Gamma}}
+    \qquad
+    \dnt{\issubst{\gamma, x \mapsto e}{\Gamma}{\Delta}} 
+    = \dnt{\issubst{\gamma}{\Gamma}{\Delta}}
+    \\
+    \dnt{\issubst{\gamma, x \mapsto e}{\Gamma}{\Delta, \thyp{x}{A}{\epsilon}}}
+    = \dmor{\dnt{\Gamma}};\dnt{\issubst{\gamma}{\Gamma}{\Delta}}
+  \end{gather*}
   \begin{equation*}
     \boxed{\dnt{\lbsubst{\Gamma}{\kappa}{\ms{L}}{\ms{K}}} 
       : \dnt{\Gamma} \otimes \dnt{\ms{L}} \to \dnt{\ms{K}}}
   \end{equation*}
-  \TODO{this}
-  \caption{Denotational semantics for \isotopessa label-substitutions}
-  \Description{Denotational semantics for isotope-SSA label-substitutions}
-  \label{fig:ssa-lsubst-sem}
+  \begin{gather*}
+    \dnt{\lbsubst{\cdot}{\Gamma}{\cdot}{\ms{K}}} 
+      = \tmor{\dnt{\Gamma} \otimes \mb{1}};0_{\ms{K}} \qquad
+    \dnt{\lbsubst{\kappa, \ell(x) \mapsto r}{\Gamma}{\ms{L}}{\ms{K}}}
+      = \dnt{\lbsubst{\kappa}{\Gamma}{\ms{L}}{\ms{K}}}
+    \\
+    \dnt{\lbsubst{\kappa, \ell(x) \mapsto r}{\Gamma}{\ms{L}, \ell(A)}{\ms{K}}}
+      = [
+        \dnt{\lbsubst{\kappa}{\Gamma}{\ms{L}}{\ms{K}}}, 
+        \dnt{\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{K}}}
+      ]
+  \end{gather*}
+  \caption{Denotational semantics for \isotopessa (label) substitutions}
+  \Description{}
+  \label{fig:ssa-vsubst-sem} 
 \end{figure}
+
+\begin{theorem}[Substitution]
+  Given $\dnt{\issubst{\gamma}{\Gamma}{\Delta}} : \dnt{\Gamma} \to_\bot
+  \dnt{\Delta}$ (in particular, this is always the case when (todo: the effect
+  of $\Delta$ is bot, but write this down)), we have that
+  \begin{enumerate}
+    \item $\dnt{\hasty{\Gamma}{\epsilon}{[\gamma]a}{A}} 
+      = \dnt{\issubst{\gamma}{\Gamma}{\Delta}};\dnt{\hasty{\Delta}{\epsilon}{a}{A}}$
+    \item $\dnt{\haslb{\Gamma}{[\gamma]r}{\ms{L}}}
+      = \dnt{\issubst{\gamma}{\Gamma}{\Delta}};\dnt{\haslb{\Delta}{r}{\ms{L}}}$
+    \item $\dnt{\issubst{[\gamma]\sigma}{\Delta}{\Xi}}
+      = \dnt{\issubst{\gamma}{\Gamma}{\Delta}};\dnt{\issubst{\sigma}{\Delta}{\Xi}}$
+    \item $\dnt{\lbsubst{\Gamma}{[\gamma]\sigma}{\ms{L}}{\ms{K}}}
+      = \dnt{\issubst{\gamma}{\Gamma}{\Delta}};\dnt{\lbsubst{\Delta}{\sigma}{\ms{L}}{\ms{K}}}$
+  \end{enumerate}
+\end{theorem}
+
+\begin{theorem}[Label substitution]
+  Given $\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}$, we have
+  \begin{enumerate}
+    \item $\dnt{\haslb{\Gamma}{[\sigma]r}{\ms{K}}}
+      = \dmor{\dnt{\Gamma}}
+      ;\dnt{\Gamma} \otimes \dnt{\haslb{\Gamma}{r}{\ms{L}}}
+      ;\dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}}$
+    \item $\dnt{\lbsubst{\Gamma}{[\sigma]\sigma'}{\ms{M}}{\ms{K}}}
+      = \dmor{\dnt{\Gamma}} \otimes \dnt{\ms{L}} ; \alpha
+      ; \dnt{\Gamma} \otimes \dnt{\lbsubst{\Gamma}{\sigma'}{\ms{M}}{\ms{L}}}
+      ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}}$
+  \end{enumerate}
+\end{theorem}
 
 \TODO{equational theory lore}
 
