@@ -99,7 +99,7 @@
 \newcommand{\haslb}[3]{#1 \vdash #2 \rhd #3}
 \newcommand{\isop}[4]{#1 \in \mc{I}_{#4}(#2, #3)}
 \newcommand{\issubst}[3]{#1: #2 \mapsto #3}
-\newcommand{\lbsubst}[3]{#1: #2 \rightsquigarrow #3}
+\newcommand{\lbsubst}[4]{#1 \vdash #2: #3 \rightsquigarrow #4}
 \newcommand{\teqv}{\approx}
 \newcommand{\tmeq}[5]{#1 \vdash_{#2} #3 \teqv #4 : {#5}}
 \newcommand{\lbeq}[4]{#1 \vdash #2 \teqv #3 : {#4}}
@@ -851,8 +851,11 @@ A \isotopessa \textit{expression} $a$ is typed with the judgement $\hasty{\Gamma
 which says that under the typing context $\Gamma$, the expression $a$ has type $A$ and effect
 $\epsilon$. The typing rules for expressions are given in Figure~\ref{fig:ssa-expr-rules}.
 
+\TODO{insert figure for table of judgements and metatheoretic judgements?}
+
 \begin{figure}[H]
   \begin{gather*}
+    \boxed{\hasty{\Gamma}{\epsilon}{a}{A}} \\
     \prftree[r]{\rle{var}}{\Gamma\;x \leq (A, \epsilon)}{\hasty{\Gamma}{\epsilon}{x}{A}} \qquad
     \prftree[r]{\rle{op}}{\isop{f}{A}{B}{\epsilon}}{\hasty{\Gamma}{\epsilon}{a}{A}}
       {\hasty{\Gamma}{\epsilon}{f\;a}{B}} \qquad
@@ -880,7 +883,7 @@ $\epsilon$. The typing rules for expressions are given in Figure~\ref{fig:ssa-ex
       {\hasty{\Gamma}{\epsilon}{\caseexpr{e}{x}{a}{y}{b}}{C}}
   \end{gather*}
   \caption{Rules for typing \isotopessa expressions}
-  \Description{Rules for typing isotope-SSA expressions}
+  \Description{}
   \label{fig:ssa-expr-rules}
 \end{figure}
 
@@ -896,6 +899,7 @@ $\mc{L}$ with the appropriate argument.
 
 \begin{figure}[H]
   \begin{gather*}
+    \boxed{\haslb{\Gamma}{r}{\ms{L}}} \\
     \prftree[r]{\rle{br}}{\hasty{\Gamma}{\bot}{a}{A}}{\ms{L}\;\lbl{\ell} = A}
       {\haslb{\Gamma}{\lbrb{\ell}{a}}{\ms{L}}} \qquad
     \prftree[r]{\rle{let$_1$-r}}
@@ -917,7 +921,7 @@ $\mc{L}$ with the appropriate argument.
       {\haslb{\Gamma}{\where{r}{(\lwbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}}
   \end{gather*}
   \caption{Rules for typing \isotopessa regions}
-  \Description{Rules for typing isotope-SSA regions}
+  \Description{}
   \label{fig:ssa-reg-rules}
 \end{figure}
 
@@ -936,14 +940,52 @@ $\ms{ret}$, with $\ms{ret}\;a$ simply being an abbreviation for $\ms{br}\;\ms{re
 
 \TODO{notes about binding precedence of where}
 
+
+
+\begin{figure}[H]
+  \begin{gather*}
+    \boxed{\Gamma \leq \Delta} \\
+    \prftree[r]{\rle{wk-nil}}{}{\cdot \leq \cdot} \qquad
+    \prftree[r]{\rle{wk-skip}}{\Gamma \leq \Delta}{\Gamma, \thyp{x}{A}{\epsilon} \leq \Delta} \qquad
+    \prftree[r]{\rle{wk-cons}}{\Gamma \leq \Delta}
+      {\Gamma, \thyp{x}{A}{\epsilon} \leq \Delta, \thyp{x}{A}{\epsilon}} \\
+    \boxed{\ms{L} \leq \ms{K}} \\
+    \prftree[r]{\rle{lwk-nil}}{}{\cdot \leq \cdot} \qquad
+    \prftree[r]{\rle{lwk-skip}}{\ms{L} \leq \ms{K}}{\ms{L} \leq \ms{K}, \lhyp{\ell}{A}} \qquad
+    \prftree[r]{\rle{lwk-cons}}{\ms{L} \leq \ms{K}}
+      {\ms{L}, \lhyp{\ell}{A} \leq \ms{K}, \lhyp{\ell}{A}} \\
+    \boxed{\issubst{\gamma}{\Gamma}{\Delta}} \\
+    \prftree[r]{\rle{sb-nil}}{}{\issubst{\cdot}{\cdot}{\Delta}} \qquad
+    \prftree[r]{\rle{sb-skip}}{}{\issubst{\gamma}{\Gamma}{\Delta}}
+      {\issubst{\gamma, x \mapsto e}{\Gamma}{\Delta}} \qquad
+    \prftree[r]{\rle{sb-cons}}{\issubst{\gamma}{\Gamma}{\Delta}}{\hasty{\Gamma}{\epsilon}{e}{A}}
+      {\issubst{\gamma, x \mapsto e}{\Gamma}{\Delta, \thyp{x}{A}{\epsilon}}} \\
+    \boxed{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}} \\
+    \prftree[r]{\rle{ls-nil}}{}{\lbsubst{\Gamma}{\cdot}{\cdot}{\ms{K}}} \qquad
+    \prftree[r]{\rle{ls-skip}}
+      {\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}}
+      {\lbsubst{\Gamma}{\sigma, \ell(x) \mapsto r}{\ms{L}}{\ms{K}}} \\
+    \prftree[r]{\rle{ls-cons}}
+      {\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}}{\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{K}}}
+      {\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}}
+      {\lbsubst{\Gamma}{\sigma, \ell(x) \mapsto r}{\ms{L}}{\ms{K}, \lhyp{\ell}{A}}}
+  \end{gather*}
+  \caption{Rules for typing \isotopessa weakening and substitution}
+  \Description{}
+  \label{fig:ssa-meta-rules}
+\end{figure}
+
 \TODO{text}
 
-\TODO{weakening rules}
-
 \begin{theorem}[Weakening]
-  Given $\Gamma \leq \Delta$, $\epsilon \leq \epsilon'$, and $\ms{L} \leq \ms{K}$, we have that
-  $\hasty{\Delta}{\epsilon}{a}{A} \implies \hasty{\Gamma}{\epsilon'}{a}{A}$ and
-  $\haslb{\Delta}{r}{\ms{L}} \implies \haslb{\Gamma}{r}{\ms{K}}$
+  Given $\Gamma \leq \Delta$, $\epsilon \leq \epsilon'$, and $\ms{L} \leq \ms{K}$, we have that:
+  \begin{enumerate}
+    \item $\hasty{\Delta}{\epsilon}{a}{A} \implies \hasty{\Gamma}{\epsilon'}{a}{A}$
+    \item $\haslb{\Delta}{r}{\ms{L}} \implies \haslb{\Gamma}{r}{\ms{K}}$
+    \item $\issubst{\sigma}{\Gamma}{\Xi} \implies \issubst{\sigma}{\Delta}{\Xi}$ and 
+          $\issubst{\sigma}{\Xi}{\Delta} \implies \issubst{\sigma}{\Xi}{\Gamma}$
+    \item $\lbsubst{\Delta}{\sigma}{\ms{L}}{\ms{K}} \implies \lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}$
+  \end{enumerate}
 \end{theorem}
 
 \TODO{text}
@@ -961,7 +1003,7 @@ $\ms{ret}$, with $\ms{ret}\;a$ simply being an abbreviation for $\ms{br}\;\ms{re
 \TODO{label substitution rules}
 
 \begin{theorem}[Label substitution]
-  Given $\lbsubst{\sigma}{\ms{L}}{\ms{K}}$, we have that
+  Given $\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}$, we have that
   $\haslb{\Gamma}{r}{\ms{L}} \implies \haslb{\Gamma}{[\sigma]r}{\ms{K}}$
 \end{theorem}
 
@@ -1047,11 +1089,12 @@ a premonoidal, or in fact a Freyd category}
 
 \begin{definition}[Freyd category]
   A \emph{Freyd category} is a premonoidal category $\mc{C}$ equipped with a wide subcategory
-  $\mc{V} \subseteq \mc{C}$ of \emph{pure} morphisms such that
+  $\mc{C}_\bot \subseteq \mc{C}$ of \emph{pure} morphisms such that
   \begin{itemize}
-    \item $\mc{V}$ contains all associators, unitors, and symmetries
-    \item For each $A_1, A_2$, there exist morphisms $\pi_i : A_1 \times A_2 \to_{\mc{V}} A_i$
-    making $A_1 \otimes A_2$ into a cartesian product on $\mc{V}$
+    \item $\mc{C}_\bot$ contains all associators, unitors, and symmetries
+    \item For each $A_1, A_2$, there exist morphisms $\pi_i : A_1 \times A_2 \to_{\mc{C}_\bot} A_i$
+    making $A_1 \otimes A_2$ into a cartesian product on $\mc{C}_\bot$
+    \item $I$ is a terminal object in $\mc{C}_\bot$
   \end{itemize}
 \end{definition}
 
@@ -1098,12 +1141,10 @@ a premonoidal, or in fact a Freyd category}
     \item \emph{Uniformity:} $\forall h, h;f = g;\ms{id} + h \implies h;f^\dagger = g^\dagger$
   \end{itemize}
   \TODO{type these?}
-
   If $\mc{C}$ is distributive, we say it has a \emph{strong Elgot structure} if
   $
   \forall f: A \to B + A, (f \otimes C ; \delta^{-1})^\dagger = f^\dagger \otimes C
   $
-
   We say a monad is Elgot if its Kliesli category has an Elgot structure. Similarly, we say a
   \emph{strong} moand is strong Elgot if its Kliesli category has a strong Elgot structure.
 \end{definition}
@@ -1142,10 +1183,32 @@ $\mc{C}$ is in fact Cartesian.
 
 \begin{figure}[H]
   \begin{align*}
-    \boxed{\dnt{A}} : |\mc{C}|
+    \boxed{\dnt{A} : |\mc{C}|} \qquad 
+    & \dnt{\mb{1}} = I \qquad
+      \dnt{A \otimes B} = \dnt{A} \otimes \dnt{B} \qquad
+      \dnt{\mb{0}} = \mb{0} \qquad
+      \dnt{A + B} = \dnt{A} + \dnt{B} \qquad \\
+    \boxed{\dnt{\Gamma} : |\mc{C}|} \qquad
+    & \dnt{\cdot} = I \qquad
+      \dnt{\Gamma, \thyp{x}{A}{\epsilon}} = \dnt{\Gamma} \otimes \dnt{A} \\
+    \boxed{\dnt{\ms{L}} : |\mc{C}|} \qquad
+    & \dnt{\cdot} = 0 \qquad
+      \dnt{\ms{L}, \lhyp{\ell}{A}} = \dnt{\ms{L}} + \dnt{A} \\
   \end{align*}
-  \caption{Denotational semantics for \isotopessa types and contexts}
-  \Description{Denotational semantics for isotope-SSA types and contexts}
+  \begin{gather*}
+    \boxed{\dnt{\Gamma \leq \Delta} : \dnt{\Gamma} \to_\bot \dnt{\Delta}} \\
+    \dnt{\cdot \leq \cdot} = \ms{id}_I \qquad
+    \dnt{\Gamma, \thyp{x}{A}{\epsilon} \leq \Delta} = \pi_l;\dnt{\Gamma \leq \Delta} \qquad
+    \dnt{\Gamma, \thyp{x}{A}{\epsilon} \leq \Delta, \thyp{x}{A}{\epsilon}} 
+    = \dnt{\Gamma \leq \Delta} \otimes \dnt{A} \\ \\
+    \boxed{\dnt{\ms{L} \leq \ms{K}} : \dnt{\ms{L}} \to_\bot \dnt{\ms{K}}} \\
+    \dnt{\cdot \leq \cdot} = \ms{id}_{\mb{0}} \qquad
+    \dnt{\ms{L} \leq \ms{K}, \lhyp{\ell}{A}} = \dnt{\ms{L} \leq \ms{K}};\iota_\ell \qquad
+    \dnt{\ms{L}, \lhyp{\ell}{A} \leq \ms{K}, \lhyp{\ell}{A}}
+    = \dnt{\ms{L} \leq \ms{K}} + \dnt{A}
+  \end{gather*}
+  \caption{Denotational semantics for \isotopessa types, contexts, and weakenings}
+  \Description{}
   \label{fig:ssa-ty-sem}
 \end{figure}
 
@@ -1241,22 +1304,11 @@ $\mc{C}$ is in fact Cartesian.
 \end{figure}
 
 \begin{figure}[H]
-  \begin{equation*}
-    \boxed{\dnt{\Gamma \leq \Delta} 
-      : \dnt{\Gamma} \to_{\bot} \dnt{\Delta}}
-  \end{equation*}
-  \TODO{this}
-  \caption{Denotational semantics for \isotopessa weakenings}
-  \Description{Denotational semantics for isotope-SSA weakenings}
-  \label{fig:ssa-vsubst-sem} 
-\end{figure} 
-
-\begin{figure}[H]
-  \begin{equation*}
+  \begin{gather*}
     \boxed{\dnt{\issubst{\gamma}{\Gamma}{\Delta}} 
-      : \dnt{\Gamma} \to_{\epsilon_\Delta} \dnt{\Delta}}
-  \end{equation*}
-  \TODO{this}
+      : \dnt{\Gamma} \to \dnt{\Delta}} \\
+    \dnt{\Gamma}
+  \end{gather*}
   \caption{Denotational semantics for \isotopessa substitutions}
   \Description{Denotational semantics for isotope-SSA substitutions}
   \label{fig:ssa-vsubst-sem} 
@@ -1264,8 +1316,8 @@ $\mc{C}$ is in fact Cartesian.
 
 \begin{figure}[H]
   \begin{equation*}
-    \boxed{\dnt{\lbsubst{\kappa}{\ms{L}}{\ms{K}}} 
-      : \dnt{\ms{L}} \to \dnt{\ms{K}}}
+    \boxed{\dnt{\lbsubst{\Gamma}{\kappa}{\ms{L}}{\ms{K}}} 
+      : \dnt{\Gamma} \otimes \dnt{\ms{L}} \to \dnt{\ms{K}}}
   \end{equation*}
   \TODO{this}
   \caption{Denotational semantics for \isotopessa label-substitutions}
@@ -1343,28 +1395,28 @@ $\mc{C}$ is in fact Cartesian.
     \end{grammar}
   \end{center}
   \caption{Grammar for \isotopessa, parametrized over a set of instructions \(f \in \mc{I}\)}
-  \Description{Grammar for isotope-SSA}
+  \Description{}
   \label{fig:ssa-grammar}
 \end{figure}
 
 \begin{figure}[H]
   \TODO{this}
   \caption{Rules for typing \isotopessa substitutions}
-  \Description{Rules for typing isotope-SSA substitutions}
+  \Description{}
   \label{fig:ssa-vsubst-rules}
 \end{figure}
 
 \begin{figure}[H]
   \TODO{this}
   \caption{Rules for typing \isotopessa label-substitutions}
-  \Description{Rules for typing isotope-SSA label-substitutions}
+  \Description{}
   \label{fig:ssa-lsubst-rules}
 \end{figure}
 
 \begin{figure}[H]
   \TODO{this}
   \caption{Syntax and typing for \isotopessa composition}
-  \Description{Syntax and typing for isotope-SSA composition}
+  \Description{}
   \label{fig:ssa-compose}
 \end{figure}
 
@@ -1988,7 +2040,8 @@ $\mc{C}$ is in fact Cartesian.
 \begin{equation*}
   \prftree[r]{\rle{cfgsubst}}
     {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
-    {\lbsubst{\cfgsubst{(\lwbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}{\ms{L}}}
+    {\lbsubst{\Gamma}
+      {\cfgsubst{(\lwbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}{\ms{L}}}
 \end{equation*}
 
 ...
@@ -2043,7 +2096,7 @@ $\mc{C}$ is in fact Cartesian.
   {\forall i, \haslb{\Gamma, \bhyp{x_i}{B_i}}
     {t_i}
     {\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
-  {\lbsubst{\sigma}{(\lhyp{\ell_i}{A_i},)_i}{\ms{L}, (\lhyp{\kappa_i}{B_i},)_i}}
+  {\lbsubst{\Gamma}{\sigma}{(\lhyp{\ell_i}{A_i},)_i}{\ms{L}, (\lhyp{\kappa_i}{B_i},)_i}}
   {\lbeq{\Gamma}
     {\where{[\sigma]r}
       {(\lwbranch{\kappa_i}{x_i}{[\sigma]t_i},)_i}}
