@@ -103,6 +103,7 @@
 \newcommand{\teqv}{\approx}
 \newcommand{\tmeq}[5]{#1 \vdash_{#2} #3 \teqv #4 : {#5}}
 \newcommand{\lbeq}[4]{#1 \vdash #2 \teqv #3 : {#4}}
+\newcommand{\brle}[1]{{\scriptsize\textsf{#1}}}
 
 % Denotational semantics
 \newcommand{\dnt}[1]{\llbracket{#1}\rrbracket}
@@ -278,14 +279,16 @@ paper.
 As a running example, consider the simple imperative program to compute $10!$ given in
 Figure~\ref{fig:fact-program}. 
 
-\TODO{3 address code was one of the first IRs; cite Frances Allen? Perhaps also cite
-\cite{allen-70-cfa} for dominance lore?}
-
 Operating directly on an imperative language can be challenging, since having a uniform
 representation of code friendly to mechanized optimization and analysis is often in tension with
-features designed to improve readability and programmer productivity, such as syntax sugar. We might
-therefore normalize our code into \textit{3-address code}, as in Figure~\ref{fig:fact-3addr}, by
-doing the following:
+features designed to improve readability and programmer productivity, such as syntax sugar. 
+
+
+\TODO{3-address code was one of the first IRs; cite Frances Allen? Perhaps also cite
+\cite{allen-70-cfa} for dominance lore?}
+
+We might therefore normalize our code into \textit{3-address code}, as in
+Figure~\ref{fig:fact-3addr}, by doing the following:
 \begin{itemize}
   \item Converting structured control flow in terms of (e.g.) \ms{while} to unstructured jumps
   between the basic blocks \ms{start} (the entry block), \ms{loop}, and \ms{body}, which now have
@@ -334,7 +337,7 @@ doing the following:
   \label{fig:fact-program}
 \end{figure}
 
-\TODO{better segue}
+\TODO{better segue; see below}
 
 Unfortunately, many optimizations are still quite difficult to express in this format, since a
 variable's value may have been set by many different definitions throughout the execution of the
@@ -699,21 +702,25 @@ can be eliminated in the obvious manner, such as by taking
 \end{figure}
 
 
-This gives us our final \isotopessa language. We can now state \textit{substitutions}, like, in
-Figure~\ref{fig:fact-cse}, which can be used to build up optimizations such as
-\textit{common-subexpression elimination}. Substitution, in particular, lets us do algebra
-\textit{algebra}, for example, since we know that:
+This gives us our final \isotopessa language. We can now state
+\textit{substitutions}, like, in Figure~\ref{fig:fact-cse}, which can be used to
+build up optimizations such as \textit{common-subexpression elimination}.
+Substitution, in particular, lets us do algebra \textit{algebra}, for example,
+since we know that:
 \begin{align*}
   (i_0 + 1, a_0 * (i_0 + 1)) &= (\ms{let}\;(x, y) = (i_0, a_0)\;\ms{in}\;(x + 1, y * (x + 1))) \\
   (1, 1) &= (\ms{let}\;(x, y) = (0, 1)\;\ms{in}\;(x + 1, y * (x + 1)))
 \end{align*} 
-we can rewrite the program in Figure~\ref{fig:fact-subst-2} to that in Figure~\ref{fig:fact-dinat}.
-We can then apply general rewrite rules such as \textit{dinaturality} (\todo{explain}, cite Elgot
-lore?) to rewrite Figure~\ref{fig:fact-dinat} to Figure~\ref{fig:fact-zero}. This allows us to build
-up justifications for complex optimizations, such as rewriting \ref{fig:fact-zero} to
-\ref{fig:fact-opt}, in terms of simple rewriting steps. In particular, we can do \textit{complex},
-\textit{error-prone} loop and control-flow graph optimizations by breaking them down into closed set
-of simple algebraic steps, with each step rigorously justified via our denotational semantics
+we can rewrite the program in Figure~\ref{fig:fact-subst-2} to that in
+Figure~\ref{fig:fact-dinat}. We can then apply general rewrite rules such as
+\textit{dinaturality} (\todo{explain, cite Elgot lore?}) to rewrite
+Figure~\ref{fig:fact-dinat} to Figure~\ref{fig:fact-zero}. This allows us to
+build up justifications for complex optimizations, such as rewriting
+\ref{fig:fact-zero} to \ref{fig:fact-opt}, in terms of simple rewriting steps.
+In particular, we can do \textit{complex}, \textit{error-prone} loop and
+control-flow graph optimizations by breaking them down into closed set of simple
+algebraic steps, with each step rigorously justified via our denotational
+semantics
 
 % \begin{itemize}
 %   \item 
@@ -849,11 +856,33 @@ the label $\ell$. This is summarized in the following grammar:
   \Description{}
 \end{figure}
 
-A \isotopessa \textit{expression} $a$ is typed with the judgement $\hasty{\Gamma}{\epsilon}{a}{A}$,
-which says that under the typing context $\Gamma$, the expression $a$ has type $A$ and effect
-$\epsilon$. The typing rules for expressions are given in Figure~\ref{fig:ssa-expr-rules}.
+\TODO{text, insert figure for table of judgements and metatheoretic judgements?}
 
-\TODO{insert figure for table of judgements and metatheoretic judgements?}
+A \isotopessa \textit{expression} $a$ is typed with the judgement
+$\hasty{\Gamma}{\epsilon}{a}{A}$, which says that under the typing context
+$\Gamma$, the expression $a$ has type $A$ and effect $\epsilon$. The typing
+rules for expressions are given in Figure~\ref{fig:ssa-expr-rules}. In
+particular, expressions may be built up from the following relatively standard
+primitives:
+\begin{itemize}
+  \item A variable $x$ in the context $\Gamma$, as typed by \brle{var}. We write $(A, \epsilon) \leq (B,
+  \epsilon') \iff A = B \and \epsilon \leq \epsilon'$.
+  \item An \emph{operation} $f \in \mc{I}_\epsilon(A, B)$ applied to an
+  expression $\hasty{\Gamma}{\epsilon}{a}{A}$, typed by \brle{op}
+  \item A standard and binary \emph{let-binding}, typed by \brle{let$_1$} and
+  \brle{let$_2$} respectively
+  \item A \emph{pair} of expressions $\hasty{\Gamma}{\epsilon}{a}{A}$,
+  $\hasty{\Gamma}{\epsilon}{b}{B}$, typed by \brle{pair}. Operationally, we
+  interpret this as executing $a$, and then $b$, and returning the pair of their
+  values.
+  \item An empty tuple $()$, which types in any context by \brle{unit}
+  \item Injections, typed by \brle{inl} and \brle{inr}
+  \item Pattern matching on sum types, typed by \brle{case}. Operationally, we
+  interpret this as executing $e$, and then, if $e$ is a left injection $\ms{inl}\;x$,
+  executing $a$ with its value ($x$), otherwise executing $b$.
+  \item An operator $\ms{abort}\;e$ allowing us to abort execution if given a
+  value of the empty type.
+\end{itemize}
 
 \begin{figure}[H]
   \begin{gather*}
@@ -889,15 +918,24 @@ $\epsilon$. The typing rules for expressions are given in Figure~\ref{fig:ssa-ex
   \label{fig:ssa-expr-rules}
 \end{figure}
 
-In particular...
-
-\TODO{rule-by-rule expression typing}
-
 A \isotopessa \textit{region} is typed with the judgement $\haslb{\Gamma}{r}{\ms{L}}$, which says
 that under the typing context $\Gamma$, the region $r$ targets the label-context $\ms{L}$. In
 particular, this can be interpreted as saying that if the variables in $\Gamma$ are live on entry to
 $r$, then $r$ will either loop forever or terminate by branching to one of the external labels in
 $\mc{L}$ with the appropriate argument.
+
+In particular, we can build up expressions as follows:
+\begin{itemize}
+  \item \todo{br rule lore} \todo{Note that ``returning'' is implemented by
+  simply branching to a distinguished label $\ms{ret}$, with $\ms{ret}\;a$
+  simply being an abbreviation for $\ms{br}\;\ms{ret}\;a$.}
+  
+  \item \todo{let rules}
+  
+  \item \todo{case rule}
+  
+  \item \todo{where rule} \todo{notes about binding precedence of where}
+\end{itemize}
 
 \begin{figure}[H]
   \begin{gather*}
@@ -926,21 +964,6 @@ $\mc{L}$ with the appropriate argument.
   \Description{}
   \label{fig:ssa-reg-rules}
 \end{figure}
-
-In particular...
-
-\TODO{br rule lore}
-
-\TODO{Note that ``returning'' is implemented by simply branching to a distinguished label
-$\ms{ret}$, with $\ms{ret}\;a$ simply being an abbreviation for $\ms{br}\;\ms{ret}\;a$.}
-
-\TODO{let rules}
-
-\TODO{case rule}
-
-\TODO{where rule}
-
-\TODO{notes about binding precedence of where}
 
 \begin{figure}[H]
   \begin{gather*}
