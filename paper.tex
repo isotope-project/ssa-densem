@@ -1096,6 +1096,9 @@ a premonoidal, or in fact a Freyd category}
     \item For each $A_1, A_2$, there exist morphisms $\pi_i : A_1 \times A_2 \to_{\mc{C}_\bot} A_i$
     making $A_1 \otimes A_2$ into a cartesian product on $\mc{C}_\bot$
     \item $I$ is a terminal object in $\mc{C}_\bot$
+    \item $\langle f, g \rangle 
+      = \dmor{} ; f \otimes - ; g \otimes -  
+      = \dmor{} ; g \otimes - ; f \otimes -$
   \end{itemize}
 \end{definition}
 
@@ -1389,6 +1392,8 @@ $\mc{C}$ is in fact Cartesian.
   \end{enumerate}
 \end{theorem}
 
+\TODO{text}
+
 \begin{theorem}[Label substitution]
   Given $\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}$, we have
   \begin{enumerate}
@@ -1403,100 +1408,7 @@ $\mc{C}$ is in fact Cartesian.
   \end{enumerate}
 \end{theorem}
 
-\TODO{equational theory lore}
-
-\TODO{completeness}
-
-\section{Concrete Models}
-
-\TODO{(strong) Elgot monad lore $\implies$ every strong Elgot monad over a Cartesian category is an
-\isotopessa model}
-
-\TODO{\cite{goncharov-16-complete-elgot}, \cite{goncharov-21-uniform-elgot},
-\cite{goncharov-guarded-unguarded}}
-
-\TODO{trace models; infinite monoids (need a name for these...)}
-
-\TODO{monad transformers: state; reader; writer}
-
-\TODO{Cite how we're doing \citet{liang-95-interpreters}}
-
-\TODO{submonads}
-
-\section{TSO weak memory}
-
-\TODO{this...}
-
-\section{Discussion and Related Work}
-
-\TODO{this...}
-
-\bibliographystyle{ACM-Reference-Format}
-\bibliography{references}
-
-\clearpage 
-
-\appendix
-
-\section{Syntax and Typing Rules}
-
-\begin{figure}[H]
-  \begin{center}
-    \begin{grammar}
-      <\(A, B, C\)> ::= 
-      \(X\)
-      \;|\; \(A \otimes B\)
-      \;|\; \(\mathbf{1}\)
-      \;|\; \(A + B\)
-      \;|\; \(\mathbf{0}\)
-
-      <\(a, b, c, e\)> ::= \(x\) 
-      \;|\;  \(f\;a\)
-      \;|\; \(\letexpr{x}{a}{e}\)
-      \alt  \(()\)
-      \;|\; \((a, b)\)
-      \;|\; \(\letexpr{(x, y)}{a}{e}\)
-      \alt  \(\linl{a}\) 
-      \;|\; \(\linr{a}\)
-      \;|\; \(\labort{a}\)
-      \;|\; \(\caseexpr{e}{x}{s}{y}{t}\)
-      
-      <\(s, t\)> ::= \(\lbrb{\ell}{a}\) 
-      \alt  \(\letstmt{x}{a}{t}\)
-      \;|\; \(\letstmt{(x, y)}{a}{t}\)
-      \;|\; \(\casestmt{e}{x}{s}{y}{t}\)
-      \alt  \(\where{t}{(\lwbranch{\ell_i}{x_i: A_i}{t_i},)_i}\)
-
-      <\(\Gamma\)> ::= \(\cdot\) \;|\; \(\Gamma, \thyp{x}{A}{\epsilon}\)
-
-      <\(\ms{L}\)> ::= \(\cdot\) \;|\; \(\ms{L}, \llhyp{\ell}{A}\)
-    \end{grammar}
-  \end{center}
-  \caption{Grammar for \isotopessa, parametrized over a set of instructions \(f \in \mc{I}\)}
-  \Description{}
-  \label{fig:ssa-grammar}
-\end{figure}
-
-\begin{figure}[H]
-  \TODO{this}
-  \caption{Rules for typing \isotopessa substitutions}
-  \Description{}
-  \label{fig:ssa-vsubst-rules}
-\end{figure}
-
-\begin{figure}[H]
-  \TODO{this}
-  \caption{Rules for typing \isotopessa label-substitutions}
-  \Description{}
-  \label{fig:ssa-lsubst-rules}
-\end{figure}
-
-\begin{figure}[H]
-  \TODO{this}
-  \caption{Syntax and typing for \isotopessa composition}
-  \Description{}
-  \label{fig:ssa-compose}
-\end{figure}
+\TODO{text}
 
 \section{Equational Theory}
 
@@ -1807,6 +1719,27 @@ $\mc{C}$ is in fact Cartesian.
     {\hasty{\Gamma}{\bot}{a'}{\mb{1}}}
     {\tmeq{\Gamma}{\epsilon}{a}{a'}{\mb{1}}}
 \end{gather*}
+
+\begin{theorem}[Completeness (Terms)]
+  The category $\ms{Th}^\otimes(\Gamma)$ with
+  \begin{itemize}
+    \item Objects types $A, B, C$
+    \item Morphisms $\ms{Th}^\otimes(\Gamma)(A, B) 
+      = \bigcup_\epsilon\ms{Th}^\otimes(\Gamma)_\epsilon(A, B) 
+      = \bigcup_\epsilon\{e \mid \hasty{\Gamma, \bhyp{\square}{A}}{\epsilon}{e}{A}\}$
+    \item Identity $\hasty{\Gamma, \bhyp{\square}{A}}{\bot}{\square}{A}$
+    \item Composition $e;e' = (\ms{let}\;\square = e; e')$ 
+  \end{itemize}
+  quotiented by (...) is a distributive Freyd category,
+  with:
+  \begin{itemize}
+    \item Pure morphisms $\ms{Th}^\otimes_\bot(\Gamma)(A, B)$
+    \item Tensor functors: ...
+    \item Projections: ...
+    \item Injections: ...
+    \item Distributor: ...
+  \end{itemize}
+\end{theorem}
 
 \TODO{soundness of term equational theory (diagrams?)}
 
@@ -2181,6 +2114,130 @@ $\mc{C}$ is in fact Cartesian.
     {\where{r}{(\lwbranch{\ell_{i}}{x_i}{[(\lwbranch{\kappa_j}{x_j}{t_j},)_j](\sigma_i)})_i}}
     {\ms{L}}}
 \end{gather*}
+
+\begin{theorem}[Completeness (Regions)]
+  The category $\ms{Th}(\Gamma, \ms{L})$ with
+  \begin{itemize}
+    \item Objects types $A, B, C$
+    \item Morphisms $\ms{Th}(\Gamma, \ms{L})(A, B) 
+      = \{r \mid \haslb{\Gamma, \bhyp{\square}{A}}{r}{\ms{L}, \ms{ret}(B)}\}$
+    \item Identity $\haslb{\Gamma, \bhyp{\square}{A}}{\ms{br}\;\ms{ret}\;\square}{\ms{L}, \ms{ret}(A)}$
+    \item Composition $r;r' = [\ms{id}, \ms{ret}(\square) \mapsto r']r$ 
+  \end{itemize}
+  quotiented by (...) is a distributive Freyd category with:
+  \begin{itemize}
+    \item Pure morphisms: ...
+    \item Tensor functors: ...
+    \item Projections: ...
+    \item Injections: ...
+    \item Distributor: ...
+    \item Elgot structure: ...
+  \end{itemize}
+  where we write $\ms{ret}\;e = \ms{br}\;\ms{ret}\;e$. Furthermore,
+  \begin{enumerate}
+    \item $e \mapsto \ms{ret}\;e$ is a full and faithful strict monoidal functor
+    (taking the action on objects to be the identity)
+    $\ms{Th}^\otimes_\bot(\Gamma)  
+      \to \ms{Th}_\bot(\Gamma, \ms{L})(A, B)$ \label{ret-functor}
+    \item Likewise $e \mapsto \letstmt{\square}{e}{\ms{ret}\;\square}$ is a
+      faithful strict monoidal functor $\ms{Th}^\otimes(\Gamma) \to
+      \ms{Th}_\bot(\Gamma, \ms{L})(A, B)$ restricting to \ref{ret-functor} on
+      $\ms{Th}^\otimes_\bot(\Gamma)$
+  \end{enumerate}
+\end{theorem}
+
+\section{Concrete Models}
+
+\TODO{(strong) Elgot monad lore $\implies$ every strong Elgot monad over a Cartesian category is an
+\isotopessa model}
+
+\TODO{\cite{goncharov-16-complete-elgot}, \cite{goncharov-21-uniform-elgot},
+\cite{goncharov-guarded-unguarded}}
+
+\TODO{trace models; infinite monoids (need a name for these...)}
+
+\TODO{monad transformers: state; reader; writer}
+
+\TODO{Cite how we're doing \citet{liang-95-interpreters}}
+
+\TODO{submonads}
+
+\section{TSO weak memory}
+
+\TODO{this...}
+
+\section{Discussion and Related Work}
+
+\TODO{this...}
+
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{references}
+
+\clearpage 
+
+\appendix
+
+\section{Syntax and Typing Rules}
+
+\begin{figure}[H]
+  \begin{center}
+    \begin{grammar}
+      <\(A, B, C\)> ::= 
+      \(X\)
+      \;|\; \(A \otimes B\)
+      \;|\; \(\mathbf{1}\)
+      \;|\; \(A + B\)
+      \;|\; \(\mathbf{0}\)
+
+      <\(a, b, c, e\)> ::= \(x\) 
+      \;|\;  \(f\;a\)
+      \;|\; \(\letexpr{x}{a}{e}\)
+      \alt  \(()\)
+      \;|\; \((a, b)\)
+      \;|\; \(\letexpr{(x, y)}{a}{e}\)
+      \alt  \(\linl{a}\) 
+      \;|\; \(\linr{a}\)
+      \;|\; \(\labort{a}\)
+      \;|\; \(\caseexpr{e}{x}{s}{y}{t}\)
+      
+      <\(s, t\)> ::= \(\lbrb{\ell}{a}\) 
+      \alt  \(\letstmt{x}{a}{t}\)
+      \;|\; \(\letstmt{(x, y)}{a}{t}\)
+      \;|\; \(\casestmt{e}{x}{s}{y}{t}\)
+      \alt  \(\where{t}{(\lwbranch{\ell_i}{x_i: A_i}{t_i},)_i}\)
+
+      <\(\Gamma\)> ::= \(\cdot\) \;|\; \(\Gamma, \thyp{x}{A}{\epsilon}\)
+
+      <\(\ms{L}\)> ::= \(\cdot\) \;|\; \(\ms{L}, \llhyp{\ell}{A}\)
+    \end{grammar}
+  \end{center}
+  \caption{Grammar for \isotopessa, parametrized over a set of instructions \(f \in \mc{I}\)}
+  \Description{}
+  \label{fig:ssa-grammar}
+\end{figure}
+
+% \begin{figure}[H]
+%   \TODO{this}
+%   \caption{Rules for typing \isotopessa substitutions}
+%   \Description{}
+%   \label{fig:ssa-vsubst-rules}
+% \end{figure}
+
+% \begin{figure}[H]
+%   \TODO{this}
+%   \caption{Rules for typing \isotopessa label-substitutions}
+%   \Description{}
+%   \label{fig:ssa-lsubst-rules}
+% \end{figure}
+
+% \begin{figure}[H]
+%   \TODO{this}
+%   \caption{Syntax and typing for \isotopessa composition}
+%   \Description{}
+%   \label{fig:ssa-compose}
+% \end{figure}
+
+\section{Equational Theory}
 
 \TODO{soundness of region equational theory (diagrams?)}
 
