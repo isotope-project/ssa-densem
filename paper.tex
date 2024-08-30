@@ -1040,403 +1040,6 @@ a la \citet{crole-93-cat-types}
 
 \section{Equational Theory}
 
-\TODO{this...}
-
-\section{Denotational Semantics}
-
-\TODO{standard denotational semantics for functional programs is given in cartesian/cartesian closed
-categories, see \citet{crole-93-cat-types}}
-
-\TODO{we want to deal with side effects and imperative programs; \citet{moggi-91-monad} says use a
-(strong) monad}
-
-\TODO{generalizing a bit; a strong monad \textit{over} a cartesian/cartesian closed category induces
-a premonoidal, or in fact a Freyd category}
-
-\TODO{like the notion of a symmetric monoidal category, but:
-\begin{itemize}
-  \item Premonoidal: no sliding, because print doesn't slide
-  \item Freyd: have underlying cartesian structure
-\end{itemize}
-}
-
-\TODO{in particular...; fuse with below narrative/definitions}
-
-\begin{definition}[Symmetric Premonoidal Category]
-  We define a \emph{binoidal category} to be a category $\mc{C}$ equipped with a binary operation
-  $\otimes : |\mc{C}| \times |\mc{C}| \to |\mc{C}|$ on the objects of $\mc{C}$ and, for each $A, B
-  \in |\mc{C}|$, functors $A \otimes -, - \otimes B : \mc{C} \to \mc{C}$. We say a morphism $f : A
-  \to A'$ in a binoidal category is \emph{central} if, for all $g : B \to B'$, it satisfies
-  \emph{sliding}:
-  $$
-  f \otimes B ; A' \otimes g = A \otimes g ; f \otimes B' \qquad
-  B \otimes f ; g \otimes A' = g \otimes A ; B' \otimes f
-  $$
-  in which case we may write these morphisms as $f \otimes g : A \otimes B \to A' \otimes B'$ and $g
-  \otimes f : B \otimes A \to B' \otimes A'$ respectively. A \emph{premonoidal category} is, then, a
-  binoidal category equipped with:
-  \begin{itemize}
-    \item An \emph{identity} object $I \in |\mc{C}|$
-    \item For each triple of objects $A, B, C \in |\mc{C}|$, a central, natural isomorphism
-    $\alpha_{A, B, C} : (A \otimes B) \otimes C \to A \otimes (B \otimes C)$, the \emph{associator}
-    \item For each object $A$, central, natural isomorphisms $\lambda_A : A \otimes I \to A$ and
-    $\rho_A : I \otimes A \to A$, the \emph{left} and \emph{right unitors}
-  \end{itemize}
-  satisfying the \emph{triangle} and \emph{pentagon identity}
-  $$
-  \alpha_{A, I, B} ; A \otimes \lambda_B = \rho_A \otimes B \qquad
-  \alpha_{A \otimes B, C, D} ; \alpha_{A, B, C \otimes D}
-  = \alpha_{A, B, C} \otimes D ; \alpha_{A, B \otimes C, D} ; A \otimes \alpha_{A, B, C}
-  $$
-  We say a premonoidal category is \emph{symmetric} if it is also equipped with a central, natural
-  involution $\sigma_{A, B} : A \otimes B \to B \otimes A$, the \textit{symmetry}, satisfying the
-  \emph{hexagon identity}
-  $$
-  \alpha_{A, B, C} ; \sigma_{A, B \otimes C} ; \alpha_{B, C, A}
-  = \sigma_{A, B} \otimes C ; \alpha_{B, A, C} ; B \otimes \sigma_{A, C}
-  $$
-  We say a premonoidal category is \emph{monoidal} if every morphism is central.
-\end{definition}
-
-\TODO{but we want a nice notion of functor between premonoidal categories, but}
-
-\TODO{(a) preserving central morphisms is too strong}
-
-\TODO{(b) if we want to preserve ``pure" morphisms, in general, central $\neq$ pure}
-
-\TODO{useful example: read is pure in Reader, but if we want a functor from Reader to State, read
- read in state is not pure!}
-
-\TODO{(c) we want some Cartesian structure, for now...}
-
-\TODO{\(\implies\) Freyd category lore}
-
-\begin{definition}[Freyd category]
-  A \emph{Freyd category} is a premonoidal category $\mc{C}$ equipped with a wide subcategory
-  $\mc{C}_\bot \subseteq \mc{C}$ of \emph{pure} morphisms such that
-  \begin{itemize}
-    \item $\mc{C}_\bot$ contains all associators, unitors, and symmetries
-    \item For each $A_1, A_2$, there exist morphisms $\pi_i : A_1 \times A_2 \to_{\mc{C}_\bot} A_i$
-    making $A_1 \otimes A_2$ into a cartesian product on $\mc{C}_\bot$
-    \item $I$ is a terminal object in $\mc{C}_\bot$
-    \item $\langle f, g \rangle 
-      = \dmor{} ; f \otimes - ; g \otimes -  
-      = \dmor{} ; g \otimes - ; f \otimes -$
-  \end{itemize}
-\end{definition}
-
-\TODO{diagonal/projection presentation: in particular, we note that every category with $\dmor{}$...}
-
-\TODO{throw some examples in here?}
-
-\TODO{
-  \begin{itemize}
-    \item Every Cartesian category $\mc{C}$ is trivially Freyd with $\mc{V} = \mc{C}$
-    \item Every strong monad on a cartesian category induces a Freyd category
-    \item Minimal subcategory $\mc{V}$ and Reader/State example...
-  \end{itemize}
-}
-
-\TODO{monadic lore?}
-
-\TODO{effect lore:}
-
-\TODO{coproduct lore}
-
-\TODO{distributivity lore}
-
-\begin{definition}[Distributive category]
-  A premonoidal category $\mc{C}$ with all coproducts is \emph{distributive} if, for all $A, B, C$,
-  the obvious morphism
-  $$
-  \delta_{A, B, C} 
-    = [(A + \iota_l), (A + \iota_r)] : (A \otimes B) + (A \otimes C) \to A \otimes (B + C)
-  $$
-  is an isomorphism.
-\end{definition}
-
-\TODO{``quotiented terms give the free model of distributive Freyd categories?''}
-
-\TODO{Elgot category lore; strength}
-
-\begin{definition}[(Strong) Elgot structure]
-  A category $\mc{C}$ with all coproducts is said to have an \emph{Elgot structure} if we can define
-  an operator $(-)^\dagger$ taking every morphism $f : A \to B + A$ to a morphism $f^\dagger : A \to
-  B$, the \emph{fixpoint} of $f$, satisfying the following axioms:
-  \begin{itemize}
-    \item \emph{Fixpoint:} $\forall f : A \to B + A, f^\dagger = f;[\ms{id}, f^\dagger]$
-    \item \emph{Naturality:} $\forall f : A \to B + A, \forall g : B \to C, 
-      (f;g + \ms{id})^\dagger = f^\dagger;g : A \to C$
-    \item \emph{Codiagonal:} $\forall f : A \to (B + A) + A, 
-      (f^\dagger)^\dagger = (f;[\ms{id}, \iota_r])^\dagger : A \to B$
-    \item \emph{Uniformity:} 
-    $
-      \forall f : A' \to B + A', \forall g : A \to B + A \forall h : A \to A', 
-        h;f = g;\ms{id} + h \implies h;f^\dagger = g^\dagger
-    $
-  \end{itemize}
-  If $\mc{C}$ is distributive, we say it has a \emph{strong Elgot structure} if
-  $
-  \forall f: A \to B + A, (f \otimes C ; \delta^{-1})^\dagger = f^\dagger \otimes C
-  $
-  We say a monad is Elgot if its Kliesli category has an Elgot structure. Similarly, we say a
-  \emph{strong} monad is strong Elgot if its Kliesli category has a strong Elgot structure.
-\end{definition}
-
-\TODO{note squaring and dinaturality are derivable by Lemma 31 of
-\citet{goncharov-18-guarded-traced}}
-
-\TODO{examples:
-\begin{itemize}
-  \item Common monads: Option, List, Powerset
-  \item Preserved by transformers: ReaderT, WriterT, StateT, OptionT, ExceptT
-  \item Later: trace lore
-\end{itemize}
-}
-
-% \begin{definition}[E-Freyd category]
-%   Given a complete lattice $E$, an \emph{$E$-Freyd category} is a premonoidal category $\mc{C}$
-%   equipped with a continuous function $\epsilon \in E \mapsto \mc{C}_\epsilon$ from elements of $E$
-%   to wide subcategories of $\mc{C}$, such that $\mc{C}_\top = \mc{C}$ and $(\mc{C}, \mc{V} =
-%   \mc{C}_\bot)$ is a Freyd category. In particular, every Freyd category is trivially an $E$-Freyd
-%   category for the Sierpinski poset $E = \{\top, \bot\}$.
-% \end{definition}
-
-An \isotopessa model consists of:
-\begin{itemize}
-  \item A distributive premonoidal category $\mc{C}$, equipped with an Elgot structure
-  \item A complete lattice $E$, and a continuous function $\epsilon \mapsto \mc{C}_\epsilon$ from
-  $E$ to wide subcategories of $\mc{C}$, such that $\mc{C}_\top = \mc{C}$, and $(\mc{C}, \mc{V} =
-  \mc{C}_\bot)$ is a Freyd category.
-\end{itemize}
-In particular, whenever $\mc{C}$ is a distributive Elgot Freyd category, we can trivially obtain an
-\isotopessa model by choosing $E = \{\top, \bot\}$. We may also choose $E = \{*\}$ if and only if
-$\mc{C}$ is in fact Cartesian.
-
-\TODO{$\to_\epsilon$ lore}
-
-\begin{figure}[H]
-  \begin{align*}
-    \boxed{\dnt{A} : |\mc{C}|} \qquad 
-    & \dnt{\mb{1}} = I \qquad
-      \dnt{A \otimes B} = \dnt{A} \otimes \dnt{B} \qquad
-      \dnt{\mb{0}} = \mb{0} \qquad
-      \dnt{A + B} = \dnt{A} + \dnt{B} \qquad \\
-    \boxed{\dnt{\Gamma} : |\mc{C}|} \qquad
-    & \dnt{\cdot} = I \qquad
-      \dnt{\Gamma, \thyp{x}{A}{\epsilon}} = \dnt{\Gamma} \otimes \dnt{A} \\
-    \boxed{\dnt{\ms{L}} : |\mc{C}|} \qquad
-    & \dnt{\cdot} = 0 \qquad
-      \dnt{\ms{L}, \lhyp{\ell}{A}} = \dnt{\ms{L}} + \dnt{A} \\
-  \end{align*}
-  \begin{equation*}
-    \boxed{\dnt{\Gamma \leq \Delta} : \dnt{\Gamma} \to_\bot \dnt{\Delta}}
-  \end{equation*}
-  \begin{gather*}
-    \dnt{\cdot \leq \cdot} = \ms{id}_I \qquad
-    \dnt{\Gamma, \thyp{x}{A}{\epsilon} \leq \Delta} = \pi_l;\dnt{\Gamma \leq \Delta} \qquad
-    \dnt{\Gamma, \thyp{x}{A}{\epsilon} \leq \Delta, \thyp{x}{A}{\epsilon}}
-    = \dnt{\Gamma \leq \Delta} \otimes \dnt{A} \\ \\
-  \end{gather*}
-  \begin{equation*}
-    \boxed{\dnt{\ms{L} \leq \ms{K}} : \dnt{\ms{L}} \to_\bot \dnt{\ms{K}}}
-  \end{equation*}
-  \begin{gather*}
-    \dnt{\cdot \leq \cdot} = \ms{id}_{\mb{0}} \qquad
-    \dnt{\ms{L} \leq \ms{K}, \lhyp{\ell}{A}} = \dnt{\ms{L} \leq \ms{K}};\iota_\ell \qquad
-    \dnt{\ms{L}, \lhyp{\ell}{A} \leq \ms{K}, \lhyp{\ell}{A}}
-    = \dnt{\ms{L} \leq \ms{K}} + \dnt{A}
-  \end{gather*}
-  \caption{Denotational semantics for \isotopessa types, contexts, and weakenings}
-  \Description{}
-  \label{fig:ssa-ty-sem}
-\end{figure}
-
-\begin{figure}[H]
-  \begin{equation*}
-    \boxed{\dnt{\hasty{\Gamma}{\epsilon}{a}{A}} : \dnt{\Gamma} \to_\epsilon \dnt{A}}
-  \end{equation*}
-  \begin{align*}
-    \dnt{\hasty{\Gamma}{\epsilon}{x}{A}} &= \pi_{\Gamma, x} \\
-    \dnt{\hasty{\Gamma}{\epsilon}{f\;a}{B}} 
-      &= \dnt{\hasty{\Gamma}{\epsilon}{a}{A}} ; \dnt{\isop{f}{A}{B}{\epsilon}} \\
-    \dnt{\hasty{\Gamma}{\epsilon}{\letexpr{x}{a}{b}}{B}}
-      &= \Delta_{\dnt{\Gamma}}
-      ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{a}{A}};
-      \\&\quad\; 
-      \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{b}{B}}
-      \\
-    \dnt{\hasty{\Gamma}{\epsilon}{(a, b)}{A \otimes B}} 
-      &= \Delta_{\dnt{\Gamma}}
-      ; \dnt{\hasty{\Gamma}{\epsilon}{a}{A}} \ltimes \dnt{\hasty{\Gamma}{\epsilon}{b}{B}}
-      % ; \dnt{\hasty{\Gamma}{\epsilon}{a}{A}} \otimes \dnt{\Gamma} 
-      % ; \dnt{A} \otimes \dnt{\hasty{\Gamma}{\epsilon}{b}{B}}
-      \\
-    \dnt{\hasty{\Gamma}{\epsilon}{\letexpr{(x, y)}{e}{c}}{C}}
-      &= \Delta_{\dnt{\Gamma}}
-      ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A \otimes B}} ;
-      \\&\quad\; 
-      \dnt{\hasty{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{\epsilon}{c}{C}}
-      \\
-    \dnt{\hasty{\Gamma}{\epsilon}{()}{\mb{1}}} &= 1_{\dnt{\Gamma}} \\
-    \dnt{\hasty{\Gamma}{\epsilon}{\linl{a}}{A + B}}
-      &= \dnt{\hasty{\Gamma}{\epsilon}{a}{A}} ; \iota_l \\
-    \dnt{\hasty{\Gamma}{\epsilon}{\linr{b}}{A + B}}
-      &= \dnt{\hasty{\Gamma}{\epsilon}{b}{B}} ; \iota_r \\
-    \dnt{\hasty{\Gamma}{\epsilon}{\caseexpr{e}{x}{a}{y}{b}}{C}}
-      &= \dnt{\hasty{\Gamma}{\epsilon}{e}{A + B}}
-      ; \\& \quad\; 
-      \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{a}{A}}
-      + \dnt{\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{b}{B}}
-      \\
-    \dnt{\hasty{\Gamma}{\epsilon}{\labort{a}}{A}} 
-      &= \dnt{\hasty{\Gamma}{\epsilon}{a}{\mb{0}}} ; 0_{\dnt{A}}
-  \end{align*}
-  \caption{Denotational semantics for \isotopessa terms}
-  \Description{Denotational semantics for isotope-SSA terms}
-  \label{fig:ssa-term-sem}
-\end{figure}
-
-\begin{figure}[H]
-  \begin{equation*}
-    \boxed{\dnt{\haslb{\Gamma}{r}{\ms{L}}} : \dnt{\Gamma} \to \dnt{\ms{L}}}
-  \end{equation*}
-  \begin{align*}
-    \dnt{\haslb{\Gamma}{\lbrb{\ell}{a}}{\ms{L}}} 
-      &= \dnt{\hasty{\Gamma}{\bot}{a}{A}} ; \iota_{\ms{L}, \ell}
-      \\
-    \dnt{\haslb{\Gamma}{\letstmt{x}{a}{r}}{\ms{L}}}
-      &= \Delta_{\dnt{\Gamma}}
-      ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{a}{A}}
-      ; \dnt{\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}} 
-      \\
-    \dnt{\haslb{\Gamma}{\letstmt{(x, y)}{e}{r}}{\ms{L}}}
-      &= \Delta_{\dnt{\Gamma}}
-      ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
-      ; \dnt{\haslb{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{r}{\ms{L}}} 
-      \\ 
-    \dnt{\haslb{\Gamma}{\casestmt{e}{x}{r}{y}{s}}{\ms{L}}}
-      &= \Delta_{\dnt{\Gamma}}
-      ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A + B}}
-      ; \delta^{-1} ;
-      \\&\quad\;
-      \dnt{\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
-      + \dnt{\haslb{\Gamma, \bhyp{y}{B}}{s}{\ms{L}}}
-      \\
-    \dnt{\haslb{\Gamma}{\where{r}{(\lwbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}}
-      &=  
-      \Delta_{\dnt{\Gamma}}
-      ; \dnt{\Gamma} \otimes \dnt{\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}} 
-      ; \delta^{-1} ;
-      \alpha^+_{}
-      \\ &\quad\;
-      (
-        \Sigma_i (\Delta_{\dnt{\Gamma}} 
-          ; \dnt{\Gamma} \otimes 
-            \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
-          ; 
-          )
-      )^\dagger
-  \end{align*}
-  \caption{Denotational semantics for \isotopessa regions}
-  \Description{Denotational semantics for isotope-SSA regions}
-  \label{fig:ssa-reg-sem}
-\end{figure}
-
-\TODO{text}
-
-\begin{theorem}[(Label) Weakening]
-  Given $\Gamma \leq \Gamma'$ and $\ms{L}' \leq \ms{L}$, $\ms{K}' \leq \ms{K}$, we have
-  \begin{enumerate}
-    \item $\dnt{\Gamma \leq \Delta} = \dnt{\Gamma \leq \Gamma'};\dnt{\Gamma' \leq \Delta}$
-    \item $\dnt{\ms{L}' \leq \ms{K}} = \dnt{\ms{L}' \leq \ms{L}};\dnt{\ms{L} \leq \ms{K}}$
-    \item $\dnt{\hasty{\Gamma}{\epsilon}{a}{A}} 
-      = \dnt{\Gamma \leq \Gamma'};\dnt{\hasty{\Gamma'}{\epsilon}{a}{A}}$
-    \item $\dnt{\haslb{\Gamma}{r}{\ms{L}}}
-      = \dnt{\Gamma \leq \Gamma'}
-      ; \dnt{\haslb{\Gamma'}{r}{\ms{L}'}}
-      ; \dnt{\ms{L}' \leq \ms{L}}$
-    \item $\dnt{\issubst{\gamma}{\Gamma}{\Delta}}
-      = \dnt{\Gamma \leq \Gamma'};\dnt{\issubst{\gamma}{\Gamma'}{\Delta}}$
-    \item $\dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}}
-      = \dnt{\Gamma \leq \Gamma'} \otimes \dnt{\ms{L}}
-      ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}'}}
-      ; \dnt{\ms{K}' \leq \ms{K}}
-      $
-  \end{enumerate}
-\end{theorem}
-
-\begin{figure}[H]
-  \begin{equation*}
-    \boxed{\dnt{\issubst{\gamma}{\Gamma}{\Delta}} 
-      : \dnt{\Gamma} \to \dnt{\Delta}}
-  \end{equation*}
-  \begin{gather*}
-    \dnt{\issubst{\cdot}{\Gamma}{\cdot}} = \tmor{\dnt{\Gamma}}
-    \qquad
-    \dnt{\issubst{\gamma, x \mapsto e}{\Gamma}{\Delta}} 
-    = \dnt{\issubst{\gamma}{\Gamma}{\Delta}}
-    \\
-    \dnt{\issubst{\gamma, x \mapsto e}{\Gamma}{\Delta, \thyp{x}{A}{\epsilon}}}
-    = \dmor{\dnt{\Gamma}};\dnt{\issubst{\gamma}{\Gamma}{\Delta}}
-  \end{gather*}
-  \begin{equation*}
-    \boxed{\dnt{\lbsubst{\Gamma}{\kappa}{\ms{L}}{\ms{K}}} 
-      : \dnt{\Gamma} \otimes \dnt{\ms{L}} \to \dnt{\ms{K}}}
-  \end{equation*}
-  \begin{gather*}
-    \dnt{\lbsubst{\cdot}{\Gamma}{\cdot}{\ms{K}}} 
-      = \tmor{\dnt{\Gamma} \otimes \mb{1}};0_{\ms{K}} \qquad
-    \dnt{\lbsubst{\kappa, \ell(x) \mapsto r}{\Gamma}{\ms{L}}{\ms{K}}}
-      = \dnt{\lbsubst{\kappa}{\Gamma}{\ms{L}}{\ms{K}}}
-    \\
-    \dnt{\lbsubst{\kappa, \ell(x) \mapsto r}{\Gamma}{\ms{L}, \ell(A)}{\ms{K}}}
-      = [
-        \dnt{\lbsubst{\kappa}{\Gamma}{\ms{L}}{\ms{K}}}, 
-        \dnt{\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{K}}}
-      ]
-  \end{gather*}
-  \caption{Denotational semantics for \isotopessa (label) substitutions}
-  \Description{}
-  \label{fig:ssa-vsubst-sem} 
-\end{figure}
-
-\begin{theorem}[Substitution]
-  Given $\dnt{\issubst{\gamma}{\Gamma}{\Delta}} : \dnt{\Gamma} \to_\bot
-  \dnt{\Delta}$ (in particular, this is always the case when (todo: the effect
-  of $\Delta$ is bot, but write this down)), we have that
-  \begin{enumerate}
-    \item $\dnt{\hasty{\Gamma}{\epsilon}{[\gamma]a}{A}} 
-      = \dnt{\issubst{\gamma}{\Gamma}{\Delta}};\dnt{\hasty{\Delta}{\epsilon}{a}{A}}$
-    \item $\dnt{\haslb{\Gamma}{[\gamma]r}{\ms{L}}}
-      = \dnt{\issubst{\gamma}{\Gamma}{\Delta}};\dnt{\haslb{\Delta}{r}{\ms{L}}}$
-    \item $\dnt{\issubst{[\gamma]\sigma}{\Delta}{\Xi}}
-      = \dnt{\issubst{\gamma}{\Gamma}{\Delta}};\dnt{\issubst{\sigma}{\Delta}{\Xi}}$
-    \item $\dnt{\lbsubst{\Gamma}{[\gamma]\sigma}{\ms{L}}{\ms{K}}}
-      = \dnt{\issubst{\gamma}{\Gamma}{\Delta}};\dnt{\lbsubst{\Delta}{\sigma}{\ms{L}}{\ms{K}}}$
-  \end{enumerate}
-\end{theorem}
-
-\TODO{text}
-
-\begin{theorem}[Label substitution]
-  Given $\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}$, we have
-  \begin{enumerate}
-    \item $\dnt{\haslb{\Gamma}{[\sigma]r}{\ms{K}}}
-      = \dmor{\dnt{\Gamma}}
-      ;\dnt{\Gamma} \otimes \dnt{\haslb{\Gamma}{r}{\ms{L}}}
-      ;\dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}}$
-    \item $\dnt{\lbsubst{\Gamma}{[\sigma]\sigma'}{\ms{M}}{\ms{K}}}
-      = \dmor{\dnt{\Gamma}} \otimes \dnt{\ms{L}} ; \alpha
-      ; \dnt{\Gamma} \otimes \dnt{\lbsubst{\Gamma}{\sigma'}{\ms{M}}{\ms{L}}}
-      ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}}$
-  \end{enumerate}
-\end{theorem}
-
-\TODO{text}
-
-\section{Equational Theory}
-
 \subsection{Terms}
 
 \TODO{write nicer fused version?}
@@ -1746,48 +1349,6 @@ $\mc{C}$ is in fact Cartesian.
 \end{gather*}
 
 \TODO{text on composition lore...}
-
-\begin{theorem}[Completeness (Terms)]
-  The category $\ms{Th}^\otimes(\Gamma)$ with
-  \begin{itemize}
-    \item Objects types $A, B, C$
-    \item Morphisms $\ms{Th}^\otimes(\Gamma)(A, B) 
-      = \bigcup_\epsilon\ms{Th}^\otimes(\Gamma)_\epsilon(A, B) 
-      = \bigcup_\epsilon\{e \mid \hasty{\Gamma, \bhyp{\square}{A}}{\epsilon}{e}{A}\}$
-      quotiented by $\tmeq{\Gamma, \bhyp{\square}{A}}{}{e}{e'}{A}$
-      % TODO: epsilation lore
-    \item Identity $\hasty{\Gamma, \bhyp{\square}{A}}{\bot}{\square}{A}$
-    \item Composition $e;e' = (\ms{let}\;\square = e; e')$ 
-  \end{itemize} 
-  is a distributive Freyd category, with:
-  \begin{itemize}
-    \item Pure morphisms generated by, given $\hasty{\Gamma, \bhyp{\square}{A}}{\epsilon}{e}{B}$ and
-          $\haslb{\Gamma, \bhyp{\square}{A}}{\ms{ret}\;e}{B, \ms{L}}$
-    \item Tensor functors 
-      $- \otimes X : r \mapsto \ms{let}\;(\square, x) 
-        = \square; (r ; \ms{ret}\;(\square, x))$
-      and 
-      $X \otimes - : r \mapsto \ms{let}\;(x, \square) 
-      = \square; (r ; \ms{ret}\;(x, \square))$
-    \item Projections $\ms{let}\;(x, y) = \square; \ms{ret}\;x$ and  
-      $\ms{let}\;(x, y) = \square; \ms{ret}\;y$
-    \item Diagonal: $\ms{ret}\;(\square, \square)$
-    \item Injections: $\ms{ret}\;\ms{inl}\;\square$, $\ms{ret}\;\ms{inr}\;\square$
-    \item Sums: $
-      [r, r'] = \casestmt{\square}{\square}{r}{\square}{r'}
-    $
-    \item Distributor
-      $\delta = \casestmt{\square}{(x, y)}{\ms{ret}\;(x, \ms{inl}\;y)}{(x, y)}{\ms{ret}\;(x, \ms{inr}\;y)}$
-      with inverse
-      $\delta^{-1} = \ms{let}\;(x, y) = \square; 
-        \casestmt{y}{z}{\ms{ret}\;\ms{inl}(x, z)}{z}{\ms{ret}\;\ms{inr}(x, z)}$
-    \item Elgot structure 
-    $$
-      r^\dagger = \where{\ms{br}\;\ms{body}\;\square}{\lwbranch{\ms{body}}{\square : A}
-        {r ; \casestmt{\square}{x}{\ms{ret}\;x}{y}{\ms{br}\;\ms{body}\;y}}}
-    $$
-  \end{itemize}
-\end{theorem}
 
 \TODO{soundness of term equational theory (diagrams?)}
 
@@ -2163,7 +1724,438 @@ $\mc{C}$ is in fact Cartesian.
     {\ms{L}}}
 \end{gather*}
 
+\section{Denotational Semantics}
+
+\TODO{rework, expand, and fold in...}
+
+\citet{moggi-91-monad} showed a cartesian closed category equipped with a strong
+monad interprets effectful higher-order functional programs. SSA, however, is a
+first-order language. In particular, to model it, we have no need for a closure
+operator, nor for first-class continuations (represented by objects of the form
+$\ms{T}(\ms{T}(A))$). Freyd categories are to first order languages as strong
+monads on a CCC are to higher-order languages. In particular, every strong monad
+on a CCC gives rise to a Freyd category in a trivial manner. SSA, however, also
+has branching and loops. To represent these, we need to add distributive
+coproducts and Elgot structure respectively.
+
+\begin{definition}[Symmetric Premonoidal Category]
+  We define a \emph{binoidal category} to be a category $\mc{C}$ equipped with a binary operation
+  $\otimes : |\mc{C}| \times |\mc{C}| \to |\mc{C}|$ on the objects of $\mc{C}$ and, for each $A, B
+  \in |\mc{C}|$, functors $A \otimes -, - \otimes B : \mc{C} \to \mc{C}$. We say a morphism $f : A
+  \to A'$ in a binoidal category is \emph{central} if, for all $g : B \to B'$, it satisfies
+  \emph{sliding}:
+  $$
+  f \otimes B ; A' \otimes g = A \otimes g ; f \otimes B' \qquad
+  B \otimes f ; g \otimes A' = g \otimes A ; B' \otimes f
+  $$
+  in which case we may write these morphisms as $f \otimes g : A \otimes B \to A' \otimes B'$ and $g
+  \otimes f : B \otimes A \to B' \otimes A'$ respectively. A \emph{premonoidal category} is, then, a
+  binoidal category equipped with:
+  \begin{itemize}
+    \item An \emph{identity} object $I \in |\mc{C}|$
+    \item For each triple of objects $A, B, C \in |\mc{C}|$, a central, natural isomorphism
+    $\alpha_{A, B, C} : (A \otimes B) \otimes C \to A \otimes (B \otimes C)$, the \emph{associator}
+    \item For each object $A$, central, natural isomorphisms $\lambda_A : A \otimes I \to A$ and
+    $\rho_A : I \otimes A \to A$, the \emph{left} and \emph{right unitors}
+  \end{itemize}
+  satisfying the \emph{triangle} and \emph{pentagon identity}
+  $$
+  \alpha_{A, I, B} ; A \otimes \lambda_B = \rho_A \otimes B \qquad
+  \alpha_{A \otimes B, C, D} ; \alpha_{A, B, C \otimes D}
+  = \alpha_{A, B, C} \otimes D ; \alpha_{A, B \otimes C, D} ; A \otimes \alpha_{A, B, C}
+  $$
+  We say a premonoidal category is \emph{symmetric} if it is also equipped with a central, natural
+  involution $\sigma_{A, B} : A \otimes B \to B \otimes A$, the \textit{symmetry}, satisfying the
+  \emph{hexagon identity}
+  $$
+  \alpha_{A, B, C} ; \sigma_{A, B \otimes C} ; \alpha_{B, C, A}
+  = \sigma_{A, B} \otimes C ; \alpha_{B, A, C} ; B \otimes \sigma_{A, C}
+  $$
+  We say a premonoidal category is \emph{monoidal} if every morphism is central.
+\end{definition}
+
+\TODO{but we want a nice notion of functor between premonoidal categories, but}
+
+\TODO{(a) preserving central morphisms is too strong}
+
+\TODO{(b) if we want to preserve ``pure" morphisms, in general, central $\neq$ pure}
+
+\TODO{useful example: read is pure in Reader, but if we want a functor from Reader to State, read
+ read in state is not pure!}
+
+\TODO{(c) we want some Cartesian structure, for now...}
+
+\TODO{\(\implies\) Freyd category lore}
+
+\begin{definition}[Freyd category]
+  A \emph{Freyd category} is a premonoidal category $\mc{C}$ equipped with a wide subcategory
+  $\mc{C}_\bot \subseteq \mc{C}$ of \emph{pure} morphisms such that
+  \begin{itemize}
+    \item $\mc{C}_\bot$ contains all associators, unitors, and symmetries
+    \item For each $A_1, A_2$, there exist morphisms $\pi_i : A_1 \times A_2 \to_{\mc{C}_\bot} A_i$
+    making $A_1 \otimes A_2$ into a cartesian product on $\mc{C}_\bot$
+    \item $I$ is a terminal object in $\mc{C}_\bot$
+    \item $\langle f, g \rangle 
+      = \dmor{} ; f \otimes - ; g \otimes -  
+      = \dmor{} ; g \otimes - ; f \otimes -$
+  \end{itemize}
+\end{definition}
+
+\TODO{diagonal/projection presentation: in particular, we note that every category with $\dmor{}$...}
+
+\TODO{throw some examples in here?}
+
+\TODO{
+  \begin{itemize}
+    \item Every Cartesian category $\mc{C}$ is trivially Freyd with $\mc{V} = \mc{C}$
+    \item Every strong monad on a cartesian category induces a Freyd category
+    \item Minimal subcategory $\mc{V}$ and Reader/State example...
+  \end{itemize}
+}
+
+\TODO{monadic lore?}
+
+\TODO{effect lore:}
+
+\TODO{coproduct lore}
+
+\TODO{distributivity lore}
+
+\begin{definition}[Distributive category]
+  A premonoidal category $\mc{C}$ with all coproducts is \emph{distributive} if, for all $A, B, C$,
+  the obvious morphism
+  $$
+  \delta_{A, B, C} 
+    = [(A + \iota_l), (A + \iota_r)] : (A \otimes B) + (A \otimes C) \to A \otimes (B + C)
+  $$
+  has an inverse.
+\end{definition}
+
+\TODO{``quotiented terms give the free model of distributive Freyd categories?''}
+
+\TODO{Elgot category lore; strength}
+
+\begin{definition}[(Strong) Elgot structure]
+  A category $\mc{C}$ with all coproducts is said to have an \emph{Elgot structure} if we can define
+  an operator $(-)^\dagger$ taking every morphism $f : A \to B + A$ to a morphism $f^\dagger : A \to
+  B$, the \emph{fixpoint} of $f$, satisfying the following axioms:
+  \begin{itemize}
+    \item \emph{Fixpoint:} $\forall f : A \to B + A, f^\dagger = f;[\ms{id}, f^\dagger]$
+    \item \emph{Naturality:} $\forall f : A \to B + A, \forall g : B \to C, 
+      (f;g + \ms{id})^\dagger = f^\dagger;g : A \to C$
+    \item \emph{Codiagonal:} $\forall f : A \to (B + A) + A, 
+      (f^\dagger)^\dagger = (f;[\ms{id}, \iota_r])^\dagger : A \to B$
+    \item \emph{Uniformity:} 
+    $
+      \forall f : A' \to B + A', \forall g : A \to B + A \forall h : A \to A', 
+        h;f = g;\ms{id} + h \implies h;f^\dagger = g^\dagger
+    $
+  \end{itemize}
+  If $\mc{C}$ is distributive, we say it has a \emph{strong Elgot structure} if
+  $
+  \forall f: A \to B + A, (f \otimes C ; \delta^{-1})^\dagger = f^\dagger \otimes C
+  $
+  We say a monad is Elgot if its Kliesli category has an Elgot structure. Similarly, we say a
+  \emph{strong} monad is strong Elgot if its Kliesli category has a strong Elgot structure.
+\end{definition}
+
+\TODO{note squaring and dinaturality are derivable by Lemma 31 of
+\citet{goncharov-18-guarded-traced}}
+
+\TODO{examples:
+\begin{itemize}
+  \item Common monads: Option, List, Powerset
+  \item Preserved by transformers: ReaderT, WriterT, StateT, OptionT, ExceptT
+  \item Later: trace lore
+\end{itemize}
+}
+
+% \begin{definition}[E-Freyd category]
+%   Given a complete lattice $E$, an \emph{$E$-Freyd category} is a premonoidal category $\mc{C}$
+%   equipped with a continuous function $\epsilon \in E \mapsto \mc{C}_\epsilon$ from elements of $E$
+%   to wide subcategories of $\mc{C}$, such that $\mc{C}_\top = \mc{C}$ and $(\mc{C}, \mc{V} =
+%   \mc{C}_\bot)$ is a Freyd category. In particular, every Freyd category is trivially an $E$-Freyd
+%   category for the Sierpinski poset $E = \{\top, \bot\}$.
+% \end{definition}
+
+An \isotopessa model consists of:
+\begin{itemize}
+  \item A distributive premonoidal category $\mc{C}$, equipped with an Elgot structure
+  \item A complete lattice $E$, and a continuous function $\epsilon \mapsto \mc{C}_\epsilon$ from
+  $E$ to wide subcategories of $\mc{C}$, such that $\mc{C}_\top = \mc{C}$, and $(\mc{C}, \mc{V} =
+  \mc{C}_\bot)$ is a Freyd category.
+\end{itemize}
+In particular, whenever $\mc{C}$ is a distributive Elgot Freyd category, we can trivially obtain an
+\isotopessa model by choosing $E = \{\top, \bot\}$. We may also choose $E = \{*\}$ if and only if
+$\mc{C}$ is in fact Cartesian.
+
+\TODO{$\to_\epsilon$ lore}
+
+\begin{figure}[H]
+  \begin{align*}
+    \boxed{\dnt{A} : |\mc{C}|} \qquad 
+    & \dnt{\mb{1}} = I \qquad
+      \dnt{A \otimes B} = \dnt{A} \otimes \dnt{B} \qquad
+      \dnt{\mb{0}} = \mb{0} \qquad
+      \dnt{A + B} = \dnt{A} + \dnt{B} \qquad \\
+    \boxed{\dnt{\Gamma} : |\mc{C}|} \qquad
+    & \dnt{\cdot} = I \qquad
+      \dnt{\Gamma, \thyp{x}{A}{\epsilon}} = \dnt{\Gamma} \otimes \dnt{A} \\
+    \boxed{\dnt{\ms{L}} : |\mc{C}|} \qquad
+    & \dnt{\cdot} = 0 \qquad
+      \dnt{\ms{L}, \lhyp{\ell}{A}} = \dnt{\ms{L}} + \dnt{A} \\
+  \end{align*}
+  \begin{equation*}
+    \boxed{\dnt{\Gamma \leq \Delta} : \dnt{\Gamma} \to_\bot \dnt{\Delta}}
+  \end{equation*}
+  \begin{gather*}
+    \dnt{\cdot \leq \cdot} = \ms{id}_I \qquad
+    \dnt{\Gamma, \thyp{x}{A}{\epsilon} \leq \Delta} = \pi_l;\dnt{\Gamma \leq \Delta} \qquad
+    \dnt{\Gamma, \thyp{x}{A}{\epsilon} \leq \Delta, \thyp{x}{A}{\epsilon}}
+    = \dnt{\Gamma \leq \Delta} \otimes \dnt{A} \\ \\
+  \end{gather*}
+  \begin{equation*}
+    \boxed{\dnt{\ms{L} \leq \ms{K}} : \dnt{\ms{L}} \to_\bot \dnt{\ms{K}}}
+  \end{equation*}
+  \begin{gather*}
+    \dnt{\cdot \leq \cdot} = \ms{id}_{\mb{0}} \qquad
+    \dnt{\ms{L} \leq \ms{K}, \lhyp{\ell}{A}} = \dnt{\ms{L} \leq \ms{K}};\iota_\ell \qquad
+    \dnt{\ms{L}, \lhyp{\ell}{A} \leq \ms{K}, \lhyp{\ell}{A}}
+    = \dnt{\ms{L} \leq \ms{K}} + \dnt{A}
+  \end{gather*}
+  \caption{Denotational semantics for \isotopessa types, contexts, and weakenings}
+  \Description{}
+  \label{fig:ssa-ty-sem}
+\end{figure}
+
+\begin{figure}[H]
+  \begin{equation*}
+    \boxed{\dnt{\hasty{\Gamma}{\epsilon}{a}{A}} : \dnt{\Gamma} \to_\epsilon \dnt{A}}
+  \end{equation*}
+  \begin{align*}
+    \dnt{\hasty{\Gamma}{\epsilon}{x}{A}} &= \pi_{\Gamma, x} \\
+    \dnt{\hasty{\Gamma}{\epsilon}{f\;a}{B}} 
+      &= \dnt{\hasty{\Gamma}{\epsilon}{a}{A}} ; \dnt{\isop{f}{A}{B}{\epsilon}} \\
+    \dnt{\hasty{\Gamma}{\epsilon}{\letexpr{x}{a}{b}}{B}}
+      &= \Delta_{\dnt{\Gamma}}
+      ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{a}{A}};
+      \\&\quad\; 
+      \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{b}{B}}
+      \\
+    \dnt{\hasty{\Gamma}{\epsilon}{(a, b)}{A \otimes B}} 
+      &= \Delta_{\dnt{\Gamma}}
+      ; \dnt{\hasty{\Gamma}{\epsilon}{a}{A}} \ltimes \dnt{\hasty{\Gamma}{\epsilon}{b}{B}}
+      % ; \dnt{\hasty{\Gamma}{\epsilon}{a}{A}} \otimes \dnt{\Gamma} 
+      % ; \dnt{A} \otimes \dnt{\hasty{\Gamma}{\epsilon}{b}{B}}
+      \\
+    \dnt{\hasty{\Gamma}{\epsilon}{\letexpr{(x, y)}{e}{c}}{C}}
+      &= \Delta_{\dnt{\Gamma}}
+      ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A \otimes B}} ;
+      \\&\quad\; 
+      \dnt{\hasty{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{\epsilon}{c}{C}}
+      \\
+    \dnt{\hasty{\Gamma}{\epsilon}{()}{\mb{1}}} &= 1_{\dnt{\Gamma}} \\
+    \dnt{\hasty{\Gamma}{\epsilon}{\linl{a}}{A + B}}
+      &= \dnt{\hasty{\Gamma}{\epsilon}{a}{A}} ; \iota_l \\
+    \dnt{\hasty{\Gamma}{\epsilon}{\linr{b}}{A + B}}
+      &= \dnt{\hasty{\Gamma}{\epsilon}{b}{B}} ; \iota_r \\
+    \dnt{\hasty{\Gamma}{\epsilon}{\caseexpr{e}{x}{a}{y}{b}}{C}}
+      &= \dnt{\hasty{\Gamma}{\epsilon}{e}{A + B}}
+      ; \\& \quad\; 
+      \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{a}{A}}
+      + \dnt{\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{b}{B}}
+      \\
+    \dnt{\hasty{\Gamma}{\epsilon}{\labort{a}}{A}} 
+      &= \dnt{\hasty{\Gamma}{\epsilon}{a}{\mb{0}}} ; 0_{\dnt{A}}
+  \end{align*}
+  \caption{Denotational semantics for \isotopessa terms}
+  \Description{Denotational semantics for isotope-SSA terms}
+  \label{fig:ssa-term-sem}
+\end{figure}
+
+\begin{figure}[H]
+  \begin{equation*}
+    \boxed{\dnt{\haslb{\Gamma}{r}{\ms{L}}} : \dnt{\Gamma} \to \dnt{\ms{L}}}
+  \end{equation*}
+  \begin{align*}
+    \dnt{\haslb{\Gamma}{\lbrb{\ell}{a}}{\ms{L}}} 
+      &= \dnt{\hasty{\Gamma}{\bot}{a}{A}} ; \iota_{\ms{L}, \ell}
+      \\
+    \dnt{\haslb{\Gamma}{\letstmt{x}{a}{r}}{\ms{L}}}
+      &= \Delta_{\dnt{\Gamma}}
+      ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{a}{A}}
+      ; \dnt{\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}} 
+      \\
+    \dnt{\haslb{\Gamma}{\letstmt{(x, y)}{e}{r}}{\ms{L}}}
+      &= \Delta_{\dnt{\Gamma}}
+      ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
+      ; \dnt{\haslb{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{r}{\ms{L}}} 
+      \\ 
+    \dnt{\haslb{\Gamma}{\casestmt{e}{x}{r}{y}{s}}{\ms{L}}}
+      &= \Delta_{\dnt{\Gamma}}
+      ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A + B}}
+      ; \delta^{-1} ;
+      \\&\quad\;
+      \dnt{\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
+      + \dnt{\haslb{\Gamma, \bhyp{y}{B}}{s}{\ms{L}}}
+      \\
+    \dnt{\haslb{\Gamma}{\where{r}{(\lwbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}}
+      &=  
+      \Delta_{\dnt{\Gamma}}
+      ; \dnt{\Gamma} \otimes \dnt{\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}} 
+      ; \delta^{-1} ;
+      \alpha^+_{}
+      \\ &\quad\;
+      (
+        \Sigma_i (\Delta_{\dnt{\Gamma}} 
+          ; \dnt{\Gamma} \otimes 
+            \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+          ; 
+          )
+      )^\dagger
+  \end{align*}
+  \caption{Denotational semantics for \isotopessa regions}
+  \Description{Denotational semantics for isotope-SSA regions}
+  \label{fig:ssa-reg-sem}
+\end{figure}
+
+\TODO{text}
+
+\begin{theorem}[(Label) Weakening]
+  Given $\Gamma \leq \Gamma'$ and $\ms{L}' \leq \ms{L}$, $\ms{K}' \leq \ms{K}$, we have
+  \begin{enumerate}
+    \item $\dnt{\Gamma \leq \Delta} = \dnt{\Gamma \leq \Gamma'};\dnt{\Gamma' \leq \Delta}$
+    \item $\dnt{\ms{L}' \leq \ms{K}} = \dnt{\ms{L}' \leq \ms{L}};\dnt{\ms{L} \leq \ms{K}}$
+    \item $\dnt{\hasty{\Gamma}{\epsilon}{a}{A}} 
+      = \dnt{\Gamma \leq \Gamma'};\dnt{\hasty{\Gamma'}{\epsilon}{a}{A}}$
+    \item $\dnt{\haslb{\Gamma}{r}{\ms{L}}}
+      = \dnt{\Gamma \leq \Gamma'}
+      ; \dnt{\haslb{\Gamma'}{r}{\ms{L}'}}
+      ; \dnt{\ms{L}' \leq \ms{L}}$
+    \item $\dnt{\issubst{\gamma}{\Gamma}{\Delta}}
+      = \dnt{\Gamma \leq \Gamma'};\dnt{\issubst{\gamma}{\Gamma'}{\Delta}}$
+    \item $\dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}}
+      = \dnt{\Gamma \leq \Gamma'} \otimes \dnt{\ms{L}}
+      ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}'}}
+      ; \dnt{\ms{K}' \leq \ms{K}}
+      $
+  \end{enumerate}
+\end{theorem}
+
+\begin{figure}[H]
+  \begin{equation*}
+    \boxed{\dnt{\issubst{\gamma}{\Gamma}{\Delta}} 
+      : \dnt{\Gamma} \to \dnt{\Delta}}
+  \end{equation*}
+  \begin{gather*}
+    \dnt{\issubst{\cdot}{\Gamma}{\cdot}} = \tmor{\dnt{\Gamma}}
+    \qquad
+    \dnt{\issubst{\gamma, x \mapsto e}{\Gamma}{\Delta}} 
+    = \dnt{\issubst{\gamma}{\Gamma}{\Delta}}
+    \\
+    \dnt{\issubst{\gamma, x \mapsto e}{\Gamma}{\Delta, \thyp{x}{A}{\epsilon}}}
+    = \dmor{\dnt{\Gamma}};\dnt{\issubst{\gamma}{\Gamma}{\Delta}}
+  \end{gather*}
+  \begin{equation*}
+    \boxed{\dnt{\lbsubst{\Gamma}{\kappa}{\ms{L}}{\ms{K}}} 
+      : \dnt{\Gamma} \otimes \dnt{\ms{L}} \to \dnt{\ms{K}}}
+  \end{equation*}
+  \begin{gather*}
+    \dnt{\lbsubst{\cdot}{\Gamma}{\cdot}{\ms{K}}} 
+      = \tmor{\dnt{\Gamma} \otimes \mb{1}};0_{\ms{K}} \qquad
+    \dnt{\lbsubst{\kappa, \ell(x) \mapsto r}{\Gamma}{\ms{L}}{\ms{K}}}
+      = \dnt{\lbsubst{\kappa}{\Gamma}{\ms{L}}{\ms{K}}}
+    \\
+    \dnt{\lbsubst{\kappa, \ell(x) \mapsto r}{\Gamma}{\ms{L}, \ell(A)}{\ms{K}}}
+      = [
+        \dnt{\lbsubst{\kappa}{\Gamma}{\ms{L}}{\ms{K}}}, 
+        \dnt{\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{K}}}
+      ]
+  \end{gather*}
+  \caption{Denotational semantics for \isotopessa (label) substitutions}
+  \Description{}
+  \label{fig:ssa-vsubst-sem} 
+\end{figure}
+
+\begin{theorem}[Substitution]
+  Given $\dnt{\issubst{\gamma}{\Gamma}{\Delta}} : \dnt{\Gamma} \to_\bot
+  \dnt{\Delta}$ (in particular, this is always the case when (todo: the effect
+  of $\Delta$ is bot, but write this down)), we have that
+  \begin{enumerate}
+    \item $\dnt{\hasty{\Gamma}{\epsilon}{[\gamma]a}{A}} 
+      = \dnt{\issubst{\gamma}{\Gamma}{\Delta}};\dnt{\hasty{\Delta}{\epsilon}{a}{A}}$
+    \item $\dnt{\haslb{\Gamma}{[\gamma]r}{\ms{L}}}
+      = \dnt{\issubst{\gamma}{\Gamma}{\Delta}};\dnt{\haslb{\Delta}{r}{\ms{L}}}$
+    \item $\dnt{\issubst{[\gamma]\sigma}{\Delta}{\Xi}}
+      = \dnt{\issubst{\gamma}{\Gamma}{\Delta}};\dnt{\issubst{\sigma}{\Delta}{\Xi}}$
+    \item $\dnt{\lbsubst{\Gamma}{[\gamma]\sigma}{\ms{L}}{\ms{K}}}
+      = \dnt{\issubst{\gamma}{\Gamma}{\Delta}};\dnt{\lbsubst{\Delta}{\sigma}{\ms{L}}{\ms{K}}}$
+  \end{enumerate}
+\end{theorem}
+
+\TODO{text}
+
+\begin{theorem}[Label substitution]
+  Given $\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}$, we have
+  \begin{enumerate}
+    \item $\dnt{\haslb{\Gamma}{[\sigma]r}{\ms{K}}}
+      = \dmor{\dnt{\Gamma}}
+      ;\dnt{\Gamma} \otimes \dnt{\haslb{\Gamma}{r}{\ms{L}}}
+      ;\dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}}$
+    \item $\dnt{\lbsubst{\Gamma}{[\sigma]\sigma'}{\ms{M}}{\ms{K}}}
+      = \dmor{\dnt{\Gamma}} \otimes \dnt{\ms{L}} ; \alpha
+      ; \dnt{\Gamma} \otimes \dnt{\lbsubst{\Gamma}{\sigma'}{\ms{M}}{\ms{L}}}
+      ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}}$
+  \end{enumerate}
+\end{theorem}
+
+\TODO{text}
+
 \TODO{text on composition lore}
+
+\subsection{Completeness}
+
+\begin{theorem}[Completeness (Terms)]
+  The category $\ms{Th}^\otimes(\Gamma)$ with
+  \begin{itemize}
+    \item Objects types $A, B, C$
+    \item Morphisms $\ms{Th}^\otimes(\Gamma)(A, B) 
+      = \bigcup_\epsilon\ms{Th}^\otimes(\Gamma)_\epsilon(A, B) 
+      = \bigcup_\epsilon\{e \mid \hasty{\Gamma, \bhyp{\square}{A}}{\epsilon}{e}{A}\}$
+      quotiented by $\tmeq{\Gamma, \bhyp{\square}{A}}{}{e}{e'}{A}$
+      % TODO: epsilation lore
+    \item Identity $\hasty{\Gamma, \bhyp{\square}{A}}{\bot}{\square}{A}$
+    \item Composition $e;e' = (\ms{let}\;\square = e; e')$ 
+  \end{itemize} 
+  is a distributive Freyd category, with:
+  \begin{itemize}
+    \item Pure morphisms generated by, given $\hasty{\Gamma, \bhyp{\square}{A}}{\epsilon}{e}{B}$ and
+          $\haslb{\Gamma, \bhyp{\square}{A}}{\ms{ret}\;e}{B, \ms{L}}$
+    \item Tensor functors 
+      $- \otimes X : e \mapsto \ms{let}\;(\square, x) 
+        = \square; (e ; (\square, x))$
+      and 
+      $X \otimes - : e \mapsto \ms{let}\;(x, \square) 
+      = \square; (e ; (x, \square))$
+    \item Projections $\ms{let}\;(x, y) = \square; x$ and  
+      $\ms{let}\;(x, y) = \square; y$
+    \item Diagonal: $(\square, \square)$
+    \item Injections: $\ms{inl}\;\square$, $\ms{inr}\;\square$
+    \item Sums: $
+      [a, b] = \caseexpr{\square}{\square}{a}{\square}{b}
+    $
+    \item Distributor
+      $\delta = \caseexpr{\square}{(x, y)}{(x, \ms{inl}\;y)}{(x, y)}{(x, \ms{inr}\;y)}$
+      with inverse
+      $\delta^{-1} = \ms{let}\;(x, y) = \square; 
+        \caseexpr{y}{z}{\ms{inl}(x, z)}{z}{\ms{inr}(x, z)}$
+  \end{itemize}
+  In particular, taking $\ms{Th}(\cdot)$ as our model, we have 
+  $
+    \tmeq{\Gamma}{\epsilon}{e}{e'}{A} 
+    \iff \dnt{\hasty{\Gamma}{\epsilon}{e}{A}} = \dnt{\hasty{\Gamma}{\epsilon}{e'}{A}}
+  $
+\end{theorem}
 
 \begin{theorem}[Completeness (Regions)]
   The category $\ms{Th}(\Gamma, \ms{L})$ with
@@ -2215,6 +2207,11 @@ $\mc{C}$ is in fact Cartesian.
       \ms{Th}_\bot(\Gamma, \ms{L})(A, B)$ restricting to \ref{ret-functor} on
       $\ms{Th}^\otimes_\bot(\Gamma)$
   \end{enumerate}
+  In particular, taking $\ms{Th}(\cdot, \cdot)$ as our model, we have 
+  $
+    \lbeq{\Gamma}{r}{r'}{\ms{L}} 
+    \iff \dnt{\haslb{\Gamma}{r}{\ms{L}}} = \dnt{\haslb{\Gamma}{r'}{\ms{L}}}
+  $
 \end{theorem}
 
 \section{Concrete Models}
