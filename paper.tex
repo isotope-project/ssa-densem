@@ -1728,15 +1728,28 @@ a la \citet{crole-93-cat-types}
 
 \TODO{rework, expand, and fold in...}
 
-\citet{moggi-91-monad} showed a cartesian closed category equipped with a strong monad interprets
-effectful higher-order functional programs. SSA, however, is a first-order language. In particular,
-since SSA does not support first-class functions, we have no need for a cartesian closure.
-Similarly, first-class computations, represented by objects of the form $\ms{T}(\ms{T}(A))$, are not
-usually supported by SSA. Freyd categories are to first order languages as strong monads on a CCC
-are to higher-order languages. In particular, every strong monad on a CCC gives rise to a Freyd
-category in a trivial manner. SSA, however, also has branching and loops. To represent these, we
-need to add distributive coproducts and Elgot structure respectively.
+\citet{moggi-91-monad} showed that the Kleisli category of a strong monad over a CCC interprets
+effectful higher-order functional programs. We are faced, however, with two problems. On one hand,
+SSA has features not necessarily supported by such models. In particular, while distributive
+coproducts are sufficient to model terminating control-flow, SSA models programs with arbitrary,
+unstructured cyclic control-flow. On the other hand, SSA, is only a first-order language. In
+particular, since SSA does not support first-class functions, we have no need for a cartesian
+closure. Similarly, first-class computations, represented by objects of the form
+$\ms{T}(\ms{T}(A))$, are not usually supported by SSA.
 
+Given that we want to model SSA with some category $\mc{C}$, we hence have to think about what
+structure we need $\mc{C}$ to possess so that it has all our desired features, but no more.
+Obviously, we need a way to take the product of two objects, to be able to model contexts as well as
+pairs. The usual way to do this is via \emph{monoidal categories}. These, however, have too many
+equations: in a monoidal category, computations operating on independent data must always commute
+(this is the ``sliding rule''), which is obviously not true for effects such as printing, since
+$$
+\ms{print}(x) ; \ms{print}(y) \neq \ms{print}(y) ; \ms{print}(x)
+$$
+Instead, we will only require that our category is \emph{premonoidal}: ``monoidal, without
+sliding.'' Indeed, the Kleisli category of a strong monad on a CCC is not always monoidal, as
+demonstrated by the writer monad on $\ms{Set}$ (which exposes $\ms{print}$), but \emph{is} always
+premonoidal. We define a premonoidal category as follows:
 \begin{definition}[Symmetric Premonoidal Category]
   We define a \emph{binoidal category} to be a category $\mc{C}$ equipped with a binary operation
   $\otimes : |\mc{C}| \times |\mc{C}| \to |\mc{C}|$ on the objects of $\mc{C}$ and, for each $A, B
@@ -1772,35 +1785,48 @@ need to add distributive coproducts and Elgot structure respectively.
   $$
   We say a premonoidal category is \emph{monoidal} if every morphism is central.
 \end{definition}
+We are now in a position to consider what additional structure we need to add to a premonoidal
+category $\mc{C}$ to be able to interpret SSA:
 
-\TODO{but we want a nice notion of functor between premonoidal categories, but}
-
-\TODO{(a) preserving central morphisms is too strong}
-
-\TODO{(b) if we want to preserve ``pure" morphisms, in general, central $\neq$ pure}
-
-\TODO{useful example: read is pure in Reader, but if we want a functor from Reader to State, read
- read in state is not pure!}
-
-\TODO{(c) we want some Cartesian structure, for now...}
-
-\TODO{\(\implies\) Freyd category lore}
+\TODO{
+  \begin{itemize}
+    \item Variables can be referenced multiple times, as well as ignored, so we need something
+    analogous to the CCC core of pure morphisms. But we don't need the ``closed" bit; so Freyd over
+    a Cartesian category
+    \begin{itemize}
+      \item To state substitution, we also need a notion of purity, which we get for free
+      \item This also means e.g. submonad inclusion is actually a functor
+    \end{itemize}
+    \item We can decompose control flow into branches and loops;
+    \begin{itemize}
+      \item Branches need distributive coproducts
+      \item Loops, a strong Elgot structure
+    \end{itemize}
+  \end{itemize}
+}
 
 \begin{definition}[Freyd category]
   A \emph{Freyd category} is a premonoidal category $\mc{C}$ equipped with a wide subcategory
   $\mc{C}_\bot \subseteq \mc{C}$ of \emph{pure} morphisms such that
   \begin{itemize}
     \item $\mc{C}_\bot$ contains all associators, unitors, and symmetries
-    \item For each $A_1, A_2$, there exist morphisms $\pi_i : A_1 \times A_2 \to_{\mc{C}_\bot} A_i$
-    making $A_1 \otimes A_2$ into a cartesian product on $\mc{C}_\bot$
     \item $I$ is a terminal object in $\mc{C}_\bot$
-    \item $\langle f, g \rangle 
-      = \dmor{} ; f \otimes - ; g \otimes -  
-      = \dmor{} ; g \otimes - ; f \otimes -$
+    \item For each $A, B$, $A \otimes B$ is a cartesian product of $A, B$ in $\mc{C}_\bot$
+    \item For pure morphisms $f, g$, $f \otimes g = \langle \pi_l; f, \pi_r ; g  \rangle$
   \end{itemize}
+  Alternatively, it is equivalent to require
+  \begin{itemize}
+    \item $\mc{C}_\bot$ contains all associators, unitors, and symmetries
+    \item $I$ is a terminal object in $\mc{C}_\bot$
+    \item For each $A$, there exists a pure morphism $\dmor{A} : A \to A \otimes A$ forming a
+          comonoid with the terminal morphism $\tmor{A} : A \to I$, i.e: $\dmor{A} ; \tmor{A}
+          \otimes A ; \rho = \dmor{A} ; A \otimes \tmor {A} ; \lambda = \ms{id}_A$
+    \item For every pure morphism $f : A \to_\bot B$, $f ; \dmor{B} = \dmor{A} ; f \otimes f$
+  \end{itemize}
+  In both cases, we have that $\pi_l = A \otimes \tmor{B} ; \lambda$, $\pi_r = \tmor{A}
+  \otimes B ; \rho$, $\langle f, g \rangle = \dmor{A} ; f \otimes g$, and $\dmor{A} = \langle
+  \ms{id}_A, \ms{id}_A \rangle$
 \end{definition}
-
-\TODO{diagonal/projection presentation: in particular, we note that every category with $\dmor{}$...}
 
 \TODO{throw some examples in here?}
 
