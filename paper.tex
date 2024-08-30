@@ -1728,15 +1728,14 @@ a la \citet{crole-93-cat-types}
 
 \TODO{rework, expand, and fold in...}
 
-\citet{moggi-91-monad} showed a cartesian closed category equipped with a strong
-monad interprets effectful higher-order functional programs. SSA, however, is a
-first-order language. In particular, to model it, we have no need for a closure
-operator, nor for first-class continuations (represented by objects of the form
-$\ms{T}(\ms{T}(A))$). Freyd categories are to first order languages as strong
-monads on a CCC are to higher-order languages. In particular, every strong monad
-on a CCC gives rise to a Freyd category in a trivial manner. SSA, however, also
-has branching and loops. To represent these, we need to add distributive
-coproducts and Elgot structure respectively.
+\citet{moggi-91-monad} showed a cartesian closed category equipped with a strong monad interprets
+effectful higher-order functional programs. SSA, however, is a first-order language. In particular,
+since SSA does not support first-class functions, we have no need for a cartesian closure.
+Similarly, first-class computations, represented by objects of the form $\ms{T}(\ms{T}(A))$, are not
+usually supported by SSA. Freyd categories are to first order languages as strong monads on a CCC
+are to higher-order languages. In particular, every strong monad on a CCC gives rise to a Freyd
+category in a trivial manner. SSA, however, also has branching and loops. To represent these, we
+need to add distributive coproducts and Elgot structure respectively.
 
 \begin{definition}[Symmetric Premonoidal Category]
   We define a \emph{binoidal category} to be a category $\mc{C}$ equipped with a binary operation
