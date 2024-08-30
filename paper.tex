@@ -111,6 +111,9 @@
 \newcommand{\tmor}[1]{{!}_{#1}}
 \newcommand{\dmor}[1]{{\Delta}_{#1}}
 
+% Composition
+\newcommand{\invar}{\square}
+
 % Branding
 \newcommand{\isotopessa}{\(\lambda_{\ms{SSA}}\)}
 
@@ -858,30 +861,31 @@ the label $\ell$. This is summarized in the following grammar:
 
 \TODO{text, insert figure for table of judgements and metatheoretic judgements?}
 
-A \isotopessa \textit{expression} $a$ is typed with the judgement
-$\hasty{\Gamma}{\epsilon}{a}{A}$, which says that under the typing context
-$\Gamma$, the expression $a$ has type $A$ and effect $\epsilon$. The typing
-rules for expressions are given in Figure~\ref{fig:ssa-expr-rules}. In
-particular, expressions may be built up from the following relatively standard
-primitives:
+A \isotopessa \textit{expression} $a$ is typed with the judgement $\hasty{\Gamma}{\epsilon}{a}{A}$,
+which says that under the typing context $\Gamma$, the expression $a$ has type $A$ and effect
+$\epsilon$. We say a term is \emph{pure} if it has effect $\bot$; note that whether a term is pure
+or not depends both on the term itself and on the purity of the variables used in the term; this is
+to allow reasoning about impure substitutions.
+
+The typing rules for expressions are given in Figure~\ref{fig:ssa-expr-rules}. In particular,
+expressions may be built up from the following fairly standard primitives:
 \begin{itemize}
-  \item A variable $x$ in the context $\Gamma$, as typed by \brle{var}. We write $(A, \epsilon) \leq (B,
-  \epsilon') \iff A = B \and \epsilon \leq \epsilon'$.
-  \item An \emph{operation} $f \in \mc{I}_\epsilon(A, B)$ applied to an
-  expression $\hasty{\Gamma}{\epsilon}{a}{A}$, typed by \brle{op}
-  \item A standard and binary \emph{let-binding}, typed by \brle{let$_1$} and
-  \brle{let$_2$} respectively
+  \item A variable $x$ in the context $\Gamma$, as typed by \brle{var}. We write $(A, \epsilon) \leq
+  (B, \epsilon') \iff A = B \and \epsilon \leq \epsilon'$.
+  \item An \emph{primitive instruction} $f \in \mc{I}_\epsilon(A, B)$ applied to an expression
+  $\hasty{\Gamma}{\epsilon}{a}{A}$, typed by \brle{op}
+  \item Unary and binary \emph{let-bindings}, typed by \brle{let$_1$} and \brle{let$_2$}
+  respectively
   \item A \emph{pair} of expressions $\hasty{\Gamma}{\epsilon}{a}{A}$,
-  $\hasty{\Gamma}{\epsilon}{b}{B}$, typed by \brle{pair}. Operationally, we
-  interpret this as executing $a$, and then $b$, and returning the pair of their
-  values.
+  $\hasty{\Gamma}{\epsilon}{b}{B}$, typed by \brle{pair}. Operationally, we interpret this as
+  executing $a$, and then $b$, and returning the pair of their values.
   \item An empty tuple $()$, which types in any context by \brle{unit}
   \item Injections, typed by \brle{inl} and \brle{inr}
-  \item Pattern matching on sum types, typed by \brle{case}. Operationally, we
-  interpret this as executing $e$, and then, if $e$ is a left injection $\ms{inl}\;x$,
-  executing $a$ with its value ($x$), otherwise executing $b$.
-  \item An operator $\ms{abort}\;e$ allowing us to abort execution if given a
-  value of the empty type.
+  \item Pattern matching on sum types, typed by \brle{case}. Operationally, we interpret this as
+  executing $e$, and then, if $e$ is a left injection $\ms{inl}\;x$, executing $a$ with its value
+  ($x$), otherwise executing $b$.
+  \item An operator $\ms{abort}\;e$ allowing us to abort execution if given a value of the empty
+  type.
 \end{itemize}
 
 \begin{figure}[H]
@@ -918,21 +922,24 @@ primitives:
   \label{fig:ssa-expr-rules}
 \end{figure}
 
+\TODO{what is a region; connection to SSA lore, rework below list to fit into narrative}
+
 A \isotopessa \textit{region} is typed with the judgement $\haslb{\Gamma}{r}{\ms{L}}$, which says
 that under the typing context $\Gamma$, the region $r$ targets the label-context $\ms{L}$. In
 particular, this can be interpreted as saying that if the variables in $\Gamma$ are live on entry to
 $r$, then $r$ will either loop forever or terminate by branching to one of the external labels in
 $\mc{L}$ with the appropriate argument.
 
-In particular, we can build up expressions as follows:
+In particular, we can build up regions as follows:
 \begin{itemize}
-  \item \todo{br rule lore} \todo{Note that ``returning'' is implemented by
-  simply branching to a distinguished label $\ms{ret}$, with $\ms{ret}\;a$
-  simply being an abbreviation for $\ms{br}\;\ms{ret}\;a$.}
+  \item A branch to a label $\ell$ with pure argument $a$, typed with \rle{br}.
   
-  \item \todo{let rules}
+  \item Unary and binary \emph{let-bindings}, typed by \brle{let$_1$} and \brle{let$_2$}
+  respectively
   
-  \item \todo{case rule}
+  \item Pattern matching on sum types, typed by \brle{case}. Operationally, we interpret this as
+  executing the (potentially effectful) expression $e$, and then, if $e$ is a left injection
+  $\ms{inl}\;x$, executing $r$ with its value ($x$), otherwise executing $s$.
   
   \item \todo{where rule} \todo{notes about binding precedence of where}
 \end{itemize}
@@ -964,6 +971,9 @@ In particular, we can build up expressions as follows:
   \Description{}
   \label{fig:ssa-reg-rules}
 \end{figure}
+\subsection{Metatheory}
+
+\TODO{introducing weakening, what is it}
 
 \begin{figure}[H]
   \begin{gather*}
@@ -999,9 +1009,9 @@ In particular, we can build up expressions as follows:
   \label{fig:ssa-meta-rules}
 \end{figure}
 
-\TODO{text}
+\TODO{weakening text}
 
-\begin{theorem}[Weakening]
+\begin{lemma}[Weakening]
   Given $\Gamma \leq \Delta$, $\epsilon \leq \epsilon'$, and $\ms{L} \leq \ms{K}$, we have that:
   \begin{enumerate}
     \item $\hasty{\Delta}{\epsilon}{a}{A} \implies \hasty{\Gamma}{\epsilon'}{a}{A}$
@@ -1010,41 +1020,34 @@ In particular, we can build up expressions as follows:
           $\issubst{\sigma}{\Xi}{\Delta} \implies \issubst{\sigma}{\Xi}{\Gamma}$
     \item $\lbsubst{\Delta}{\sigma}{\ms{L}}{\ms{K}} \implies \lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}$
   \end{enumerate}
-\end{theorem}
+\end{lemma}
 
-\TODO{text}
+\TODO{substitution text}
 
-\TODO{substitution rules}
+\TODO{substitution composition; substitution definitions}
 
-\begin{theorem}[Substitution]
+\begin{lemma}[Substitution]
   Given $\issubst{\gamma}{\Gamma}{\Delta}$, we have that $\hasty{\Delta}{\epsilon}{a}{A} \implies
   \hasty{\Gamma}{\epsilon}{[\gamma]a}{A}$ and $\haslb{\Delta}{r}{\ms{L}} \implies
   \haslb{\Gamma}{[\gamma]r}{\ms{L}}$
-\end{theorem}
+\end{lemma}
 
-\TODO{text}
+\TODO{label substitution text}
 
-\TODO{label substitution rules}
+\TODO{label substitution composition; label substitution definitions}
 
-\begin{theorem}[Label substitution]
+\begin{lemma}[Label substitution]
   Given $\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}$, we have that
   $\haslb{\Gamma}{r}{\ms{L}} \implies \haslb{\Gamma}{[\sigma]r}{\ms{K}}$
-\end{theorem}
-
-\TODO{text}
-
-\TODO{
-  Idea: structure as Terms; Equations; Free Theorem, \textit{then} Elgot; Regions; Free Theorem,
-a la \citet{crole-93-cat-types}
-}
+\end{lemma}
 
 \section{Equational Theory}
 
-\subsection{Terms}
+\TODO{intro?}
 
-\TODO{write nicer fused version?}
+\subsection{Expressions}
 
-\TODO{\textit{formalize} nicer fused version?}
+\TODO{congruence rules for expressions}
 
 \begin{gather*}
   \prftree[r]{\rle{refl}}{\hasty{\Gamma}{\epsilon}{a}{A}}{\tmeq{\Gamma}{\epsilon}{a}{a}{A}} \qquad
@@ -1115,6 +1118,7 @@ a la \citet{crole-93-cat-types}
     {\tmeq{\Gamma}{\epsilon}{\caseexpr{e}{x}{a}{y}{b}}{\caseexpr{e'}{x}{a}{y}{b'}}{C}}
 \end{gather*}
 
+\TODO{$\beta$-$\eta$ rules}
 
 \begin{gather*}
   \prftree[r]{\rle{let$_1$-$\beta$}}
@@ -1126,6 +1130,8 @@ a la \citet{crole-93-cat-types}
     {\hasty{\Gamma}{\epsilon}{a}{A}}
     {\tmeq{\Gamma}{\epsilon}{\letexpr{x}{a}{x}}{a}{A}}
 \end{gather*}
+
+\TODO{\ms{let}1 commutes with stuff...}
 
 \begin{gather*}
   \prftree[r]{\rle{let$_1$-op}}
@@ -1181,6 +1187,8 @@ a la \citet{crole-93-cat-types}
     }
 \end{gather*}
 
+\TODO{as does \ms{let}2...}
+
 \begin{gather*}
   \prftree[r]{\rle{let$_2$-$\eta$}}
     {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
@@ -1199,6 +1207,8 @@ a la \citet{crole-93-cat-types}
       {\letexpr{(x, y)}{e}{c}}
       {\letexpr{z}{e}{\letexpr{z}{e}{c}}}{C}}
 \end{gather*}
+
+\TODO{theory of cases}
 
 \begin{gather*}
   \prftree[r]{\rle{case-inl}}
@@ -1223,6 +1233,8 @@ a la \citet{crole-93-cat-types}
     {\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{d}{C}}
     {\tmeq{\Gamma}{\epsilon}{\caseexpr{e}{x}{c}{y}{d}}{\letexpr{z}{e}{\caseexpr{z}{x}{c}{y}{d}}}{C}}
 \end{gather*}
+
+\TODO{also case commutes with stuff...}
 
 \begin{gather*}
   \prftree[r]{\rle{let$_1$-case}}
@@ -1335,6 +1347,8 @@ a la \citet{crole-93-cat-types}
     {\tmeq{\Gamma}{\epsilon}{\caseexpr{e}{x}{a}{y}{a}}{a}{A}}
 \end{gather*}
 
+\TODO{and $\mb{0}$ is initial and $\mb{1}$ is terminal}
+
 \begin{gather*}
   \prftree[r]{\rle{initial}} 
     {\hasty{\Gamma}{\bot}{a}{A}}
@@ -1348,13 +1362,13 @@ a la \citet{crole-93-cat-types}
     {\tmeq{\Gamma}{\epsilon}{a}{a'}{\mb{1}}}
 \end{gather*}
 
-\TODO{text on composition lore...}
+\TODO{lemma: weakening of rewriting}
 
-\TODO{soundness of term equational theory (diagrams?)}
-
-\TODO{notes on completeness? derivable equations?}
+\TODO{lemma: substitution, composition is a congruence}
 
 \subsection{Regions}
+
+\TODO{like before, congruence for regions}
 
 \begin{gather*}
   \prftree[r]{\rle{refl}}{\haslb{\Gamma}{r}{\ms{L}}}{\lbeq{\Gamma}{r}{r}{\ms{L}}} \qquad
@@ -1403,6 +1417,8 @@ a la \citet{crole-93-cat-types}
     }
 \end{gather*}
 
+\TODO{let1 theory}
+
 \begin{gather*}
   \prftree[r]{\rle{let$_1$-$\beta$}}
     {\hasty{\Gamma}{\bot}{a}{A}}
@@ -1425,6 +1441,8 @@ a la \citet{crole-93-cat-types}
     {\exists x, \Gamma\;x = \mb{0}}
     {\lbeq{\Gamma}{r}{s}{\ms{L}}}
 \end{gather*}
+
+\TODO{let1 commutes with stuff}
 
 \begin{gather*}
   \prftree[r]{\rle{let$_1$-op}}
@@ -1473,6 +1491,8 @@ a la \citet{crole-93-cat-types}
     {\lbeq{\Gamma}{\letstmt{y}{\labort{a}}{r}}{\letstmt{x}{a}{\letstmt{y}{\labort{x}}{r}}}{\ms{L}}}
 \end{gather*}
 
+\TODO{let2 commutes with stuff}
+
 \begin{gather*}
   \prftree[r]{\rle{let$_2$-bind}}
     {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
@@ -1490,6 +1510,8 @@ a la \citet{crole-93-cat-types}
     {\haslb{\Gamma, \bhyp{z}{A \otimes B}}{r}{\ms{L}}}
     {\lbeq{\Gamma}{\letstmt{(x, y)}{e}{\letstmt{z}{(x, y)}{r}}}{\letstmt{z}{e}{r}}{\ms{L}}}
 \end{gather*}
+
+\TODO{case theory}
 
 \begin{gather*}
   \prftree[r]{\rle{case-bind}}
@@ -1563,6 +1585,8 @@ a la \citet{crole-93-cat-types}
       }
     }
 \end{gather*}
+
+\TODO{where theory}
 
 \begin{gather*}
     \prftree[r]{\rle{cfg-$<$}}
@@ -1648,7 +1672,7 @@ a la \citet{crole-93-cat-types}
         {\where{r}{(\lwbranch{\ell_i}{x_i}{s_i},)_i}}{\ms{L}}}
 \end{gather*}
 
-...
+\TODO{cfgsubst lore}
 
 \begin{equation*}
   \cfgsubst{(\lwbranch{\ell_i}{x_i}{t_i},)_i}\;\kappa\;a
@@ -1664,7 +1688,7 @@ a la \citet{crole-93-cat-types}
       {\cfgsubst{(\lwbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}{\ms{L}}}
 \end{equation*}
 
-...
+\TODO{advanced where lore}
 
 \begin{gather*}
   \prftree[r]{\rle{ucfg}}
@@ -1723,6 +1747,10 @@ a la \citet{crole-93-cat-types}
     {\where{r}{(\lwbranch{\ell_{i}}{x_i}{[(\lwbranch{\kappa_j}{x_j}{t_j},)_j](\sigma_i)})_i}}
     {\ms{L}}}
 \end{gather*}
+
+\TODO{lemma: weakening of rewriting}
+
+\TODO{lemma: substitution, label-substitution, composition of these is a congruence}
 
 \section{Denotational Semantics}
 
@@ -1785,26 +1813,28 @@ premonoidal. We define a premonoidal category as follows:
   $$
   We say a premonoidal category is \emph{monoidal} if every morphism is central.
 \end{definition}
-We are now in a position to consider what additional structure we need to add to a premonoidal
-category $\mc{C}$ to be able to interpret SSA:
-
-\TODO{
-  \begin{itemize}
-    \item Variables can be referenced multiple times, as well as ignored, so we need something
-    analogous to the CCC core of pure morphisms. But we don't need the ``closed" bit; so Freyd over
-    a Cartesian category
-    \begin{itemize}
-      \item To state substitution, we also need a notion of purity, which we get for free
-      \item This also means e.g. submonad inclusion is actually a functor
-    \end{itemize}
-    \item We can decompose control flow into branches and loops;
-    \begin{itemize}
-      \item Branches need distributive coproducts
-      \item Loops, a strong Elgot structure
-    \end{itemize}
-  \end{itemize}
-}
-
+Just like for higher-order functional languages, we can interpret types $A$ as objects $\dnt{A} :
+|\mc{C}|$. Similarly, we can interpret variable contexts $\Gamma$ by taking products of objects, as
+follows:
+$$
+\boxed{\dnt{\Gamma} : |\mc{C}|} \qquad 
+  \dnt{\cdot} = I \qquad \dnt{\Gamma, \bhyp{x}{A}} = \dnt{\Gamma} \otimes \dnt{A}
+$$
+We would like to interpret a expression-in-context $\hasty{\Gamma}{\epsilon}{a}{A}$ as a morphism in
+$\mc{C}$ from $\dnt{\Gamma}$ to $\dnt{A}$. However, in standard SSA, it is possible for a variable
+to be unused, or used multiple times. Our premonoidal structure, however, does not give us any way
+to \emph{project} out of a product type, making it impossible to interpet expressions-in-context
+like
+$
+\hasty{\bhyp{x}{A}, \bhyp{y}{B}}{}{x}{A}
+$. 
+Indeed, a premonoidal category can only interpret \emph{linear} expressions, that is, those which
+use every variable exactly once. To rectify this, much like how the CCC underlying a strong monad's
+Kleisli category allows us to perform variable manipulation, when viewed as a subcategory (through
+inclusion via the monad's unit), we can postulate a subcategory $\mc{C}_\bot \subseteq \mc{C}$
+equipped with only a \emph{cartesian}, rather than \emph{cartesian closed}, structure (since we do
+not want to require support for first-class functions or computations); this is called a \emph{Freyd
+category}, and is defined as follows: \TODO{cite original paper for Freyd categories?}
 \begin{definition}[Freyd category]
   A \emph{Freyd category} is a premonoidal category $\mc{C}$ equipped with a wide subcategory
   $\mc{C}_\bot \subseteq \mc{C}$ of \emph{pure} morphisms such that
@@ -1827,25 +1857,24 @@ category $\mc{C}$ to be able to interpret SSA:
   \otimes B ; \rho$, $\langle f, g \rangle = \dmor{A} ; f \otimes g$, and $\dmor{A} = \langle
   \ms{id}_A, \ms{id}_A \rangle$
 \end{definition}
+We now have everything we need to model effectful first-order expressions. For reasoning about
+substitution, we will also demand that the denotation of ``\emph{pure}" expressions
+$\hasty{\Gamma}{\bot}{a}{A}$ lies in $\mc{C}_\bot(\dnt{\Gamma}, \dnt{A})$; in general, we will write
+morphisms in $\mc{C}_\bot$ as $A \to_\bot B$.
 
-\TODO{throw some examples in here?}
-
-\TODO{
-  \begin{itemize}
-    \item Every Cartesian category $\mc{C}$ is trivially Freyd with $\mc{V} = \mc{C}$
-    \item Every strong monad on a cartesian category induces a Freyd category
-    \item Minimal subcategory $\mc{V}$ and Reader/State example...
-  \end{itemize}
-}
-
-\TODO{monadic lore?}
-
-\TODO{effect lore:}
-
-\TODO{coproduct lore}
-
-\TODO{distributivity lore}
-
+At this point, we still have no way to interpret control-flow, i.e. $\ms{case}$-expressions.
+Furthermore, if we want to model regions as morphisms, we need some way of modeling label-contexts
+$\ms{L}$. At first glance, it seems sufficient for branching control-flow to require the existence
+of coproducts, and indeed, assuming the existence of all coproducts and an initial object, we may
+model label-contexts as follows:
+$$
+\boxed{\dnt{\ms{L}} : |\mc{C}|} \qquad 
+  \dnt{\cdot} = \mb{0} \qquad \dnt{\ms{L}, \llhyp{\ell}{A}} = \dnt{\ms{L}} + \dnt{A}
+$$
+Regions can now be interpreted as morphisms in $\mc{C}$ from $\dnt{\Gamma}$ to $\dnt{\ms{L}}$, as
+desired. However, it turns out that our coproducts must be \emph{distributive} to allow us to use
+variables in scope before the branch. In particular, we define a \emph{distributive} premonoidal
+category as follows:
 \begin{definition}[Distributive category]
   A premonoidal category $\mc{C}$ with all coproducts is \emph{distributive} if, for all $A, B, C$,
   the obvious morphism
@@ -1855,11 +1884,11 @@ category $\mc{C}$ to be able to interpret SSA:
   $$
   has an inverse.
 \end{definition}
-
-\TODO{``quotiented terms give the free model of distributive Freyd categories?''}
-
-\TODO{Elgot category lore; strength}
-
+We note in particular that every CCC with coproducts is distributive. The last piece of the puzzle,
+allowing us to model loops in regions, is the existence of an \emph{Elgot structure}. We would also
+like our Elgot structure to be \emph{strong}; that is, compatible with the distributor, so that we
+can soundly shuttle access variables in scope in the loop body. Formally, we define a \emph{(strong)
+Elgot structure} as follows:
 \begin{definition}[(Strong) Elgot structure]
   A category $\mc{C}$ with all coproducts is said to have an \emph{Elgot structure} if we can define
   an operator $(-)^\dagger$ taking every morphism $f : A \to B + A$ to a morphism $f^\dagger : A \to
@@ -1880,43 +1909,26 @@ category $\mc{C}$ to be able to interpret SSA:
   $
   \forall f: A \to B + A, (f \otimes C ; \delta^{-1})^\dagger = f^\dagger \otimes C
   $
-  We say a monad is Elgot if its Kliesli category has an Elgot structure. Similarly, we say a
-  \emph{strong} monad is strong Elgot if its Kliesli category has a strong Elgot structure.
+  In particular, we say a monad is Elgot if its Kliesli category has an Elgot structure. Similarly,
+  we say a \emph{strong} monad is strong Elgot if its Kliesli category has a strong Elgot structure.
 \end{definition}
-
-\TODO{note squaring and dinaturality are derivable by Lemma 31 of
-\citet{goncharov-18-guarded-traced}}
-
-\TODO{examples:
-\begin{itemize}
-  \item Common monads: Option, List, Powerset
-  \item Preserved by transformers: ReaderT, WriterT, StateT, OptionT, ExceptT
-  \item Later: trace lore
-\end{itemize}
-}
-
-% \begin{definition}[E-Freyd category]
-%   Given a complete lattice $E$, an \emph{$E$-Freyd category} is a premonoidal category $\mc{C}$
-%   equipped with a continuous function $\epsilon \in E \mapsto \mc{C}_\epsilon$ from elements of $E$
-%   to wide subcategories of $\mc{C}$, such that $\mc{C}_\top = \mc{C}$ and $(\mc{C}, \mc{V} =
-%   \mc{C}_\bot)$ is a Freyd category. In particular, every Freyd category is trivially an $E$-Freyd
-%   category for the Sierpinski poset $E = \{\top, \bot\}$.
-% \end{definition}
-
-An \isotopessa model consists of:
+We now have all the ingredients we need to give a semantics to \isotopessa expressions and regions.
+In particular, an \isotopessa model consists of:
 \begin{itemize}
   \item A distributive premonoidal category $\mc{C}$, equipped with an Elgot structure
   \item A complete lattice $E$, and a continuous function $\epsilon \mapsto \mc{C}_\epsilon$ from
   $E$ to wide subcategories of $\mc{C}$, such that $\mc{C}_\top = \mc{C}$, and $(\mc{C}, \mc{V} =
   \mc{C}_\bot)$ is a Freyd category.
 \end{itemize}
-In particular, whenever $\mc{C}$ is a distributive Elgot Freyd category, we can trivially obtain an
-\isotopessa model by choosing $E = \{\top, \bot\}$. We may also choose $E = \{*\}$ if and only if
+We will write morphisms $\mc{C}_\epsilon(A, B)$ as $A \to_\epsilon B$, and morphisms $\mc{C}(A, B)$
+as $A \to B$. Note that, whenever $\mc{C}$ is a distributive Elgot Freyd category, we can trivially
+obtain an \isotopessa model by choosing $E = \{\top, \bot\}$; hence, this re-framing does not add
+any additional generality, but simplifies bookkeeping. We may also choose $E = \{*\}$ if and only if
 $\mc{C}$ is in fact Cartesian.
 
-\TODO{$\to_\epsilon$ lore}
+\TODO{we model types in the obvious manner; as in Figure \ref{fig:ssa-ty-sem}}
 
-\begin{figure}[H]
+\begin{figure}
   \begin{align*}
     \boxed{\dnt{A} : |\mc{C}|} \qquad 
     & \dnt{\mb{1}} = I \qquad
@@ -1953,7 +1965,10 @@ $\mc{C}$ is in fact Cartesian.
   \label{fig:ssa-ty-sem}
 \end{figure}
 
-\begin{figure}[H]
+\TODO{expressions are modeled as morphisms in the obvious manner; we also have that denotations with
+different effects are equal}
+
+\begin{figure}
   \begin{equation*}
     \boxed{\dnt{\hasty{\Gamma}{\epsilon}{a}{A}} : \dnt{\Gamma} \to_\epsilon \dnt{A}}
   \end{equation*}
@@ -1993,12 +2008,16 @@ $\mc{C}$ is in fact Cartesian.
     \dnt{\hasty{\Gamma}{\epsilon}{\labort{a}}{A}} 
       &= \dnt{\hasty{\Gamma}{\epsilon}{a}{\mb{0}}} ; 0_{\dnt{A}}
   \end{align*}
-  \caption{Denotational semantics for \isotopessa terms}
-  \Description{Denotational semantics for isotope-SSA terms}
-  \label{fig:ssa-term-sem}
+  \caption{Denotational semantics for \isotopessa expressions}
+  \Description{Denotational semantics for isotope-SSA expressions}
+  \label{fig:ssa-expr-sem}
 \end{figure}
 
-\begin{figure}[H]
+\TODO{regions are similarly modeled as morphisms in the obvious manner}
+
+\TODO{note on how Elgot structure is like Bohm-Jacopini for conversion to structured control-flow}
+
+\begin{figure}
   \begin{equation*}
     \boxed{\dnt{\haslb{\Gamma}{r}{\ms{L}}} : \dnt{\Gamma} \to \dnt{\ms{L}}}
   \end{equation*}
@@ -2044,9 +2063,11 @@ $\mc{C}$ is in fact Cartesian.
   \label{fig:ssa-reg-sem}
 \end{figure}
 
-\TODO{text}
+\TODO{weakenings are modeled as projections, label-weakenings as injections}
 
-\begin{theorem}[(Label) Weakening]
+\TODO{text for weakening lemma}
+
+\begin{lemma}[(Label) Weakening]
   Given $\Gamma \leq \Gamma'$ and $\ms{L}' \leq \ms{L}$, $\ms{K}' \leq \ms{K}$, we have
   \begin{enumerate}
     \item $\dnt{\Gamma \leq \Delta} = \dnt{\Gamma \leq \Gamma'};\dnt{\Gamma' \leq \Delta}$
@@ -2065,7 +2086,11 @@ $\mc{C}$ is in fact Cartesian.
       ; \dnt{\ms{K}' \leq \ms{K}}
       $
   \end{enumerate}
-\end{theorem}
+\end{lemma}
+
+\TODO{(label) substitutions are modeled as morphisms}
+
+\TODO{not always pure! but pure when all target variables are, and sometimes other times!}
 
 \begin{figure}[H]
   \begin{equation*}
@@ -2102,25 +2127,49 @@ $\mc{C}$ is in fact Cartesian.
   \label{fig:ssa-vsubst-sem} 
 \end{figure}
 
-\begin{theorem}[Substitution]
+\TODO{most simple substitution theorem is \emph{rewriting}:}
+
+\begin{theorem}[Rewriting]
+  Given $\issubst{\gamma, \gamma'}{\Gamma}{\Delta}$, such that 
+  $\forall (\thyp{x}{A}{\epsilon}) \in \Delta. \dnt{\hasty{\Gamma}{\epsilon}{\gamma\;x}{A}}$, we
+  have
+  \begin{enumerate}
+    \item Given $\hasty{\Delta}{\epsilon}{a}{A}$, 
+      $\dnt{\hasty{\Gamma}{\epsilon}{[\gamma]a}{A}} = \dnt{\hasty{\Gamma}{\epsilon}{[\gamma']a}{A}}$
+    \item Given $\issubst{\rho}{\Delta}{\Xi}$, $\dnt{\issubst{[\gamma]\rho}{\Gamma}{\Xi}} =
+      \dnt{\issubst{[\gamma']\rho}{\Gamma}{\Xi}}$
+    \item Given $\haslb{\Delta}{r}{\ms{L}}$, $\dnt{\haslb{\Gamma}{[\gamma]r}{\ms{L}}} =
+      \dnt{\haslb{\Gamma}{[\gamma']r}{\ms{L}}}$
+    \item Given $\lbsubst{\rho}{\Delta}{\ms{L}}{\ms{K}}$,
+      $\dnt{\lbsubst{\Gamma}{[\gamma]\rho}{\ms{L}}{\ms{K}}} =
+      \dnt{\lbsubst{\Gamma}{[\gamma']\rho}{\ms{L}}{\ms{K}}}$ 
+  \end{enumerate}
+\end{theorem}
+
+\TODO{if our substitution \emph{is} pure, we can also prove that substitution is \emph{sound}:}
+
+\begin{theorem}[Soundness of Substitution]
   Given $\dnt{\issubst{\gamma}{\Gamma}{\Delta}} : \dnt{\Gamma} \to_\bot
-  \dnt{\Delta}$ (in particular, this is always the case when (todo: the effect
-  of $\Delta$ is bot, but write this down)), we have that
+  \dnt{\Delta}$ (in particular, this is always the case when \todo{the effect
+  of $\Delta$ is $\bot$, but write this down}, we have that
   \begin{enumerate}
     \item $\dnt{\hasty{\Gamma}{\epsilon}{[\gamma]a}{A}} 
       = \dnt{\issubst{\gamma}{\Gamma}{\Delta}};\dnt{\hasty{\Delta}{\epsilon}{a}{A}}$
     \item $\dnt{\haslb{\Gamma}{[\gamma]r}{\ms{L}}}
       = \dnt{\issubst{\gamma}{\Gamma}{\Delta}};\dnt{\haslb{\Delta}{r}{\ms{L}}}$
-    \item $\dnt{\issubst{[\gamma]\sigma}{\Delta}{\Xi}}
-      = \dnt{\issubst{\gamma}{\Gamma}{\Delta}};\dnt{\issubst{\sigma}{\Delta}{\Xi}}$
+    \item $\dnt{\issubst{[\gamma]\rho}{\Delta}{\Xi}}
+      = \dnt{\issubst{\gamma}{\Gamma}{\Delta}};\dnt{\issubst{\rho}{\Delta}{\Xi}}$
     \item $\dnt{\lbsubst{\Gamma}{[\gamma]\sigma}{\ms{L}}{\ms{K}}}
       = \dnt{\issubst{\gamma}{\Gamma}{\Delta}};\dnt{\lbsubst{\Delta}{\sigma}{\ms{L}}{\ms{K}}}$
   \end{enumerate}
 \end{theorem}
 
-\TODO{text}
+\TODO{note that soundness $\implies$ rewriting, but rewriting works for \emph{all} substitutions
+(including impure ones), whereas soundness is only for pure substitutions!}
 
-\begin{theorem}[Label substitution]
+\TODO{On the other hand, \emph{all} label substitutions are sound:}
+
+\begin{theorem}[Soundness of label substitution]
   Given $\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}$, we have
   \begin{enumerate}
     \item $\dnt{\haslb{\Gamma}{[\sigma]r}{\ms{K}}}
@@ -2140,39 +2189,39 @@ $\mc{C}$ is in fact Cartesian.
 
 \subsection{Completeness}
 
-\begin{theorem}[Completeness (Terms)]
+\begin{theorem}[Completeness (Expressions)]
   The category $\ms{Th}^\otimes(\Gamma)$ with
   \begin{itemize}
     \item Objects types $A, B, C$
     \item Morphisms $\ms{Th}^\otimes(\Gamma)(A, B) 
       = \bigcup_\epsilon\ms{Th}^\otimes(\Gamma)_\epsilon(A, B) 
-      = \bigcup_\epsilon\{e \mid \hasty{\Gamma, \bhyp{\square}{A}}{\epsilon}{e}{A}\}$
-      quotiented by $\tmeq{\Gamma, \bhyp{\square}{A}}{}{e}{e'}{A}$
+      = \bigcup_\epsilon\{e \mid \hasty{\Gamma, \bhyp{\invar}{A}}{\epsilon}{e}{A}\}$
+      quotiented by $\tmeq{\Gamma, \bhyp{\invar}{A}}{}{e}{e'}{A}$
       % TODO: epsilation lore
-    \item Identity $\hasty{\Gamma, \bhyp{\square}{A}}{\bot}{\square}{A}$
-    \item Composition $e;e' = (\ms{let}\;\square = e; e')$ 
+    \item Identity $\hasty{\Gamma, \bhyp{\invar}{A}}{\bot}{\invar}{A}$
+    \item Composition $e;e' = (\ms{let}\;\invar = e; e')$ 
   \end{itemize} 
   is a distributive Freyd category, with:
   \begin{itemize}
-    \item Pure morphisms generated by, given $\hasty{\Gamma, \bhyp{\square}{A}}{\epsilon}{e}{B}$ and
-          $\haslb{\Gamma, \bhyp{\square}{A}}{\ms{ret}\;e}{B, \ms{L}}$
+    \item Pure morphisms generated by, given $\hasty{\Gamma, \bhyp{\invar}{A}}{\epsilon}{e}{B}$ and
+          $\haslb{\Gamma, \bhyp{\invar}{A}}{\ms{ret}\;e}{B, \ms{L}}$
     \item Tensor functors 
-      $- \otimes X : e \mapsto \ms{let}\;(\square, x) 
-        = \square; (e ; (\square, x))$
+      $- \otimes X : e \mapsto \ms{let}\;(\invar, x) 
+        = \invar; (e ; (\invar, x))$
       and 
-      $X \otimes - : e \mapsto \ms{let}\;(x, \square) 
-      = \square; (e ; (x, \square))$
-    \item Projections $\ms{let}\;(x, y) = \square; x$ and  
-      $\ms{let}\;(x, y) = \square; y$
-    \item Diagonal: $(\square, \square)$
-    \item Injections: $\ms{inl}\;\square$, $\ms{inr}\;\square$
+      $X \otimes - : e \mapsto \ms{let}\;(x, \invar) 
+      = \invar; (e ; (x, \invar))$
+    \item Projections $\ms{let}\;(x, y) = \invar; x$ and  
+      $\ms{let}\;(x, y) = \invar; y$
+    \item Diagonal: $(\invar, \invar)$
+    \item Injections: $\ms{inl}\;\invar$, $\ms{inr}\;\invar$
     \item Sums: $
-      [a, b] = \caseexpr{\square}{\square}{a}{\square}{b}
+      [a, b] = \caseexpr{\invar}{\invar}{a}{\invar}{b}
     $
     \item Distributor
-      $\delta = \caseexpr{\square}{(x, y)}{(x, \ms{inl}\;y)}{(x, y)}{(x, \ms{inr}\;y)}$
+      $\delta = \caseexpr{\invar}{(x, y)}{(x, \ms{inl}\;y)}{(x, y)}{(x, \ms{inr}\;y)}$
       with inverse
-      $\delta^{-1} = \ms{let}\;(x, y) = \square; 
+      $\delta^{-1} = \ms{let}\;(x, y) = \invar; 
         \caseexpr{y}{z}{\ms{inl}(x, z)}{z}{\ms{inr}(x, z)}$
   \end{itemize}
   In particular, taking $\ms{Th}(\cdot)$ as our model, we have 
@@ -2187,37 +2236,37 @@ $\mc{C}$ is in fact Cartesian.
   \begin{itemize}
     \item Objects types $A, B, C$
     \item Morphisms $\ms{Th}(\Gamma, \ms{L})(A, B) 
-      = \{r \mid \haslb{\Gamma, \bhyp{\square}{A}}{r}{\ms{L}, \ms{ret}(B)}\}$ quotiented by
-      $\lbeq{\Gamma, \bhyp{\square}{A}}{r}{r'}{\ms{L}, \ms{ret}(B)}$
-    \item Identity $\haslb{\Gamma, \bhyp{\square}{A}}{\ms{br}\;\ms{ret}\;\square}{\ms{L}, \ms{ret}(A)}$
-    \item Composition $r;r' = [\ms{id}, \ms{ret}(\square) \mapsto r']r$ 
+      = \{r \mid \haslb{\Gamma, \bhyp{\invar}{A}}{r}{\ms{L}, \ms{ret}(B)}\}$ quotiented by
+      $\lbeq{\Gamma, \bhyp{\invar}{A}}{r}{r'}{\ms{L}, \ms{ret}(B)}$
+    \item Identity $\haslb{\Gamma, \bhyp{\invar}{A}}{\ms{br}\;\ms{ret}\;\invar}{\ms{L}, \ms{ret}(A)}$
+    \item Composition $r;r' = [\ms{id}, \ms{ret}(\invar) \mapsto r']r$ 
   \end{itemize}
   is a distributive Freyd category with:
   \begin{itemize}
-    \item Pure morphisms generated by, given $\hasty{\Gamma, \bhyp{\square}{A}}{\epsilon}{e}{B}$ and
-          $\haslb{\Gamma, \bhyp{\square}{A}}{\ms{ret}\;e}{B, \ms{L}}$
+    \item Pure morphisms generated by, given $\hasty{\Gamma, \bhyp{\invar}{A}}{\epsilon}{e}{B}$ and
+          $\haslb{\Gamma, \bhyp{\invar}{A}}{\ms{ret}\;e}{B, \ms{L}}$
     \item Tensor functors 
-      $- \otimes X : r \mapsto \ms{let}\;(\square, x) 
-        = \square; (r ; \ms{ret}\;(\square, x))$
+      $- \otimes X : r \mapsto \ms{let}\;(\invar, x) 
+        = \invar; (r ; \ms{ret}\;(\invar, x))$
       and 
-      $X \otimes - : r \mapsto \ms{let}\;(x, \square) 
-      = \square; (r ; \ms{ret}\;(x, \square))$
-    \item Projections $\ms{let}\;(x, y) = \square; \ms{ret}\;x$ and  
-      $\ms{let}\;(x, y) = \square; \ms{ret}\;y$
-    \item Diagonal: $\ms{ret}\;(\square, \square)$
-    \item Injections: $\ms{ret}\;\ms{inl}\;\square$, $\ms{ret}\;\ms{inr}\;\square$
+      $X \otimes - : r \mapsto \ms{let}\;(x, \invar) 
+      = \invar; (r ; \ms{ret}\;(x, \invar))$
+    \item Projections $\ms{let}\;(x, y) = \invar; \ms{ret}\;x$ and  
+      $\ms{let}\;(x, y) = \invar; \ms{ret}\;y$
+    \item Diagonal: $\ms{ret}\;(\invar, \invar)$
+    \item Injections: $\ms{ret}\;\ms{inl}\;\invar$, $\ms{ret}\;\ms{inr}\;\invar$
     \item Sums: $
-      [r, r'] = \casestmt{\square}{\square}{r}{\square}{r'}
+      [r, r'] = \casestmt{\invar}{\invar}{r}{\invar}{r'}
     $
     \item Distributor
-      $\delta = \casestmt{\square}{(x, y)}{\ms{ret}\;(x, \ms{inl}\;y)}{(x, y)}{\ms{ret}\;(x, \ms{inr}\;y)}$
+      $\delta = \casestmt{\invar}{(x, y)}{\ms{ret}\;(x, \ms{inl}\;y)}{(x, y)}{\ms{ret}\;(x, \ms{inr}\;y)}$
       with inverse
-      $\delta^{-1} = \ms{let}\;(x, y) = \square; 
+      $\delta^{-1} = \ms{let}\;(x, y) = \invar; 
         \casestmt{y}{z}{\ms{ret}\;\ms{inl}(x, z)}{z}{\ms{ret}\;\ms{inr}(x, z)}$
     \item Elgot structure 
     $$
-      r^\dagger = \where{\ms{br}\;\ms{body}\;\square}{\lwbranch{\ms{body}}{\square : A}
-        {r ; \casestmt{\square}{x}{\ms{ret}\;x}{y}{\ms{br}\;\ms{body}\;y}}}
+      r^\dagger = \where{\ms{br}\;\ms{body}\;\invar}{\lwbranch{\ms{body}}{\invar : A}
+        {r ; \casestmt{\invar}{x}{\ms{ret}\;x}{y}{\ms{br}\;\ms{body}\;y}}}
     $$
   \end{itemize}
   where $\ms{ret}\;e$ denotes $\ms{br}\;\ms{ret}\;e$. Furthermore,
@@ -2227,7 +2276,7 @@ $\mc{C}$ is in fact Cartesian.
     $\ms{Th}^\otimes_\bot(\Gamma)  
       \to \ms{Th}_\bot(\Gamma, \ms{L})(A, B)$ \label{ret-functor}.
     In particular, we have $\ms{ret}\;\delta = \delta$.
-    \item Likewise $e \mapsto \letstmt{\square}{e}{\ms{ret}\;\square}$ is a
+    \item Likewise $e \mapsto \letstmt{\invar}{e}{\ms{ret}\;\invar}$ is a
       faithful strict monoidal functor $\ms{Th}^\otimes(\Gamma) \to
       \ms{Th}_\bot(\Gamma, \ms{L})(A, B)$ restricting to \ref{ret-functor} on
       $\ms{Th}^\otimes_\bot(\Gamma)$
@@ -2334,6 +2383,8 @@ distributive Cartesian category is an \isotopessa model}
 
 \section{Syntax and Typing Rules}
 
+\TODO{pull up and remove section?}
+
 \begin{figure}[H]
   \begin{center}
     \begin{grammar}
@@ -2371,32 +2422,9 @@ distributive Cartesian category is an \isotopessa model}
   \label{fig:ssa-grammar}
 \end{figure}
 
-% \begin{figure}[H]
-%   \TODO{this}
-%   \caption{Rules for typing \isotopessa substitutions}
-%   \Description{}
-%   \label{fig:ssa-vsubst-rules}
-% \end{figure}
+\section{Böhm–Jacopini Theorem}
 
-% \begin{figure}[H]
-%   \TODO{this}
-%   \caption{Rules for typing \isotopessa label-substitutions}
-%   \Description{}
-%   \label{fig:ssa-lsubst-rules}
-% \end{figure}
-
-% \begin{figure}[H]
-%   \TODO{this}
-%   \caption{Syntax and typing for \isotopessa composition}
-%   \Description{}
-%   \label{fig:ssa-compose}
-% \end{figure}
-
-\section{Equational Theory}
-
-\TODO{soundness of region equational theory (diagrams?)}
-
-\TODO{notes on completeness? derivable equations?}
+\TODO{this...}
 
 \section{Normalization}
 
@@ -2407,10 +2435,6 @@ distributive Cartesian category is an \isotopessa model}
 \TODO{to TRegion ...}
 
 \TODO{to ContRegion ...}
-
-\section{Böhm–Jacopini}
-
-\TODO{this...}
 
 \end{document}
 \endinput
