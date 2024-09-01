@@ -971,17 +971,48 @@ In particular, we can build up regions as follows:
   \Description{}
   \label{fig:ssa-reg-rules}
 \end{figure}
+
 \subsection{Metatheory}
 
-\TODO{introducing weakening, what is it}
+We can now begin to state the syntactic metatheory of \isotopessa. One of the
+most important metatheorems, and a basic santity check of our type theory, is
+\emph{weakening}; essentially, if things typecheck in a context $\Delta$, and
+$\Gamma$ contains all the variables of $\Delta$ (written $\Gamma \leq \Delta$,
+pronounced ``$\Gamma$ \emph{weakens} $\Delta$''), then these things should
+typecheck in the context $\Gamma$ as well. That is, ``$\Gamma$ typechecks more
+terms than $\Delta$''.
+ 
+Making things more formal, we introduce the rules for weakening $\Gamma \leq
+\Delta$ in the first part of Figure \ref{fig:ssa-meta-rules}: \brle{wk-nil} says
+that the empty context weakens itself, \brle{wk-skip} says that if $\Gamma$
+weakens $\Delta$, then $\Gamma$ with an arbitrary variable added also weakens
+$\Delta$, and \brle{wk-cons} says that if $\Gamma$ weakens $\Delta$ and
+$\epsilon \leq \epsilon'$, then $\Gamma$ with $\thyp{x}{A}{\epsilon}$ added
+weakens $\Delta, \thyp{x}{A}{\epsilon'}$. It is easy to see that weakening
+defined in this manner induces a partial order on contexts.
+
+We may go further and introduce weakening for \emph{label contexts} $\ms{L} \leq
+\ms{K}$ analogously, except that we will flip the ordering such that $\ms{L}$
+weakens $\ms{K}$ if it contains \emph{less}, rather than \emph{more}, labels
+than $\ms{K}$. This is a bit unconventional, since in this case $\ms{L}$ types
+\emph{less} regions than $\ms{K}$, but it will make our metatheory and
+denotational semantics come out more clearly, since it corresponds to
+label-contexts being ``on the right'' (with variable contexts ``on the left'').
+In particular, in Figure \ref{fig:ssa-meta-rules}, we introduce the rules
+\brle{lwk-nil}, which says that the empty label context weakens itself,
+\brle{lwk-skip}, which says that if $\ms{L}$ weakens $\ms{K}$, then $\ms{L}$
+weakens $\ms{K}$ with an arbitrary label added, and \brle{lwk-cons}, which says
+that if $\ms{L}$ weakens $\ms{K}$, then $\ms{L}$ with a label $\lhyp{\ell}{A}$
+added weakens $\ms{K}$ with the same label added. It is easy to see that this
+induces a partial order on label contexts.
 
 \begin{figure}[H]
   \begin{gather*}
     \boxed{\Gamma \leq \Delta} \\
     \prftree[r]{\rle{wk-nil}}{}{\cdot \leq \cdot} \qquad
     \prftree[r]{\rle{wk-skip}}{\Gamma \leq \Delta}{\Gamma, \thyp{x}{A}{\epsilon} \leq \Delta} \qquad
-    \prftree[r]{\rle{wk-cons}}{\Gamma \leq \Delta}
-      {\Gamma, \thyp{x}{A}{\epsilon} \leq \Delta, \thyp{x}{A}{\epsilon}} \\
+    \prftree[r]{\rle{wk-cons}}{\Gamma \leq \Delta}{\epsilon \leq \epsilon'}
+      {\Gamma, \thyp{x}{A}{\epsilon} \leq \Delta, \thyp{x}{A}{\epsilon'}} \\
     \boxed{\ms{L} \leq \ms{K}} \\
     \prftree[r]{\rle{lwk-nil}}{}{\cdot \leq \cdot} \qquad
     \prftree[r]{\rle{lwk-skip}}{\ms{L} \leq \ms{K}}{\ms{L} \leq \ms{K}, \lhyp{\ell}{A}} \qquad
@@ -1008,8 +1039,6 @@ In particular, we can build up regions as follows:
   \Description{}
   \label{fig:ssa-meta-rules}
 \end{figure}
-
-\TODO{weakening text}
 
 \begin{lemma}[Weakening]
   Given $\Gamma \leq \Delta$, $\epsilon \leq \epsilon'$, and $\ms{L} \leq \ms{K}$, we have that:
