@@ -1111,7 +1111,10 @@ capture-avoiding substitution, as made explicit in Figure
     [\gamma](\sigma, \ell(x) \mapsto r) 
     = ([\gamma]\sigma, \ell(x) \mapsto [\gamma]r)
     \\ \\
-    [\sigma](\brb{\ell}{a}) = \brb{\sigma(\ell)}{a} \qquad
+    (\sigma, \ell(x) \mapsto r)(\ell, a) = [a/x]r \qquad
+    (\sigma, \kappa(x) \mapsto r)(\ell, a) = \sigma(\ell, a)
+    \\ \\
+    [\sigma](\brb{\ell}{a}) = \sigma(\ell, a) \qquad
     [\sigma](\letstmt{x}{a}{r}) = \letstmt{x}{a}{[\sigma]r} \\
     [\sigma](\letstmt{(x, y)}{e}{r}) = \letstmt{(x, y)}{e}{[\sigma]r} \\
     [\sigma](\casestmt{e}{x}{r}{y}{s}) = \casestmt{e}{x}{[\sigma]r}{y}{[\sigma]s} \\
@@ -1152,14 +1155,27 @@ composition associates as expected: $[[\gamma_1]\gamma_2]\gamma_3 =
 [\gamma_1]([\gamma_2]\gamma_3)$, and has identity $[\ms{id}]\gamma = \gamma$,
 yielding a category of substitutions with variable contexts $\Gamma$ as objects.
 
-\TODO{label substitution text}
-
-\TODO{label substitution composition; label substitution definitions}
+Finally, just as we can substitute generalizes weakening by substituting
+expressions for variables, we can generalize label weakening by substituting
+\emph{labels} for \emph{(parametrized) regions} via \emph{label substitution}.
+In particular, a label-substitution $\lbsubst{\sigma}{\Gamma}{\ms{L}}{\ms{K}}$
+maps every label $\ell(A) \in \ms{L}$ to a region $\haslb{\Gamma, x :
+A}{r}{\ms{K}}$ parametrized by $x : A$. As shown in Figure
+\ref{fig:ssa-subst-def}, we may then define label-substitution recursively in
+the obvious manner, mapping $\ms{br}\;\ell\;a$ to $[a/x]r$ as a base case. We
+can similarly define the composition of label substitutions $[\sigma']\sigma$ in
+the expected manner. This allows us to state \emph{label substitution} as
+follows:
 
 \begin{lemma}[Label substitution]
   Given $\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}$, we have that
   $\haslb{\Gamma}{r}{\ms{L}} \implies \haslb{\Gamma}{[\sigma]r}{\ms{K}}$
 \end{lemma}
+
+Label substitution is powerful since it allows us to reason directly about
+program transformations which splice and manipulate the control-flow graph.
+
+\TODO{this...}
 
 \section{Equational Theory}
 
