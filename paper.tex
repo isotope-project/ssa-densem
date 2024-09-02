@@ -813,60 +813,85 @@ as $\ms{Ty}(X)$. We also parametrize over:
   \item A set of effects $\epsilon \in \mc{E}$, forming a join-semilattice with bottom element $\bot
   \in \mc{E}$
   
-  \item For each pair $A, B \in \ms{Ty}(X)$ and effect $\epsilon \in \mc{E}$, a set of
-  \textit{instructions} $f \in \mc{I}_\epsilon(A, B)$, where $\epsilon \leq \epsilon' \implies
-  \mc{I}_\epsilon(A, B) \subseteq \mc{I}_{\epsilon'}(A, B)$. 
+  \item For each pair $A, B \in \ms{Ty}(X)$ and effect $\epsilon \in \mc{E}$, a
+  set of \textit{primitive instructions} $f \in \mc{I}_\epsilon(A, B)$, where
+  $\epsilon \leq \epsilon' \implies \mc{I}_\epsilon(A, B) \subseteq
+  \mc{I}_{\epsilon'}(A, B)$. 
   
-  We write $\mc{I}(A, B) = \bigcup_\epsilon\mc{I}_\epsilon(A, B)$, $\mc{I}_\epsilon = \bigcup_{A,
-  B}\mc{I}_\epsilon(A, B)$, and $\mc{I} = \bigcup_\epsilon\mc{I}_\epsilon$.
+  We write $\mc{I}(A, B) = \bigcup_\epsilon\mc{I}_\epsilon(A, B)$,
+  $\mc{I}_\epsilon = \bigcup_{A, B}\mc{I}_\epsilon(A, B)$, and $\mc{I} =
+  \bigcup_\epsilon\mc{I}_\epsilon$.
 
 \end{itemize}
+We'll call a tuple $Sg = (\mc{E}, \mc{T}, \mc{I})$ of types and instructions
+over these types an \emph{\isotopessa-signature}.
 
-A \textit{context} $\Gamma$ is a list of \textit{typing hypotheses} $\thyp{x}{A}{\epsilon}$, where
-$x$ is a variable name, $A$ is the type of that variable, and $\epsilon$ is the effect of using that
-variable (used when filling holes with effectful expressions). If $\epsilon = \bot$, we often omit
-it, writing $\bhyp{x}{A}$. Similarly, we define a \textit{label-context} to be a list of
-\textit{labels} $\lhyp{\ell}{A}$, where $A$ is the parameter type that must be passed on a jump to
-the label $\ell$. This is summarized in the following grammar:
+A (variable )\textit{context} $\Gamma$ is a list of \textit{typing hypotheses}
+$\thyp{x}{A}{\epsilon}$, where $x$ is a variable name, $A$ is the type of that
+variable, and $\epsilon$ is the effect of using that variable (used when filling
+holes with effectful expressions). If $\epsilon = \bot$, we often omit it,
+writing $\bhyp{x}{A}$. Similarly, we define a \textit{label-context} to be a
+list of \textit{labels} $\lhyp{\ell}{A}$, where $A$ is the parameter type that
+must be passed on a jump to the label $\ell$.
 
 \begin{figure}[H]
   \begin{center}
-    \begin{minipage}{.5\textwidth}
-      \begin{grammar}
-        <\(A, B, C\)> ::= 
-        \(X\)
-        \;|\; \(A \otimes B\)
-        \;|\; \(\mathbf{1}\)
-        \;|\; \(A + B\)
-        \;|\; \(\mathbf{0}\)
-      \end{grammar}
-    \end{minipage}%
-    \begin{minipage}{.25\textwidth}
-      \begin{grammar}
-        <\(\Gamma\)> ::= \(\cdot\) \;|\; \(\Gamma, \thyp{x}{A}{\epsilon}\)
-      \end{grammar}
-    \end{minipage}%
-    \begin{minipage}{.25\textwidth}
-      \begin{grammar}
-        <\(\ms{L}\)> ::= \(\cdot\) \;|\; \(\ms{L}, \lhyp{\ell}{A}\)
-      \end{grammar}
-    \end{minipage}
+    \begin{grammar}
+      <\(A, B, C\)> ::= 
+      \(X\)
+      \;|\; \(A \otimes B\)
+      \;|\; \(\mathbf{1}\)
+      \;|\; \(A + B\)
+      \;|\; \(\mathbf{0}\)
+
+      <\(a, b, c, e\)> ::= \(x\) 
+      \;|\;  \(f\;a\)
+      \;|\; \(\letexpr{x}{a}{e}\)
+      \alt  \(()\)
+      \;|\; \((a, b)\)
+      \;|\; \(\letexpr{(x, y)}{a}{e}\)
+      \alt  \(\linl{a}\) 
+      \;|\; \(\linr{a}\)
+      \;|\; \(\labort{a}\)
+      \;|\; \(\caseexpr{e}{x}{s}{y}{t}\)
+      
+      <\(s, t\)> ::= \(\brb{\ell}{a}\) 
+      \alt  \(\letstmt{x}{a}{t}\)
+      \;|\; \(\letstmt{(x, y)}{a}{t}\)
+      \;|\; \(\casestmt{e}{x}{s}{y}{t}\)
+      \alt  \(\where{t}{(\wbranch{\ell_i}{x_i: A_i}{t_i},)_i}\)
+
+      <\(\Gamma\)> ::= \(\cdot\) \;|\; \(\Gamma, \thyp{x}{A}{\epsilon}\)
+
+      <\(\ms{L}\)> ::= \(\cdot\) \;|\; \(\ms{L}, \lhyp{\ell}{A}\)
+    \end{grammar}
   \end{center}
-  \caption{Grammar for \isotopessa types, contexts, and label-contexts}
-  \label{fig:ssa-ty-grammar}
+  \caption{Grammar for \isotopessa, parametrized over an \isotopessa signature}
   \Description{}
+  \label{fig:ssa-grammar}
 \end{figure}
 
-\TODO{text, insert figure for table of judgements and metatheoretic judgements?}
+As shown in Figure~\ref{fig:ssa-grammar}, \isotopessa terms are divided into two
+syntactic categories, each of with associated with a judgement:
+\begin{itemize}
+  \item \emph{Expressions} $a, b, c, e$ typed with the judgement
+  $\hasty{\Gamma}{\epsilon}{a}{A}$, which says that under the typing context
+  $\Gamma$, the expression $a$ has type $A$ and effect $\epsilon$. We say a term
+  is \emph{pure} if it has effect $\bot$; note that whether an expression is
+  pure or not depends both on the expression itself and on the purity of the
+  variables used in the expression; this is to allow reasoning about impure
+  substitutions.
+  \item \emph{Regions} $r, s, t$, which recursively define a lexically-scoped
+  SSA program with a single entry and (potentially) multiple exits. This is
+  typed with the judgement $\haslb{\Gamma}{r}{\ms{L}}$, which states that given
+  that $\Gamma$ is live at the unique entry point, $r$ will either loop forever
+  or branch to one of the exit labels in $\ell(A) \in \ms{L}$ with an argument
+  of type $A$.
+\end{itemize}
 
-A \isotopessa \textit{expression} $a$ is typed with the judgement $\hasty{\Gamma}{\epsilon}{a}{A}$,
-which says that under the typing context $\Gamma$, the expression $a$ has type $A$ and effect
-$\epsilon$. We say a term is \emph{pure} if it has effect $\bot$; note that whether a term is pure
-or not depends both on the term itself and on the purity of the variables used in the term; this is
-to allow reasoning about impure substitutions.
-
-The typing rules for expressions are given in Figure~\ref{fig:ssa-expr-rules}. In particular,
-expressions may be built up from the following fairly standard primitives:
+The typing rules for expressions are given in Figure~\ref{fig:ssa-expr-rules}.
+In particular, expressions may be built up from the following fairly standard
+primitives:
 \begin{itemize}
   \item A variable $x$ in the context $\Gamma$, as typed by \brle{var}. We write $(A, \epsilon) \leq
   (B, \epsilon') \iff A = B \and \epsilon \leq \epsilon'$.
@@ -920,16 +945,7 @@ expressions may be built up from the following fairly standard primitives:
   \label{fig:ssa-expr-rules}
 \end{figure}
 
-\TODO{what is a region; connection to SSA lore, rework below list to fit into
-narrative}
-
-A \isotopessa \textit{region} is typed with the judgement $\haslb{\Gamma}{r}{\ms{L}}$, which says
-that under the typing context $\Gamma$, the region $r$ targets the label-context $\ms{L}$. In
-particular, this can be interpreted as saying that if the variables in $\Gamma$ are live on entry to
-$r$, then $r$ will either loop forever or terminate by branching to one of the external labels in
-$\mc{L}$ with the appropriate argument.
-
-In particular, we can build up regions as follows:
+\emph{Regions}, on the other hand, can be built up as follows:
 \begin{itemize}
   \item A branch to a label $\ell$ with pure argument $a$, typed with \rle{br}.
   
@@ -940,8 +956,44 @@ In particular, we can build up regions as follows:
   executing the (potentially effectful) expression $e$, and then, if $e$ is a left injection
   $\ms{inl}\;x$, executing $r$ with its value ($x$), otherwise executing $s$.
   
-  \item \todo{where rule} \todo{notes about binding precedence of where}
+  \item \emph{\ms{where}-statements} of the form
+  ``$\where{r}{(\wbranch{\ell_i}{x_i}{t_i})_i}$", which consist of a collection
+  of mutually recursive regions $\wbranch{\ell_i}{x_i}{t_i}$ and a \emph{terminator
+  region} $r$ which may branch to one of $\ell_i$ or an exit label.
 \end{itemize}
+We previously described SSA programs as being made up out of \emph{basic
+blocks}, each of which is made up of a sequence of instructions followed by a
+\emph{terminator} and, potentially, a list of strictly dominated basic blocks
+this terminator may jump to. Basic blocks are an \emph{implicit} feature of our
+grammar: we can view each as a list of unary or binary let-bindings, until we
+reach a terminator, which is either an unconditional branch, a
+\ms{case}-statement or a \ms{where}-statement, as follows:
+\begin{gather*}
+  \ms{defs}(\letstmt{x}{e}{r}) = (x, e)::r \qquad 
+  \ms{defs}(\letstmt{(x, y)}{e}{r}) = ((x, y), e)::r \\
+  \ms{defs}(r) = [] \quad \text{otherwise} \\
+  \ms{terminator}(\letstmt{x}{e}{r}) 
+  = \ms{terminator}(\letstmt{(x, y)}{e}{r}) 
+  = \ms{terminator}(r) \\
+  \ms{terminator}(r) = r \quad \text{otherwise} \\
+  \ms{bb}(r) = (\ms{defs}(r), \ms{terminator}(r))
+\end{gather*}
+Note in particular that the region $r$ in a \ms{where}-statement
+$\where{r}{(\wbranch{\ell_i}{x_i}{t_i})_i}$ is best interpreted as a terminator
+rather than an entry-block even if of the form, e.g., $r = \letstmt{x}{e}{s}$.
+The entry block is instead the \emph{implicit} basic-block made up of any
+let-bindings surrounding the \ms{where}-statement. The key difference is that
+variables defined in $r$ are \emph{not} visible in the blocks $t_i$, whereas
+variables defined in the entry-block are. While at first glance this can be
+unintuitive, the additional generality greatly simplifies rewriting, and we can
+always ``normalize away'' this feature, since our equational theory generally
+admits that, \emph{if} both sides are well-typed and there is no shadowing,
+\begin{align*}
+  \where{(\letexpr{x}{e}{r})}{(\wbranch{\ell_i}{x_i}{t_i})_i}
+  &= (\letexpr{x}{e}{(\where{r}{(\wbranch{\ell_i}{x_i}{t_i})_i})}) \\
+  \where{(\letexpr{(x, y)}{e}{r})}{(\wbranch{\ell_i}{x_i}{t_i})_i}
+  &= (\letexpr{(x, y)}{e}{(\where{r}{(\wbranch{\ell_i}{x_i}{t_i})_i})})
+\end{align*}
 
 \begin{figure}
   \begin{gather*}
@@ -2550,47 +2602,6 @@ distributive Cartesian category is an \isotopessa model}
 \clearpage 
 
 \appendix
-
-\section{Syntax and Typing Rules}
-
-\TODO{pull up and remove section?}
-
-\begin{figure}[H]
-  \begin{center}
-    \begin{grammar}
-      <\(A, B, C\)> ::= 
-      \(X\)
-      \;|\; \(A \otimes B\)
-      \;|\; \(\mathbf{1}\)
-      \;|\; \(A + B\)
-      \;|\; \(\mathbf{0}\)
-
-      <\(a, b, c, e\)> ::= \(x\) 
-      \;|\;  \(f\;a\)
-      \;|\; \(\letexpr{x}{a}{e}\)
-      \alt  \(()\)
-      \;|\; \((a, b)\)
-      \;|\; \(\letexpr{(x, y)}{a}{e}\)
-      \alt  \(\linl{a}\) 
-      \;|\; \(\linr{a}\)
-      \;|\; \(\labort{a}\)
-      \;|\; \(\caseexpr{e}{x}{s}{y}{t}\)
-      
-      <\(s, t\)> ::= \(\brb{\ell}{a}\) 
-      \alt  \(\letstmt{x}{a}{t}\)
-      \;|\; \(\letstmt{(x, y)}{a}{t}\)
-      \;|\; \(\casestmt{e}{x}{s}{y}{t}\)
-      \alt  \(\where{t}{(\wbranch{\ell_i}{x_i: A_i}{t_i},)_i}\)
-
-      <\(\Gamma\)> ::= \(\cdot\) \;|\; \(\Gamma, \thyp{x}{A}{\epsilon}\)
-
-      <\(\ms{L}\)> ::= \(\cdot\) \;|\; \(\ms{L}, \lhyp{\ell}{A}\)
-    \end{grammar}
-  \end{center}
-  \caption{Grammar for \isotopessa, parametrized over a set of instructions \(f \in \mc{I}\)}
-  \Description{}
-  \label{fig:ssa-grammar}
-\end{figure}
 
 \section{Böhm–Jacopini Theorem}
 
