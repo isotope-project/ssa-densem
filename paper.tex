@@ -112,6 +112,9 @@
 % Composition
 \newcommand{\invar}{\square}
 
+% Weak memory
+\newcommand{\bufloc}[1]{\overline{#1}}
+
 % Branding
 \newcommand{\isotopessa}{\(\lambda_{\ms{SSA}}\)}
 
@@ -1235,7 +1238,14 @@ program transformations which splice and manipulate the control-flow graph.
 
 \subsection{Expressions}
 
-\TODO{congruence rules for expressions at \ref{fig:ssa-expr-congr-rules}}
+We can now give an equational theory for \isotopessa expressions. In particular,
+we will inductively define an equivalence relation
+$
+\tmeq{\Gamma}{\epsilon}{a}{a'}{A}
+$
+on terms $a, a'$ for each context $\Gamma$, effect $\epsilon$, and type $A$.
+This will be presented as a set of simple \emph{rewriting rules} along with a
+\emph{congruence}, which is given in Figure~\ref{fig:ssa-expr-congr-rules}.
 
 \begin{figure}
   \begin{gather*}
@@ -1641,258 +1651,278 @@ program transformations which splice and manipulate the control-flow graph.
 
 \TODO{let1 theory}
 
-\begin{gather*}
-  \prftree[r]{\rle{let$_1$-$\beta$}}
-    {\hasty{\Gamma}{\bot}{a}{A}}
-    {\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
-    {\lbeq{\Gamma}{\letstmt{x}{a}{r}}{[r/x]a}{\ms{L}}}
-  \qquad
-  \prftree[r]{\rle{let$_1$-$\eta$}}
-    {\hasty{\Gamma}{\epsilon}{a}{\ms{L}}}
-    {\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
-    {\lbeq{\Gamma}{\letstmt{x}{a}{r}}{\letstmt{y}{a}{\letstmt{x}{y}{r}}}{\ms{L}}}
-  \\
-  \prftree[r]{\rle{let$_{1\approx}$}}
-    {\tmeq{\Gamma}{\epsilon}{a}{a'}{A}}
-    {\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
-    {\lbeq{\Gamma}{\letstmt{x}{a}{r}}{\letstmt{x}{a'}{r}}{\ms{L}}}
-  \qquad
-  \prftree[r]{\rle{initial}}
-    {\haslb{\Gamma}{r}{\ms{L}}}
-    {\haslb{\Gamma}{s}{\ms{L}}}
-    {\exists x, \Gamma\;x = \mb{0}}
-    {\lbeq{\Gamma}{r}{s}{\ms{L}}}
-\end{gather*}
+\begin{figure}
+  \begin{gather*}
+    \prftree[r]{\rle{let$_1$-$\beta$}}
+      {\hasty{\Gamma}{\bot}{a}{A}}
+      {\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
+      {\lbeq{\Gamma}{\letstmt{x}{a}{r}}{[r/x]a}{\ms{L}}}
+    \qquad
+    \prftree[r]{\rle{let$_1$-$\eta$}}
+      {\hasty{\Gamma}{\epsilon}{a}{\ms{L}}}
+      {\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
+      {\lbeq{\Gamma}{\letstmt{x}{a}{r}}{\letstmt{y}{a}{\letstmt{x}{y}{r}}}{\ms{L}}}
+    \\
+    \prftree[r]{\rle{let$_{1\approx}$}}
+      {\tmeq{\Gamma}{\epsilon}{a}{a'}{A}}
+      {\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
+      {\lbeq{\Gamma}{\letstmt{x}{a}{r}}{\letstmt{x}{a'}{r}}{\ms{L}}}
+    \qquad
+    \prftree[r]{\rle{initial}}
+      {\haslb{\Gamma}{r}{\ms{L}}}
+      {\haslb{\Gamma}{s}{\ms{L}}}
+      {\exists x, \Gamma\;x = \mb{0}}
+      {\lbeq{\Gamma}{r}{s}{\ms{L}}}
+  \end{gather*}
+  \Description{}
+  \caption{todo: this}
+\end{figure}
 
 \TODO{let1 commutes with stuff}
 
-\begin{gather*}
-  \prftree[r]{\rle{let$_1$-op}}
-    {\isop{f}{A}{B}{\epsilon}}
-    {\hasty{\Gamma}{\epsilon}{a}{A}}
-    {\haslb{\Gamma, \bhyp{y}{B}}{r}{\ms{L}}}
-    {\lbeq{\Gamma}{\letstmt{y}{f\;a}{r}}{\letstmt{x}{a}{\letstmt{y}{f\;x}{r}}}{\ms{L}}}
-  \\
-  \prftree[r]{\rle{let$_{1}$-let$_1$}}
-    {\hasty{\Gamma}{\epsilon}{a}{A}}
-    {\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{b}{B}}
-    {\haslb{\Gamma, \bhyp{y}{B}}{r}{\ms{L}}}
-    {\lbeq{\Gamma}{\letstmt{y}{(\letexpr{x}{a}{b})}{r}}{\letstmt{x}{a}{\letstmt{y}{b}{r}}}{\ms{L}}}
-  \\
-  \prftree[r]{\rle{let$_1$-pair}}
-    {\hasty{\Gamma}{\epsilon}{a}{A}}
-    {\hasty{\Gamma}{\epsilon}{b}{B}}
-    {\haslb{\Gamma, \bhyp{z}{A \otimes B}}{r}{\ms{L}}}
-    {\lbeq{\Gamma}
-      {\letstmt{z}{(a, b)}{r}}
-      {\letstmt{x}{a}{\letstmt{y}{b}{\letstmt{z}{(x, y)}{r}}}}
-      {\ms{L}}}
-  \\
-  \prftree[r]{\rle{let$_{1}$-let$_2$}}
-    {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
-    {\hasty{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{\epsilon}{c}{C}}
-    {\haslb{\Gamma, \bhyp{z}{C}}{r}{\ms{L}}}
-    {\lbeq{\Gamma}
-      {\letstmt{z}{(\letexpr{(x, y)}{e}{c})}{r}}
-      {\letstmt{(x, y)}{e}{\letstmt{z}{c}{r}}}
-      {\ms{L}}}
-  \\
-  \prftree[r]{\rle{let$_1$-inl}}
-    {\hasty{\Gamma}{\epsilon}{a}{A}}
-    {\haslb{\Gamma, \bhyp{y}{A + B}}{r}{\ms{L}}}
-    {\lbeq{\Gamma}{\letstmt{y}{\linl{a}}{r}}{\letstmt{x}{a}{\letstmt{\linl{x}}{y}{r}}}{\ms{L}}}
-  \\
-  \prftree[r]{\rle{let$_1$-inr}}
-    {\hasty{\Gamma}{\epsilon}{b}{B}}
-    {\haslb{\Gamma, \bhyp{y}{A + B}}{r}{\ms{L}}}
-    {\lbeq{\Gamma}{\letstmt{y}{\linr{b}}{r}}{\letstmt{x}{b}{\letstmt{\linr{x}}{y}{r}}}{\ms{L}}}
-  \\
-  \prftree[r]{\rle{let$_1$-abort}}
-    {\hasty{\Gamma}{\epsilon}{a}{\mb{0}}}
-    {\haslb{\Gamma, \bhyp{y}{A}}{r}{\ms{L}}}
-    {\lbeq{\Gamma}{\letstmt{y}{\labort{a}}{r}}{\letstmt{x}{a}{\letstmt{y}{\labort{x}}{r}}}{\ms{L}}}
-\end{gather*}
+\begin{figure}
+  \begin{gather*}
+    \prftree[r]{\rle{let$_1$-op}}
+      {\isop{f}{A}{B}{\epsilon}}
+      {\hasty{\Gamma}{\epsilon}{a}{A}}
+      {\haslb{\Gamma, \bhyp{y}{B}}{r}{\ms{L}}}
+      {\lbeq{\Gamma}{\letstmt{y}{f\;a}{r}}{\letstmt{x}{a}{\letstmt{y}{f\;x}{r}}}{\ms{L}}}
+    \\
+    \prftree[r]{\rle{let$_{1}$-let$_1$}}
+      {\hasty{\Gamma}{\epsilon}{a}{A}}
+      {\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{b}{B}}
+      {\haslb{\Gamma, \bhyp{y}{B}}{r}{\ms{L}}}
+      {\lbeq{\Gamma}{\letstmt{y}{(\letexpr{x}{a}{b})}{r}}{\letstmt{x}{a}{\letstmt{y}{b}{r}}}{\ms{L}}}
+    \\
+    \prftree[r]{\rle{let$_1$-pair}}
+      {\hasty{\Gamma}{\epsilon}{a}{A}}
+      {\hasty{\Gamma}{\epsilon}{b}{B}}
+      {\haslb{\Gamma, \bhyp{z}{A \otimes B}}{r}{\ms{L}}}
+      {\lbeq{\Gamma}
+        {\letstmt{z}{(a, b)}{r}}
+        {\letstmt{x}{a}{\letstmt{y}{b}{\letstmt{z}{(x, y)}{r}}}}
+        {\ms{L}}}
+    \\
+    \prftree[r]{\rle{let$_{1}$-let$_2$}}
+      {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
+      {\hasty{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{\epsilon}{c}{C}}
+      {\haslb{\Gamma, \bhyp{z}{C}}{r}{\ms{L}}}
+      {\lbeq{\Gamma}
+        {\letstmt{z}{(\letexpr{(x, y)}{e}{c})}{r}}
+        {\letstmt{(x, y)}{e}{\letstmt{z}{c}{r}}}
+        {\ms{L}}}
+    \\
+    \prftree[r]{\rle{let$_1$-inl}}
+      {\hasty{\Gamma}{\epsilon}{a}{A}}
+      {\haslb{\Gamma, \bhyp{y}{A + B}}{r}{\ms{L}}}
+      {\lbeq{\Gamma}{\letstmt{y}{\linl{a}}{r}}{\letstmt{x}{a}{\letstmt{\linl{x}}{y}{r}}}{\ms{L}}}
+    \\
+    \prftree[r]{\rle{let$_1$-inr}}
+      {\hasty{\Gamma}{\epsilon}{b}{B}}
+      {\haslb{\Gamma, \bhyp{y}{A + B}}{r}{\ms{L}}}
+      {\lbeq{\Gamma}{\letstmt{y}{\linr{b}}{r}}{\letstmt{x}{b}{\letstmt{\linr{x}}{y}{r}}}{\ms{L}}}
+    \\
+    \prftree[r]{\rle{let$_1$-abort}}
+      {\hasty{\Gamma}{\epsilon}{a}{\mb{0}}}
+      {\haslb{\Gamma, \bhyp{y}{A}}{r}{\ms{L}}}
+      {\lbeq{\Gamma}{\letstmt{y}{\labort{a}}{r}}{\letstmt{x}{a}{\letstmt{y}{\labort{x}}{r}}}{\ms{L}}}
+  \end{gather*}
+  \Description{}
+  \caption{todo: this}
+\end{figure}
 
 \TODO{let2 commutes with stuff}
 
-\begin{gather*}
-  \prftree[r]{\rle{let$_2$-bind}}
-    {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
-    {\haslb{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{r}{\ms{L}}}
-    {\lbeq{\Gamma}{\letstmt{(x, y)}{e}{r}}{\letstmt{z}{e}{\letstmt{(x, y)}{z}{r}}}{\ms{L}}}
-  \\
-  \prftree[r]{\rle{let$_2$-pair}}
-    {\hasty{\Gamma}{\epsilon}{a}{A}}
-    {\hasty{\Gamma}{\epsilon}{b}{B}}
-    {\haslb{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{r}{\ms{L}}}
-    {\lbeq{\Gamma}{\letstmt{(x, y)}{(a, b)}{r}}{\letstmt{x}{a}{\letstmt{y}{b}{r}}}{\ms{L}}}
-  \\
-  \prftree[r]{\rle{let$_2$-$\eta$}}
-    {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
-    {\haslb{\Gamma, \bhyp{z}{A \otimes B}}{r}{\ms{L}}}
-    {\lbeq{\Gamma}{\letstmt{(x, y)}{e}{\letstmt{z}{(x, y)}{r}}}{\letstmt{z}{e}{r}}{\ms{L}}}
-\end{gather*}
+\begin{figure}
+  \begin{gather*}
+    \prftree[r]{\rle{let$_2$-bind}}
+      {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
+      {\haslb{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{r}{\ms{L}}}
+      {\lbeq{\Gamma}{\letstmt{(x, y)}{e}{r}}{\letstmt{z}{e}{\letstmt{(x, y)}{z}{r}}}{\ms{L}}}
+    \\
+    \prftree[r]{\rle{let$_2$-pair}}
+      {\hasty{\Gamma}{\epsilon}{a}{A}}
+      {\hasty{\Gamma}{\epsilon}{b}{B}}
+      {\haslb{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{r}{\ms{L}}}
+      {\lbeq{\Gamma}{\letstmt{(x, y)}{(a, b)}{r}}{\letstmt{x}{a}{\letstmt{y}{b}{r}}}{\ms{L}}}
+    \\
+    \prftree[r]{\rle{let$_2$-$\eta$}}
+      {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
+      {\haslb{\Gamma, \bhyp{z}{A \otimes B}}{r}{\ms{L}}}
+      {\lbeq{\Gamma}{\letstmt{(x, y)}{e}{\letstmt{z}{(x, y)}{r}}}{\letstmt{z}{e}{r}}{\ms{L}}}
+  \end{gather*}
+  \Description{}
+  \caption{todo: this}
+\end{figure}
 
 \TODO{case theory}
 
-\begin{gather*}
-  \prftree[r]{\rle{case-bind}}
-    {\hasty{\Gamma}{\epsilon}{e}{A + B}}
-    {\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
-    {\haslb{\Gamma, \bhyp{y}{B}}{s}{\ms{L}}}
-    {\lbeq{\Gamma}{\caseexpr{e}{x}{r}{y}{s}}{\letstmt{z}{e}{\caseexpr{z}{x}{r}{y}{s}}}{\ms{L}}}
-  \\
-  \prftree[r]{\rle{case-inl}}
-    {\hasty{\Gamma}{\epsilon}{a}{A}}
-    {\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
-    {\haslb{\Gamma, \bhyp{y}{B}}{s}{\ms{L}}}
-    {\lbeq{\Gamma}{\caseexpr{\linl{a}}{x}{r}{y}{s}}{\letstmt{x}{a}{r}}{\ms{L}}}
-  \\
-  \prftree[r]{\rle{case-inr}}
-    {\hasty{\Gamma}{\epsilon}{b}{B}}
-    {\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
-    {\haslb{\Gamma, \bhyp{y}{B}}{s}{\ms{L}}}
-    {\lbeq{\Gamma}{\caseexpr{\linr{b}}{x}{r}{y}{s}}{\letstmt{y}{b}{s}}{\ms{L}}}
-  \\
-  \prftree[r]{\rle{let$_{11}$-case}}
-    {\hasty{\Gamma}{\epsilon}{a}{A_1 + A_2}}
-    {\hasty{\Gamma, \bhyp{x}{A_1 + A_2}}{\epsilon}{b}{B}}
-    {
-    \forall i. \haslb{\Gamma, \bhyp{x}{A_1 + A_2}, \bhyp{y}{B}, \bhyp{z_i}{A_i}}{r_i}{\ms{L}}
-    }
-    {
-      \prfStackPremises
-      {\Gamma \vdash \letstmt{x}{a}{\letstmt{y}{c}{\casestmt{x}{z_1}{r_1}{z_2}{r_2}}}}
-      {\hspace{6em} \approx 
-        \letstmt{x}{a}{\casestmt{x}{z_1}{\letstmt{y}{c}{r_1}}{z_2}{\letstmt{y}{c}{r_2}}} 
-        : \ms{L}}
-    }
-  \\
-  \prftree[r]{\rle{let$_{12}$-case}}
-    {\hasty{\Gamma}{\epsilon}{a}{A_1 + A_2}}
-    {\hasty{\Gamma, \bhyp{x}{A_1 + A_2}}{\epsilon}{b}{B \otimes C}}
-    {
-    \forall i. 
-      \haslb{\Gamma, \bhyp{x}{A_1 + A_2}, \bhyp{y}{B}, \bhyp{z}{C}, \bhyp{w_i}{A_i}}{r_i}{\ms{L}}
-    }
-    {
-      \prfStackPremises
-      {\Gamma \vdash \letstmt{x}{a}{\letstmt{(y, z)}{c}{\casestmt{x}{w_1}{r_1}{w_2}{r_2}}}}
-      {\hspace{5em} \approx 
-        \letstmt{x}{a}{\casestmt{x}{w_1}{\letstmt{(y, z)}{b}{r_1}}{w_2}{\letstmt{(y, z)}{b}{r_2}}} 
-        : \ms{L}}
-    }
-  \\
-  \prftree[r]{\rle{case-case}}
-    {\hasty{\Gamma}{\epsilon}{a}{A_1 + A_2}}
-    {\hasty{\Gamma, \bhyp{x}{A_1 + A_2}}{\epsilon}{b}{B_1 + B_2}}
-    {
-    \forall i j. 
-      \haslb{\Gamma, \bhyp{x}{A_1 + A_2}, \bhyp{y_i}{B_i}, \bhyp{z_j}{A_j}}{r_{ij}}{\ms{L}}
-    }
-    {
-      \prfStackPremises
-      {\Gamma \vdash \ms{let}\;x = a; \ms{case}\;b\;\{
-        \linl{y_1} \lto \casestmt{x}{z_1}{r_{11}}{z_2}{r_{21}}
-      }
-      {
-        \hspace{10em} \linr{y_2} \lto \casestmt{x}{z_1}{r_{12}}{z_2}{r_{22}}\}
-      }
-      {
-        \hspace{1.3em} \approx \ms{let}\;x = a; \ms{case}\;x\;\{
-        \linl{z_1} \lto \casestmt{b}{y_1}{r_{11}}{y_2}{r_{21}}
-      }
-      {
-        \hspace{10em} \linr{z_2} \lto \casestmt{b}{y_1}{r_{12}}{y_2}{r_{22}}\}
-      }
-    }
-\end{gather*}
-
-\TODO{where theory}
-
-\begin{gather*}
-    \prftree[r]{\rle{cfg-$<$}}
-      {\hasty{\Gamma}{\bot}{a}{A_k}}
-      {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
-      {\lbeq{\Gamma}
-        {\where{\brb{\ell_k}{a}}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
-        {\where{(\letstmt{x_k}{a}{t_k})}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
-        {\ms{L}}}
+\begin{figure}
+  \begin{gather*}
+    \prftree[r]{\rle{case-bind}}
+      {\hasty{\Gamma}{\epsilon}{e}{A + B}}
+      {\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
+      {\haslb{\Gamma, \bhyp{y}{B}}{s}{\ms{L}}}
+      {\lbeq{\Gamma}{\caseexpr{e}{x}{r}{y}{s}}{\letstmt{z}{e}{\caseexpr{z}{x}{r}{y}{s}}}{\ms{L}}}
     \\
-    \prftree[r]{\rle{cfg$_1$}}
+    \prftree[r]{\rle{case-inl}}
       {\hasty{\Gamma}{\epsilon}{a}{A}}
-      {\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
-      {\forall i. \haslb{\Gamma, \bhyp{y_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
-      {\lbeq{\Gamma}
-        {\where{(\letstmt{x}{a}{r})}{(\wbranch{\ell_i}{y_i}{t_i},)_i}}
-        {\letstmt{x}{a}{(\where{r}{(\wbranch{\ell_i}{y_i}{t_i},)_i})}}
-        {\ms{L}}}
+      {\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
+      {\haslb{\Gamma, \bhyp{y}{B}}{s}{\ms{L}}}
+      {\lbeq{\Gamma}{\caseexpr{\linl{a}}{x}{r}{y}{s}}{\letstmt{x}{a}{r}}{\ms{L}}}
     \\
-    \prftree[r]{\rle{cfg$_2$}}
-      {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
-      {\haslb{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{r}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
-      {\forall i. \haslb{\Gamma, \bhyp{z_i}{C_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
-      {\lbeq{\Gamma}
-        {\where{(\letstmt{(x, y)}{e}{r})}{(\wbranch{\ell_i}{z_i}{t_i},)_i}}
-        {\letstmt{(x, y)}{e}{(\where{r}{(\wbranch{\ell_i}{z_i}{t_i},)_i})}}
-        {\ms{L}}}
+    \prftree[r]{\rle{case-inr}}
+      {\hasty{\Gamma}{\epsilon}{b}{B}}
+      {\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
+      {\haslb{\Gamma, \bhyp{y}{B}}{s}{\ms{L}}}
+      {\lbeq{\Gamma}{\caseexpr{\linr{b}}{x}{r}{y}{s}}{\letstmt{y}{b}{s}}{\ms{L}}}
     \\
-    \prftree[r]{\rle{cfg-case}}
+    \prftree[r]{\rle{let$_{11}$-case}}
       {\hasty{\Gamma}{\epsilon}{a}{A_1 + A_2}}
-      {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{r_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
-      {\forall i. \haslb{\Gamma, \bhyp{y_i}{B_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+      {\hasty{\Gamma, \bhyp{x}{A_1 + A_2}}{\epsilon}{b}{B}}
       {
-        \prfStackPremises
-        {\Gamma \vdash \where{(\casestmt{a}{x_1}{r_1}{x_2}{r_2})}
-          {(\wbranch{\ell_i}{y_i}{t_i},)_i} }
-        {\approx \casestmt{a}
-          {x_1}{(\where{r_1}{(\wbranch{\ell_i}{y_i}{t_i},)_i})}
-          {x_2}{\where{r_2}{(\wbranch{\ell_i}{y_i}{t_i},)_i}} : \ms{L}}
-      }
-    \\
-    \prftree[r]{\rle{cfg-cfg}}
-      {\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
-      {
-        \prfStackPremises
-        {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}
-          {s_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j, (\lhyp{\kappa_k}{B_k},)_k}}
-        {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}} 
+      \forall i. \haslb{\Gamma, \bhyp{x}{A_1 + A_2}, \bhyp{y}{B}, \bhyp{z_i}{A_i}}{r_i}{\ms{L}}
       }
       {
         \prfStackPremises
-        {\Gamma \vdash \where{(\where{r}{(\wbranch{\kappa_i}{x_i}{s_i},)_i})}
-          {(\wbranch{\ell_i}{y_j}{t_j},)_j}}
-        {\approx \where{r}{(\wbranch{\kappa_i}{x_i}{s_i},)_i(\wbranch{\ell_i}{y_j}{t_j},)_j} 
+        {\Gamma \vdash \letstmt{x}{a}{\letstmt{y}{c}{\casestmt{x}{z_1}{r_1}{z_2}{r_2}}}}
+        {\hspace{6em} \approx 
+          \letstmt{x}{a}{\casestmt{x}{z_1}{\letstmt{y}{c}{r_1}}{z_2}{\letstmt{y}{c}{r_2}}} 
           : \ms{L}}
       }
     \\
-    % % TODO: derivable from ucfg, but prove this!
-    % \prftree[r]{\rle{cfg$_0$}}
-    %   {\haslb{\Gamma}{r}{\ms{L}}}
-    %   {\lbeq{\Gamma}{\where{r}{}}{r}{\ms{L}}}
-    % \\
-    % TODO: probably derivable from dinaturality? but prove...
-    % \prftree[r]{\rle{wk-cfg}}
-    %   {\haslb{\Gamma}{[\ell_i \mapsto \ell_{\rho\;i}]r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
-    %   {\forall i, \haslb{\Gamma, \bhyp{x_i}{A_i}}
-    %     {[\ell_i \mapsto \ell_{\rho\;i}]t_i}
-    %     {\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
-    %   {\lbeq{\Gamma}
-    %     {\where{[\ell_i \mapsto \ell_{\rho i}]r}
-    %       {(\wbranch{\ell_i}{x_i}{[\ell_i \mapsto \ell_{\rho\;i}]r})_i}}
-    %     {\where{r}{(\wbranch{\ell_{\rho\;i}}{x_i}{r})_i}}
-    %     {\ms{L}}}
-    % \\
-    % TODO: note difference between this and wk-cfg
-    % TODO: think about whether _this_ is derivable... maybe from dinaturality too?
-    \prftree[r]{\rle{dead-cfg}}
-      {\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
-      {\forall i, \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
-      {\lbeq{\Gamma}{\where{r}{
-          (\wbranch{\ell_i}{x_i}{s_i},)_i
-          (\wbranch{\kappa_j}{y_j}{t_j},)_j}}
-        {\where{r}{(\wbranch{\ell_i}{x_i}{s_i},)_i}}{\ms{L}}}
-\end{gather*}
+    \prftree[r]{\rle{let$_{12}$-case}}
+      {\hasty{\Gamma}{\epsilon}{a}{A_1 + A_2}}
+      {\hasty{\Gamma, \bhyp{x}{A_1 + A_2}}{\epsilon}{b}{B \otimes C}}
+      {
+      \forall i. 
+        \haslb{\Gamma, \bhyp{x}{A_1 + A_2}, \bhyp{y}{B}, \bhyp{z}{C}, \bhyp{w_i}{A_i}}{r_i}{\ms{L}}
+      }
+      {
+        \prfStackPremises
+        {\Gamma \vdash \letstmt{x}{a}{\letstmt{(y, z)}{c}{\casestmt{x}{w_1}{r_1}{w_2}{r_2}}}}
+        {\hspace{5em} \approx 
+          \letstmt{x}{a}{\casestmt{x}{w_1}{\letstmt{(y, z)}{b}{r_1}}{w_2}{\letstmt{(y, z)}{b}{r_2}}} 
+          : \ms{L}}
+      }
+    \\
+    \prftree[r]{\rle{case-case}}
+      {\hasty{\Gamma}{\epsilon}{a}{A_1 + A_2}}
+      {\hasty{\Gamma, \bhyp{x}{A_1 + A_2}}{\epsilon}{b}{B_1 + B_2}}
+      {
+      \forall i j. 
+        \haslb{\Gamma, \bhyp{x}{A_1 + A_2}, \bhyp{y_i}{B_i}, \bhyp{z_j}{A_j}}{r_{ij}}{\ms{L}}
+      }
+      {
+        \prfStackPremises
+        {\Gamma \vdash \ms{let}\;x = a; \ms{case}\;b\;\{
+          \linl{y_1} \lto \casestmt{x}{z_1}{r_{11}}{z_2}{r_{21}}
+        }
+        {
+          \hspace{10em} \linr{y_2} \lto \casestmt{x}{z_1}{r_{12}}{z_2}{r_{22}}\}
+        }
+        {
+          \hspace{1.3em} \approx \ms{let}\;x = a; \ms{case}\;x\;\{
+          \linl{z_1} \lto \casestmt{b}{y_1}{r_{11}}{y_2}{r_{21}}
+        }
+        {
+          \hspace{10em} \linr{z_2} \lto \casestmt{b}{y_1}{r_{12}}{y_2}{r_{22}}\}
+        }
+      }
+  \end{gather*}
+  \Description{}
+  \caption{todo: this}
+\end{figure}
+
+\TODO{where theory}
+
+\begin{figure}
+  \begin{gather*}
+      \prftree[r]{\rle{cfg-$<$}}
+        {\hasty{\Gamma}{\bot}{a}{A_k}}
+        {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+        {\lbeq{\Gamma}
+          {\where{\brb{\ell_k}{a}}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
+          {\where{(\letstmt{x_k}{a}{t_k})}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
+          {\ms{L}}}
+      \\
+      \prftree[r]{\rle{cfg$_1$}}
+        {\hasty{\Gamma}{\epsilon}{a}{A}}
+        {\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+        {\forall i. \haslb{\Gamma, \bhyp{y_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+        {\lbeq{\Gamma}
+          {\where{(\letstmt{x}{a}{r})}{(\wbranch{\ell_i}{y_i}{t_i},)_i}}
+          {\letstmt{x}{a}{(\where{r}{(\wbranch{\ell_i}{y_i}{t_i},)_i})}}
+          {\ms{L}}}
+      \\
+      \prftree[r]{\rle{cfg$_2$}}
+        {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
+        {\haslb{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{r}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+        {\forall i. \haslb{\Gamma, \bhyp{z_i}{C_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+        {\lbeq{\Gamma}
+          {\where{(\letstmt{(x, y)}{e}{r})}{(\wbranch{\ell_i}{z_i}{t_i},)_i}}
+          {\letstmt{(x, y)}{e}{(\where{r}{(\wbranch{\ell_i}{z_i}{t_i},)_i})}}
+          {\ms{L}}}
+      \\
+      \prftree[r]{\rle{cfg-case}}
+        {\hasty{\Gamma}{\epsilon}{a}{A_1 + A_2}}
+        {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{r_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+        {\forall i. \haslb{\Gamma, \bhyp{y_i}{B_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+        {
+          \prfStackPremises
+          {\Gamma \vdash \where{(\casestmt{a}{x_1}{r_1}{x_2}{r_2})}
+            {(\wbranch{\ell_i}{y_i}{t_i},)_i} }
+          {\approx \casestmt{a}
+            {x_1}{(\where{r_1}{(\wbranch{\ell_i}{y_i}{t_i},)_i})}
+            {x_2}{\where{r_2}{(\wbranch{\ell_i}{y_i}{t_i},)_i}} : \ms{L}}
+        }
+      \\
+      \prftree[r]{\rle{cfg-cfg}}
+        {\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
+        {
+          \prfStackPremises
+          {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}
+            {s_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j, (\lhyp{\kappa_k}{B_k},)_k}}
+          {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}} 
+        }
+        {
+          \prfStackPremises
+          {\Gamma \vdash \where{(\where{r}{(\wbranch{\kappa_i}{x_i}{s_i},)_i})}
+            {(\wbranch{\ell_i}{y_j}{t_j},)_j}}
+          {\approx \where{r}{(\wbranch{\kappa_i}{x_i}{s_i},)_i(\wbranch{\ell_i}{y_j}{t_j},)_j} 
+            : \ms{L}}
+        }
+      \\
+      % % TODO: derivable from ucfg, but prove this!
+      % \prftree[r]{\rle{cfg$_0$}}
+      %   {\haslb{\Gamma}{r}{\ms{L}}}
+      %   {\lbeq{\Gamma}{\where{r}{}}{r}{\ms{L}}}
+      % \\
+      % TODO: probably derivable from dinaturality? but prove...
+      % \prftree[r]{\rle{wk-cfg}}
+      %   {\haslb{\Gamma}{[\ell_i \mapsto \ell_{\rho\;i}]r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
+      %   {\forall i, \haslb{\Gamma, \bhyp{x_i}{A_i}}
+      %     {[\ell_i \mapsto \ell_{\rho\;i}]t_i}
+      %     {\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+      %   {\lbeq{\Gamma}
+      %     {\where{[\ell_i \mapsto \ell_{\rho i}]r}
+      %       {(\wbranch{\ell_i}{x_i}{[\ell_i \mapsto \ell_{\rho\;i}]r})_i}}
+      %     {\where{r}{(\wbranch{\ell_{\rho\;i}}{x_i}{r})_i}}
+      %     {\ms{L}}}
+      % \\
+      % TODO: note difference between this and wk-cfg
+      % TODO: think about whether _this_ is derivable... maybe from dinaturality too?
+      \prftree[r]{\rle{dead-cfg}}
+        {\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
+        {\forall i, \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+        {\lbeq{\Gamma}{\where{r}{
+            (\wbranch{\ell_i}{x_i}{s_i},)_i
+            (\wbranch{\kappa_j}{y_j}{t_j},)_j}}
+          {\where{r}{(\wbranch{\ell_i}{x_i}{s_i},)_i}}{\ms{L}}}
+  \end{gather*}
+  \Description{}
+  \caption{todo: this}
+\end{figure}
 
 \TODO{cfgsubst lore}
 
@@ -1912,63 +1942,67 @@ program transformations which splice and manipulate the control-flow graph.
 
 \TODO{advanced where lore}
 
-\begin{gather*}
-  \prftree[r]{\rle{ucfg}}
-    {\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
-    {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
-    {
-      \lbeq{\Gamma}
-        {\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
-        {[\cfgsubst{(\wbranch{\ell_i}{x_i}{t_i},)_i}]r}
-        {\ms{L}}
-    }
-  \\
-  % NOTE: in the development, it's (ret e) wseq s_0, not [e/x] s_0
-  \prftree[r]{\rle{uni}}
-    {
-      \prfStackPremises
-      {\hasty{\Gamma, \bhyp{x}{A}}{\bot}{e}{B}}
+\begin{figure}
+  \begin{gather*}
+    \prftree[r]{\rle{ucfg}}
+      {\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
+      {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+      {
+        \lbeq{\Gamma}
+          {\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
+          {[\cfgsubst{(\wbranch{\ell_i}{x_i}{t_i},)_i}]r}
+          {\ms{L}}
+      }
+    \\
+    % NOTE: in the development, it's (ret e) wseq s_0, not [e/x] s_0
+    \prftree[r]{\rle{uni}}
+      {
+        \prfStackPremises
+        {\hasty{\Gamma, \bhyp{x}{A}}{\bot}{e}{B}}
+        {\haslb{\Gamma}{r}{\ms{L}, \ell(A)}}
+      }
+      {
+        \prfStackPremises
+        {\haslb{\Gamma, \bhyp{y}{B}}{s}{\ms{L}, \kappa(B)}}
+        {\haslb{\Gamma, \bhyp{x}{A}}{t}{\ms{L}, \ell(A)}}
+      }
+      {
+        \lbeq{\Gamma, \bhyp{x}{A}}
+          {[e/y]s}
+          {\where{t}{\wbranch{\ell}{x}{\brb{\kappa}{e}}}}
+          {\ms{L}, \kappa(B)}
+      }
+      {
+        \lbeq{\Gamma}
+          {\where{(\where{r}{\wbranch{\ell}{x}{\brb{\kappa}{e}}})}
+            {\wbranch{\kappa}{y}{s}}}
+          {\where{r}{t}}
+          {\ms{L}}
+      }
+    \\
+    \prftree[r]{\rle{codiag}}
       {\haslb{\Gamma}{r}{\ms{L}, \ell(A)}}
-    }
-    {
-      \prfStackPremises
-      {\haslb{\Gamma, \bhyp{y}{B}}{s}{\ms{L}, \kappa(B)}}
-      {\haslb{\Gamma, \bhyp{x}{A}}{t}{\ms{L}, \ell(A)}}
-    }
-    {
-      \lbeq{\Gamma, \bhyp{x}{A}}
-        {[e/y]s}
-        {\where{t}{\wbranch{\ell}{x}{\brb{\kappa}{e}}}}
-        {\ms{L}, \kappa(B)}
-    }
-    {
-      \lbeq{\Gamma}
-        {\where{(\where{r}{\wbranch{\ell}{x}{\brb{\kappa}{e}}})}
-          {\wbranch{\kappa}{y}{s}}}
-        {\where{r}{t}}
-        {\ms{L}}
-    }
-  \\
-  \prftree[r]{\rle{codiag}}
-    {\haslb{\Gamma}{r}{\ms{L}, \ell(A)}}
-    {\haslb{\Gamma, \bhyp{y}{A}}{s}{\ms{L}, \ell(A), \kappa(A)}}
-    {\lbeq{\Gamma}{\where{r}{\wbranch{\ell}{x}{\where{\brb{\kappa}{x}}
-      {\wbranch{\kappa}{y}{s}}}}}
-    {\where{r}{\wbranch{\ell}{y}{[\ell/\kappa]s}}}
-    {\ms{L}}}
-  \\
-  \prftree[r]{\rle{dinat}}
-  {\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
-  {\forall i, \haslb{\Gamma, \bhyp{x_i}{B_i}}
-    {t_i}
-    {\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
-  {\lbsubst{\Gamma}{\sigma}{(\lhyp{\ell_i}{A_i},)_i}{\ms{L}, (\lhyp{\kappa_i}{B_i},)_i}}
-  {\lbeq{\Gamma}
-    {\where{[\sigma]r}
-      {(\wbranch{\kappa_i}{x_i}{[\sigma]t_i},)_i}}
-    {\where{r}{(\wbranch{\ell_{i}}{x_i}{[(\wbranch{\kappa_j}{x_j}{t_j},)_j](\sigma_i)})_i}}
-    {\ms{L}}}
-\end{gather*}
+      {\haslb{\Gamma, \bhyp{y}{A}}{s}{\ms{L}, \ell(A), \kappa(A)}}
+      {\lbeq{\Gamma}{\where{r}{\wbranch{\ell}{x}{\where{\brb{\kappa}{x}}
+        {\wbranch{\kappa}{y}{s}}}}}
+      {\where{r}{\wbranch{\ell}{y}{[\ell/\kappa]s}}}
+      {\ms{L}}}
+    \\
+    \prftree[r]{\rle{dinat}}
+    {\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
+    {\forall i, \haslb{\Gamma, \bhyp{x_i}{B_i}}
+      {t_i}
+      {\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+    {\lbsubst{\Gamma}{\sigma}{(\lhyp{\ell_i}{A_i},)_i}{\ms{L}, (\lhyp{\kappa_i}{B_i},)_i}}
+    {\lbeq{\Gamma}
+      {\where{[\sigma]r}
+        {(\wbranch{\kappa_i}{x_i}{[\sigma]t_i},)_i}}
+      {\where{r}{(\wbranch{\ell_{i}}{x_i}{[(\wbranch{\kappa_j}{x_j}{t_j},)_j](\sigma_i)})_i}}
+      {\ms{L}}}
+  \end{gather*}
+  \Description{}
+  \caption{todo: this}
+\end{figure}
 
 \TODO{lemma: weakening of rewriting}
 
@@ -2512,7 +2546,7 @@ different effects are equal}
 
 \section{Concrete Models}
 
-\subsection{Monads, Submonads, and Monad Transformers}
+\subsection{Monads and Monad Transformers}
 
 As previously stated, every strong monad over a CCC, by virtue of providing a
 model of higher-order effectful programming, \emph{also} provides a model of
@@ -2595,6 +2629,8 @@ As a concrete example, interpreting $\ms{some}\;A = \{a\}$ and $\ms{none} =
 Similarly, 
 \TODO{monad transformer lore, needs formalization...}
 
+\TODO{frame as subcategory}
+
 \subsection{Trace Models}
 
 A particularly important class of \isotopessa models are what we will call
@@ -2637,9 +2673,15 @@ Other important examples include:
 
 \begin{definition}[Trace Monad Transformer]
   Given a monoidal stream action $(M, I, \cdot)$, we can define the \emph{trace
-  monad transformer} as follows: 
+  monad transformer} over $\ms{Set}$ as follows:
+  $
+  \ms{TraceT}\;M\;I\;\ms{T}\;A = \ms{T}\;(A \times M + I)
+  $
+  with monad operations
   $$
-  \ms{TraceT}\;M\;I\;m\;A = \ms{m}\;(A \times M + I)
+  \eta = (\lambda a. \iota_l (a, 0)) ; \eta_{\ms{T}} \qquad
+  \ms{bind}\;a\;f = \sorry
+  %\ms{bind}_{\ms{T}}\;a\;[\lambda (a, m). m \cdot f a, \lambda i. \eta_{\ms{T}}(\iota_r\;i)]
   $$
   \
   \begin{itemize}
@@ -2662,31 +2704,154 @@ Other important examples include:
 
 \section{TSO weak memory}
 
-\TODO{pomsets and operations on them; are a stream action}
+Another interesting use of the trace monad to build a sophisticated \isotopessa
+model is to build a model of TSO-style weak memory based on \citet{sparky}. For
+simplicity, we will consider an infinite set of named locations \(x, y, z \in
+\ms{Loc}\) which are subject to concurrent modification by all threads via TSO
+reads, writes, and fences. We begin with the following definitions:
+\begin{definition}[Pomset] 
+  A \textbf{pomset} \(\alpha\) over a set of actions \(\mc{A}\) with a
+  distinguished null action "\textbf{tick}" \(\delta \in \mc{A}\) is a
+  \textit{nonempty} partially-ordered \textbf{carrier set} \(P\) such that every
+  \(p \in P\) has finitely many predecessors equipped with a mapping \(\alpha: P
+  \to \mc{A}\) quotiented over the removal of \(\delta\) such that cardinality
+  is preserved. A pomset is \textbf{finite} if its carrier set is. We will write
+  unordered pomsets using multiset notation, e.g. \(\{a, a, b\}\), and linearly
+  ordered pomsets using list notation, e.g. \([a, a, b]\).
+\end{definition}
+(Finite) pomsets form a monoid under sequential composition \(\alpha;\beta\),
+which is defined by the function \([\alpha, \beta]: \ms{trim}(P + Q) \to
+\mc{A}\), where \(P + Q\) is given the lexicographic ordering and
+\(\ms{trim}(R)\) removes all elements of \(R\) with infinitely many
+predecessors. They also form a monoid under parallel composition, defining
+\(\alpha || \beta = [\alpha, \beta]: P + Q \to \mc{A}\) where \(P + Q\) is given
+the standard partial ordering (with elements of \(P\) and \(Q\) incomparable).
+Note in both cases the monoidal unit is \(\{\delta\}\), since we only consider
+nonempty pomsets but allow the removal of finitely many ticks. Given any
+partially ordered set \(N\) and a family of pomsets \(\alpha_n\) for \(n \in
+N\), we can define their \textit{sum} \(\Sigma_n\alpha_n\) to be given by the
+function \((n, a) \mapsto \alpha_n\;a: \ms{trim}(\Sigma_nP_n) \to \mc{A}\),
+where the dependent product \(\Sigma_nP_n\) is given the lexicographic order. In
+particular, choosing \(N = \nats\) makes \(\Sigma: \ms{Pom}_{\ms{fin}}^\omega
+\to \ms{Pom}\) into a stream action w.r.t the sequential composition monoid on
+finite pomsets. 
 
-\TODO{modeling SC with pomsets and postfilter}
-
-\TODO{better syntax for finite pomsets than $\ms{Pom}_0$? $\ms{FPom}$?}
-
+We define a \textbf{program order pomset} to be a pomset with \(\mc{A}_{\ms{PO}}
+= \mc{A}_w \cup \mc{A}_r \cup \{\delta\}\), where \(\mc{A}_r\) consists of
+\textit{reads} of the form \(x = v\) and \(\mc{A}_w\) consists of
+\textit{writes} of the form \(x := v\) for locations \(x\) and values \(v \in
+\ms{Word}\). We define the \textbf{program order monad} \(\ms{PO}\;A =
+\ms{Traces}\;\Sigma\;A\), where \(\Sigma\) is taken as a stream action on finite
+program order pomsets. This yields an \isotopessa model with support for
+concurrent read and write operations \(\ms{read}_x: \mc{I}^\varnothing_0(\mb{1},
+\ms{Word})\), \(\ms{write}_x: \mc{I}^\varnothing_0(\ms{Word}, \mb{1})\) with
+semantics
+\(
+  \dnt{\ms{read}_x} = R_x^{\ms{PO}} = \lambda (). \{(v, \{x = v\}) | v \in \ms{Word}\}
+\),
+\(
+  \dnt{\ms{write}_x} = W_x^{\ms{PO}} =  \lambda v. \{((), \{x := v\})\}
+\).
+% The semantics of \(\ms{read}\) in particular give a hint as to how this model
+% works: rather than tracking the state of the heap, we simply \textit{emit} a
+% pomset of the events that would have be generated by a given execution (in the
+% case of a read, a read event \(x = v\) whenever the read returns \(v\), and in
+% the case of a write, the single write event \(x := v\) for a write of \(v\)),
+% and later post-filter to obtain a set of valid executions. By doing so, our
+% semantics remains compositional, allowing us to reason about each program
+% fragment individually, while still allowing other program fragments to perform
+% concurrent operations affecting our potential executions. 
+% On that note, 
+We can define the \textit{parallel execution} of two morphisms as follows:
 \begin{equation}
-  \ms{SC}\;A = \ms{Traces}\;\ms{Pom}_0\;\ms{Pom}\;A
+  \begin{aligned}
+  f_0 || f_1 = \lambda (a_0, a_1). 
+  & \{\iota_0 ((b_0, b_1), \alpha_0 || \alpha_1) 
+    \mid \iota_0 (b_i, \alpha_i) \in f_i\;a_i\} 
+  \\ & \cup \{\iota_1 (\alpha_0 || \alpha_1) \mid (\iota_0 (b_0, \alpha_0) \in f_0\;a \lor \iota_0\;\alpha_0 \in f_0\;a_0) \land \iota_1 \alpha_1 \in f_1\;a_1\} 
+  \\ & \cup \{\iota_1 (\alpha_0 || \alpha_1) \mid \iota_1\;\alpha_0 \in f_0\;a_0 \land \iota_0 (a_1, \alpha_1) \in f_1\;a_1\}: \ms{Set}_{\ms{PO}}(A \otimes A', B \otimes B')
+  \end{aligned}
+\end{equation}
+It's tempting to try to use this to define a tensor product of morphisms to
+obtain a monoidal (rather than preomonoidal) category, but unfortunately,
+sliding still fails: \((W_x^{\ms{PO}} || \ms{id}) ; (\ms{id} || W_y^{\ms{PO}})\)
+emits the pomset \([x := a, y := b]\), while \((\ms{id} || W_y^{\ms{PO}}) ;
+(W_x^{\ms{PO}} || \ms{id})\) emits the pomset \([y := b, x := a]\). 
+% If we did want this behaviour, we'd need to have a significantly more
+% sophisticated model of composition which effectively takes nontermination into
+% account, which we will leave to future work.
+
+To graduate from sequential consistency to a genuine, if maximally simple, weak
+memory model, we introduce \textit{load buffering} of write actions. We will
+implement TSO ordering by buffering all our writes, in which case they are only
+visible to the local thread. On the other hand, read events will first attempt
+to read from the buffer, and, if there is no corresponding write in the buffer,
+will read an arbitrary value, in both cases pushing an event to the global
+pomset. At any point, we may choose to \textit{flush} some of the buffered
+writes. We introduce the set \(\mc{A}_b = \{(\bufloc{x} := v)\}\) of
+\textit{buffer write actions}, where an action \(\bufloc{x} := v\) by a thread
+denotes adding a write \(x := v\) to the thread's write buffer. We may then
+define the set of TSO actions \(\mc{A}_{\ms{TSO}} = \mc{A}_{\ms{PO}} \cup
+\mc{A}_b\); a pomset over this set is called a \textbf{TSO pomset}. A buffer
+will be defined to be a list of write actions \(\ms{Buf} = \mc{A}_b^*\), which
+we will interpret as linear pomsets over \(\mc{A}_{\ms{TSO}}\) ordered by index
+(with the empty list corresponding to \(\{\delta\}\)). In particular, we define
+the monad \(\ms{TSO} = \ms{StateT}\;\ms{Buf}\;(\ms{Trace}\;\Sigma)\), where
+\(\Sigma\) is taken as a the stream action of finite TSO pomsets on TSO pomsets.
+We can view \(\ms{PO}\) as a submonad of this monad.
+
+Given a buffer \(\ms{Buf}\), we can define the result of reads \([\cdot]_x:
+\ms{Buf} \to \ms{Word} \sqcup \{\bot\}\) from the buffer by induction to be:
+\(
+  (L;\{\bufloc{x} := v\})[x] = v,
+\),
+\(
+  (L;\{\bufloc{y} := v\})[x] = L[x]
+\),
+\(
+  [][x] = \bot
+\).
+% Note that writes at the \textit{end} of the buffer are prioritized, since
+% later writes overwrite earlier ones! 
+The semantics of reads and writes can then be given by
+\begin{equation}
+  \begin{aligned}
+  \dnt{\ms{read}_x} = R_x^{\ms{TSO}} 
+    &= \ms{pflush};(\lambda ()\;L. \{(v, L, \{x = v\}) \mid L[x] = v \lor L[x] = \bot\});\ms{pflush} \\
+  \dnt{\ms{write}_x} = W_x^{\ms{TSO}}
+    &= \ms{pflush};(\lambda v\;L. \{(v, (L;\{\bufloc{x} := v\}), \{x := v\})\});\ms{pflush}
+  \end{aligned}
+\end{equation}
+where buffer flushing is implemented via the morphism 
+\(
+  \ms{pflush}_A = \lambda a\;L. \{(a, R, \alpha) | L = \alpha;R\}
+  : \ms{Set}_{\ms{TSO}}(A, A)
+\)
+(called \(\ms{split}\) in \cite{sparky}). To be able to perform synchronization,
+we will also need to introduce a \(\ms{fence}: \mc{I}^\varnothing_0(\mb{1},
+\mb{1})\) instruction, which simply causes all actions before the fence to be
+observed before any actions after the fence. For \(\ms{TSO}\), implementing this
+is as simple as flushing the buffer, i.e., we define
+\(
+  \dnt{\ms{fence}} = \lambda ()\;L. \{((), [], L;\{\delta\})\}
+\).
+We can now define the parallel composition of morphisms in a "fork-join" style
+as follows: we first flush the buffer completely (i.e., taking it and sticking
+it at the beginning of our pomset), then execute \(f\) and \(g\) in parallel
+with separate buffers, \textit{filtering out executions which completely flush
+the buffer}. Since both threads end up with an empty buffer, the resulting
+joined buffer is also empty, giving us the following definition:
+\begin{equation}
+  \begin{aligned}
+    f_0 || f_1 = \lambda (a_0, a_1)\;L. 
+    & \{\iota_0 ((b_0, b_1), [], L;(\alpha_0 || \alpha_1)) 
+      \mid \iota_0 (b_i, [], \alpha_i) \in f_i\;a_i\;[]\} 
+    \\ & \cup \{\iota_1 (\alpha_0 || \alpha_1) \mid (\iota_0 (b_0, [], \alpha_0) \in f_0\;a \lor \iota_0\;\alpha_0 \in f_0\;a_0\;[]) \land \iota_1 \alpha_1 \in f_1\;a_1\;[]\} 
+    \\ & \cup \{\iota_1 (\alpha_0 || \alpha_1) \mid \iota_1\;\alpha_0 \in f_0\;a_0\;[] \land \iota_0 (a_1, [], \alpha_1) \in f_1\;a_1\;[]\}
+    \end{aligned}
 \end{equation}
 
-\TODO{explain \citet{sparky} model, sticking a buffer on the front and generating a submonad}
-
-\TODO{something something Karoubi envelope something something}
-
-\begin{equation}
-  \ms{BSC}\;A = \ms{StateT}\;\ms{Buf}\;(\ms{SC}\;A)
-\end{equation}
-
-\TODO{pure is not buffer continuous, so actually we should quotient or smt...}
-
-\begin{equation}
-  \ms{TSO}\;A = \langle
-    \ms{pure}, \ms{read}, \ms{write}, \ms{fence}, \ms{fork}, \ms{par}, (\cdot)^\dagger
-  \rangle \subseteq \ms{BSC}\;A
-\end{equation}
+\TODO{\ms{pflush}-sandwich subcategory; Elgot lore}
 
 \section{Discussion and Related Work}
 
