@@ -101,6 +101,8 @@
 \newcommand{\teqv}{\approx}
 \newcommand{\tmeq}[5]{#1 \vdash_{#2} #3 \teqv #4 : {#5}}
 \newcommand{\lbeq}[4]{#1 \vdash #2 \teqv #3 : {#4}}
+\newcommand{\tmseq}[4]{\issubst{#1 \approx #2}{#3}{#4}}
+\newcommand{\lbseq}[5]{\lbsubst{#1 \approx #2}{#3}{#4}{#5}}
 \newcommand{\brle}[1]{{\scriptsize\textsf{#1}}}
 
 % Denotational semantics
@@ -1101,7 +1103,7 @@ We can now state weakening formally as follows:
     \item $\hasty{\Delta}{\epsilon}{a}{A} \implies \hasty{\Gamma}{\epsilon'}{a}{A}$
     \item $\haslb{\Delta}{r}{\ms{L}} \implies \haslb{\Gamma}{r}{\ms{K}}$
     \item $\issubst{\sigma}{\Gamma}{\Xi} \implies \issubst{\sigma}{\Delta}{\Xi}$ and 
-          $\issubst{\sigma}{\Xi}{\Delta} \implies \issubst{\sigma}{\Xi}{\Gamma}$
+          $\issubst{\sigma}{\Xi}{\Gamma} \implies \issubst{\sigma}{\Xi}{\Delta}$
     \item $\lbsubst{\Delta}{\sigma}{\ms{L}}{\ms{K}} \implies \lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}$
   \end{enumerate}
 \end{lemma}
@@ -1224,7 +1226,11 @@ follows:
 
 \begin{lemma}[Label substitution]
   Given $\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}$, we have that
-  $\haslb{\Gamma}{r}{\ms{L}} \implies \haslb{\Gamma}{[\sigma]r}{\ms{K}}$
+  \begin{enumerate}[label=(\alph*)]
+    \item $\haslb{\Gamma}{r}{\ms{L}} \implies \haslb{\Gamma}{[\sigma]r}{\ms{K}}$
+    \item $\lbsubst{\Gamma}{\kappa}{\ms{L}}{\ms{J}} 
+      \implies \lbsubst{\Gamma}{[\sigma]\kappa}{\ms{K}}{\ms{J}}$
+  \end{enumerate}
 \end{lemma}
 
 Label substitution is powerful since it allows us to reason directly about
@@ -1243,9 +1249,90 @@ we will inductively define an equivalence relation
 $
 \tmeq{\Gamma}{\epsilon}{a}{a'}{A}
 $
-on terms $a, a'$ for each context $\Gamma$, effect $\epsilon$, and type $A$.
-This will be presented as a set of simple \emph{rewriting rules} along with a
-\emph{congruence}, which is given in Figure~\ref{fig:ssa-expr-congr-rules}.
+on terms $a, a'$ for each context $\Gamma$, effect $\epsilon$, and type $A$. This will be presented
+as a set of simple \emph{rewriting rules} along with a \emph{congruence rules}, given in
+Figure~\ref{fig:ssa-expr-congr-rules}, which merely ensure we can perform equational reasoning as
+normal.
+
+For each of the rules we will present, we assume the rule is valid if and only if \emph{both sides}
+of the rule are well-typed. We also assume that variables are $\alpha$-converted as appropriate to
+avoid shadowing; our actual formalization uses de-Bruijn indices, but we stick with a named
+exposition for clarity.
+
+We may group our rules according to the relevant constructor, i.e.
+$\ms{let}$ (unary and binary) and $\ms{case}$. In particular, for unary $\ms{let}$, we have the
+following rules, summarized in Figure~\ref{fig:ssa-unary-let-expr}:
+\begin{itemize}
+  \item \brle{let$_1$-$\beta$}, which allows us to substitute the bound variable in $x$ the
+  let-statement $\letexpr{x}{a}{b}$ with its definition $a$, yielding $[a/x]b$. Note that we require
+  $\hasty{\Gamma}{\bot}{a}{A}$; i.e., $a$ must be \emph{pure}.
+  \item \brle{let$_1$-$\eta$}, which is the standard $\eta$-rule for \ms{let}. This is included as a
+  separate rule since, while it follows trivially from $\beta$ for pure $a$, we also want to
+  consider \emph{impure} expressions with some effect $e \neq \bot$.
+  \item Rules \brle{let$_1$-op}, \brle{let$_1$-pair}, \brle{let$_1$-inl}, and \brle{let$_1$-inr},
+  \brle{let$_1$-abort}, and \brle{let$_1$-case} which allow us to ``pull'' a let-statement out of
+  any of the other expression constructors, reflecting the path that this does not effect the
+  expected operational behaviour of our expression.
+  
+  For example, \brle{let$_1$-case} says that, if both
+  $\letexpr{z}{\caseexpr{e}{x}{a}{y}{b}}{d}$ and
+  $\caseexpr{e}{x}{\letexpr{z}{a}{d}}{y}{\letexpr{z}{b}{d}}{y}$,
+  are well typed, then both must have the same behaviour:
+  \begin{enumerate}
+    \item Compute $e$
+    \item If $e = \linl{e_l}$, compute $[e_l/x]a$, else, if $e = \linr{e_r}$, compute $[e_r/y]b$;
+          store this value as $z$
+    \item Compute $d$ given our value for $z$
+  \end{enumerate}
+  Note in particular that, since both sides are well-typed, $d$ cannot depend on either $x$ or $y$.
+\end{itemize}
+
+Handling the other type constructors is a little simpler: by providing a ``binding'' rule, we
+generally only need to specify how to interact with $\ms{let}_1$, as well as an $\eta$ and $\beta$
+rule; interactions with the other constructors can then be derived. For example, consider the rules
+for $\ms{let}_2$ given in \ref{fig:ssa-binary-let-expr}; we have:
+\begin{itemize}
+  \item \brle{let$_2$-$\eta$}, which is the standard $\eta$-rule for binary \ms{let}-bindings
+  \item \brle{let$_2$-pair}, which acts like a slightly generalized $\beta$-rule, since we can
+  derive $\beta$ reduction as follows: given pure $\hasty{\Gamma}{\bot}{a}{A}$ and
+  $\hasty{\Gamma}{\bot}{b}{B}$, we have
+  $$
+  (\letexpr{(x, y)}{(a, b)}{c}) 
+  \approx (\letexpr{x}{a}{\letexpr{y}{b}{c}})
+  \approx ([a/x](\letexpr{y}{b}{c}))
+  \approx ([a/x][b/y]c)
+  $$
+  We state the rule in a more general form to allow for impure $a$ and $b$, as well as to simplify
+  certain proofs.
+  \item \brle{let$_2$-bind}, which allows us to ``pull'' out the bound value of a binary
+  \ms{let}-expression into its own unary \ms{let}-expression
+\end{itemize}
+This is enough to allow us to define our interactions with the other expression constructors: for
+example, to show that we can lift an operation $f$ out of a binary $\ms{let}$-binding, rather than
+adding a separate rule, we can instead derive (types omitted for simplicity) it from
+\brle{let$_2$-bind} and \brle{let$_1$-op} as follows:
+\begin{align*}
+  (\letexpr{(x, y)}{f\;a}{b})
+  &\approx (\letexpr{z_f}{f\;a}{\letexpr{(x, y)}{z}{b}}) \\
+  &\approx (\letexpr{z_a}{a}{\letexpr{z_f}{f\;z_a}{\letexpr{(x, y)}{z}{b}}}) \\
+  &\approx (\letexpr{z_a}{a}{\letexpr{(x, y)}{f\;z_a}{b}})
+\end{align*}
+% TODO: "it is enough to give?" Let's try removing rules from the formalization...
+Similarly, we give $\eta$, $\beta$, and binding rules for \brle{case} expressions,
+as in Figure \ref{fig:ssa-case-expr}. In particular
+\begin{itemize}
+  \item \todo{left, right}
+  \item \todo{eta}
+  \item \todo{binding}
+\end{itemize}
+
+\TODO{deal with case distributivity}
+
+\TODO{rules for inl, inr, op for free}
+
+\TODO{unit: $\mb{1}$ is terminal}
+
+\TODO{abort: $\mb{0}$ is initial}
 
 \begin{figure}
   \begin{gather*}
@@ -1321,8 +1408,6 @@ This will be presented as a set of simple \emph{rewriting rules} along with a
   \label{fig:ssa-expr-congr-rules}
 \end{figure}
 
-\TODO{\ms{let}1 commutes with stuff...}
-
 \begin{figure}
   \begin{gather*}
     \prftree[r]{\rle{let$_1$-$\beta$}}
@@ -1360,13 +1445,13 @@ This will be presented as a set of simple \emph{rewriting rules} along with a
       {\hasty{\Gamma}{\epsilon}{a}{A}}
       {\hasty{\Gamma, \bhyp{x}{A + B}}{\epsilon}{c}{C}}
       {\hasty{\Gamma, \bhyp{y}{C}}{\epsilon}{d}{D}}
-      {\tmeq{\Gamma}{\epsilon}{\letexpr{y}{\linl{a}}{c}}{\letexpr{x}{a}{\letexpr{\linl{x}}{y}{c}}}{C}}
+      {\tmeq{\Gamma}{\epsilon}{\letexpr{y}{\linl{a}}{c}}{\letexpr{x}{a}{\letexpr{y}{\linl{x}}{c}}}{C}}
     \\
     \prftree[r]{\rle{let$_1$-inr}}
       {\hasty{\Gamma}{\epsilon}{b}{B}}
       {\hasty{\Gamma, \bhyp{x}{A + B}}{\epsilon}{c}{C}}
       {\hasty{\Gamma, \bhyp{y}{C}}{\epsilon}{d}{D}}
-      {\tmeq{\Gamma}{\epsilon}{\letexpr{y}{\linr{b}}{c}}{\letexpr{x}{b}{\letexpr{\linr{x}}{y}{c}}}{C}}
+      {\tmeq{\Gamma}{\epsilon}{\letexpr{y}{\linr{b}}{c}}{\letexpr{x}{b}{\letexpr{y}{\linr{x}}{c}}}{C}}
     \\
     \prftree[r]{\rle{let$_1$-abort}}
       {\hasty{\Gamma}{\epsilon}{a}{\mb{0}}}
@@ -1383,14 +1468,13 @@ This will be presented as a set of simple \emph{rewriting rules} along with a
       { 
         \prfStackPremises
         {\Gamma \vdash_\epsilon \letexpr{z}{(\caseexpr{e}{x}{a}{y}{b})}{d}}
-        {\hspace{6em} \teqv \caseexpr{e}{x}{\letexpr{z}{a}{d}}{\letexpr{z}{b}{d}}{b} : D}
+        {\hspace{6em} \teqv \caseexpr{e}{x}{\letexpr{z}{a}{d}}{y}{\letexpr{z}{b}{d}} : D}
       }
   \end{gather*}
   \Description{}
   \caption{Rules for \isotopessa unary \ms{let} expressions}
+  \label{fig:ssa-unary-let-expr}
 \end{figure}
-
-\TODO{as does \ms{let}2...}
 
 \begin{figure}
   \begin{gather*}
@@ -1409,13 +1493,12 @@ This will be presented as a set of simple \emph{rewriting rules} along with a
       {\hasty{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{\epsilon}{c}{C}}
       {\tmeq{\Gamma}{\epsilon}
         {\letexpr{(x, y)}{e}{c}}
-        {\letexpr{z}{e}{\letexpr{z}{e}{c}}}{C}}
+        {\letexpr{z}{e}{\letexpr{(x, y)}{z}{c}}}{C}}
   \end{gather*}
   \Description{}
   \caption{Rules for \isotopessa binary \ms{let} expressions}
+  \label{fig:ssa-binary-let-expr}
 \end{figure}
-
-\TODO{theory of cases}
 
 \begin{figure}
   \begin{gather*}
@@ -1443,9 +1526,8 @@ This will be presented as a set of simple \emph{rewriting rules} along with a
   \end{gather*}
   \Description{}
   \caption{Reduction rules for \isotopessa \ms{case} expressions}
+  \label{fig:ssa-case-expr}
 \end{figure}
-
-\TODO{also case commutes with stuff...}
 
 \begin{figure}
   \begin{gather*}
@@ -1562,8 +1644,6 @@ This will be presented as a set of simple \emph{rewriting rules} along with a
   \caption{Rewriting rules for \isotopessa \ms{case} expressions}
 \end{figure}
 
-\TODO{and $\mb{0}$ is initial and $\mb{1}$ is terminal}
-
 \begin{figure}
   \begin{gather*}
     \prftree[r]{\rle{initial}} 
@@ -1589,10 +1669,6 @@ This will be presented as a set of simple \emph{rewriting rules} along with a
     from \brle{initial}, \brle{let$_1$-$\beta$}, and congruence.
   }
 \end{figure}
-
-\TODO{lemma: weakening of rewriting}
-
-\TODO{lemma: substitution, composition is a congruence}
 
 \subsection{Regions}
 
@@ -1715,12 +1791,12 @@ This will be presented as a set of simple \emph{rewriting rules} along with a
     \prftree[r]{\rle{let$_1$-inl}}
       {\hasty{\Gamma}{\epsilon}{a}{A}}
       {\haslb{\Gamma, \bhyp{y}{A + B}}{r}{\ms{L}}}
-      {\lbeq{\Gamma}{\letstmt{y}{\linl{a}}{r}}{\letstmt{x}{a}{\letstmt{\linl{x}}{y}{r}}}{\ms{L}}}
+      {\lbeq{\Gamma}{\letstmt{y}{\linl{a}}{r}}{\letstmt{x}{a}{\letstmt{y}{\linl{x}}{r}}}{\ms{L}}}
     \\
     \prftree[r]{\rle{let$_1$-inr}}
       {\hasty{\Gamma}{\epsilon}{b}{B}}
       {\haslb{\Gamma, \bhyp{y}{A + B}}{r}{\ms{L}}}
-      {\lbeq{\Gamma}{\letstmt{y}{\linr{b}}{r}}{\letstmt{x}{b}{\letstmt{\linr{x}}{y}{r}}}{\ms{L}}}
+      {\lbeq{\Gamma}{\letstmt{y}{\linr{b}}{r}}{\letstmt{x}{b}{\letstmt{y}{\linr{x}}{r}}}{\ms{L}}}
     \\
     \prftree[r]{\rle{let$_1$-abort}}
       {\hasty{\Gamma}{\epsilon}{a}{\mb{0}}}
@@ -1987,28 +2063,73 @@ This will be presented as a set of simple \emph{rewriting rules} along with a
         {\wbranch{\kappa}{y}{s}}}}}
       {\where{r}{\wbranch{\ell}{y}{[\ell/\kappa]s}}}
       {\ms{L}}}
-    \\
-    \prftree[r]{\rle{dinat}}
-    {\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
-    {\forall i, \haslb{\Gamma, \bhyp{x_i}{B_i}}
-      {t_i}
-      {\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
-    {\lbsubst{\Gamma}{\sigma}{(\lhyp{\ell_i}{A_i},)_i}{\ms{L}, (\lhyp{\kappa_i}{B_i},)_i}}
-    {\lbeq{\Gamma}
-      {\where{[\sigma]r}
-        {(\wbranch{\kappa_i}{x_i}{[\sigma]t_i},)_i}}
-      {\where{r}{(\wbranch{\ell_{i}}{x_i}{[(\wbranch{\kappa_j}{x_j}{t_j},)_j](\sigma_i)})_i}}
-      {\ms{L}}}
+    % \\
+    % \prftree[r]{\rle{dinat}}
+    % {\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
+    % {\forall i, \haslb{\Gamma, \bhyp{x_i}{B_i}}
+    %   {t_i}
+    %   {\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+    % {\lbsubst{\Gamma}{\sigma}{(\lhyp{\ell_i}{A_i},)_i}{\ms{L}, (\lhyp{\kappa_i}{B_i},)_i}}
+    % {\lbeq{\Gamma}
+    %   {\where{[\sigma]r}
+    %     {(\wbranch{\kappa_i}{x_i}{[\sigma]t_i},)_i}}
+    %   {\where{r}{(\wbranch{\ell_{i}}{x_i}{[(\wbranch{\kappa_j}{x_j}{t_j},)_j](\sigma_i)})_i}}
+    %   {\ms{L}}}
   \end{gather*}
   \Description{}
   \caption{todo: this}
 \end{figure}
 
+\subsection{Metatheory}
+
+\TODO{congruence relation on substitutions, label-substitutions}
+
 \TODO{lemma: weakening of rewriting}
 
-\TODO{lemma: substitution, label-substitution, composition of these is a congruence}
+\begin{lemma}[Weakening (Rewriting)]
+  Given $\Gamma \leq \Delta$, $\epsilon \leq \epsilon'$, we have that
+  \begin{enumerate}[label=(\alph*)]
+    \item $\tmeq{\Delta}{\epsilon}{a}{a'}{A} \implies \tmeq{\Gamma}{\epsilon'}{a}{a'}{A}$
+    \item $\lbeq{\Delta}{r}{r'}{\ms{L}} \implies \lbeq{\Gamma}{r}{r'}{\ms{L}}$
+    \item $\tmseq{\gamma}{\gamma'}{\Delta}{\Xi} 
+      \implies \tmseq{\gamma}{\gamma'}{\Gamma}{\Xi}$ and
+      $\tmseq{\gamma}{\gamma'}{\Xi}{\Gamma}\
+      \implies \tmseq{\sigma}{\sigma'}{\Xi}{\Delta}$
+    \item $\lbseq{\sigma}{\sigma'}{\Delta}{\ms{L}}{\ms{K}}
+      \implies \lbseq{\sigma}{\sigma'}{\Gamma}{\ms{L}}{\ms{K}}$
+  \end{enumerate}
+\end{lemma}
+
+\TODO{lemma: substitution, composition is a congruence}
+
+\begin{lemma}[Substitution Congruence]
+  Given $\tmseq{\gamma}{\gamma'}{\Gamma}{\Delta}$, we have that
+  \begin{enumerate}[label=(\alph*)]
+    \item $\tmeq{\Delta}{\epsilon}{a}{a'}{A} 
+      \implies \tmeq{\Gamma}{\epsilon}{[\gamma]a}{[\gamma']a'}{A}$
+    \item $\lbeq{\Delta}{r}{r'}{\ms{L}} 
+      \implies \lbeq{\Gamma}{[\gamma]r}{[\gamma']r'}{\ms{L}}$
+    \item $\tmseq{\rho}{\rho'}{\Delta}{\Xi}
+      \implies \tmseq{[\gamma]\rho}{[\gamma']\rho'}{\Gamma}{\Xi}$
+    \item $\lbseq{\sigma}{\sigma'}{\Delta}{\ms{L}}{\ms{K}}
+      \implies \lbseq{[\gamma]\sigma}{[\gamma']\sigma'}{\Gamma}{\ms{L}}{\ms{K}}$
+  \end{enumerate}
+\end{lemma}
+
+\TODO{lemma: label-substitution, composition is a congruence}
+
+\begin{lemma}[Label Substitution Congruence]
+  Given $\lbseq{\sigma}{\sigma'}{\Gamma}{\ms{L}}{\ms{K}}$, we have that
+  \begin{enumerate}[label=(\alph*)]
+    \item $\lbeq{\Gamma}{r}{r'}{\ms{L}} \implies \lbeq{\Gamma}{[\sigma]r}{[\sigma']r'}{\ms{K}}$
+    \item $\lbseq{\kappa}{\kappa'}{\Gamma}{\ms{L}}{\ms{J}}
+      \implies \lbseq{[\sigma]\kappa}{[\sigma']\kappa'}{\Gamma}{\ms{K}}{\ms{J}}$
+  \end{enumerate}
+\end{lemma}
 
 \section{Denotational Semantics}
+
+\subsection{Freyd Elgot Categories}
 
 \TODO{rework, expand, and fold in...}
 
@@ -2168,6 +2289,11 @@ Elgot structure} as follows:
   In particular, we say a monad is Elgot if its Kliesli category has an Elgot structure. Similarly,
   we say a \emph{strong} monad is strong Elgot if its Kliesli category has a strong Elgot structure.
 \end{definition}
+
+\TODO{discuss string diagrams? string diagrammatic proofs?}
+
+\subsection{Semantics}
+
 We now have all the ingredients we need to give a semantics to \isotopessa expressions and regions.
 In particular, an \isotopessa model consists of:
 \begin{itemize}
@@ -2383,9 +2509,11 @@ different effects are equal}
   \label{fig:ssa-vsubst-sem} 
 \end{figure}
 
+\subsection{Soundness}
+
 \TODO{most simple substitution theorem is \emph{rewriting}:}
 
-\begin{theorem}[Rewriting]
+\begin{theorem}[Soundness (Rewriting)]
   Given $\issubst{\gamma, \gamma'}{\Gamma}{\Delta}$, such that 
   $\forall (\thyp{x}{A}{\epsilon}) \in \Delta. \dnt{\hasty{\Gamma}{\epsilon}{\gamma\;x}{A}}$, we
   have
@@ -2404,7 +2532,7 @@ different effects are equal}
 
 \TODO{if our substitution \emph{is} pure, we can also prove that substitution is \emph{sound}:}
 
-\begin{theorem}[Soundness of Substitution]
+\begin{theorem}[Soundness (Substitution)]
   Given $\dnt{\issubst{\gamma}{\Gamma}{\Delta}} : \dnt{\Gamma} \to_\bot
   \dnt{\Delta}$ (in particular, this is always the case when \todo{the effect
   of $\Delta$ is $\bot$, but write this down}, we have that
@@ -2425,7 +2553,7 @@ different effects are equal}
 
 \TODO{On the other hand, \emph{all} label substitutions are sound:}
 
-\begin{theorem}[Soundness of label substitution]
+\begin{theorem}[Soundness (Label Substitution)]
   Given $\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}$, we have
   \begin{enumerate}[label=(\alph*)]
     \item $\dnt{\haslb{\Gamma}{[\sigma]r}{\ms{K}}}
@@ -2441,9 +2569,26 @@ different effects are equal}
 
 \TODO{text}
 
-\TODO{text on composition lore}
+\begin{theorem}[Soundness (Equational Theory)]
+  We have that
+  \begin{enumerate}[label=(\alph*)]
+    \item $\tmeq{\Gamma}{\epsilon}{a}{a'}{A} \implies 
+      \dnt{\hasty{\Gamma}{\epsilon}{a}{A}} = \dnt{\hasty{\Gamma}{\epsilon}{a'}{A}}$
+    \item $\lbeq{\Gamma}{r}{r'}{\ms{L}} \implies
+      \dnt{\haslb{\Gamma}{r}{\ms{L}}} = \dnt{\haslb{\Gamma}{r'}{\ms{L}}}$
+    \item $\tmseq{\gamma}{\gamma'}{\Gamma}{\Delta} \implies
+      \dnt{\issubst{\gamma}{\Gamma}{\Delta}} = \dnt{\issubst{\gamma'}{\Gamma}{\Delta}}$
+    \item $\lbseq{\sigma}{\sigma'}{\Gamma}{\ms{L}}{\ms{K}} \implies
+      \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}} 
+      = \dnt{\lbsubst{\Gamma}{\sigma'}{\ms{L}}{\ms{K}}}$
+  \end{enumerate}
+\end{theorem}
+
+\TODO{text}
 
 \subsection{Completeness}
+
+\TODO{text}
 
 \begin{theorem}[Completeness (Expressions)]
   The category $\ms{Th}^\otimes(\Gamma)$ with
@@ -2480,12 +2625,14 @@ different effects are equal}
       $\delta^{-1} = \ms{let}\;(x, y) = \invar; 
         \caseexpr{y}{z}{\ms{inl}(x, z)}{z}{\ms{inr}(x, z)}$
   \end{itemize}
-  In particular, taking $\ms{Th}(\cdot)$ as our model, we have 
-  $
-    \tmeq{\Gamma}{\epsilon}{e}{e'}{A} 
-    \iff \dnt{\hasty{\Gamma}{\epsilon}{e}{A}} = \dnt{\hasty{\Gamma}{\epsilon}{e'}{A}}
-  $
+  % In particular, taking $\ms{Th}(\cdot)$ as our model, we have 
+  % $
+  %   \tmeq{\Gamma}{\epsilon}{e}{e'}{A} 
+  %   \iff \dnt{\hasty{\Gamma}{\epsilon}{e}{A}} = \dnt{\hasty{\Gamma}{\epsilon}{e'}{A}}
+  % $
 \end{theorem}
+
+\TODO{text}
 
 \begin{theorem}[Completeness (Regions)]
   The category $\ms{Th}(\Gamma, \ms{L})$ with
@@ -2537,12 +2684,14 @@ different effects are equal}
       \ms{Th}_\bot(\Gamma, \ms{L})(A, B)$ restricting to \ref{ret-functor} on
       $\ms{Th}^\otimes_\bot(\Gamma)$
   \end{enumerate}
-  In particular, taking $\ms{Th}(\cdot, \cdot)$ as our model, we have 
-  $
-    \lbeq{\Gamma}{r}{r'}{\ms{L}} 
-    \iff \dnt{\haslb{\Gamma}{r}{\ms{L}}} = \dnt{\haslb{\Gamma}{r'}{\ms{L}}}
-  $
+  % In particular, taking $\ms{Th}(\cdot, \cdot)$ as our model, we have 
+  % $
+  %   \lbeq{\Gamma}{r}{r'}{\ms{L}} 
+  %   \iff \dnt{\haslb{\Gamma}{r}{\ms{L}}} = \dnt{\haslb{\Gamma}{r'}{\ms{L}}}
+  % $
 \end{theorem}
+
+\TODO{B\"ohm-Jacopini based completeness}
 
 \section{Concrete Models}
 
@@ -2851,7 +3000,7 @@ joined buffer is also empty, giving us the following definition:
     \end{aligned}
 \end{equation}
 
-\TODO{\ms{pflush}-sandwich subcategory; Elgot lore}
+\TODO{\ms{pflush}-sandwich subcategory; Elgot lore?}
 
 \section{Discussion and Related Work}
 
