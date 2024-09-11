@@ -204,7 +204,7 @@ compiler intermediate representation since its introduction by
 MLIR, Cranelift -- uses this representation, because it makes many
 optimizations much easier to do than traditional 3-address code IRs.
 
-The key idea behind SSA is to adapt an idea from functional
+The key i behind SSA is to adapt an idea from functional
 programming: namely, every variable is defined only once. This means
 that substitution is unconditionally valid, without first requiring a
 dataflow analysis to compute where definitions reach. Unlike in
@@ -1259,88 +1259,6 @@ of the rule are well-typed. We also assume that variables are $\alpha$-converted
 avoid shadowing; our actual formalization uses de-Bruijn indices, but we stick with a named
 exposition for clarity.
 
-We may group our rules according to the relevant constructor, i.e.
-$\ms{let}$ (unary and binary) and $\ms{case}$. In particular, for unary $\ms{let}$, we have the
-following rules, summarized in Figure~\ref{fig:ssa-unary-let-expr}:
-\begin{itemize}
-  \item \brle{let$_1$-$\beta$}, which allows us to substitute the bound variable in $x$ the
-  let-statement $\letexpr{x}{a}{b}$ with its definition $a$, yielding $[a/x]b$. Note that we require
-  $\hasty{\Gamma}{\bot}{a}{A}$; i.e., $a$ must be \emph{pure}.
-  \item \brle{let$_1$-$\eta$}, which is the standard $\eta$-rule for \ms{let}. This is included as a
-  separate rule since, while it follows trivially from $\beta$ for pure $a$, we also want to
-  consider \emph{impure} expressions with some effect $e \neq \bot$.
-  \item Rules \brle{let$_1$-op}, \brle{let$_1$-pair}, \brle{let$_1$-inl}, and \brle{let$_1$-inr},
-  \brle{let$_1$-abort}, and \brle{let$_1$-case} which allow us to ``pull'' a let-statement out of
-  any of the other expression constructors; operationally, this is saying that the bound expression
-  we pull out is evaluated before the rest of the \ms{let}-binding.
-  
-  For example, \brle{let$_1$-case} says that, if both
-  $\letexpr{z}{\caseexpr{e}{x}{a}{y}{b}}{d}$ and
-  $\caseexpr{e}{x}{\letexpr{z}{a}{d}}{y}{\letexpr{z}{b}{d}}{y}$,
-  are well typed, then both must have the same behaviour:
-  \begin{enumerate}
-    \item Compute $e$
-    \item If $e = \linl{e_l}$, compute $[e_l/x]a$, else, if $e = \linr{e_r}$, compute $[e_r/y]b$;
-          store this value as $z$
-    \item Compute $d$ given our value for $z$
-  \end{enumerate}
-  Note in particular that, since both sides are well-typed, $d$ cannot depend on either $x$ or $y$.
-\end{itemize}
-
-Handling the other type constructors is a little simpler: by providing a ``binding'' rule, we
-generally only need to specify how to interact with $\ms{let}_1$, as well as an $\eta$ and $\beta$
-rule; interactions with the other constructors can then be derived. For example, consider the rules
-for $\ms{let}_2$ given in \ref{fig:ssa-binary-let-expr}; we have:
-\begin{itemize}
-  \item \brle{let$_2$-$\eta$}, which is the standard $\eta$-rule for binary \ms{let}-bindings
-  \item \brle{let$_2$-pair}, which acts like a slightly generalized $\beta$-rule, since we can
-  derive $\beta$ reduction as follows: given pure $\hasty{\Gamma}{\bot}{a}{A}$ and
-  $\hasty{\Gamma}{\bot}{b}{B}$, we have
-  $$
-  (\letexpr{(x, y)}{(a, b)}{c}) 
-  \teqv (\letexpr{x}{a}{\letexpr{y}{b}{c}})
-  \teqv ([a/x](\letexpr{y}{b}{c}))
-  \teqv ([a/x][b/y]c)
-  $$
-  We state the rule in a more general form to allow for impure $a$ and $b$, as well as to simplify
-  certain proofs.
-  \item \brle{let$_2$-bind}, which allows us to ``pull'' out the bound value of a binary
-  \ms{let}-expression into its own unary \ms{let}-expression; operationally, this just says that
-  we execute the bound value before executing the binding itself.
-\end{itemize}
-This is enough to allow us to define our interactions with the other expression constructors: for
-example, to show that we can lift an operation $f$ out of a binary $\ms{let}$-binding, rather than
-adding a separate rule, we can instead derive (types omitted for simplicity) it from
-\brle{let$_2$-bind} and \brle{let$_1$-op} as follows:
-\begin{align*}
-  (\letexpr{(x, y)}{f\;a}{b})
-  &\teqv (\letexpr{z_f}{f\;a}{\letexpr{(x, y)}{z}{b}}) \\
-  &\teqv (\letexpr{z_a}{a}{\letexpr{z_f}{f\;z_a}{\letexpr{(x, y)}{z}{b}}}) \\
-  &\teqv (\letexpr{z_a}{a}{\letexpr{(x, y)}{f\;z_a}{b}})
-\end{align*}
-Similarly, it is enough to give $\eta$, $\beta$, and binding rules for \brle{case} expressions,
-as in Figure \ref{fig:ssa-case-expr}. In particular, we have that
-\begin{itemize}
-  \item \brle{case-inl} and \brle{case-inr} serve as $\beta$-reduction rules, telling us that
-  \ms{case}-expressions given an injection as an argument have the expected operational behaviour.
-  Note that we reduce to a \ms{let}-expression rather than perform a substitution to allow for
-  impure discriminants.
-  \item \brle{case-$\eta$} is the standard $\eta$-rule for \ms{case}-expressions.
-  \item \brle{case-bind} allows us to ``pull'' out the bound value of the discriminant into
-  it's own \ms{let}-expression; again, operationally, this just says that we need to evaluate
-  the discriminant before executing the \ms{case}-expression.
-\end{itemize}
-It's interesting that this is enough, along with the \brle{let-case} rule and friends, to derive the
-distributivity properties we would expect well-behaved \ms{case}-expressions to have. For example,
-we have that
-\begin{align*}
-  f(\caseexpr{e}{x}{a}{y}{b}) 
-  &\teqv (\letexpr{z}{\caseexpr{e}{x}{a}{y}{b}}{f\;z}) \\
-  &\teqv \caseexpr{e}{x}{\letexpr{z}{a}{f\;z}}{y}{\letexpr{z}{b}{f\;z}} \\
-  &\teqv \caseexpr{e}{x}{f\;a}{y}{f\;b}
-\end{align*}
-and likewise for more complicated distributivity properties involving, e.g., \ms{let}-bindings.
-
 \begin{figure}
   \begin{gather*}
     \prftree[r]{\rle{refl}}{\hasty{\Gamma}{\epsilon}{a}{A}}{\tmeq{\Gamma}{\epsilon}{a}{a}{A}} \qquad
@@ -1415,6 +1333,34 @@ and likewise for more complicated distributivity properties involving, e.g., \ms
   \label{fig:ssa-expr-congr-rules}
 \end{figure}
 
+We may group the rest of our rules according to the relevant constructor, i.e. $\ms{let}$ (unary and
+binary) and $\ms{case}$. In particular, for unary $\ms{let}$, we have the following rules,
+summarized in Figure~\ref{fig:ssa-unary-let-expr}:
+\begin{itemize}
+  \item \brle{let$_1$-$\beta$}, which allows us to substitute the bound variable in $x$ the
+  let-statement $\letexpr{x}{a}{b}$ with its definition $a$, yielding $[a/x]b$. Note that we require
+  $\hasty{\Gamma}{\bot}{a}{A}$; i.e., $a$ must be \emph{pure}.
+  \item \brle{let$_1$-$\eta$}, which is the standard $\eta$-rule for \ms{let}. This is included as a
+  separate rule since, while it follows trivially from $\beta$ for pure $a$, we also want to
+  consider \emph{impure} expressions with some effect $e \neq \bot$.
+  \item Rules \brle{let$_1$-op}, \brle{let$_1$-pair}, \brle{let$_1$-inl}, and \brle{let$_1$-inr},
+  \brle{let$_1$-abort}, and \brle{let$_1$-case} which allow us to ``pull'' a let-statement out of
+  any of the other expression constructors; operationally, this is saying that the bound expression
+  we pull out is evaluated before the rest of the \ms{let}-binding.
+  
+  For example, \brle{let$_1$-case} says that, if both
+  $\letexpr{z}{\caseexpr{e}{x}{a}{y}{b}}{d}$ and
+  $\caseexpr{e}{x}{\letexpr{z}{a}{d}}{y}{\letexpr{z}{b}{d}}{y}$,
+  are well typed, then both must have the same behaviour:
+  \begin{enumerate}
+    \item Compute $e$
+    \item If $e = \linl{e_l}$, compute $[e_l/x]a$, else, if $e = \linr{e_r}$, compute $[e_r/y]b$;
+          store this value as $z$
+    \item Compute $d$ given our value for $z$
+  \end{enumerate}
+  Note in particular that, since both sides are well-typed, $d$ cannot depend on either $x$ or $y$.
+\end{itemize}
+
 \begin{figure}
   \begin{gather*}
     \prftree[r]{\rle{let$_1$-$\beta$}}
@@ -1479,21 +1425,53 @@ and likewise for more complicated distributivity properties involving, e.g., \ms
       }
   \end{gather*}
   \Description{}
-  \caption{Rules for \isotopessa unary \ms{let} expressions}
+  \caption{Rewriting rules for \isotopessa unary \ms{let} expressions}
   \label{fig:ssa-unary-let-expr}
 \end{figure}
 
+Handling the other type constructors is a little simpler: by providing a ``binding'' rule, we
+generally only need to specify how to interact with $\ms{let}_1$, as well as an $\eta$ and $\beta$
+rule; interactions with the other constructors can then be derived. For example, consider the rules
+for $\ms{let}_2$ given in \ref{fig:ssa-binary-let-expr}; we have:
+\begin{itemize}
+  \item \brle{let$_2$-$\eta$}, which is the standard $\eta$-rule for binary \ms{let}-bindings
+  \item \brle{let$_2$-pair}, which acts like a slightly generalized $\beta$-rule, since we can
+  derive $\beta$ reduction as follows: given pure $\hasty{\Gamma}{\bot}{a}{A}$ and
+  $\hasty{\Gamma}{\bot}{b}{B}$, we have
+  $$
+  (\letexpr{(x, y)}{(a, b)}{c}) 
+  \teqv (\letexpr{x}{a}{\letexpr{y}{b}{c}})
+  \teqv ([a/x](\letexpr{y}{b}{c}))
+  \teqv ([a/x][b/y]c)
+  $$
+  We state the rule in a more general form to allow for impure $a$ and $b$, as well as to simplify
+  certain proofs.
+  \item \brle{let$_2$-bind}, which allows us to ``pull'' out the bound value of a binary
+  \ms{let}-expression into its own unary \ms{let}-expression; operationally, this just says that
+  we execute the bound value before executing the binding itself.
+\end{itemize}
+This is enough to allow us to define our interactions with the other expression constructors: for
+example, to show that we can lift an operation $f$ out of a binary $\ms{let}$-binding, rather than
+adding a separate rule, we can instead derive (types omitted for simplicity) it from
+\brle{let$_2$-bind} and \brle{let$_1$-op} as follows:
+\begin{align*}
+  (\letexpr{(x, y)}{f\;a}{b})
+  &\teqv (\letexpr{z_f}{f\;a}{\letexpr{(x, y)}{z}{b}}) \\
+  &\teqv (\letexpr{z_a}{a}{\letexpr{z_f}{f\;z_a}{\letexpr{(x, y)}{z}{b}}}) \\
+  &\teqv (\letexpr{z_a}{a}{\letexpr{(x, y)}{f\;z_a}{b}})
+\end{align*}
+
 \begin{figure}
   \begin{gather*}
-    \prftree[r]{\rle{let$_2$-$\eta$}}
-      {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
-      {\tmeq{\Gamma}{\epsilon}{\letexpr{(x, y)}{e}{(x, y)}}{e}{A \otimes B}} 
-    \\
     \prftree[r]{\rle{let$_2$-pair}}
       {\hasty{\Gamma}{\epsilon}{a}{A}}
       {\hasty{\Gamma}{\epsilon}{b}{B}}
       {\hasty{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{\epsilon}{c}{C}}
       {\tmeq{\Gamma}{\epsilon}{\letexpr{(x, y)}{(a, b)}{c}}{\letexpr{x}{a}{\letexpr{y}{b}{c}}}{C}}
+    \\
+    \prftree[r]{\rle{let$_2$-$\eta$}}
+      {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
+      {\tmeq{\Gamma}{\epsilon}{\letexpr{(x, y)}{e}{(x, y)}}{e}{A \otimes B}} 
     \\
     \prftree[r]{\rle{let$_2$-bind}}
       {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
@@ -1503,9 +1481,32 @@ and likewise for more complicated distributivity properties involving, e.g., \ms
         {\letexpr{z}{e}{\letexpr{(x, y)}{z}{c}}}{C}}
   \end{gather*}
   \Description{}
-  \caption{Rules for \isotopessa binary \ms{let} expressions}
+  \caption{Rewriting rules for \isotopessa binary \ms{let} expressions}
   \label{fig:ssa-binary-let-expr}
 \end{figure}
+
+Similarly, it is enough to give $\eta$, $\beta$, and binding rules for \brle{case} expressions,
+as in Figure \ref{fig:ssa-case-expr}. In particular, we have that
+\begin{itemize}
+  \item \brle{case-inl} and \brle{case-inr} serve as $\beta$-reduction rules, telling us that
+  \ms{case}-expressions given an injection as an argument have the expected operational behaviour.
+  Note that we reduce to a \ms{let}-expression rather than perform a substitution to allow for
+  impure discriminants.
+  \item \brle{case-$\eta$} is the standard $\eta$-rule for \ms{case}-expressions.
+  \item \brle{case-bind} allows us to ``pull'' out the bound value of the discriminant into
+  it's own \ms{let}-expression; again, operationally, this just says that we need to evaluate
+  the discriminant before executing the \ms{case}-expression.
+\end{itemize}
+It's interesting that this is enough, along with the \brle{let-case} rule and friends, to derive the
+distributivity properties we would expect well-behaved \ms{case}-expressions to have. For example,
+we have that
+\begin{align*}
+  f(\caseexpr{e}{x}{a}{y}{b}) 
+  &\teqv (\letexpr{z}{\caseexpr{e}{x}{a}{y}{b}}{f\;z}) \\
+  &\teqv \caseexpr{e}{x}{\letexpr{z}{a}{f\;z}}{y}{\letexpr{z}{b}{f\;z}} \\
+  &\teqv \caseexpr{e}{x}{f\;a}{y}{f\;b}
+\end{align*}
+and likewise for more complicated distributivity properties involving, e.g., \ms{let}-bindings.
 
 \begin{figure}
   \begin{gather*}
@@ -1532,7 +1533,7 @@ and likewise for more complicated distributivity properties involving, e.g., \ms
       {\tmeq{\Gamma}{\epsilon}{\caseexpr{e}{x}{c}{y}{d}}{\letexpr{z}{e}{\caseexpr{z}{x}{c}{y}{d}}}{C}}
   \end{gather*}
   \Description{}
-  \caption{Reduction rules for \isotopessa \ms{case} expressions}
+  \caption{Rewriting rules for \isotopessa \ms{case} expressions}
   \label{fig:ssa-case-expr}
 \end{figure}
 
@@ -1651,7 +1652,11 @@ congruence, the latter given in Figure~\ref{fig:ssa-reg-congr-rules}.
   \label{fig:ssa-reg-congr-rules}
 \end{figure}
 
-\TODO{let1 theory}
+\TODO{
+  let1 theory is the same as above: just need to commute with each expression constructor, +
+  an extra rule for let1-expressions; should move \brle{initial} to the proper place later and
+  restate \brle{initial-expr}
+}
 
 \begin{figure}
   \begin{gather*}
@@ -1722,16 +1727,13 @@ congruence, the latter given in Figure~\ref{fig:ssa-reg-congr-rules}.
       {\lbeq{\Gamma}{\letstmt{y}{\labort{a}}{r}}{\letstmt{x}{a}{\letstmt{y}{\labort{x}}{r}}}{\ms{L}}}
   \end{gather*}
   \Description{}
-  \caption{Rules for \isotopessa unary \ms{let}-statements}
+  \caption{Rewriting rules for \isotopessa unary \ms{let}-statements}
 \end{figure}
+
+\TODO{let2 theory is again a reduction, eta, and bind}
 
 \begin{figure}
   \begin{gather*}
-    \prftree[r]{\rle{let$_2$-bind}}
-      {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
-      {\haslb{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{r}{\ms{L}}}
-      {\lbeq{\Gamma}{\letstmt{(x, y)}{e}{r}}{\letstmt{z}{e}{\letstmt{(x, y)}{z}{r}}}{\ms{L}}}
-    \\
     \prftree[r]{\rle{let$_2$-pair}}
       {\hasty{\Gamma}{\epsilon}{a}{A}}
       {\hasty{\Gamma}{\epsilon}{b}{B}}
@@ -1742,12 +1744,17 @@ congruence, the latter given in Figure~\ref{fig:ssa-reg-congr-rules}.
       {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
       {\haslb{\Gamma, \bhyp{z}{A \otimes B}}{r}{\ms{L}}}
       {\lbeq{\Gamma}{\letstmt{(x, y)}{e}{\letstmt{z}{(x, y)}{r}}}{\letstmt{z}{e}{r}}{\ms{L}}}
+    \prftree[r]{\rle{let$_2$-bind}}
+      {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
+      {\haslb{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{r}{\ms{L}}}
+      {\lbeq{\Gamma}{\letstmt{(x, y)}{e}{r}}{\letstmt{z}{e}{\letstmt{(x, y)}{z}{r}}}{\ms{L}}}
+    \\
   \end{gather*}
   \Description{}
-  \caption{Rules for \isotopessa binary \ms{let}-statements}
+  \caption{Rewriting rules for \isotopessa binary \ms{let}-statements}
 \end{figure}
 
-\TODO{case theory}
+\TODO{case theory is again a reduction, eta, and bind}
 
 \begin{figure}
   \begin{gather*}
@@ -1768,66 +1775,14 @@ congruence, the latter given in Figure~\ref{fig:ssa-reg-congr-rules}.
       {\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
       {\haslb{\Gamma, \bhyp{y}{B}}{s}{\ms{L}}}
       {\lbeq{\Gamma}{\caseexpr{\linr{b}}{x}{r}{y}{s}}{\letstmt{y}{b}{s}}{\ms{L}}}
-    % TODO: check if these can actually be removed!
-    % \\
-    % \prftree[r]{\rle{let$_{11}$-case}}
-    %   {\hasty{\Gamma}{\epsilon}{a}{A_1 + A_2}}
-    %   {\hasty{\Gamma, \bhyp{x}{A_1 + A_2}}{\epsilon}{b}{B}}
-    %   {
-    %   \forall i. \haslb{\Gamma, \bhyp{x}{A_1 + A_2}, \bhyp{y}{B}, \bhyp{z_i}{A_i}}{r_i}{\ms{L}}
-    %   }
-    %   {
-    %     \prfStackPremises
-    %     {\Gamma \vdash \letstmt{x}{a}{\letstmt{y}{c}{\casestmt{x}{z_1}{r_1}{z_2}{r_2}}}}
-    %     {\hspace{6em} \teqv 
-    %       \letstmt{x}{a}{\casestmt{x}{z_1}{\letstmt{y}{c}{r_1}}{z_2}{\letstmt{y}{c}{r_2}}} 
-    %       : \ms{L}}
-    %   }
-    % \\
-    % \prftree[r]{\rle{let$_{12}$-case}}
-    %   {\hasty{\Gamma}{\epsilon}{a}{A_1 + A_2}}
-    %   {\hasty{\Gamma, \bhyp{x}{A_1 + A_2}}{\epsilon}{b}{B \otimes C}}
-    %   {
-    %   \forall i. 
-    %     \haslb{\Gamma, \bhyp{x}{A_1 + A_2}, \bhyp{y}{B}, \bhyp{z}{C}, \bhyp{w_i}{A_i}}{r_i}{\ms{L}}
-    %   }
-    %   {
-    %     \prfStackPremises
-    %     {\Gamma \vdash \letstmt{x}{a}{\letstmt{(y, z)}{c}{\casestmt{x}{w_1}{r_1}{w_2}{r_2}}}}
-    %     {\hspace{5em} \teqv 
-    %       \letstmt{x}{a}{\casestmt{x}{w_1}{\letstmt{(y, z)}{b}{r_1}}{w_2}{\letstmt{(y, z)}{b}{r_2}}} 
-    %       : \ms{L}}
-    %   }
-    % \\
-    % \prftree[r]{\rle{case-case}}
-    %   {\hasty{\Gamma}{\epsilon}{a}{A_1 + A_2}}
-    %   {\hasty{\Gamma, \bhyp{x}{A_1 + A_2}}{\epsilon}{b}{B_1 + B_2}}
-    %   {
-    %   \forall i j. 
-    %     \haslb{\Gamma, \bhyp{x}{A_1 + A_2}, \bhyp{y_i}{B_i}, \bhyp{z_j}{A_j}}{r_{ij}}{\ms{L}}
-    %   }
-    %   {
-    %     \prfStackPremises
-    %     {\Gamma \vdash \ms{let}\;x = a; \ms{case}\;b\;\{
-    %       \linl{y_1} \lto \casestmt{x}{z_1}{r_{11}}{z_2}{r_{21}}
-    %     }
-    %     {
-    %       \hspace{10em} \linr{y_2} \lto \casestmt{x}{z_1}{r_{12}}{z_2}{r_{22}}\}
-    %     }
-    %     {
-    %       \hspace{1.3em} \teqv \ms{let}\;x = a; \ms{case}\;x\;\{
-    %       \linl{z_1} \lto \casestmt{b}{y_1}{r_{11}}{y_2}{r_{21}}
-    %     }
-    %     {
-    %       \hspace{10em} \linr{z_2} \lto \casestmt{b}{y_1}{r_{12}}{y_2}{r_{22}}\}
-    %     }
-    %   }
   \end{gather*}
   \Description{}
-  \caption{Rules for \isotopessa \ms{case}-statements}
+  \caption{Rewriting rules for \isotopessa \ms{case}-statements}
 \end{figure}
 
-\TODO{basic where theory}
+\TODO{
+  basic where theory: simple reduction, binding rules for let12 and case, self-binding
+}
 
 \TODO{cfgsubst lore}
 
@@ -1845,7 +1800,7 @@ congruence, the latter given in Figure~\ref{fig:ssa-reg-congr-rules}.
       {\cfgsubst{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}{\ms{L}}}
 \end{equation*}
 
-\TODO{advanced where lore}
+\TODO{advanced where lore: lsubst-reduction, uniformity, and codiagonal}
 
 \begin{figure}
   \begin{gather*}
@@ -1856,80 +1811,6 @@ congruence, the latter given in Figure~\ref{fig:ssa-reg-congr-rules}.
           {\where{\brb{\ell_k}{a}}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
           {\where{(\letstmt{x_k}{a}{t_k})}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
           {\ms{L}}}
-      \\
-      \prftree[r]{\rle{cfg$_1$}}
-        {\hasty{\Gamma}{\epsilon}{a}{A}}
-        {\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
-        {\forall i. \haslb{\Gamma, \bhyp{y_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
-        {\lbeq{\Gamma}
-          {\where{(\letstmt{x}{a}{r})}{(\wbranch{\ell_i}{y_i}{t_i},)_i}}
-          {\letstmt{x}{a}{(\where{r}{(\wbranch{\ell_i}{y_i}{t_i},)_i})}}
-          {\ms{L}}}
-      \\
-      \prftree[r]{\rle{cfg$_2$}}
-        {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
-        {\haslb{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{r}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
-        {\forall i. \haslb{\Gamma, \bhyp{z_i}{C_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
-        {\lbeq{\Gamma}
-          {\where{(\letstmt{(x, y)}{e}{r})}{(\wbranch{\ell_i}{z_i}{t_i},)_i}}
-          {\letstmt{(x, y)}{e}{(\where{r}{(\wbranch{\ell_i}{z_i}{t_i},)_i})}}
-          {\ms{L}}}
-      \\
-      \prftree[r]{\rle{cfg-case}}
-        {\hasty{\Gamma}{\epsilon}{a}{A_1 + A_2}}
-        {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{r_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
-        {\forall i. \haslb{\Gamma, \bhyp{y_i}{B_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
-        {
-          \prfStackPremises
-          {\Gamma \vdash \where{(\casestmt{a}{x_1}{r_1}{x_2}{r_2})}
-            {(\wbranch{\ell_i}{y_i}{t_i},)_i} }
-          {\teqv \casestmt{a}
-            {x_1}{(\where{r_1}{(\wbranch{\ell_i}{y_i}{t_i},)_i})}
-            {x_2}{\where{r_2}{(\wbranch{\ell_i}{y_i}{t_i},)_i}} : \ms{L}}
-        }
-      \\
-      \prftree[r]{\rle{cfg-cfg}}
-        {\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
-        {
-          \prfStackPremises
-          {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}
-            {s_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j, (\lhyp{\kappa_k}{B_k},)_k}}
-          {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}} 
-        }
-        {
-          \prfStackPremises
-          {\Gamma \vdash \where{(\where{r}{(\wbranch{\kappa_i}{x_i}{s_i},)_i})}
-            {(\wbranch{\ell_i}{y_j}{t_j},)_j}}
-          {\teqv \where{r}{(\wbranch{\kappa_i}{x_i}{s_i},)_i(\wbranch{\ell_i}{y_j}{t_j},)_j} 
-            : \ms{L}}
-        }
-      \\
-      % % TODO: derivable from ucfg, but prove this!
-      % \prftree[r]{\rle{cfg$_0$}}
-      %   {\haslb{\Gamma}{r}{\ms{L}}}
-      %   {\lbeq{\Gamma}{\where{r}{}}{r}{\ms{L}}}
-      % \\
-      % TODO: probably derivable from dinaturality? but prove...
-      % \prftree[r]{\rle{wk-cfg}}
-      %   {\haslb{\Gamma}{[\ell_i \mapsto \ell_{\rho\;i}]r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
-      %   {\forall i, \haslb{\Gamma, \bhyp{x_i}{A_i}}
-      %     {[\ell_i \mapsto \ell_{\rho\;i}]t_i}
-      %     {\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
-      %   {\lbeq{\Gamma}
-      %     {\where{[\ell_i \mapsto \ell_{\rho i}]r}
-      %       {(\wbranch{\ell_i}{x_i}{[\ell_i \mapsto \ell_{\rho\;i}]r})_i}}
-      %     {\where{r}{(\wbranch{\ell_{\rho\;i}}{x_i}{r})_i}}
-      %     {\ms{L}}}
-      % \\
-      % TODO: note difference between this and wk-cfg
-      % TODO: think about whether _this_ is derivable... maybe from dinaturality too?
-      \prftree[r]{\rle{dead-cfg}}
-        {\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
-        {\forall i, \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
-        {\lbeq{\Gamma}{\where{r}{
-            (\wbranch{\ell_i}{x_i}{s_i},)_i
-            (\wbranch{\kappa_j}{y_j}{t_j},)_j}}
-          {\where{r}{(\wbranch{\ell_i}{x_i}{s_i},)_i}}{\ms{L}}}
       \\
         \prftree[r]{\rle{ucfg}}
         {\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
@@ -1942,6 +1823,7 @@ congruence, the latter given in Figure~\ref{fig:ssa-reg-congr-rules}.
         }
       \\
       % NOTE: in the development, it's (ret e) wseq s_0, not [e/x] s_0
+      % but these are trivially equal by cfg-<
       \prftree[r]{\rle{uni}}
         {
           \prfStackPremises
@@ -1976,7 +1858,7 @@ congruence, the latter given in Figure~\ref{fig:ssa-reg-congr-rules}.
         {\ms{L}}}
   \end{gather*}
   \Description{}
-  \caption{Rules for \isotopessa \ms{where}-statements}
+  \caption{Rewriting rules for \isotopessa \ms{where}-statements}
 \end{figure}
 
 \subsection{Metatheory}
