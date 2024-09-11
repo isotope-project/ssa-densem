@@ -101,8 +101,8 @@
 \newcommand{\teqv}{\approx}
 \newcommand{\tmeq}[5]{#1 \vdash_{#2} #3 \teqv #4 : {#5}}
 \newcommand{\lbeq}[4]{#1 \vdash #2 \teqv #3 : {#4}}
-\newcommand{\tmseq}[4]{\issubst{#1 \approx #2}{#3}{#4}}
-\newcommand{\lbseq}[5]{\lbsubst{#1 \approx #2}{#3}{#4}{#5}}
+\newcommand{\tmseq}[4]{\issubst{#1 \teqv #2}{#3}{#4}}
+\newcommand{\lbseq}[5]{\lbsubst{#1 \teqv #2}{#3}{#4}{#5}}
 \newcommand{\brle}[1]{{\scriptsize\textsf{#1}}}
 
 % Denotational semantics
@@ -1271,8 +1271,8 @@ following rules, summarized in Figure~\ref{fig:ssa-unary-let-expr}:
   consider \emph{impure} expressions with some effect $e \neq \bot$.
   \item Rules \brle{let$_1$-op}, \brle{let$_1$-pair}, \brle{let$_1$-inl}, and \brle{let$_1$-inr},
   \brle{let$_1$-abort}, and \brle{let$_1$-case} which allow us to ``pull'' a let-statement out of
-  any of the other expression constructors, reflecting the path that this does not effect the
-  expected operational behaviour of our expression.
+  any of the other expression constructors; operationally, this is saying that the bound expression
+  we pull out is evaluated before the rest of the \ms{let}-binding.
   
   For example, \brle{let$_1$-case} says that, if both
   $\letexpr{z}{\caseexpr{e}{x}{a}{y}{b}}{d}$ and
@@ -1298,14 +1298,15 @@ for $\ms{let}_2$ given in \ref{fig:ssa-binary-let-expr}; we have:
   $\hasty{\Gamma}{\bot}{b}{B}$, we have
   $$
   (\letexpr{(x, y)}{(a, b)}{c}) 
-  \approx (\letexpr{x}{a}{\letexpr{y}{b}{c}})
-  \approx ([a/x](\letexpr{y}{b}{c}))
-  \approx ([a/x][b/y]c)
+  \teqv (\letexpr{x}{a}{\letexpr{y}{b}{c}})
+  \teqv ([a/x](\letexpr{y}{b}{c}))
+  \teqv ([a/x][b/y]c)
   $$
   We state the rule in a more general form to allow for impure $a$ and $b$, as well as to simplify
   certain proofs.
   \item \brle{let$_2$-bind}, which allows us to ``pull'' out the bound value of a binary
-  \ms{let}-expression into its own unary \ms{let}-expression
+  \ms{let}-expression into its own unary \ms{let}-expression; operationally, this just says that
+  we execute the bound value before executing the binding itself.
 \end{itemize}
 This is enough to allow us to define our interactions with the other expression constructors: for
 example, to show that we can lift an operation $f$ out of a binary $\ms{let}$-binding, rather than
@@ -1313,26 +1314,32 @@ adding a separate rule, we can instead derive (types omitted for simplicity) it 
 \brle{let$_2$-bind} and \brle{let$_1$-op} as follows:
 \begin{align*}
   (\letexpr{(x, y)}{f\;a}{b})
-  &\approx (\letexpr{z_f}{f\;a}{\letexpr{(x, y)}{z}{b}}) \\
-  &\approx (\letexpr{z_a}{a}{\letexpr{z_f}{f\;z_a}{\letexpr{(x, y)}{z}{b}}}) \\
-  &\approx (\letexpr{z_a}{a}{\letexpr{(x, y)}{f\;z_a}{b}})
+  &\teqv (\letexpr{z_f}{f\;a}{\letexpr{(x, y)}{z}{b}}) \\
+  &\teqv (\letexpr{z_a}{a}{\letexpr{z_f}{f\;z_a}{\letexpr{(x, y)}{z}{b}}}) \\
+  &\teqv (\letexpr{z_a}{a}{\letexpr{(x, y)}{f\;z_a}{b}})
 \end{align*}
-% TODO: "it is enough to give?" Let's try removing rules from the formalization...
-Similarly, we give $\eta$, $\beta$, and binding rules for \brle{case} expressions,
-as in Figure \ref{fig:ssa-case-expr}. In particular
+Similarly, it is enough to give $\eta$, $\beta$, and binding rules for \brle{case} expressions,
+as in Figure \ref{fig:ssa-case-expr}. In particular, we have that
 \begin{itemize}
-  \item \todo{left, right}
-  \item \todo{eta}
-  \item \todo{binding}
+  \item \brle{case-inl} and \brle{case-inr} serve as $\beta$-reduction rules, telling us that
+  \ms{case}-expressions given an injection as an argument have the expected operational behaviour.
+  Note that we reduce to a \ms{let}-expression rather than perform a substitution to allow for
+  impure discriminants.
+  \item \brle{case-$\eta$} is the standard $\eta$-rule for \ms{case}-expressions.
+  \item \brle{case-bind} allows us to ``pull'' out the bound value of the discriminant into
+  it's own \ms{let}-expression; again, operationally, this just says that we need to evaluate
+  the discriminant before executing the \ms{case}-expression.
 \end{itemize}
-
-\TODO{deal with case distributivity}
-
-\TODO{rules for inl, inr, op for free}
-
-\TODO{unit: $\mb{1}$ is terminal}
-
-\TODO{abort: $\mb{0}$ is initial}
+It's interesting that this is enough, along with the \brle{let-case} rule and friends, to derive the
+distributivity properties we would expect well-behaved \ms{case}-expressions to have. For example,
+we have that
+\begin{align*}
+  f(\caseexpr{e}{x}{a}{y}{b}) 
+  &\teqv (\letexpr{z}{\caseexpr{e}{x}{a}{y}{b}}{f\;z}) \\
+  &\teqv \caseexpr{e}{x}{\letexpr{z}{a}{f\;z}}{y}{\letexpr{z}{b}{f\;z}} \\
+  &\teqv \caseexpr{e}{x}{f\;a}{y}{f\;b}
+\end{align*}
+and likewise for more complicated distributivity properties involving, e.g., \ms{let}-bindings.
 
 \begin{figure}
   \begin{gather*}
@@ -1529,120 +1536,31 @@ as in Figure \ref{fig:ssa-case-expr}. In particular
   \label{fig:ssa-case-expr}
 \end{figure}
 
-\begin{figure}
-  \begin{gather*}
-    \prftree[r]{\rle{let$_1$-case}}
-      {\hasty{\Gamma}{\epsilon}{a}{A + B}}
-      {\hasty{\Gamma, \bhyp{x}{A + B}}{\epsilon}{c}{C}}
-      {
-        \prfStackPremises
-        {\hasty{\Gamma, \bhyp{x}{A + B}, \bhyp{y}{C}, \bhyp{z}{A}}{\epsilon}{d}{D}}
-        {\hasty{\Gamma, \bhyp{x}{A + B}, \bhyp{y}{C}, \bhyp{z'}{B}}{\epsilon}{d'}{D}}
-      }
-      {
-        \prfStackPremises
-        {\Gamma \vdash_\epsilon \letexpr{x}{a}{\letexpr{y}{c}{\caseexpr{x}{z}{d}{z'}{d'}}}}
-        {\hspace{6em} \teqv \letexpr{x}{a}{\caseexpr{x}{z}{\letexpr{y}{c}{d}}{z'}{\letexpr{y}{c}{d'}}} 
-        : D}
-      }
-    \\
-    \prftree[r]{\rle{let$_2$-case}}
-      {\hasty{\Gamma}{\epsilon}{a}{A + B}}
-      {\hasty{\Gamma, \bhyp{x}{A + B}}{\epsilon}{c}{C \otimes D}}
-      {
-        \prfStackPremises
-        {\hasty{\Gamma, \bhyp{x}{A + B}, \bhyp{y}{C}, \bhyp{z}{D}, \bhyp{w}{A}}{\epsilon}{e}{E}}
-        {\hasty{\Gamma, \bhyp{x}{A + B}, \bhyp{y}{C}, \bhyp{z}{D}, \bhyp{w'}{B}}{\epsilon}{e'}{E}}
-      }
-      {
-        \prfStackPremises
-        {\Gamma \vdash_\epsilon \letexpr{x}{a}{\letexpr{(y, z)}{c}{\caseexpr{x}{w}{e}{w'}{e'}}}}
-        {\hspace{5em} \teqv \letexpr{x}{a}
-          {\caseexpr{x}
-            {w}{\letexpr{(y, z)}{c}{e}}
-            {w'}{\letexpr{(y, z)}{c}{e'}}} 
-        : E}
-      }
-    \\
-    \prftree[r]{\rle{case-case}}
-      {\hasty{\Gamma}{\epsilon}{a}{A_1 + A_2}}
-      {\hasty{\Gamma, \bhyp{x}{A + B}}{\epsilon}{b}{B_1 + B_2}}
-      {
-        \forall i j.
-        \hasty{\Gamma, \bhyp{x}{A_1 + A_2}, \bhyp{y_i}{B_i}, \bhyp{z_j}{A_j}}{\epsilon}
-              {c_{ij}}{C}
-      }
-      {
-        \prfStackPremises
-        {\Gamma \vdash_\epsilon 
-          \ms{let}\;x = a;
-          \ms{case}\;b\;\{\ms{inl}\;y_1 \lto \caseexpr{x}{z_1}{e_{11}}{z_2}{e_{12}}
-        }
-        {
-          \hspace{10em} \ms{inr}\;y_2 \lto \caseexpr{x}{z_1}{e_{21}}{z_2}{e_{22}} \}
-        }
-        {\hspace{1.3em} \teqv
-          \ms{let}\;x = a;
-          \ms{case}\;x\;\{\ms{inl}\;z_1 \lto \caseexpr{b}{y_1}{e_{11}}{y_2}{e_{21}}
-        }
-        {
-          \hspace{10em} \ms{inr}\;z_2 \lto \caseexpr{b}{y_1}{e_{12}}{y_2}{e_{22}} \}
-        }
-      }
-    \\
-    \prftree[r]{\rle{op-case}}
-      {\hasty{\Gamma}{\epsilon}{e}{A + B}}
-      {\isop{f}{C}{D}{\epsilon}}
-      {\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{c}{C}}
-      {\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{c'}{C}}
-      {\tmeq{\Gamma}{\epsilon}{\caseexpr{e}{x}{f\;c}{y}{f\;c'}}{f\;\caseexpr{e}{x}{c}{y}{c'}}{D}}
-    \\
-    \prftree[r]{\rle{inl-case}}
-      {\hasty{\Gamma}{\epsilon}{e}{A + B}}
-      {\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{c}{C}}
-      {\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{c'}{C}}
-      {\tmeq{\Gamma}{\epsilon}
-        {\caseexpr{e}{x}{\linl{c}}{y}{\linl{c'}}}
-        {\linl{\caseexpr{e}{x}{c}{y}{c'}}}
-        {C + D}}
-    \\
-    \prftree[r]{\rle{inr-case}}
-      {\hasty{\Gamma}{\epsilon}{e}{A + B}}
-      {\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{d}{D}}
-      {\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{d'}{D}}
-      {\tmeq{\Gamma}{\epsilon}
-        {\caseexpr{e}{x}{\linr{d}}{y}{\linr{d'}}}
-        {\linr{\caseexpr{e}{x}{d}{y}{d'}}}
-        {C + D}}
-    \\
-    \prftree[r]{\rle{abort-case}}
-    {\hasty{\Gamma}{\epsilon}{e}{A + B}}
-    {\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{c}{\mb{0}}}
-    {\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{c'}{\mb{0}}}
-    {
-      \prfStackPremises
-      {\Gamma \vdash_\epsilon \caseexpr{e}{x}{\labort{c}}{y}{\labort{c'}}}
-      {\approx \labort{\caseexpr{e}{x}{c}{y}{c'}} : C}
-    }
-    \\
-    \prftree[r]{\rle{pair-case}}
-      {\hasty{\Gamma}{\epsilon}{e}{A_1 + A_2}}
-      {\forall i, \hasty{\Gamma, \bhyp{x_i}{A_i}}{\epsilon}{b_{ij}}{B_j}}
-      {
-        \prfStackPremises
-        {\Gamma \vdash_\epsilon \caseexpr{e}{x}{(b_{11}, b_{12})}{y}{(b_{21}, b_{22})}}
-        {\approx (\caseexpr{e}{x}{b_{11}}{y}{b_{21}}, \caseexpr{e}{x}{b_{12}}{y}{b_{22}}) 
-        : B_1 \otimes B_2}
-      }
-    \\
-    \prftree[r]{\rle{case$_0$}}
-      {\hasty{\Gamma}{\epsilon}{e}{A_1 + A_2}}
-      {\hasty{\Gamma}{\epsilon}{a}{A}}
-      {\tmeq{\Gamma}{\epsilon}{\caseexpr{e}{x}{a}{y}{a}}{a}{A}}
-  \end{gather*}
-  \Description{}
-  \caption{Rewriting rules for \isotopessa \ms{case} expressions}
-\end{figure}
+The case for other the other constructors is even more convenient: no additional rules are required
+at all to handle operations, pairs, and injections. For example, we can derive a the expected
+bind-rule for operations as follows:
+\begin{align*}
+  f\;a \teqv (\letexpr{y}{f\;a}{y})
+  \teqv (\letexpr{x}{a}{\letexpr{y}{f\;x}{y}})
+  \teqv (\letexpr{x}{a}{f\;x})
+\end{align*}
+To have aborts and units behave as we expect; namely, that $\mb{0}$ acts as the empty type and
+$\mb{1}$ the unit type, we need only introduce the following rules, given in
+Figure~\ref{fig:ssa-initial-terminal-expr}:
+\begin{itemize}
+  \item \brle{initial}, which says that \emph{all} terms are equated in any context containing the
+  empty type $\mb{0}$, since such we will take such a context to be unreachable by program execution
+  (e.g. after an infinite loop, or an instruction or function call which never returns). 
+
+  This can be combined with \brle{let1-$\beta$} to yield the more convenient rule
+  \brle{initial-expr}, which states that any context in which a \emph{pure} term of empty type
+  can be constructed equates all terms. Note in particular that this means divergent instructions
+  must have impure effect!
+
+  \item \brle{terminal}, which says that all \emph{pure} terms of type $\mb{1}$ are equal in any
+  context. Note that \emph{impure} terms may be disequal, since while their result values are the
+  same, their side effects may differ!
+\end{itemize}
 
 \begin{figure}
   \begin{gather*}
@@ -1668,11 +1586,18 @@ as in Figure \ref{fig:ssa-case-expr}. In particular
     Initial and terminal object rules; the rule \brle{initial-expr} is derivable 
     from \brle{initial}, \brle{let$_1$-$\beta$}, and congruence.
   }
+  \label{fig:ssa-initial-terminal-expr}
 \end{figure}
+
+This completes the equational theory for \isotopessa terms; in Section \ref{ssec:completeness}, we
+will show that this is enough to state a relatively powerful completeness theorem.
 
 \subsection{Regions}
 
-\TODO{like before, congruence for regions}
+We now come to the equational theory for \isotopessa \emph{regions}, which is somewhat more
+complicated, due to needing to support arbitrary control-flow graphs in the form of
+\ms{where}-statements. It is presented in a similar format, with a set of rewriting rules and a
+congruence, the latter given in Figure~\ref{fig:ssa-reg-congr-rules}.
 
 \begin{figure}
   \begin{gather*}
@@ -1723,6 +1648,7 @@ as in Figure \ref{fig:ssa-case-expr}. In particular
   \end{gather*}
   \Description{}
   \caption{Congruence rules for \isotopessa regions}
+  \label{fig:ssa-reg-congr-rules}
 \end{figure}
 
 \TODO{let1 theory}
@@ -1739,7 +1665,7 @@ as in Figure \ref{fig:ssa-case-expr}. In particular
       {\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
       {\lbeq{\Gamma}{\letstmt{x}{a}{r}}{\letstmt{y}{a}{\letstmt{x}{y}{r}}}{\ms{L}}}
     \\
-    \prftree[r]{\rle{let$_{1\approx}$}}
+    \prftree[r]{\rle{let$_{1\teqv}$}}
       {\tmeq{\Gamma}{\epsilon}{a}{a'}{A}}
       {\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
       {\lbeq{\Gamma}{\letstmt{x}{a}{r}}{\letstmt{x}{a'}{r}}{\ms{L}}}
@@ -1749,16 +1675,8 @@ as in Figure \ref{fig:ssa-case-expr}. In particular
       {\haslb{\Gamma}{s}{\ms{L}}}
       {\exists x, \Gamma\;x = \mb{0}}
       {\lbeq{\Gamma}{r}{s}{\ms{L}}}
-  \end{gather*}
-  \Description{}
-  \caption{todo: this}
-\end{figure}
-
-\TODO{let1 commutes with stuff}
-
-\begin{figure}
-  \begin{gather*}
-    \prftree[r]{\rle{let$_1$-op}}
+    \\
+      \prftree[r]{\rle{let$_1$-op}}
       {\isop{f}{A}{B}{\epsilon}}
       {\hasty{\Gamma}{\epsilon}{a}{A}}
       {\haslb{\Gamma, \bhyp{y}{B}}{r}{\ms{L}}}
@@ -1804,10 +1722,8 @@ as in Figure \ref{fig:ssa-case-expr}. In particular
       {\lbeq{\Gamma}{\letstmt{y}{\labort{a}}{r}}{\letstmt{x}{a}{\letstmt{y}{\labort{x}}{r}}}{\ms{L}}}
   \end{gather*}
   \Description{}
-  \caption{todo: this}
+  \caption{Rules for \isotopessa unary \ms{let}-statements}
 \end{figure}
-
-\TODO{let2 commutes with stuff}
 
 \begin{figure}
   \begin{gather*}
@@ -1828,7 +1744,7 @@ as in Figure \ref{fig:ssa-case-expr}. In particular
       {\lbeq{\Gamma}{\letstmt{(x, y)}{e}{\letstmt{z}{(x, y)}{r}}}{\letstmt{z}{e}{r}}{\ms{L}}}
   \end{gather*}
   \Description{}
-  \caption{todo: this}
+  \caption{Rules for \isotopessa binary \ms{let}-statements}
 \end{figure}
 
 \TODO{case theory}
@@ -1852,65 +1768,84 @@ as in Figure \ref{fig:ssa-case-expr}. In particular
       {\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
       {\haslb{\Gamma, \bhyp{y}{B}}{s}{\ms{L}}}
       {\lbeq{\Gamma}{\caseexpr{\linr{b}}{x}{r}{y}{s}}{\letstmt{y}{b}{s}}{\ms{L}}}
-    \\
-    \prftree[r]{\rle{let$_{11}$-case}}
-      {\hasty{\Gamma}{\epsilon}{a}{A_1 + A_2}}
-      {\hasty{\Gamma, \bhyp{x}{A_1 + A_2}}{\epsilon}{b}{B}}
-      {
-      \forall i. \haslb{\Gamma, \bhyp{x}{A_1 + A_2}, \bhyp{y}{B}, \bhyp{z_i}{A_i}}{r_i}{\ms{L}}
-      }
-      {
-        \prfStackPremises
-        {\Gamma \vdash \letstmt{x}{a}{\letstmt{y}{c}{\casestmt{x}{z_1}{r_1}{z_2}{r_2}}}}
-        {\hspace{6em} \approx 
-          \letstmt{x}{a}{\casestmt{x}{z_1}{\letstmt{y}{c}{r_1}}{z_2}{\letstmt{y}{c}{r_2}}} 
-          : \ms{L}}
-      }
-    \\
-    \prftree[r]{\rle{let$_{12}$-case}}
-      {\hasty{\Gamma}{\epsilon}{a}{A_1 + A_2}}
-      {\hasty{\Gamma, \bhyp{x}{A_1 + A_2}}{\epsilon}{b}{B \otimes C}}
-      {
-      \forall i. 
-        \haslb{\Gamma, \bhyp{x}{A_1 + A_2}, \bhyp{y}{B}, \bhyp{z}{C}, \bhyp{w_i}{A_i}}{r_i}{\ms{L}}
-      }
-      {
-        \prfStackPremises
-        {\Gamma \vdash \letstmt{x}{a}{\letstmt{(y, z)}{c}{\casestmt{x}{w_1}{r_1}{w_2}{r_2}}}}
-        {\hspace{5em} \approx 
-          \letstmt{x}{a}{\casestmt{x}{w_1}{\letstmt{(y, z)}{b}{r_1}}{w_2}{\letstmt{(y, z)}{b}{r_2}}} 
-          : \ms{L}}
-      }
-    \\
-    \prftree[r]{\rle{case-case}}
-      {\hasty{\Gamma}{\epsilon}{a}{A_1 + A_2}}
-      {\hasty{\Gamma, \bhyp{x}{A_1 + A_2}}{\epsilon}{b}{B_1 + B_2}}
-      {
-      \forall i j. 
-        \haslb{\Gamma, \bhyp{x}{A_1 + A_2}, \bhyp{y_i}{B_i}, \bhyp{z_j}{A_j}}{r_{ij}}{\ms{L}}
-      }
-      {
-        \prfStackPremises
-        {\Gamma \vdash \ms{let}\;x = a; \ms{case}\;b\;\{
-          \linl{y_1} \lto \casestmt{x}{z_1}{r_{11}}{z_2}{r_{21}}
-        }
-        {
-          \hspace{10em} \linr{y_2} \lto \casestmt{x}{z_1}{r_{12}}{z_2}{r_{22}}\}
-        }
-        {
-          \hspace{1.3em} \approx \ms{let}\;x = a; \ms{case}\;x\;\{
-          \linl{z_1} \lto \casestmt{b}{y_1}{r_{11}}{y_2}{r_{21}}
-        }
-        {
-          \hspace{10em} \linr{z_2} \lto \casestmt{b}{y_1}{r_{12}}{y_2}{r_{22}}\}
-        }
-      }
+    % TODO: check if these can actually be removed!
+    % \\
+    % \prftree[r]{\rle{let$_{11}$-case}}
+    %   {\hasty{\Gamma}{\epsilon}{a}{A_1 + A_2}}
+    %   {\hasty{\Gamma, \bhyp{x}{A_1 + A_2}}{\epsilon}{b}{B}}
+    %   {
+    %   \forall i. \haslb{\Gamma, \bhyp{x}{A_1 + A_2}, \bhyp{y}{B}, \bhyp{z_i}{A_i}}{r_i}{\ms{L}}
+    %   }
+    %   {
+    %     \prfStackPremises
+    %     {\Gamma \vdash \letstmt{x}{a}{\letstmt{y}{c}{\casestmt{x}{z_1}{r_1}{z_2}{r_2}}}}
+    %     {\hspace{6em} \teqv 
+    %       \letstmt{x}{a}{\casestmt{x}{z_1}{\letstmt{y}{c}{r_1}}{z_2}{\letstmt{y}{c}{r_2}}} 
+    %       : \ms{L}}
+    %   }
+    % \\
+    % \prftree[r]{\rle{let$_{12}$-case}}
+    %   {\hasty{\Gamma}{\epsilon}{a}{A_1 + A_2}}
+    %   {\hasty{\Gamma, \bhyp{x}{A_1 + A_2}}{\epsilon}{b}{B \otimes C}}
+    %   {
+    %   \forall i. 
+    %     \haslb{\Gamma, \bhyp{x}{A_1 + A_2}, \bhyp{y}{B}, \bhyp{z}{C}, \bhyp{w_i}{A_i}}{r_i}{\ms{L}}
+    %   }
+    %   {
+    %     \prfStackPremises
+    %     {\Gamma \vdash \letstmt{x}{a}{\letstmt{(y, z)}{c}{\casestmt{x}{w_1}{r_1}{w_2}{r_2}}}}
+    %     {\hspace{5em} \teqv 
+    %       \letstmt{x}{a}{\casestmt{x}{w_1}{\letstmt{(y, z)}{b}{r_1}}{w_2}{\letstmt{(y, z)}{b}{r_2}}} 
+    %       : \ms{L}}
+    %   }
+    % \\
+    % \prftree[r]{\rle{case-case}}
+    %   {\hasty{\Gamma}{\epsilon}{a}{A_1 + A_2}}
+    %   {\hasty{\Gamma, \bhyp{x}{A_1 + A_2}}{\epsilon}{b}{B_1 + B_2}}
+    %   {
+    %   \forall i j. 
+    %     \haslb{\Gamma, \bhyp{x}{A_1 + A_2}, \bhyp{y_i}{B_i}, \bhyp{z_j}{A_j}}{r_{ij}}{\ms{L}}
+    %   }
+    %   {
+    %     \prfStackPremises
+    %     {\Gamma \vdash \ms{let}\;x = a; \ms{case}\;b\;\{
+    %       \linl{y_1} \lto \casestmt{x}{z_1}{r_{11}}{z_2}{r_{21}}
+    %     }
+    %     {
+    %       \hspace{10em} \linr{y_2} \lto \casestmt{x}{z_1}{r_{12}}{z_2}{r_{22}}\}
+    %     }
+    %     {
+    %       \hspace{1.3em} \teqv \ms{let}\;x = a; \ms{case}\;x\;\{
+    %       \linl{z_1} \lto \casestmt{b}{y_1}{r_{11}}{y_2}{r_{21}}
+    %     }
+    %     {
+    %       \hspace{10em} \linr{z_2} \lto \casestmt{b}{y_1}{r_{12}}{y_2}{r_{22}}\}
+    %     }
+    %   }
   \end{gather*}
   \Description{}
-  \caption{todo: this}
+  \caption{Rules for \isotopessa \ms{case}-statements}
 \end{figure}
 
-\TODO{where theory}
+\TODO{basic where theory}
+
+\TODO{cfgsubst lore}
+
+\begin{equation*}
+  \cfgsubst{(\wbranch{\ell_i}{x_i}{t_i},)_i}\;\kappa\;a
+  := \where{\brb{\kappa}{a}}{(\wbranch{\ell_i}{x_i}{t_i},)_i}
+\end{equation*}
+
+\TODO{text}
+
+\begin{equation*}
+  \prftree[r]{\rle{cfgsubst}}
+    {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+    {\lbsubst{\Gamma}
+      {\cfgsubst{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}{\ms{L}}}
+\end{equation*}
+
+\TODO{advanced where lore}
 
 \begin{figure}
   \begin{gather*}
@@ -1948,7 +1883,7 @@ as in Figure \ref{fig:ssa-case-expr}. In particular
           \prfStackPremises
           {\Gamma \vdash \where{(\casestmt{a}{x_1}{r_1}{x_2}{r_2})}
             {(\wbranch{\ell_i}{y_i}{t_i},)_i} }
-          {\approx \casestmt{a}
+          {\teqv \casestmt{a}
             {x_1}{(\where{r_1}{(\wbranch{\ell_i}{y_i}{t_i},)_i})}
             {x_2}{\where{r_2}{(\wbranch{\ell_i}{y_i}{t_i},)_i}} : \ms{L}}
         }
@@ -1965,7 +1900,7 @@ as in Figure \ref{fig:ssa-case-expr}. In particular
           \prfStackPremises
           {\Gamma \vdash \where{(\where{r}{(\wbranch{\kappa_i}{x_i}{s_i},)_i})}
             {(\wbranch{\ell_i}{y_j}{t_j},)_j}}
-          {\approx \where{r}{(\wbranch{\kappa_i}{x_i}{s_i},)_i(\wbranch{\ell_i}{y_j}{t_j},)_j} 
+          {\teqv \where{r}{(\wbranch{\kappa_i}{x_i}{s_i},)_i(\wbranch{\ell_i}{y_j}{t_j},)_j} 
             : \ms{L}}
         }
       \\
@@ -1995,89 +1930,53 @@ as in Figure \ref{fig:ssa-case-expr}. In particular
             (\wbranch{\ell_i}{x_i}{s_i},)_i
             (\wbranch{\kappa_j}{y_j}{t_j},)_j}}
           {\where{r}{(\wbranch{\ell_i}{x_i}{s_i},)_i}}{\ms{L}}}
-  \end{gather*}
-  \Description{}
-  \caption{todo: this}
-\end{figure}
-
-\TODO{cfgsubst lore}
-
-\begin{equation*}
-  \cfgsubst{(\wbranch{\ell_i}{x_i}{t_i},)_i}\;\kappa\;a
-  := \where{\brb{\kappa}{a}}{(\wbranch{\ell_i}{x_i}{t_i},)_i}
-\end{equation*}
-
-...
-
-\begin{equation*}
-  \prftree[r]{\rle{cfgsubst}}
-    {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
-    {\lbsubst{\Gamma}
-      {\cfgsubst{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}{\ms{L}}}
-\end{equation*}
-
-\TODO{advanced where lore}
-
-\begin{figure}
-  \begin{gather*}
-    \prftree[r]{\rle{ucfg}}
-      {\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
-      {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
-      {
-        \lbeq{\Gamma}
-          {\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
-          {[\cfgsubst{(\wbranch{\ell_i}{x_i}{t_i},)_i}]r}
-          {\ms{L}}
-      }
-    \\
-    % NOTE: in the development, it's (ret e) wseq s_0, not [e/x] s_0
-    \prftree[r]{\rle{uni}}
-      {
-        \prfStackPremises
-        {\hasty{\Gamma, \bhyp{x}{A}}{\bot}{e}{B}}
+      \\
+        \prftree[r]{\rle{ucfg}}
+        {\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
+        {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+        {
+          \lbeq{\Gamma}
+            {\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
+            {[\cfgsubst{(\wbranch{\ell_i}{x_i}{t_i},)_i}]r}
+            {\ms{L}}
+        }
+      \\
+      % NOTE: in the development, it's (ret e) wseq s_0, not [e/x] s_0
+      \prftree[r]{\rle{uni}}
+        {
+          \prfStackPremises
+          {\hasty{\Gamma, \bhyp{x}{A}}{\bot}{e}{B}}
+          {\haslb{\Gamma}{r}{\ms{L}, \ell(A)}}
+        }
+        {
+          \prfStackPremises
+          {\haslb{\Gamma, \bhyp{y}{B}}{s}{\ms{L}, \kappa(B)}}
+          {\haslb{\Gamma, \bhyp{x}{A}}{t}{\ms{L}, \ell(A)}}
+        }
+        {
+          \lbeq{\Gamma, \bhyp{x}{A}}
+            {[e/y]s}
+            {\where{t}{\wbranch{\ell}{x}{\brb{\kappa}{e}}}}
+            {\ms{L}, \kappa(B)}
+        }
+        {
+          \lbeq{\Gamma}
+            {\where{(\where{r}{\wbranch{\ell}{x}{\brb{\kappa}{e}}})}
+              {\wbranch{\kappa}{y}{s}}}
+            {\where{r}{t}}
+            {\ms{L}}
+        }
+      \\
+      \prftree[r]{\rle{codiag}}
         {\haslb{\Gamma}{r}{\ms{L}, \ell(A)}}
-      }
-      {
-        \prfStackPremises
-        {\haslb{\Gamma, \bhyp{y}{B}}{s}{\ms{L}, \kappa(B)}}
-        {\haslb{\Gamma, \bhyp{x}{A}}{t}{\ms{L}, \ell(A)}}
-      }
-      {
-        \lbeq{\Gamma, \bhyp{x}{A}}
-          {[e/y]s}
-          {\where{t}{\wbranch{\ell}{x}{\brb{\kappa}{e}}}}
-          {\ms{L}, \kappa(B)}
-      }
-      {
-        \lbeq{\Gamma}
-          {\where{(\where{r}{\wbranch{\ell}{x}{\brb{\kappa}{e}}})}
-            {\wbranch{\kappa}{y}{s}}}
-          {\where{r}{t}}
-          {\ms{L}}
-      }
-    \\
-    \prftree[r]{\rle{codiag}}
-      {\haslb{\Gamma}{r}{\ms{L}, \ell(A)}}
-      {\haslb{\Gamma, \bhyp{y}{A}}{s}{\ms{L}, \ell(A), \kappa(A)}}
-      {\lbeq{\Gamma}{\where{r}{\wbranch{\ell}{x}{\where{\brb{\kappa}{x}}
-        {\wbranch{\kappa}{y}{s}}}}}
-      {\where{r}{\wbranch{\ell}{y}{[\ell/\kappa]s}}}
-      {\ms{L}}}
-    % \\
-    % \prftree[r]{\rle{dinat}}
-    % {\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
-    % {\forall i, \haslb{\Gamma, \bhyp{x_i}{B_i}}
-    %   {t_i}
-    %   {\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
-    % {\lbsubst{\Gamma}{\sigma}{(\lhyp{\ell_i}{A_i},)_i}{\ms{L}, (\lhyp{\kappa_i}{B_i},)_i}}
-    % {\lbeq{\Gamma}
-    %   {\where{[\sigma]r}
-    %     {(\wbranch{\kappa_i}{x_i}{[\sigma]t_i},)_i}}
-    %   {\where{r}{(\wbranch{\ell_{i}}{x_i}{[(\wbranch{\kappa_j}{x_j}{t_j},)_j](\sigma_i)})_i}}
-    %   {\ms{L}}}
+        {\haslb{\Gamma, \bhyp{y}{A}}{s}{\ms{L}, \ell(A), \kappa(A)}}
+        {\lbeq{\Gamma}{\where{r}{\wbranch{\ell}{x}{\where{\brb{\kappa}{x}}
+          {\wbranch{\kappa}{y}{s}}}}}
+        {\where{r}{\wbranch{\ell}{y}{[\ell/\kappa]s}}}
+        {\ms{L}}}
   \end{gather*}
   \Description{}
-  \caption{todo: this}
+  \caption{Rules for \isotopessa \ms{where}-statements}
 \end{figure}
 
 \subsection{Metatheory}
@@ -2514,9 +2413,9 @@ different effects are equal}
 \TODO{most simple substitution theorem is \emph{rewriting}:}
 
 \begin{theorem}[Soundness (Rewriting)]
-  Given $\issubst{\gamma, \gamma'}{\Gamma}{\Delta}$, such that 
-  $\forall (\thyp{x}{A}{\epsilon}) \in \Delta. \dnt{\hasty{\Gamma}{\epsilon}{\gamma\;x}{A}}$, we
-  have
+  Given substitutions $\issubst{\gamma, \gamma'}{\Gamma}{\Delta}$ such that, for all 
+  $\thyp{x}{A}{\epsilon} \in \Delta$, $\dnt{\hasty{\Gamma}{\epsilon}{\gamma\;x}{A}} =
+  \dnt{\hasty{\Gamma}{\epsilon}{\gamma'\;x}{A}}$, we have
   \begin{enumerate}[label=(\alph*)]
     \item Given $\hasty{\Delta}{\epsilon}{a}{A}$, 
       $\dnt{\hasty{\Gamma}{\epsilon}{[\gamma]a}{A}} = \dnt{\hasty{\Gamma}{\epsilon}{[\gamma']a}{A}}$
@@ -2587,6 +2486,8 @@ different effects are equal}
 \TODO{text}
 
 \subsection{Completeness}
+
+\label{ssec:completeness}
 
 \TODO{text}
 
@@ -3015,7 +2916,7 @@ joined buffer is also empty, giving us the following definition:
 
 \appendix
 
-\section{Böhm–Jacopini Theorem}
+\section{Böhm-Jacopini Theorem}
 
 \TODO{this...}
 
@@ -3028,6 +2929,122 @@ joined buffer is also empty, giving us the following definition:
 \TODO{to TRegion ...}
 
 \TODO{to ContRegion ...}
+
+% \begin{figure}
+%   \begin{gather*}
+%     \prftree[r]{\rle{let$_1$-case}}
+%       {\hasty{\Gamma}{\epsilon}{a}{A + B}}
+%       {\hasty{\Gamma, \bhyp{x}{A + B}}{\epsilon}{c}{C}}
+%       {
+%         \prfStackPremises
+%         {\hasty{\Gamma, \bhyp{x}{A + B}, \bhyp{y}{C}, \bhyp{z}{A}}{\epsilon}{d}{D}}
+%         {\hasty{\Gamma, \bhyp{x}{A + B}, \bhyp{y}{C}, \bhyp{z'}{B}}{\epsilon}{d'}{D}}
+%       }
+%       {
+%         \prfStackPremises
+%         {\Gamma \vdash_\epsilon \letexpr{x}{a}{\letexpr{y}{c}{\caseexpr{x}{z}{d}{z'}{d'}}}}
+%         {\hspace{6em} \teqv 
+%                  \letexpr{x}{a}{\caseexpr{x}{z}{\letexpr{y}{c}{d}}{z'}{\letexpr{y}{c}{d'}}} 
+%         : D}
+%       }
+%     \\
+%     \prftree[r]{\rle{let$_2$-case}}
+%       {\hasty{\Gamma}{\epsilon}{a}{A + B}}
+%       {\hasty{\Gamma, \bhyp{x}{A + B}}{\epsilon}{c}{C \otimes D}}
+%       {
+%         \prfStackPremises
+%         {\hasty{\Gamma, \bhyp{x}{A + B}, \bhyp{y}{C}, \bhyp{z}{D}, \bhyp{w}{A}}{\epsilon}{e}{E}}
+%         {\hasty{\Gamma, \bhyp{x}{A + B}, \bhyp{y}{C}, \bhyp{z}{D}, \bhyp{w'}{B}}{\epsilon}{e'}{E}}
+%       }
+%       {
+%         \prfStackPremises
+%         {\Gamma \vdash_\epsilon \letexpr{x}{a}{\letexpr{(y, z)}{c}{\caseexpr{x}{w}{e}{w'}{e'}}}}
+%         {\hspace{5em} \teqv \letexpr{x}{a}
+%           {\caseexpr{x}
+%             {w}{\letexpr{(y, z)}{c}{e}}
+%             {w'}{\letexpr{(y, z)}{c}{e'}}} 
+%         : E}
+%       }
+%     \\
+%     \prftree[r]{\rle{case-case}}
+%       {\hasty{\Gamma}{\epsilon}{a}{A_1 + A_2}}
+%       {\hasty{\Gamma, \bhyp{x}{A + B}}{\epsilon}{b}{B_1 + B_2}}
+%       {
+%         \forall i j.
+%         \hasty{\Gamma, \bhyp{x}{A_1 + A_2}, \bhyp{y_i}{B_i}, \bhyp{z_j}{A_j}}{\epsilon}
+%               {c_{ij}}{C}
+%       }
+%       {
+%         \prfStackPremises
+%         {\Gamma \vdash_\epsilon 
+%           \ms{let}\;x = a;
+%           \ms{case}\;b\;\{\ms{inl}\;y_1 \lto \caseexpr{x}{z_1}{e_{11}}{z_2}{e_{12}}
+%         }
+%         {
+%           \hspace{10em} \ms{inr}\;y_2 \lto \caseexpr{x}{z_1}{e_{21}}{z_2}{e_{22}} \}
+%         }
+%         {\hspace{1.3em} \teqv
+%           \ms{let}\;x = a;
+%           \ms{case}\;x\;\{\ms{inl}\;z_1 \lto \caseexpr{b}{y_1}{e_{11}}{y_2}{e_{21}}
+%         }
+%         {
+%           \hspace{10em} \ms{inr}\;z_2 \lto \caseexpr{b}{y_1}{e_{12}}{y_2}{e_{22}} \}
+%         }
+%       }
+%     \\
+%     \prftree[r]{\rle{op-case}}
+%       {\hasty{\Gamma}{\epsilon}{e}{A + B}}
+%       {\isop{f}{C}{D}{\epsilon}}
+%       {\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{c}{C}}
+%       {\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{c'}{C}}
+%       {\tmeq{\Gamma}{\epsilon}{\caseexpr{e}{x}{f\;c}{y}{f\;c'}}{f\;\caseexpr{e}{x}{c}{y}{c'}}{D}}
+%     \\
+%     \prftree[r]{\rle{inl-case}}
+%       {\hasty{\Gamma}{\epsilon}{e}{A + B}}
+%       {\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{c}{C}}
+%       {\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{c'}{C}}
+%       {\tmeq{\Gamma}{\epsilon}
+%         {\caseexpr{e}{x}{\linl{c}}{y}{\linl{c'}}}
+%         {\linl{\caseexpr{e}{x}{c}{y}{c'}}}
+%         {C + D}}
+%     \\
+%     \prftree[r]{\rle{inr-case}}
+%       {\hasty{\Gamma}{\epsilon}{e}{A + B}}
+%       {\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{d}{D}}
+%       {\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{d'}{D}}
+%       {\tmeq{\Gamma}{\epsilon}
+%         {\caseexpr{e}{x}{\linr{d}}{y}{\linr{d'}}}
+%         {\linr{\caseexpr{e}{x}{d}{y}{d'}}}
+%         {C + D}}
+%     \\
+%     \prftree[r]{\rle{abort-case}}
+%     {\hasty{\Gamma}{\epsilon}{e}{A + B}}
+%     {\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{c}{\mb{0}}}
+%     {\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{c'}{\mb{0}}}
+%     {
+%       \prfStackPremises
+%       {\Gamma \vdash_\epsilon \caseexpr{e}{x}{\labort{c}}{y}{\labort{c'}}}
+%       {\teqv \labort{\caseexpr{e}{x}{c}{y}{c'}} : C}
+%     }
+%     \\
+%     \prftree[r]{\rle{pair-case}}
+%       {\hasty{\Gamma}{\epsilon}{e}{A_1 + A_2}}
+%       {\forall i, \hasty{\Gamma, \bhyp{x_i}{A_i}}{\epsilon}{b_{ij}}{B_j}}
+%       {
+%         \prfStackPremises
+%         {\Gamma \vdash_\epsilon \caseexpr{e}{x}{(b_{11}, b_{12})}{y}{(b_{21}, b_{22})}}
+%         {\teqv (\caseexpr{e}{x}{b_{11}}{y}{b_{21}}, \caseexpr{e}{x}{b_{12}}{y}{b_{22}}) 
+%         : B_1 \otimes B_2}
+%       }
+%     \\
+%     \prftree[r]{\rle{case$_0$}}
+%       {\hasty{\Gamma}{\epsilon}{e}{A_1 + A_2}}
+%       {\hasty{\Gamma}{\epsilon}{a}{A}}
+%       {\tmeq{\Gamma}{\epsilon}{\caseexpr{e}{x}{a}{y}{a}}{a}{A}}
+%   \end{gather*}
+%   \Description{}
+%   \caption{Derivable rules rules for \isotopessa \ms{case} expressions}
+% \end{figure}
 
 \end{document}
 \endinput
