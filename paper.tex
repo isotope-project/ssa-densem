@@ -1577,6 +1577,19 @@ quite standard; we have:
   since it will follow from the version for terms; this is good, since the concept of a ``pure''
   region has not yet been defined.
 \end{itemize}
+Our rewriting rules for unary \ms{let}-statements, given in Figure~\ref{fig:ssa-reg-unary-let}, are
+analogous to those for unary \ms{let}-expressions:
+\begin{itemize}
+  \item \brle{let$_1$-$\beta$} allows us to perform $\beta$-reduction of \emph{pure} expressions
+  into regions; unlike for terms, we do not need an $\eta$-rule
+  \item Exactly like for \ms{let}-expressions, \brle{let$_1$-op}, \brle{let$_1$-pair},
+  \brle{let$_1$-inl}, \brle{let$_1$-inr}, \brle{let$_1$-abort}, and \brle{let$_1$-case} allow us
+  to pull out nested subexpressions of the bound value of a \ms{let}-statement into their own
+  unary \ms{let}-statement
+\end{itemize}
+Just like for expressions, binary \ms{let}-statements and \ms{case}-statements need only the obvious
+$\beta$ rule and binding rule, with all the interactions with other constructors derivable; these
+rules are given in Figure~\ref{fig:ssa-reg-let2-case-expr}.
 
 \begin{figure}
   \begin{gather*}
@@ -1621,29 +1634,12 @@ quite standard; we have:
   \label{fig:ssa-reg-congr-rules}
 \end{figure}
 
-Our rewriting rules for unary \ms{let}-statements are analogous to those for unary
-\ms{let}-expressions:
-\begin{itemize}
-  \item \brle{let$_1$-$\beta$} allows us to perform $\beta$-reduction of \emph{pure} expressions
-  into regions
-  \item \brle{let$_1$-$\eta$}... \todo{is this derivable?}
-  \item Exactly like for \ms{let}-expressions, \brle{let$_1$-op}, \brle{let$_1$-pair},
-  \brle{let$_1$-inl}, \brle{let$_1$-inr}, \brle{let$_1$-abort}, and \brle{let$_1$-case} allow us
-  to pull out nested subexpressions of the bound value of a \ms{let}-statement into their own
-  unary \ms{let}-statement
-\end{itemize}
-
 \begin{figure}
   \begin{gather*}
     \prftree[r]{\rle{let$_1$-$\beta$}}
       {\hasty{\Gamma}{\bot}{a}{A}}
       {\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
       {\lbeq{\Gamma}{\letstmt{x}{a}{r}}{[r/x]a}{\ms{L}}}
-    \qquad
-    \prftree[r]{\rle{let$_1$-$\eta$}}
-      {\hasty{\Gamma}{\epsilon}{a}{\ms{L}}}
-      {\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
-      {\lbeq{\Gamma}{\letstmt{x}{a}{r}}{\letstmt{y}{a}{\letstmt{x}{y}{r}}}{\ms{L}}}
     \\
       \prftree[r]{\rle{let$_1$-op}}
       {\isop{f}{A}{B}{\epsilon}}
@@ -1688,15 +1684,13 @@ Our rewriting rules for unary \ms{let}-statements are analogous to those for una
     \prftree[r]{\rle{let$_1$-abort}}
       {\hasty{\Gamma}{\epsilon}{a}{\mb{0}}}
       {\haslb{\Gamma, \bhyp{y}{A}}{r}{\ms{L}}}
-      {\lbeq{\Gamma}{\letstmt{y}{\labort{a}}{r}}{\letstmt{x}{a}{\letstmt{y}{\labort{x}}{r}}}{\ms{L}}}
+      {\lbeq{\Gamma}{\letstmt{y}{\labort{a}}{r}}
+        {\letstmt{x}{a}{\letstmt{y}{\labort{x}}{r}}}{\ms{L}}}
   \end{gather*}
   \Description{}
   \caption{Rewriting rules for \isotopessa unary \ms{let}-statements}
+  \label{fig:ssa-reg-unary-let}
 \end{figure}
-
-\TODO{let2 theory is again a reduction, eta, and bind}
-
-\TODO{case theory is again a reduction, eta, and bind}
 
 \begin{figure}
   \begin{gather*}
@@ -1706,21 +1700,10 @@ Our rewriting rules for unary \ms{let}-statements are analogous to those for una
       {\haslb{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{r}{\ms{L}}}
       {\lbeq{\Gamma}{\letstmt{(x, y)}{(a, b)}{r}}{\letstmt{x}{a}{\letstmt{y}{b}{r}}}{\ms{L}}}
     \\
-    \prftree[r]{\rle{let$_2$-$\eta$}}
-      {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
-      {\haslb{\Gamma, \bhyp{z}{A \otimes B}}{r}{\ms{L}}}
-      {\lbeq{\Gamma}{\letstmt{(x, y)}{e}{\letstmt{z}{(x, y)}{r}}}{\letstmt{z}{e}{r}}{\ms{L}}}
-    \\
     \prftree[r]{\rle{let$_2$-bind}}
       {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
       {\haslb{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{r}{\ms{L}}}
       {\lbeq{\Gamma}{\letstmt{(x, y)}{e}{r}}{\letstmt{z}{e}{\letstmt{(x, y)}{z}{r}}}{\ms{L}}}
-    \\
-    \prftree[r]{\rle{case-bind}}
-    {\hasty{\Gamma}{\epsilon}{e}{A + B}}
-    {\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
-    {\haslb{\Gamma, \bhyp{y}{B}}{s}{\ms{L}}}
-    {\lbeq{\Gamma}{\caseexpr{e}{x}{r}{y}{s}}{\letstmt{z}{e}{\caseexpr{z}{x}{r}{y}{s}}}{\ms{L}}}
     \\
     \prftree[r]{\rle{case-inl}}
       {\hasty{\Gamma}{\epsilon}{a}{A}}
@@ -1733,36 +1716,54 @@ Our rewriting rules for unary \ms{let}-statements are analogous to those for una
       {\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
       {\haslb{\Gamma, \bhyp{y}{B}}{s}{\ms{L}}}
       {\lbeq{\Gamma}{\caseexpr{\linr{b}}{x}{r}{y}{s}}{\letstmt{y}{b}{s}}{\ms{L}}}
+    \\
+    \prftree[r]{\rle{case-bind}}
+    {\hasty{\Gamma}{\epsilon}{e}{A + B}}
+    {\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
+    {\haslb{\Gamma, \bhyp{y}{B}}{s}{\ms{L}}}
+    {\lbeq{\Gamma}{\caseexpr{e}{x}{r}{y}{s}}{\letstmt{z}{e}{\caseexpr{z}{x}{r}{y}{s}}}{\ms{L}}}
   \end{gather*}
   \Description{}
   \caption{Rewriting rules for \isotopessa binary \ms{let}-statements and \ms{case}-statements}
+  \label{fig:ssa-reg-let2-case-expr}
 \end{figure}
 
-\TODO{
-  basic where theory: simple reduction, binding rules for let12 and case, self-binding
-}
-
-\TODO{cfgsubst lore}
-
-\begin{equation*}
+Dealing with \ms{where}-blocks, on the other hand, is a little bit more complicated, as shown by the
+number of rules in Figure~\ref{fig:ssa-where-rules}. One difficulty is that, unlike the other region
+constructors, we will need an $\eta$-rule as well as \emph{two} $\beta$-rules. The latter are simple
+enough to state:
+\begin{itemize}
+  \item For $\ell_k$ defined in a \ms{where}-block, \brle{cfg-$\beta_1$} says that \todo{this}
+  \item For $\kappa$ \emph{not} defined in a \ms{where}-block, \brle{cfg-$\beta_2$} says that
+  \todo{this}
+\end{itemize}
+To state our $\eta$-rule, however, we will need to introduce some more machinery. Given a mapping
+from a set of labels $\ell_i$ to associated regions $t_i$, we may define the \emph{control-flow
+graph substitution} $\cfgsubst{(\wbranch{\ell_i}{x_i}{t_i},)_i}$ pointwise as follows:
+\begin{equation}
   \cfgsubst{(\wbranch{\ell_i}{x_i}{t_i},)_i}\;\kappa\;a
-  := \where{\brb{\kappa}{a}}{(\wbranch{\ell_i}{x_i}{t_i},)_i}
-\end{equation*}
+  := (\where{\brb{\kappa}{a}}{(\wbranch{\ell_i}{x_i}{t_i},)_i})
+\end{equation}
 
 \TODO{text}
 
-\begin{equation*}
-  \prftree[r]{\rle{cfgsubst}}
+\begin{equation}
+  \prftree[r]{\rle{cfgs}}
     {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
     {\lbsubst{\Gamma}
       {\cfgsubst{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}{\ms{L}}}
-\end{equation*}
+\end{equation}
 
-\TODO{advanced where lore: lsubst-reduction, uniformity, and codiagonal}
+\TODO{text}
+
+\begin{itemize}
+  \item \todo{codiagonal, needs extensive explanation}
+  \item \todo{uniformity, needs extensive explanation}
+\end{itemize}
 
 \begin{figure}
   \begin{gather*}
-      \prftree[r]{\rle{cfg-$<$}}
+      \prftree[r]{\rle{cfg-$\beta_1$}}
         {\hasty{\Gamma}{\bot}{a}{A_k}}
         {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
         {\lbeq{\Gamma}
@@ -1770,7 +1771,16 @@ Our rewriting rules for unary \ms{let}-statements are analogous to those for una
           {\where{(\letstmt{x_k}{a}{t_k})}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
           {\ms{L}}}
       \\
-        \prftree[r]{\rle{ucfg}}
+      \prftree[r]{\rle{cfg-$\beta_2$}}
+        {\hasty{\Gamma}{\bot}{a}{A_k}}
+        {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+        {\kappa \notin \{(\ell_i,)_i\}}
+        {\lbeq{\Gamma}
+          {\where{\brb{\kappa}{a}}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
+          {\brb{\kappa}{a}}
+          {\ms{L}}}
+      \\
+        \prftree[r]{\rle{cfg-$\eta$}}
         {\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
         {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
         {
@@ -1781,7 +1791,8 @@ Our rewriting rules for unary \ms{let}-statements are analogous to those for una
         }
       \\
       % NOTE: in the development, it's (ret e) wseq s_0, not [e/x] s_0
-      % but these are trivially equal by cfg-<
+      % but these are trivially equal by cfg-\beta_1
+      \\
       \prftree[r]{\rle{uni}}
         {
           \prfStackPremises
@@ -1816,15 +1827,15 @@ Our rewriting rules for unary \ms{let}-statements are analogous to those for una
         {\ms{L}}}
   \end{gather*}
   \Description{}
-  \caption{Rewriting rules for \isotopessa \ms{where}-statements}
+  \caption{Rewriting rules for \isotopessa \ms{where}-blocks}
+  \label{fig:ssa-where-rules}
 \end{figure}
 
 \subsection{Metatheory}
 
-\TODO{congruence relation on substitutions, label-substitutions}
-
-\TODO{lemma: weakening of rewriting}
-
+We can now begin to investigate the metatheoretic properties of our equational theory. As a first
+sanity check, we can verify that weakening, label-weakening, and loosening of effects all respect
+our equivalence relation, as stated in the following lemma:
 \begin{lemma}[Weakening (Rewriting)]
   Given $\Gamma \leq \Delta$, $\epsilon \leq \epsilon'$, we have that
   \begin{enumerate}[label=(\alph*)]
@@ -1838,10 +1849,53 @@ Our rewriting rules for unary \ms{let}-statements are analogous to those for una
       \implies \lbseq{\sigma}{\sigma'}{\Gamma}{\ms{L}}{\ms{K}}$
   \end{enumerate}
 \end{lemma}
+\begin{proof}
+  By induction. \todo{formalization pointer?}
+\end{proof}
+In particular, note that this lemma uses an equivalence relation on substitutions and
+label-substitutions: this is just the obvious pointwise extension of the equivalence relation on
+terms and regions respectively. We give the rules for this relation in
+Figure~\ref{fig:ssa-subst-equiv} in the interests of explicitness. It is straightforward to verify
+that these are indeed equivalence relations.
+
+\begin{figure}
+  \begin{gather*}
+    \prftree[r]{\rle{sb-nil}}{\tmseq{\cdot}{\cdot}{\Gamma}{\cdot}} \qquad
+    \prftree[r]{\rle{sb-cons}}
+      {\tmeq{\Gamma}{\epsilon}{a}{a'}{A}}{\tmseq{\gamma}{\gamma'}{\Gamma}{\Delta}}
+      {\tmseq{\gamma, x \mapsto a}{\gamma', x \mapsto a'}{\Gamma}{\Delta, \thyp{x}{A}{\epsilon}}}
+    \\
+    \prftree[r]{\rle{sb-skip-l}}
+      {\tmseq{\gamma}{\gamma'}{\Gamma}{\Delta}}
+      {\tmseq{\gamma, x \mapsto a}{\gamma'}{\Gamma}{\Delta}} \qquad
+    \prftree[r]{\rle{sb-skip-r}}
+      {\tmseq{\gamma}{\gamma'}{\Gamma}{\Delta}}
+      {\tmseq{\gamma}{\gamma', x \mapsto a'}{\Gamma}{\Delta}}
+    \\
+    \prftree[r]{\rle{ls-nil}}{\lbseq{\cdot}{\cdot}{\cdot}{\ms{K}}} \qquad
+    \prftree[r]{\rle{ls-cons}}
+      {\lbeq{\Gamma, \bhyp{x}{A}}{r}{r'}{\ms{K}}}
+      {\lbseq{\sigma}{\sigma'}{\Gamma}{\ms{L}}{\ms{K}}}
+      {\lbseq
+        {\sigma, \ell(x) \mapsto r}{\sigma', \ell(x) \mapsto r'}{\Gamma}
+        {\ms{L}, \ell(A)}{\ms{K}}}
+    \\
+    \prftree[r]{\rle{ls-skip-l}}
+      {\lbseq{\sigma}{\sigma'}{\Gamma}{\ms{L}}{\ms{K}}}
+      {\lbseq{\sigma, \ell(x) \mapsto r}{\sigma'}{\Gamma}{\ms{L}}{\ms{K}}}
+      \qquad
+    \prftree[r]{\rle{ls-skip-r}}
+      {\lbseq{\sigma}{\sigma'}{\Gamma}{\ms{L}}{\ms{K}}}
+      {\lbseq{\sigma}{\sigma', \ell(x) \mapsto r'}{\Gamma}{\ms{L}}{\ms{K}}}
+  \end{gather*}
+  \Description{}
+  \caption{Rules for the equivalence relation on \isotopessa substitutions and label-substitutions}
+  \label{fig:ssa-subst-equiv}
+\end{figure}
 
 \TODO{lemma: substitution, composition is a congruence}
 
-\begin{lemma}[Substitution Congruence]
+\begin{lemma}[Congruence (Substitution)]
   Given $\tmseq{\gamma}{\gamma'}{\Gamma}{\Delta}$, we have that
   \begin{enumerate}[label=(\alph*)]
     \item $\tmeq{\Delta}{\epsilon}{a}{a'}{A} 
@@ -1857,7 +1911,7 @@ Our rewriting rules for unary \ms{let}-statements are analogous to those for una
 
 \TODO{lemma: label-substitution, composition is a congruence}
 
-\begin{lemma}[Label Substitution Congruence]
+\begin{lemma}[Congruence (Label Substitution)]
   Given $\lbseq{\sigma}{\sigma'}{\Gamma}{\ms{L}}{\ms{K}}$, we have that
   \begin{enumerate}[label=(\alph*)]
     \item $\lbeq{\Gamma}{r}{r'}{\ms{L}} \implies \lbeq{\Gamma}{[\sigma]r}{[\sigma']r'}{\ms{K}}$
