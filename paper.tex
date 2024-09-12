@@ -1560,14 +1560,23 @@ will show that this is enough to state a relatively powerful completeness theore
 
 \subsection{Regions}
 
-We now come to the equational theory for \isotopessa \emph{regions}, which is somewhat more
-complicated, due to needing to support arbitrary control-flow graphs in the form of
-\ms{where}-statements. It is presented in a similar format, with a set of rewriting rules and a
-congruence, the latter given in Figure~\ref{fig:ssa-reg-congr-rules}.
-
-\TODO{explain congruence rules; note about formalization?}
-
-\TODO{add parentheses?}
+We now come to the equational theory for regions, which is similar to that for terms, except that we
+also need to support control-flow graphs. As before, we will split our rules into a set of
+\emph{cogruence rules} and, for each region constructor, \emph{rewriting rules} based on that
+constructor's semantics. Our congruence rules, given in Figure~\ref{fig:ssa-reg-congr-rules}, are
+quite standard; we have:
+\begin{itemize}
+  \item As for terms, \brle{refl}, \brle{trans}, and \brle{symm} state that
+  $\lbeq{\Gamma}{\cdot}{\cdot}{\ms{L}}$ is an equivalence relation for all $\Gamma$, $\ms{L}$.
+  \item Similarly, \brle{let$_1$}, \brle{let$_2$}, \brle{case}, and \brle{cfg} state that
+  $\lbeq{\Gamma}{\cdot}{\cdot}{\ms{L}}$ is a congruence over the respective region constructors;
+  \emph{as well as} the equivalence relation on terms $\tmeq{\Gamma}{\epsilon}{\cdot}{\cdot}{A}$.
+  \item \brle{initial} states that any context containing the empty type $\mb{0}$ equates all
+  regions, by a similar reasoning to the rules for terms. Note that we do not require an analogue to
+  the \brle{terminal} rule (for example, for regions targeting $\ms{L} = \lhyp{\ell}{\mb{1}}$),
+  since it will follow from the version for terms; this is good, since the concept of a ``pure''
+  region has not yet been defined.
+\end{itemize}
 
 \begin{figure}
   \begin{gather*}
@@ -1575,12 +1584,6 @@ congruence, the latter given in Figure~\ref{fig:ssa-reg-congr-rules}.
     \prftree[r]{\rle{trans}}{\lbeq{\Gamma}{r}{s}{\ms{L}}}{\lbeq{\Gamma}{s}{t}{\ms{L}}}
       {\lbeq{\Gamma}{r}{t}{\ms{L}}} \qquad
     \prftree[r]{\rle{symm}}{\lbeq{\Gamma}{r}{s}{\ms{L}}}{\lbeq{\Gamma}{s}{r}{\ms{L}}}
-    \\
-    \prftree[r]{\rle{case}}
-      {\tmeq{\Gamma}{\epsilon}{e}{e'}{A + B}}
-      {\lbeq{\Gamma, \bhyp{x}{A}}{r}{r'}{\ms{L}}}
-      {\lbeq{\Gamma, \bhyp{y}{B}}{s}{s'}{\ms{L}}}
-      {\lbeq{\Gamma}{\caseexpr{e}{x}{r}{y}{s}}{\caseexpr{e'}{x}{r'}{y}{s'}}{\ms{L}}}
     \\
     \prftree[r]{\rle{let}$_1$}
       {\tmeq{\Gamma}{\epsilon}{a}{a'}{A}}
@@ -1591,6 +1594,12 @@ congruence, the latter given in Figure~\ref{fig:ssa-reg-congr-rules}.
       {\tmeq{\Gamma}{\epsilon}{e}{e'}{A \otimes B}}
       {\lbeq{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{r}{r'}{\ms{L}}}
       {\lbeq{\Gamma}{\letstmt{(x, y)}{e}{r}}{\letstmt{(x, y)}{e'}{r'}}{\ms{L}}}
+    \\
+    \prftree[r]{\rle{case}}
+      {\tmeq{\Gamma}{\epsilon}{e}{e'}{A + B}}
+      {\lbeq{\Gamma, \bhyp{x}{A}}{r}{r'}{\ms{L}}}
+      {\lbeq{\Gamma, \bhyp{y}{B}}{s}{s'}{\ms{L}}}
+      {\lbeq{\Gamma}{\caseexpr{e}{x}{r}{y}{s}}{\caseexpr{e'}{x}{r'}{y}{s'}}{\ms{L}}}
     \\
     \prftree[r]{\rle{cfg}}
       {\lbeq{\Gamma}{r}{r'}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
@@ -1612,10 +1621,17 @@ congruence, the latter given in Figure~\ref{fig:ssa-reg-congr-rules}.
   \label{fig:ssa-reg-congr-rules}
 \end{figure}
 
-\TODO{
-  let1 theory is the same as above: just need to commute with each expression constructor, +
-  an extra rule for let1-expressions
-}
+Our rewriting rules for unary \ms{let}-statements are analogous to those for unary
+\ms{let}-expressions:
+\begin{itemize}
+  \item \brle{let$_1$-$\beta$} allows us to perform $\beta$-reduction of \emph{pure} expressions
+  into regions
+  \item \brle{let$_1$-$\eta$}... \todo{is this derivable?}
+  \item Exactly like for \ms{let}-expressions, \brle{let$_1$-op}, \brle{let$_1$-pair},
+  \brle{let$_1$-inl}, \brle{let$_1$-inr}, \brle{let$_1$-abort}, and \brle{let$_1$-case} allow us
+  to pull out nested subexpressions of the bound value of a \ms{let}-statement into their own
+  unary \ms{let}-statement
+\end{itemize}
 
 \begin{figure}
   \begin{gather*}
