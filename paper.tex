@@ -1240,8 +1240,6 @@ program transformations which splice and manipulate the control-flow graph.
 
 \section{Equational Theory}
 
-\TODO{intro?}
-
 \subsection{Expressions}
 
 We can now give an equational theory for \isotopessa expressions. In particular,
@@ -1249,15 +1247,34 @@ we will inductively define an equivalence relation
 $
 \tmeq{\Gamma}{\epsilon}{a}{a'}{A}
 $
-on terms $a, a'$ for each context $\Gamma$, effect $\epsilon$, and type $A$. This will be presented
-as a set of simple \emph{rewriting rules} along with a \emph{congruence rules}, given in
-Figure~\ref{fig:ssa-expr-congr-rules}, which merely ensure we can perform equational reasoning as
-normal.
+on terms $a, a'$ for each context $\Gamma$, effect $\epsilon$, and type $A$. For each of the rules
+we will present, we assume the rule is valid if and only if \emph{both sides} of the rule are
+well-typed. We also assume that variables are $\alpha$-converted as appropriate to avoid shadowing;
+our formalization uses de-Bruijn indices, but we stick with names in this exposition for simplicity.
 
-For each of the rules we will present, we assume the rule is valid if and only if \emph{both sides}
-of the rule are well-typed. We also assume that variables are $\alpha$-converted as appropriate to
-avoid shadowing; our actual formalization uses de-Bruijn indices, but we stick with a named
-exposition for clarity.
+The rules for this relation can be roughly split into \emph{rewriting rules}, which denote when two
+particular expressions have equivalent semantics, and \emph{congruence rules}, which govern how
+rewrites can be composed to enable equational reasoning. In particular, our congruence rules, given
+in Figure~\ref{fig:ssa-expr-congr-rules}, consist of:
+\begin{itemize}
+  \item \brle{refl}, \brle{symm}, \brle{trans}, which state that
+  $\tmeq{\Gamma}{\epsilon}{\cdot}{\cdot}{A}$ is reflexive, transitive, and symmetric respectively
+  for each choice of $\Gamma, \epsilon, A$, and therefore an equivalence relation.
+  \item \brle{let$_1$}, \brle{let$_2$}, \brle{pair}, \brle{inl}, \brle{inr}, \brle{case}, and
+  \brle{abort}, which state that $\tmeq{\Gamma}{\epsilon}{\cdot}{\cdot}{A}$ is a \emph{congruence}
+  with respect to the corresponding expression contructor, and, in particular, that the expression
+  constructors are well-defined functions on the quotient of expressions up to $\teqv$.
+\end{itemize} 
+We also include the following \emph{type-directed} rules as part of our congruence relation:
+\begin{itemize}
+  \item \brle{initial}, which equates \emph{all} terms in a context containing the empty type
+  $\mb{0}$, since we will deem any such context to be \emph{unreachable} by control flow. In
+  particular, any instruction or function call returning $\mb{0}$ is assumed to diverge, similarly
+  to Rust's ``never type'' ``$!$".
+  \item \brle{terminal}, which equats all \emph{pure} terms of unit type $\mb{1}$. Note that
+  \emph{impure} terms may be disequal, since while their result values are the same, their side
+  effects may differ!
+\end{itemize}
 
 \begin{figure}
   \begin{gather*}
@@ -1270,34 +1287,20 @@ exposition for clarity.
       {\tmeq{\Gamma}{\epsilon}{a}{b}{A}}
       {\tmeq{\Gamma}{\epsilon}{b}{a}{A}}
     \\
-    \prftree[r]{\rle{let$_1$-bind}}
+    \prftree[r]{\rle{let$_1$}}
       {\tmeq{\Gamma}{\epsilon}{a}{a'}{A}}
-      {\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{b}{B}}
-      {\tmeq{\Gamma}{\epsilon}{\letexpr{x}{a}{b}}{\letexpr{x}{a'}{b}}{B}} 
-    \\
-    \prftree[r]{\rle{let$_1$-bound}}
-      {\hasty{\Gamma}{\epsilon}{a}{A}}
       {\tmeq{\Gamma, \bhyp{x}{A}}{\epsilon}{b}{b'}{B}}
-      {\tmeq{\Gamma}{\epsilon}{\letexpr{x}{a}{b}}{\letexpr{x}{a}{b'}}{B}}
+      {\tmeq{\Gamma}{\epsilon}{\letexpr{x}{a}{b}}{\letexpr{x}{a'}{b'}}{B}} 
     \\
-    \prftree[r]{\rle{pair-l}}
+    \prftree[r]{\rle{pair}}
       {\tmeq{\Gamma}{\epsilon}{a}{a'}{A}}
-      {\hasty{\Gamma}{\epsilon}{b}{B}}
-      {\tmeq{\Gamma}{\epsilon}{(a, b)}{(a', b)}{A \otimes B}} \qquad
-    \prftree[r]{\rle{pair-r}}
-      {\hasty{\Gamma}{\epsilon}{a}{A}}
       {\tmeq{\Gamma}{\epsilon}{b}{b'}{B}}
-      {\tmeq{\Gamma}{\epsilon}{(a, b)}{(a, b')}{A \otimes B}}
+      {\tmeq{\Gamma}{\epsilon}{(a, b)}{(a', b)}{A \otimes B}}
     \\
-    \prftree[r]{\rle{let$_2$-bind}}
+    \prftree[r]{\rle{let$_2$}}
       {\tmeq{\Gamma}{\epsilon}{e}{e'}{A \otimes B}}
-      {\hasty{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{\epsilon}{c}{C}}
-      {\tmeq{\Gamma}{\epsilon}{\letexpr{(x, y)}{e}{c}}{\letexpr{(x, y)}{e'}{c}}{C}}
-    \\
-    \prftree[r]{\rle{let$_2$-bound}}
-      {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
       {\tmeq{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{\epsilon}{c}{c'}{C}}
-      {\tmeq{\Gamma}{\epsilon}{\letexpr{(x, y)}{e}{c}}{\letexpr{(x, y)}{e}{c'}}{C}}
+      {\tmeq{\Gamma}{\epsilon}{\letexpr{(x, y)}{e}{c}}{\letexpr{(x, y)}{e'}{c'}}{C}}
     \\
     \prftree[r]{\rle{inl}}
       {\tmeq{\Gamma}{\epsilon}{a}{a'}{A}}
@@ -1306,27 +1309,26 @@ exposition for clarity.
       {\tmeq{\Gamma}{\epsilon}{b}{b'}{B}}
       {\tmeq{\Gamma}{\epsilon}{\linr{b}}{\linr{b'}}{A + B}} \qquad
     \\
+    \prftree[r]{\rle{case}}
+      {\tmeq{\Gamma}{\epsilon}{e}{e'}{A + B}}
+      {\tmeq{\Gamma, \bhyp{x}{A}}{\epsilon}{a}{a'}{C}}
+      {\tmeq{\Gamma, \bhyp{y}{B}}{\epsilon}{b}{b'}{C}}
+      {\tmeq{\Gamma}{\epsilon}{\caseexpr{e}{x}{a}{y}{b}}{\caseexpr{e'}{x}{a'}{y}{b'}}{C}}
+    \\
     \prftree[r]{\rle{abort}}
       {\tmeq{\Gamma}{\epsilon}{a}{a'}{\mb{0}}}
       {\tmeq{\Gamma}{\epsilon}{\labort{a}}{\labort{a'}}{A}}
     \\
-    \prftree[r]{\rle{case-d}}
-      {\tmeq{\Gamma}{\epsilon}{e}{e'}{A + B}}
-      {\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{a}{C}}
-      {\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{b}{C}}
-      {\tmeq{\Gamma}{\epsilon}{\caseexpr{e}{x}{a}{y}{b}}{\caseexpr{e'}{x}{a}{y}{b}}{C}}
-    \\
-    \prftree[r]{\rle{case-l}}
-      {\hasty{\Gamma}{\epsilon}{e}{A + B}}
-      {\tmeq{\Gamma, \bhyp{x}{A}}{\epsilon}{a}{a'}{C}}
-      {\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{b}{C}}
-      {\tmeq{\Gamma}{\epsilon}{\caseexpr{e}{x}{a}{y}{b}}{\caseexpr{e'}{x}{a'}{y}{b}}{C}}
-    \\
-    \prftree[r]{\rle{case-r}}
-      {\hasty{\Gamma}{\epsilon}{e}{A + B}}
-      {\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{a}{C}}
-      {\tmeq{\Gamma, \bhyp{y}{B}}{\epsilon}{b}{b'}{C}}
-      {\tmeq{\Gamma}{\epsilon}{\caseexpr{e}{x}{a}{y}{b}}{\caseexpr{e'}{x}{a}{y}{b'}}{C}}
+    \prftree[r]{\rle{initial}} 
+      {\hasty{\Gamma}{\epsilon}{a}{A}}
+      {\hasty{\Gamma}{\epsilon}{a'}{A}}
+      {\exists x, \Gamma\;x = (\mb{0}, \bot)}
+      {\tmeq{\Gamma}{\epsilon}{a}{a'}{A}}
+      \qquad
+    \prftree[r]{\rle{terminal}}
+      {\hasty{\Gamma}{\bot}{a}{\mb{1}}}
+      {\hasty{\Gamma}{\bot}{a'}{\mb{1}}}
+      {\tmeq{\Gamma}{\epsilon}{a}{a'}{\mb{1}}}
   \end{gather*}
   \caption{Congruence rules for \isotopessa expressions}
   \Description{}
@@ -1340,9 +1342,22 @@ summarized in Figure~\ref{fig:ssa-unary-let-expr}:
   \item \brle{let$_1$-$\beta$}, which allows us to substitute the bound variable in $x$ the
   let-statement $\letexpr{x}{a}{b}$ with its definition $a$, yielding $[a/x]b$. Note that we require
   $\hasty{\Gamma}{\bot}{a}{A}$; i.e., $a$ must be \emph{pure}.
+  \brle{let$_1$-$\beta$} can be combined with \brle{initial} to derive the more convenient
+  rule \brle{initial-expr}:
+  \begin{gather*}
+    \prftree[r]{\rle{initial-expr}} 
+      {\hasty{\Gamma}{\epsilon}{a}{A}}
+      {\hasty{\Gamma}{\epsilon}{a'}{A}}
+      {\exists e, \hasty{\Gamma}{\bot}{e}{\mb{0}}}
+      {\tmeq{\Gamma}{\epsilon}{a}{a'}{A}}
+  \end{gather*}
+  This states that any context in which a \emph{pure} term of empty type can be constructed equates
+  all terms. Note in particular that this means divergent instructions must have impure effect!
+
   \item \brle{let$_1$-$\eta$}, which is the standard $\eta$-rule for \ms{let}. This is included as a
   separate rule since, while it follows trivially from $\beta$ for pure $a$, we also want to
   consider \emph{impure} expressions with some effect $e \neq \bot$.
+  
   \item Rules \brle{let$_1$-op}, \brle{let$_1$-pair}, \brle{let$_1$-inl}, and \brle{let$_1$-inr},
   \brle{let$_1$-abort}, and \brle{let$_1$-case} which allow us to ``pull'' a let-statement out of
   any of the other expression constructors; operationally, this is saying that the bound expression
@@ -1432,7 +1447,7 @@ summarized in Figure~\ref{fig:ssa-unary-let-expr}:
 Handling the other type constructors is a little simpler: by providing a ``binding'' rule, we
 generally only need to specify how to interact with $\ms{let}_1$, as well as an $\eta$ and $\beta$
 rule; interactions with the other constructors can then be derived. For example, consider the rules
-for $\ms{let}_2$ given in \ref{fig:ssa-binary-let-expr}; we have:
+for $\ms{let}_2$ given in \ref{fig:ssa-let2-case-expr}; we have:
 \begin{itemize}
   \item \brle{let$_2$-$\eta$}, which is the standard $\eta$-rule for binary \ms{let}-bindings
   \item \brle{let$_2$-pair}, which acts like a slightly generalized $\beta$-rule, since we can
@@ -1479,14 +1494,37 @@ adding a separate rule, we can instead derive (types omitted for simplicity) it 
       {\tmeq{\Gamma}{\epsilon}
         {\letexpr{(x, y)}{e}{c}}
         {\letexpr{z}{e}{\letexpr{(x, y)}{z}{c}}}{C}}
+    \\
+    \prftree[r]{\rle{case-inl}}
+      {\hasty{\Gamma}{\epsilon}{a}{A}}
+      {\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{c}{C}}
+      {\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{d}{C}}
+      {\tmeq{\Gamma}{\epsilon}{\caseexpr{\linl{a}}{x}{c}{y}{d}}{\letexpr{x}{a}{c}}{C}}
+    \\
+    \prftree[r]{\rle{case-inr}}
+      {\hasty{\Gamma}{\epsilon}{b}{B}}
+      {\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{c}{C}}
+      {\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{d}{C}}
+      {\tmeq{\Gamma}{\epsilon}{\caseexpr{\linr{b}}{x}{c}{y}{d}}{\letexpr{y}{b}{d}}{C}}
+    \\
+    \prftree[r]{\rle{case-$\eta$}}
+      {\hasty{\Gamma}{\epsilon}{e}{A + B}}
+      {\tmeq{\Gamma}{\epsilon}{\caseexpr{e}{x}{\linl{x}}{y}{\linr{y}}}{e}{A + B}}
+    \\
+    \prftree[r]{\rle{case-bind}}
+      {\hasty{\Gamma}{\epsilon}{e}{A + B}}
+      {\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{c}{C}}
+      {\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{d}{C}}
+      {\tmeq{\Gamma}{\epsilon}{\caseexpr{e}{x}{c}{y}{d}}
+      {\letexpr{z}{e}{\caseexpr{z}{x}{c}{y}{d}}}{C}}
   \end{gather*}
   \Description{}
-  \caption{Rewriting rules for \isotopessa binary \ms{let} expressions}
-  \label{fig:ssa-binary-let-expr}
+  \caption{Rewriting rules for \isotopessa binary \ms{let} and \ms{case} expressions}
+  \label{fig:ssa-let2-case-expr}
 \end{figure}
 
-Similarly, it is enough to give $\eta$, $\beta$, and binding rules for \brle{case} expressions,
-as in Figure \ref{fig:ssa-case-expr}. In particular, we have that
+Similarly, it is enough to give $\eta$, $\beta$, and binding rules for \brle{case} expressions. 
+In particular, we have that
 \begin{itemize}
   \item \brle{case-inl} and \brle{case-inr} serve as $\beta$-reduction rules, telling us that
   \ms{case}-expressions given an injection as an argument have the expected operational behaviour.
@@ -1508,87 +1546,14 @@ we have that
 \end{align*}
 and likewise for more complicated distributivity properties involving, e.g., \ms{let}-bindings.
 
-\begin{figure}
-  \begin{gather*}
-    \prftree[r]{\rle{case-inl}}
-      {\hasty{\Gamma}{\epsilon}{a}{A}}
-      {\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{c}{C}}
-      {\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{d}{C}}
-      {\tmeq{\Gamma}{\epsilon}{\caseexpr{\linl{a}}{x}{c}{y}{d}}{\letexpr{x}{a}{c}}{C}}
-    \\
-    \prftree[r]{\rle{case-inr}}
-      {\hasty{\Gamma}{\epsilon}{b}{B}}
-      {\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{c}{C}}
-      {\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{d}{C}}
-      {\tmeq{\Gamma}{\epsilon}{\caseexpr{\linr{b}}{x}{c}{y}{d}}{\letexpr{y}{b}{d}}{C}}
-    \\
-    \prftree[r]{\rle{case-$\eta$}}
-      {\hasty{\Gamma}{\epsilon}{e}{A + B}}
-      {\tmeq{\Gamma}{\epsilon}{\caseexpr{e}{x}{\linl{x}}{y}{\linr{y}}}{e}{A + B}}
-    \\
-    \prftree[r]{\rle{case-bind}}
-      {\hasty{\Gamma}{\epsilon}{e}{A + B}}
-      {\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{c}{C}}
-      {\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{d}{C}}
-      {\tmeq{\Gamma}{\epsilon}{\caseexpr{e}{x}{c}{y}{d}}{\letexpr{z}{e}{\caseexpr{z}{x}{c}{y}{d}}}{C}}
-  \end{gather*}
-  \Description{}
-  \caption{Rewriting rules for \isotopessa \ms{case} expressions}
-  \label{fig:ssa-case-expr}
-\end{figure}
-
 The case for other the other constructors is even more convenient: no additional rules are required
-at all to handle operations, pairs, and injections. For example, we can derive a the expected
+at all to handle operations, pairs, and injections. For example, we can derive the expected
 bind-rule for operations as follows:
 \begin{align*}
   f\;a \teqv (\letexpr{y}{f\;a}{y})
   \teqv (\letexpr{x}{a}{\letexpr{y}{f\;x}{y}})
   \teqv (\letexpr{x}{a}{f\;x})
 \end{align*}
-To have aborts and units behave as we expect; namely, that $\mb{0}$ acts as the empty type and
-$\mb{1}$ the unit type, we need only introduce the following rules, given in
-Figure~\ref{fig:ssa-initial-terminal-expr}:
-\begin{itemize}
-  \item \brle{initial}, which says that \emph{all} terms are equated in any context containing the
-  empty type $\mb{0}$, since such we will take such a context to be unreachable by program execution
-  (e.g. after an infinite loop, or an instruction or function call which never returns). 
-
-  This can be combined with \brle{let1-$\beta$} to yield the more convenient rule
-  \brle{initial-expr}, which states that any context in which a \emph{pure} term of empty type
-  can be constructed equates all terms. Note in particular that this means divergent instructions
-  must have impure effect!
-
-  \item \brle{terminal}, which says that all \emph{pure} terms of type $\mb{1}$ are equal in any
-  context. Note that \emph{impure} terms may be disequal, since while their result values are the
-  same, their side effects may differ!
-\end{itemize}
-
-\begin{figure}
-  \begin{gather*}
-    \prftree[r]{\rle{initial}} 
-      {\hasty{\Gamma}{\epsilon}{a}{A}}
-      {\hasty{\Gamma}{\epsilon}{a'}{A}}
-      {\exists x, \Gamma\;x = (\mb{0}, \bot)}
-      {\tmeq{\Gamma}{\epsilon}{a}{a'}{A}}
-      \qquad
-    \prftree[r]{\rle{terminal}}
-      {\hasty{\Gamma}{\bot}{a}{\mb{1}}}
-      {\hasty{\Gamma}{\bot}{a'}{\mb{1}}}
-      {\tmeq{\Gamma}{\epsilon}{a}{a'}{\mb{1}}}
-    \\
-    \prftree[r]{\rle{initial-expr}} 
-      {\hasty{\Gamma}{\epsilon}{a}{A}}
-      {\hasty{\Gamma}{\epsilon}{a'}{A}}
-      {\exists e, \hasty{\Gamma}{\bot}{e}{\mb{0}}}
-      {\tmeq{\Gamma}{\epsilon}{a}{a'}{A}}
-  \end{gather*}
-  \Description{} 
-  \caption{
-    Initial and terminal object rules; the rule \brle{initial-expr} is derivable 
-    from \brle{initial}, \brle{let$_1$-$\beta$}, and congruence.
-  }
-  \label{fig:ssa-initial-terminal-expr}
-\end{figure}
 
 This completes the equational theory for \isotopessa terms; in Section \ref{ssec:completeness}, we
 will show that this is enough to state a relatively powerful completeness theorem.
@@ -1600,6 +1565,10 @@ complicated, due to needing to support arbitrary control-flow graphs in the form
 \ms{where}-statements. It is presented in a similar format, with a set of rewriting rules and a
 congruence, the latter given in Figure~\ref{fig:ssa-reg-congr-rules}.
 
+\TODO{explain congruence rules; note about formalization?}
+
+\TODO{add parentheses?}
+
 \begin{figure}
   \begin{gather*}
     \prftree[r]{\rle{refl}}{\haslb{\Gamma}{r}{\ms{L}}}{\lbeq{\Gamma}{r}{r}{\ms{L}}} \qquad
@@ -1607,45 +1576,36 @@ congruence, the latter given in Figure~\ref{fig:ssa-reg-congr-rules}.
       {\lbeq{\Gamma}{r}{t}{\ms{L}}} \qquad
     \prftree[r]{\rle{symm}}{\lbeq{\Gamma}{r}{s}{\ms{L}}}{\lbeq{\Gamma}{s}{r}{\ms{L}}}
     \\
-    \prftree[r]{\rle{case-left}}
-      {\hasty{\Gamma}{\epsilon}{e}{A + B}}
+    \prftree[r]{\rle{case}}
+      {\tmeq{\Gamma}{\epsilon}{e}{e'}{A + B}}
       {\lbeq{\Gamma, \bhyp{x}{A}}{r}{r'}{\ms{L}}}
-      {\haslb{\Gamma, \bhyp{y}{B}}{s}{\ms{L}}}
-      {\lbeq{\Gamma}{\caseexpr{e}{x}{r}{y}{s}}{\caseexpr{e}{x}{r'}{y}{s}}{\ms{L}}}
-    \\
-    \prftree[r]{\rle{case-right}}
-      {\hasty{\Gamma}{\epsilon}{e}{A + B}}
-      {\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
       {\lbeq{\Gamma, \bhyp{y}{B}}{s}{s'}{\ms{L}}}
-      {\lbeq{\Gamma}{\caseexpr{e}{x}{r}{y}{s}}{\caseexpr{e}{x}{r}{y}{s'}}{\ms{L}}}
+      {\lbeq{\Gamma}{\caseexpr{e}{x}{r}{y}{s}}{\caseexpr{e'}{x}{r'}{y}{s'}}{\ms{L}}}
     \\
     \prftree[r]{\rle{let}$_1$}
-      {\hasty{\Gamma}{\epsilon}{a}{A}}
+      {\tmeq{\Gamma}{\epsilon}{a}{a'}{A}}
       {\lbeq{\Gamma, \bhyp{x}{A}}{r}{r'}{\ms{L}}}
-      {\lbeq{\Gamma}{\letstmt{x}{a}{r}}{\letstmt{x}{a}{r'}}{\ms{L}}}
-    \\
+      {\lbeq{\Gamma}{\letstmt{x}{a}{r}}{\letstmt{x}{a'}{r'}}{\ms{L}}}
+    \qquad
     \prftree[r]{\rle{let}$_2$}
-      {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
+      {\tmeq{\Gamma}{\epsilon}{e}{e'}{A \otimes B}}
       {\lbeq{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{r}{r'}{\ms{L}}}
-      {\lbeq{\Gamma}{\letstmt{(x, y)}{e}{r}}{\letstmt{(x, y)}{e}{r'}}{\ms{L}}}
+      {\lbeq{\Gamma}{\letstmt{(x, y)}{e}{r}}{\letstmt{(x, y)}{e'}{r'}}{\ms{L}}}
     \\
-    \prftree[r]{\rle{cfg-entry}}
+    \prftree[r]{\rle{cfg}}
       {\lbeq{\Gamma}{r}{r'}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
-      {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
-      {\lbeq{\Gamma}
-        {\where{r}{(\wbranch{\ell_i}{x_i: A_i}{t_i},)_i}}
-        {\where{r'}{(\wbranch{\ell_i}{x_i: A_i}{t_i},)_i}}
-        {\ms{L}}
-      }
-    \\
-    \prftree[r]{\rle{cfg-block}}
-      {\haslb{\Gamma}{r}{\ms{L}}}
       {\forall i. \lbeq{\Gamma, \bhyp{x_i}{A_i}}{t_i}{t_i'}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
       {\lbeq{\Gamma}
         {\where{r}{(\wbranch{\ell_i}{x_i: A_i}{t_i},)_i}}
         {\where{r'}{(\wbranch{\ell_i}{x_i: A_i}{t_i'},)_i}}
         {\ms{L}}
       }
+    \\
+    \prftree[r]{\rle{initial}}
+      {\haslb{\Gamma}{r}{\ms{L}}}
+      {\haslb{\Gamma}{s}{\ms{L}}}
+      {\exists x, \Gamma\;x = \mb{0}}
+      {\lbeq{\Gamma}{r}{s}{\ms{L}}}
   \end{gather*}
   \Description{}
   \caption{Congruence rules for \isotopessa regions}
@@ -1654,8 +1614,7 @@ congruence, the latter given in Figure~\ref{fig:ssa-reg-congr-rules}.
 
 \TODO{
   let1 theory is the same as above: just need to commute with each expression constructor, +
-  an extra rule for let1-expressions; should move \brle{initial} to the proper place later and
-  restate \brle{initial-expr}
+  an extra rule for let1-expressions
 }
 
 \begin{figure}
@@ -1669,17 +1628,6 @@ congruence, the latter given in Figure~\ref{fig:ssa-reg-congr-rules}.
       {\hasty{\Gamma}{\epsilon}{a}{\ms{L}}}
       {\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
       {\lbeq{\Gamma}{\letstmt{x}{a}{r}}{\letstmt{y}{a}{\letstmt{x}{y}{r}}}{\ms{L}}}
-    \\
-    \prftree[r]{\rle{let$_{1\teqv}$}}
-      {\tmeq{\Gamma}{\epsilon}{a}{a'}{A}}
-      {\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
-      {\lbeq{\Gamma}{\letstmt{x}{a}{r}}{\letstmt{x}{a'}{r}}{\ms{L}}}
-    \qquad
-    \prftree[r]{\rle{initial}}
-      {\haslb{\Gamma}{r}{\ms{L}}}
-      {\haslb{\Gamma}{s}{\ms{L}}}
-      {\exists x, \Gamma\;x = \mb{0}}
-      {\lbeq{\Gamma}{r}{s}{\ms{L}}}
     \\
       \prftree[r]{\rle{let$_1$-op}}
       {\isop{f}{A}{B}{\epsilon}}
@@ -1732,6 +1680,8 @@ congruence, the latter given in Figure~\ref{fig:ssa-reg-congr-rules}.
 
 \TODO{let2 theory is again a reduction, eta, and bind}
 
+\TODO{case theory is again a reduction, eta, and bind}
+
 \begin{figure}
   \begin{gather*}
     \prftree[r]{\rle{let$_2$-pair}}
@@ -1744,25 +1694,17 @@ congruence, the latter given in Figure~\ref{fig:ssa-reg-congr-rules}.
       {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
       {\haslb{\Gamma, \bhyp{z}{A \otimes B}}{r}{\ms{L}}}
       {\lbeq{\Gamma}{\letstmt{(x, y)}{e}{\letstmt{z}{(x, y)}{r}}}{\letstmt{z}{e}{r}}{\ms{L}}}
+    \\
     \prftree[r]{\rle{let$_2$-bind}}
       {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
       {\haslb{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{r}{\ms{L}}}
       {\lbeq{\Gamma}{\letstmt{(x, y)}{e}{r}}{\letstmt{z}{e}{\letstmt{(x, y)}{z}{r}}}{\ms{L}}}
     \\
-  \end{gather*}
-  \Description{}
-  \caption{Rewriting rules for \isotopessa binary \ms{let}-statements}
-\end{figure}
-
-\TODO{case theory is again a reduction, eta, and bind}
-
-\begin{figure}
-  \begin{gather*}
     \prftree[r]{\rle{case-bind}}
-      {\hasty{\Gamma}{\epsilon}{e}{A + B}}
-      {\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
-      {\haslb{\Gamma, \bhyp{y}{B}}{s}{\ms{L}}}
-      {\lbeq{\Gamma}{\caseexpr{e}{x}{r}{y}{s}}{\letstmt{z}{e}{\caseexpr{z}{x}{r}{y}{s}}}{\ms{L}}}
+    {\hasty{\Gamma}{\epsilon}{e}{A + B}}
+    {\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
+    {\haslb{\Gamma, \bhyp{y}{B}}{s}{\ms{L}}}
+    {\lbeq{\Gamma}{\caseexpr{e}{x}{r}{y}{s}}{\letstmt{z}{e}{\caseexpr{z}{x}{r}{y}{s}}}{\ms{L}}}
     \\
     \prftree[r]{\rle{case-inl}}
       {\hasty{\Gamma}{\epsilon}{a}{A}}
@@ -1777,7 +1719,7 @@ congruence, the latter given in Figure~\ref{fig:ssa-reg-congr-rules}.
       {\lbeq{\Gamma}{\caseexpr{\linr{b}}{x}{r}{y}{s}}{\letstmt{y}{b}{s}}{\ms{L}}}
   \end{gather*}
   \Description{}
-  \caption{Rewriting rules for \isotopessa \ms{case}-statements}
+  \caption{Rewriting rules for \isotopessa binary \ms{let}-statements and \ms{case}-statements}
 \end{figure}
 
 \TODO{
@@ -2290,7 +2232,7 @@ different effects are equal}
   \label{fig:ssa-vsubst-sem} 
 \end{figure}
 
-\subsection{Soundness}
+\subsection{Rewriting and Substitution}
 
 \TODO{most simple substitution theorem is \emph{rewriting}:}
 
@@ -2350,6 +2292,10 @@ different effects are equal}
 
 \TODO{text}
 
+\subsection{Equational Theory}
+
+\TODO{text}
+
 \begin{theorem}[Soundness (Equational Theory)]
   We have that
   \begin{enumerate}[label=(\alph*)]
@@ -2365,7 +2311,7 @@ different effects are equal}
   \end{enumerate}
 \end{theorem}
 
-\TODO{text}
+\TODO{text; diagram for each rule?}
 
 \subsection{Completeness}
 
@@ -2700,8 +2646,13 @@ We can define the \textit{parallel execution} of two morphisms as follows:
   f_0 || f_1 = \lambda (a_0, a_1). 
   & \{\iota_0 ((b_0, b_1), \alpha_0 || \alpha_1) 
     \mid \iota_0 (b_i, \alpha_i) \in f_i\;a_i\} 
-  \\ & \cup \{\iota_1 (\alpha_0 || \alpha_1) \mid (\iota_0 (b_0, \alpha_0) \in f_0\;a \lor \iota_0\;\alpha_0 \in f_0\;a_0) \land \iota_1 \alpha_1 \in f_1\;a_1\} 
-  \\ & \cup \{\iota_1 (\alpha_0 || \alpha_1) \mid \iota_1\;\alpha_0 \in f_0\;a_0 \land \iota_0 (a_1, \alpha_1) \in f_1\;a_1\}: \ms{Set}_{\ms{PO}}(A \otimes A', B \otimes B')
+  \\ & \cup \{\iota_1 (\alpha_0 || \alpha_1) 
+      \mid (\iota_0 (b_0, \alpha_0) \in f_0\;a \lor \iota_0\;\alpha_0 \in f_0\;a_0) 
+      \land \iota_1 \alpha_1 \in f_1\;a_1\} 
+  \\ & \cup \{\iota_1 (\alpha_0 || \alpha_1) 
+      \mid \iota_1\;\alpha_0 \in f_0\;a_0 
+      \land \iota_0 (a_1, \alpha_1) \in f_1\;a_1\}
+    : \ms{Set}_{\ms{PO}}(A \otimes A', B \otimes B')
   \end{aligned}
 \end{equation}
 It's tempting to try to use this to define a tensor product of morphisms to
@@ -2749,24 +2700,25 @@ The semantics of reads and writes can then be given by
 \begin{equation}
   \begin{aligned}
   \dnt{\ms{read}_x} = R_x^{\ms{TSO}} 
-    &= \ms{pflush};(\lambda ()\;L. \{(v, L, \{x = v\}) \mid L[x] = v \lor L[x] = \bot\});\ms{pflush} \\
+    &= \ms{pflush};(\lambda ()\;L. \{(v, L, \{x = v\}) \mid L[x] = v \lor L[x] = \bot\});\ms{pflush} 
+  \\
   \dnt{\ms{write}_x} = W_x^{\ms{TSO}}
     &= \ms{pflush};(\lambda v\;L. \{(v, (L;\{\bufloc{x} := v\}), \{x := v\})\});\ms{pflush}
   \end{aligned}
 \end{equation}
 where buffer flushing is implemented via the morphism 
-\(
+$$
   \ms{pflush}_A = \lambda a\;L. \{(a, R, \alpha) | L = \alpha;R\}
   : \ms{Set}_{\ms{TSO}}(A, A)
-\)
+$$
 (called \(\ms{split}\) in \cite{sparky}). To be able to perform synchronization,
 we will also need to introduce a \(\ms{fence}: \mc{I}^\varnothing_0(\mb{1},
 \mb{1})\) instruction, which simply causes all actions before the fence to be
 observed before any actions after the fence. For \(\ms{TSO}\), implementing this
 is as simple as flushing the buffer, i.e., we define
-\(
+$$
   \dnt{\ms{fence}} = \lambda ()\;L. \{((), [], L;\{\delta\})\}
-\).
+$$
 We can now define the parallel composition of morphisms in a "fork-join" style
 as follows: we first flush the buffer completely (i.e., taking it and sticking
 it at the beginning of our pomset), then execute \(f\) and \(g\) in parallel
@@ -2778,12 +2730,16 @@ joined buffer is also empty, giving us the following definition:
     f_0 || f_1 = \lambda (a_0, a_1)\;L. 
     & \{\iota_0 ((b_0, b_1), [], L;(\alpha_0 || \alpha_1)) 
       \mid \iota_0 (b_i, [], \alpha_i) \in f_i\;a_i\;[]\} 
-    \\ & \cup \{\iota_1 (\alpha_0 || \alpha_1) \mid (\iota_0 (b_0, [], \alpha_0) \in f_0\;a \lor \iota_0\;\alpha_0 \in f_0\;a_0\;[]) \land \iota_1 \alpha_1 \in f_1\;a_1\;[]\} 
-    \\ & \cup \{\iota_1 (\alpha_0 || \alpha_1) \mid \iota_1\;\alpha_0 \in f_0\;a_0\;[] \land \iota_0 (a_1, [], \alpha_1) \in f_1\;a_1\;[]\}
+    \\ & \cup \{\iota_1 (\alpha_0 || \alpha_1) 
+        \mid (\iota_0 (b_0, [], \alpha_0) \in f_0\;a \lor \iota_0\;\alpha_0 \in f_0\;a_0\;[]) 
+        \land \iota_1 \alpha_1 \in f_1\;a_1\;[]\} 
+    \\ & \cup \{\iota_1 (\alpha_0 || \alpha_1) 
+        \mid \iota_1\;\alpha_0 \in f_0\;a_0\;[] 
+        \land \iota_0 (a_1, [], \alpha_1) \in f_1\;a_1\;[]\}
     \end{aligned}
 \end{equation}
 
-\TODO{\ms{pflush}-sandwich subcategory; Elgot lore?}
+\TODO{this category has ``too many'' morphisms: \ms{pflush}-sandwich subcategory; Elgot lore?}
 
 \section{Discussion and Related Work}
 
