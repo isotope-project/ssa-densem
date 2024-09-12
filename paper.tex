@@ -2639,78 +2639,84 @@ Other important examples include:
     \item \todo{\ms{Trace}}
   \end{itemize}
 \end{definition}
+As a simple, concrete example of type type of model this construction lets us define, consider the
+\textbf{nondeterministic printing monad}, which is simply defined as \(\ms{Print}\;A \equiv
+\ms{Traces}\;\Sigma\), where \(\Sigma: (\ms{byte}^*)^\omega \to \ms{byte}^{\leq \omega}\) denotes
+concatenation of bytestrings into a potentially infinite bytestream. This gives us us an \isotopessa
+model supporting effectful instructions \(\ms{print}: \ms{byte}^* \to \mb{1}\) and \(\ms{nondet}:
+\mb{1} \to A\) (for \(A\) nonempty), with semantics \(\dnt{\ms{print}} = \lambda b.\{\iota_0 ((),
+b)\}\), \(\dnt{\ms{nondet}} = \lambda (). \{\iota_0 (a, []) \mid a \in A\}\).
 
-\subsection{Heaps and Printing}
+We can make things a little more interesting by adding a heap to the mix, defining our monad
+\(\ms{Comp} = \ms{StateT}\;\ms{Heap}\;\ms{Print}\), where \(\ms{Heap} = \nats \rightharpoonup
+\nats\) is simply a partial function with finite support. The Kleisli category of this monad is also
+a Freyd category and inherits an Elgot structure from that on \(\ms{Set}_{\ms{Print}}\); we
+therefore have an \isotopessa model supporting the instructions \(\ms{set}: \nats \times \nats \to
+\mb{1}\), \(\ms{get}: \nats \to \nats\), \(\ms{alloc}: \nats \to \nats)\), and \(\ms{free}: \nats
+\to \mb{1}\). We can assign semantics to \(\ms{set}\) in the standard fashion, with \(\dnt{\ms{set}}
+= \lambda (p, v)\;h. \{\iota_0((), [p \mapsto v]h, [])\}\). \(\ms{get}\) is a bit more tricky, since
+it is unclear what to do when we try to access uninitialized memory: one option is simply to return
+an arbitrary value, with \(\dnt{\ms{get}} = \lambda p\;h. \{\iota_0(v, h, []) \mid v = h\;p \lor p
+\notin h\}\). Finally, \(\dnt{\ms{alloc}} = \lambda v\;h.\{\iota_0\;(p, h', []) \mid h' = h \sqcup p
+\mapsto v\}\) simply fills a random empty heap cell with the provided value, returning a pointer to
+the cell, while \(\dnt{\ms{free}} = \lambda p\;h. \{\iota_0\;((), h \setminus p, [])\}\).
 
-\begin{equation}
-  \ms{Heap}\;A = \ms{StateT}\;(\ms{Addr} \to \ms{Word})\;(\ms{Traces}\;\ms{str}^*\;\ms{str}^\omega\;A)
-\end{equation}
-
-\TODO{this...}
-
-\TODO{Cite how we're doing \citet{liang-95-interpreters}}
+As we can see, the trace monad is a very powerful tool for quickly constructing families of
+\isotopessa models, at least for relatively simple side-effects. It turns out, however, that the
+same techniques can be used to tackle much more complex side-effects; to demonstrate this, we will
+show how to build a simple model of TSO weak memory based on that given in \citet{sparky}.
 
 \section{TSO weak memory}
 
-Another interesting use of the trace monad to build a sophisticated \isotopessa
-model is to build a model of TSO-style weak memory based on \citet{sparky}. For
-simplicity, we will consider an infinite set of named locations \(x, y, z \in
-\ms{Loc}\) which are subject to concurrent modification by all threads via TSO
-reads, writes, and fences. We begin with the following definitions:
+To start, we need to construct an appropriate stream action monoid to take our traces over. For
+simplicity, we will consider an infinite set of named locations \(x, y, z \in \ms{Loc}\) which are
+subject to concurrent modification by all threads via TSO reads, writes, and fences. We begin with
+the following definitions:
 \begin{definition}[Pomset] 
-  A \textbf{pomset} \(\alpha\) over a set of actions \(\mc{A}\) with a
-  distinguished null action "\textbf{tick}" \(\delta \in \mc{A}\) is a
-  \textit{nonempty} partially-ordered \textbf{carrier set} \(P\) such that every
-  \(p \in P\) has finitely many predecessors equipped with a mapping \(\alpha: P
-  \to \mc{A}\) quotiented over the removal of \(\delta\) such that cardinality
-  is preserved. A pomset is \textbf{finite} if its carrier set is. We will write
-  unordered pomsets using multiset notation, e.g. \(\{a, a, b\}\), and linearly
-  ordered pomsets using list notation, e.g. \([a, a, b]\).
+  A \textbf{pomset} \(\alpha\) over a set of actions \(\mc{A}\) with a distinguished null action
+  "\textbf{tick}" \(\delta \in \mc{A}\) is a \textit{nonempty} partially-ordered \textbf{carrier
+  set} \(P\) such that every \(p \in P\) has finitely many predecessors equipped with a mapping
+  \(\alpha: P \to \mc{A}\) quotiented over the removal of \(\delta\) such that cardinality is
+  preserved. A pomset is \textbf{finite} if its carrier set is. We will write unordered pomsets
+  using multiset notation, e.g. \(\{a, a, b\}\), and linearly ordered pomsets using list notation,
+  e.g. \([a, a, b]\).
 \end{definition}
-(Finite) pomsets form a monoid under sequential composition \(\alpha;\beta\),
-which is defined by the function \([\alpha, \beta]: \ms{trim}(P + Q) \to
-\mc{A}\), where \(P + Q\) is given the lexicographic ordering and
-\(\ms{trim}(R)\) removes all elements of \(R\) with infinitely many
-predecessors. They also form a monoid under parallel composition, defining
-\(\alpha || \beta = [\alpha, \beta]: P + Q \to \mc{A}\) where \(P + Q\) is given
-the standard partial ordering (with elements of \(P\) and \(Q\) incomparable).
-Note in both cases the monoidal unit is \(\{\delta\}\), since we only consider
-nonempty pomsets but allow the removal of finitely many ticks. Given any
-partially ordered set \(N\) and a family of pomsets \(\alpha_n\) for \(n \in
-N\), we can define their \textit{sum} \(\Sigma_n\alpha_n\) to be given by the
-function \((n, a) \mapsto \alpha_n\;a: \ms{trim}(\Sigma_nP_n) \to \mc{A}\),
-where the dependent product \(\Sigma_nP_n\) is given the lexicographic order. In
-particular, choosing \(N = \nats\) makes \(\Sigma: \ms{Pom}_{\ms{fin}}^\omega
-\to \ms{Pom}\) into a stream action w.r.t the sequential composition monoid on
-finite pomsets. 
+(Finite) pomsets form a monoid under sequential composition \(\alpha;\beta\), which is defined by
+the function \([\alpha, \beta]: \ms{trim}(P + Q) \to \mc{A}\), where \(P + Q\) is given the
+lexicographic ordering and \(\ms{trim}(R)\) removes all elements of \(R\) with infinitely many
+predecessors. They also form a monoid under parallel composition, defining \(\alpha || \beta =
+[\alpha, \beta]: P + Q \to \mc{A}\) where \(P + Q\) is given the standard partial ordering (with
+elements of \(P\) and \(Q\) incomparable). Note in both cases the monoidal unit is \(\{\delta\}\),
+since we only consider nonempty pomsets but allow the removal of finitely many ticks. Given any
+partially ordered set \(N\) and a family of pomsets \(\alpha_n\) for \(n \in N\), we can define
+their \textit{sum} \(\Sigma_n\alpha_n\) to be given by the function \((n, a) \mapsto \alpha_n\;a:
+\ms{trim}(\Sigma_nP_n) \to \mc{A}\), where the dependent product \(\Sigma_nP_n\) is given the
+lexicographic order. In particular, choosing \(N = \nats\) makes \(\Sigma:
+\ms{Pom}_{\ms{fin}}^\omega \to \ms{Pom}\) into a stream action monoid w.r.t the sequential
+composition monoid on finite pomsets. 
 
-We define a \textbf{program order pomset} to be a pomset with \(\mc{A}_{\ms{PO}}
-= \mc{A}_w \cup \mc{A}_r \cup \{\delta\}\), where \(\mc{A}_r\) consists of
-\textit{reads} of the form \(x = v\) and \(\mc{A}_w\) consists of
-\textit{writes} of the form \(x := v\) for locations \(x\) and values \(v \in
-\ms{Word}\). We define the \textbf{program order monad} \(\ms{PO}\;A =
-\ms{Traces}\;\Sigma\;A\), where \(\Sigma\) is taken as a stream action on finite
-program order pomsets. This yields an \isotopessa model with support for
-concurrent read and write operations \(\ms{read}_x: \mc{I}^\varnothing_0(\mb{1},
-\ms{Word})\), \(\ms{write}_x: \mc{I}^\varnothing_0(\ms{Word}, \mb{1})\) with
-semantics
+We define a \textbf{program order pomset} to be a pomset with \(\mc{A}_{\ms{PO}} = \mc{A}_w \cup
+\mc{A}_r \cup \{\delta\}\), where \(\mc{A}_r\) consists of \textit{reads} of the form \(x = v\) and
+\(\mc{A}_w\) consists of \textit{writes} of the form \(x := v\) for locations \(x\) and values \(v
+\in \ms{Word}\). We define the \textbf{program order monad} \(\ms{PO}\;A = \ms{Traces}\;\Sigma\;A\),
+where \(\Sigma\) is taken as a stream action on finite program order pomsets. This yields an
+\isotopessa model with support for concurrent read and write operations \(\ms{read}_x:
+\mc{I}^\varnothing_0(\mb{1}, \ms{Word})\), \(\ms{write}_x: \mc{I}^\varnothing_0(\ms{Word}, \mb{1})\)
+with semantics
 \(
   \dnt{\ms{read}_x} = R_x^{\ms{PO}} = \lambda (). \{(v, \{x = v\}) | v \in \ms{Word}\}
 \),
 \(
   \dnt{\ms{write}_x} = W_x^{\ms{PO}} =  \lambda v. \{((), \{x := v\})\}
 \).
-% The semantics of \(\ms{read}\) in particular give a hint as to how this model
-% works: rather than tracking the state of the heap, we simply \textit{emit} a
-% pomset of the events that would have be generated by a given execution (in the
-% case of a read, a read event \(x = v\) whenever the read returns \(v\), and in
-% the case of a write, the single write event \(x := v\) for a write of \(v\)),
-% and later post-filter to obtain a set of valid executions. By doing so, our
-% semantics remains compositional, allowing us to reason about each program
-% fragment individually, while still allowing other program fragments to perform
-% concurrent operations affecting our potential executions. 
-% On that note, 
-We can define the \textit{parallel execution} of two morphisms as follows:
+The semantics of \(\ms{read}\) in particular give a hint as to how this model works: rather than
+tracking the state of the heap, we simply \textit{emit} a pomset of the events that would have be
+generated by a given execution (in the case of a read, a read event \(x = v\) whenever the read
+returns \(v\), and in the case of a write, the single write event \(x := v\) for a write of \(v\)),
+and later post-filter to obtain a set of valid executions. By doing so, our semantics remains
+compositional, allowing us to reason about each program fragment individually, while still allowing
+other program fragments to perform concurrent operations affecting our potential executions. On that
+note, we can define the \textit{parallel execution} of two morphisms as follows:
 \begin{equation}
   \begin{aligned}
   f_0 || f_1 = \lambda (a_0, a_1). 
@@ -2725,36 +2731,31 @@ We can define the \textit{parallel execution} of two morphisms as follows:
     : \ms{Set}_{\ms{PO}}(A \otimes A', B \otimes B')
   \end{aligned}
 \end{equation}
-It's tempting to try to use this to define a tensor product of morphisms to
-obtain a monoidal (rather than preomonoidal) category, but unfortunately,
-sliding still fails: \((W_x^{\ms{PO}} || \ms{id}) ; (\ms{id} || W_y^{\ms{PO}})\)
-emits the pomset \([x := a, y := b]\), while \((\ms{id} || W_y^{\ms{PO}}) ;
-(W_x^{\ms{PO}} || \ms{id})\) emits the pomset \([y := b, x := a]\). 
+It's tempting to try to use this to define a tensor product of morphisms to obtain a monoidal
+(rather than preomonoidal) category, but unfortunately, sliding still fails: \((W_x^{\ms{PO}} ||
+\ms{id}) ; (\ms{id} || W_y^{\ms{PO}})\) emits the pomset \([x := a, y := b]\), while \((\ms{id} ||
+W_y^{\ms{PO}}) ; (W_x^{\ms{PO}} || \ms{id})\) emits the pomset \([y := b, x := a]\). 
 % If we did want this behaviour, we'd need to have a significantly more
 % sophisticated model of composition which effectively takes nontermination into
 % account, which we will leave to future work.
 
-To graduate from sequential consistency to a genuine, if maximally simple, weak
-memory model, we introduce \textit{load buffering} of write actions. We will
-implement TSO ordering by buffering all our writes, in which case they are only
-visible to the local thread. On the other hand, read events will first attempt
-to read from the buffer, and, if there is no corresponding write in the buffer,
-will read an arbitrary value, in both cases pushing an event to the global
-pomset. At any point, we may choose to \textit{flush} some of the buffered
-writes. We introduce the set \(\mc{A}_b = \{(\bufloc{x} := v)\}\) of
-\textit{buffer write actions}, where an action \(\bufloc{x} := v\) by a thread
-denotes adding a write \(x := v\) to the thread's write buffer. We may then
-define the set of TSO actions \(\mc{A}_{\ms{TSO}} = \mc{A}_{\ms{PO}} \cup
-\mc{A}_b\); a pomset over this set is called a \textbf{TSO pomset}. A buffer
-will be defined to be a list of write actions \(\ms{Buf} = \mc{A}_b^*\), which
-we will interpret as linear pomsets over \(\mc{A}_{\ms{TSO}}\) ordered by index
-(with the empty list corresponding to \(\{\delta\}\)). In particular, we define
-the monad \(\ms{TSO} = \ms{StateT}\;\ms{Buf}\;(\ms{Trace}\;\Sigma)\), where
-\(\Sigma\) is taken as a the stream action of finite TSO pomsets on TSO pomsets.
-We can view \(\ms{PO}\) as a submonad of this monad.
+To graduate from sequential consistency to a genuine, if maximally simple, weak memory model, we
+introduce \textit{load buffering} of write actions. We will implement TSO ordering by buffering all
+our writes, in which case they are only visible to the local thread. On the other hand, read events
+will first attempt to read from the buffer, and, if there is no corresponding write in the buffer,
+will read an arbitrary value, in both cases pushing an event to the global pomset. At any point, we
+may choose to \textit{flush} some of the buffered writes. We introduce the set \(\mc{A}_b =
+\{(\bufloc{x} := v)\}\) of \textit{buffer write actions}, where an action \(\bufloc{x} := v\) by a
+thread denotes adding a write \(x := v\) to the thread's write buffer. We may then define the set of
+TSO actions \(\mc{A}_{\ms{TSO}} = \mc{A}_{\ms{PO}} \cup \mc{A}_b\); a pomset over this set is called
+a \textbf{TSO pomset}. A buffer will be defined to be a list of write actions \(\ms{Buf} =
+\mc{A}_b^*\), which we will interpret as linear pomsets over \(\mc{A}_{\ms{TSO}}\) ordered by index
+(with the empty list corresponding to \(\{\delta\}\)). In particular, we define the monad \(\ms{TSO}
+= \ms{StateT}\;\ms{Buf}\;(\ms{Trace}\;\Sigma)\), where \(\Sigma\) is taken as a the stream action of
+finite TSO pomsets on TSO pomsets. We can view \(\ms{PO}\) as a submonad of this monad.
 
-Given a buffer \(\ms{Buf}\), we can define the result of reads \([\cdot]_x:
-\ms{Buf} \to \ms{Word} \sqcup \{\bot\}\) from the buffer by induction to be:
+Given a buffer \(\ms{Buf}\), we can define the result of reads \([\cdot]_x: \ms{Buf} \to \ms{Word}
+\sqcup \{\bot\}\) from the buffer by induction to be:
 \(
   (L;\{\bufloc{x} := v\})[x] = v,
 \),
@@ -2781,20 +2782,18 @@ $$
   \ms{pflush}_A = \lambda a\;L. \{(a, R, \alpha) | L = \alpha;R\}
   : \ms{Set}_{\ms{TSO}}(A, A)
 $$
-(called \(\ms{split}\) in \cite{sparky}). To be able to perform synchronization,
-we will also need to introduce a \(\ms{fence}: \mc{I}^\varnothing_0(\mb{1},
-\mb{1})\) instruction, which simply causes all actions before the fence to be
-observed before any actions after the fence. For \(\ms{TSO}\), implementing this
-is as simple as flushing the buffer, i.e., we define
+(called \(\ms{split}\) in \cite{sparky}). To be able to perform synchronization, we will also need
+to introduce a \(\ms{fence}: \mc{I}^\varnothing_0(\mb{1}, \mb{1})\) instruction, which simply causes
+all actions before the fence to be observed before any actions after the fence. For \(\ms{TSO}\),
+implementing this is as simple as flushing the buffer, i.e., we define
 $$
   \dnt{\ms{fence}} = \lambda ()\;L. \{((), [], L;\{\delta\})\}
 $$
-We can now define the parallel composition of morphisms in a "fork-join" style
-as follows: we first flush the buffer completely (i.e., taking it and sticking
-it at the beginning of our pomset), then execute \(f\) and \(g\) in parallel
-with separate buffers, \textit{filtering out executions which completely flush
-the buffer}. Since both threads end up with an empty buffer, the resulting
-joined buffer is also empty, giving us the following definition:
+We can now define the parallel composition of morphisms in a "fork-join" style as follows: we first
+flush the buffer completely (i.e., taking it and sticking it at the beginning of our pomset), then
+execute \(f\) and \(g\) in parallel with separate buffers, \textit{filtering out executions which
+completely flush the buffer}. Since both threads end up with an empty buffer, the resulting joined
+buffer is also empty, giving us the following definition:
 \begin{equation}
   \begin{aligned}
     f_0 || f_1 = \lambda (a_0, a_1)\;L. 
