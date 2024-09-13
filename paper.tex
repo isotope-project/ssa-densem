@@ -243,24 +243,25 @@ compiler optimization.
 Concretely, our contributions are as follows: 
 
 \begin{itemize}
-\item First, we give a type-theoretic presentation of SSA, with both typing rules and an equational
-  theory for well-typed terms. We also prove the correctness of suitable substitution properties for
-  this calculus. 
+\item First, we give a type-theoretic presentation of SSA, with both typing rules (in
+  Section~\ref{sec:typing}) and an equational theory (in Section~\ref{sec:equations}) for
+  well-typed terms. We also prove the correctness of suitable substitution properties for this
+  calculus. 
   
-\item Next, we give a categorical semantics for this type theory, in terms of distributive Elgot
-  categories. We show that any denotational model with this categorical structure is also a model of
-  SSA. This shows that all of the equations we give are sound with respect to the categorical
-  structure. 
+\item Next, in Section~\ref{sec:densem}, we give a categorical semantics for this type theory, in
+  terms of distributive Elgot categories. We show that any denotational model with this categorical
+  structure is also a model of SSA. This shows that all of the equations we give are sound with
+  respect to the categorical structure. 
 
-\item We also show that syntax quotiented by the equational theory yields the initial distributive
-  Elgot category. This establishes that our set of syntactic equations is complete, and that there
-  are no equations which the denotational semantics validates, but which cannot be proved
-  syntactically. 
+\item We also show, in Section~\ref{ssec:completeness}, that syntax quotiented by the equational
+  theory yields the initial distributive Elgot category. This establishes that our set of syntactic
+  equations is complete, and that there are no equations which the denotational semantics validates,
+  but which cannot be proved syntactically. 
 
-\item We show that this denotational axiomatization is useful in practice, by giving a variety of
-  concrete models, including a model of TSO weak memory based on~\cite{sparky}. This demonstrates
-  that it is possible to give realistic weak memory models which do not disturb the structure of SSA
-  in fundamental ways.
+\item We proceed in Section~\ref{sec:concrete} to show that this denotational axiomatization is
+  useful in practice, by giving a variety of concrete models, including a model of TSO weak memory
+  based on~\citet{sparky} in Section~\ref{ssec:tso}. This demonstrates that it is possible to give
+  realistic weak memory models which do not disturb the structure of SSA in fundamental ways.
 
 \item Finally, we have substantially mechanized our proofs using the Lean 4 proof assistant. We have
   mechanized proofs of substitution for our type theory, as well as proofs that the syntax forms the
@@ -809,6 +810,8 @@ semantics
 
 \section{Type Theory}
 
+\label{sec:typing}
+
 We now give a formal account of \isotopessa, starting with the types. Our types are first order, and
 consists of binary sums $A + B$, products $A \otimes B$, the unit type $\mathbf{1}$, and the empty
 type $\mb{0}$, all parametrized over a set of base types $X \in \mc{T}$. We write our set of types
@@ -1107,9 +1110,9 @@ We can now state weakening formally as follows:
     \item $\lbsubst{\Delta}{\sigma}{\ms{L}}{\ms{K}} \implies \lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}$
   \end{enumerate}
 \end{lemma}
-\begin{proof}
-  By induction. \todo{pointer to formalization?}
-\end{proof}
+% \begin{proof}
+%   By induction. \todo{pointer to formalization?}
+% \end{proof}
 
 If we look at the proof of variable weakening, we might arrive at the alternate
 statement that all the variables in $\Delta$ are also available with the same
@@ -1202,9 +1205,9 @@ is as follows:
     \item $\lbsubst{\sigma}{\Gamma}{\ms{L}}{\ms{K}} \implies \lbsubst{[\gamma]\sigma}{\Delta}{\ms{L}}{\ms{K}}$
   \end{enumerate}
 \end{lemma}
-\begin{proof}
-  By induction. \todo{pointer to formalization?}
-\end{proof}
+% \begin{proof}
+%   By induction. \todo{pointer to formalization?}
+% \end{proof}
 Note in particular that this allows us to take the \emph{composition}
 $\issubst{[\gamma']\gamma}{\Gamma'}{\Delta}$ of substitutions
 $\issubst{\gamma'}{\Gamma'}{\Gamma}$ and $\issubst{\gamma}{\Gamma}{\Delta}$; the
@@ -1239,6 +1242,8 @@ program transformations which splice and manipulate the control-flow graph.
 \TODO{this...}
 
 \section{Equational Theory}
+
+\label{sec:equations}
 
 \subsection{Expressions}
 
@@ -1733,9 +1738,12 @@ number of rules in Figure~\ref{fig:ssa-where-rules}. One difficulty is that, unl
 constructors, we will need an $\eta$-rule as well as \emph{two} $\beta$-rules. The latter are simple
 enough to state:
 \begin{itemize}
-  \item For $\ell_k$ defined in a \ms{where}-block, \brle{cfg-$\beta_1$} says that \todo{this}
+  \item For $\ell_k$ defined in a \ms{where}-block, \brle{cfg-$\beta_1$} says that we can replace a
+  branch to $\ell_k$ with argument $a$ with a \ms{let}-statement binding $a$ to the corresponding
+  body $t_k$'s argument $x_k$.
   \item For $\kappa$ \emph{not} defined in a \ms{where}-block, \brle{cfg-$\beta_2$} says that
-  \todo{this}
+  a branch to $\kappa$ within the \ms{where}-block has the same semantics as if the \ms{where}-block
+  was not there; hence, it can be removed.
 \end{itemize}
 To state our $\eta$-rule, however, we will need to introduce some more machinery. Given a mapping
 from a set of labels $\ell_i$ to associated regions $t_i$, we may define the \emph{control-flow
@@ -1744,22 +1752,36 @@ graph substitution} $\cfgsubst{(\wbranch{\ell_i}{x_i}{t_i},)_i}$ pointwise as fo
   \cfgsubst{(\wbranch{\ell_i}{x_i}{t_i},)_i}\;\kappa\;a
   := (\where{\brb{\kappa}{a}}{(\wbranch{\ell_i}{x_i}{t_i},)_i})
 \end{equation}
-
-\TODO{text}
-
+In general, we may derive, for any label-context $\ms{L}$ (assuming $\cfgsubst{\cdot}$ acts uniformly
+on the labels $\kappa$ in $\ms{L}$ as described above), the following rule:
 \begin{equation}
   \prftree[r]{\rle{cfgs}}
     {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
     {\lbsubst{\Gamma}
       {\cfgsubst{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}{\ms{L}}}
 \end{equation}
+Our $\eta$-rule, \brle{cfg-$\eta$}, says that any \ms{where}-block of the form
+$\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}$ has the same semantics as the label-substitution
+$[\cfgsubst{(\wbranch{\ell_i}{x_i}{t_i},)_i}]r$, which in effect propagates the where-block to the
+branches of $r$, if any. While we called this rule \brle{cfg-$\eta$}, it also functions similarly
+to a binding rule in that it allows us to derive many of the expected commutativity properties of
+\ms{where}; for example, we have that
+\begin{align*}
+  \where{\letexpr{y}{a}{r}}{(\wbranch{\ell_i}{x_i}{\brb{\ell_j}{a_j}},)_i}
+  &\teqv [\cfgsubst{(\wbranch{\ell_i}{x_i}{\brb{\ell_j}{a_j}},)_i}](\letexpr{y}{a}{r}) \\
+  &\teqv \letexpr{y}{a}{[\cfgsubst{(\wbranch{\ell_i}{x_i}{\brb{\ell_j}{a_j}},)_i}]r} \\
+  &\teqv \letexpr{y}{a}{\where{r}{(\wbranch{\ell_i}{x_i}{\brb{\ell_j}{a_j}},)_i}}
+\end{align*}
+However, on it's own, it's not quite enough to get rid of nested \ms{where}-blocks. To enable this,
+it turns out that we only need to add as an axiom the ability to get rid of a single, trivially
+nested \ms{where}-block; this is given as the rule \brle{codiag}.
 
-\TODO{text}
+\TODO{think about the above w.r.t B\"ohm Jacopini}
 
-\begin{itemize}
-  \item \todo{codiagonal, needs extensive explanation}
-  \item \todo{uniformity, needs extensive explanation}
-\end{itemize}
+The final rule we need to cover is the rule \brle{uni}, which expresses that the \ms{where}-block
+construction is \emph{uniform} with respect to pure substitutions.
+
+\TODO{explain...}
 
 \begin{figure}
   \begin{gather*}
@@ -1849,14 +1871,39 @@ our equivalence relation, as stated in the following lemma:
       \implies \lbseq{\sigma}{\sigma'}{\Gamma}{\ms{L}}{\ms{K}}$
   \end{enumerate}
 \end{lemma}
-\begin{proof}
-  By induction. \todo{formalization pointer?}
-\end{proof}
+% \begin{proof}
+%   By rule induction on $\teqv$. \todo{formalization pointer?}
+% \end{proof}
 In particular, note that this lemma uses an equivalence relation on substitutions and
 label-substitutions: this is just the obvious pointwise extension of the equivalence relation on
 terms and regions respectively. We give the rules for this relation in
 Figure~\ref{fig:ssa-subst-equiv} in the interests of explicitness. It is straightforward to verify
-that these are indeed equivalence relations.
+that these are indeed equivalence relations.  In fact, it turns out that substitution and
+label-substitution both respect these equivalences, in the following precise sense:
+\begin{lemma}[Congruence (Substitution)]
+  Given $\tmseq{\gamma}{\gamma'}{\Gamma}{\Delta}$, we have that
+  \begin{enumerate}[label=(\alph*)]
+    \item $\tmeq{\Delta}{\epsilon}{a}{a'}{A} 
+      \implies \tmeq{\Gamma}{\epsilon}{[\gamma]a}{[\gamma']a'}{A}$
+    \item $\lbeq{\Delta}{r}{r'}{\ms{L}} 
+      \implies \lbeq{\Gamma}{[\gamma]r}{[\gamma']r'}{\ms{L}}$
+    \item $\tmseq{\rho}{\rho'}{\Delta}{\Xi}
+      \implies \tmseq{[\gamma]\rho}{[\gamma']\rho'}{\Gamma}{\Xi}$
+    \item $\lbseq{\sigma}{\sigma'}{\Delta}{\ms{L}}{\ms{K}}
+      \implies \lbseq{[\gamma]\sigma}{[\gamma']\sigma'}{\Gamma}{\ms{L}}{\ms{K}}$
+  \end{enumerate}
+\end{lemma}
+\begin{lemma}[Congruence (Label Substitution)]
+  Given $\lbseq{\sigma}{\sigma'}{\Gamma}{\ms{L}}{\ms{K}}$, we have that
+  \begin{enumerate}[label=(\alph*)]
+    \item $\lbeq{\Gamma}{r}{r'}{\ms{L}} \implies \lbeq{\Gamma}{[\sigma]r}{[\sigma']r'}{\ms{K}}$
+    \item $\lbseq{\kappa}{\kappa'}{\Gamma}{\ms{L}}{\ms{J}}
+      \implies \lbseq{[\sigma]\kappa}{[\sigma']\kappa'}{\Gamma}{\ms{K}}{\ms{J}}$
+  \end{enumerate}
+\end{lemma}
+This means, in particular, that, substitution and label-substitution are well-defined operators on
+equivalence classes of terms, which will come in handy later as we set out to prove completeness
+in Section~\ref{ssec:completeness}.
 
 \begin{figure}
   \begin{gather*}
@@ -1893,34 +1940,9 @@ that these are indeed equivalence relations.
   \label{fig:ssa-subst-equiv}
 \end{figure}
 
-\TODO{lemma: substitution, composition is a congruence}
-
-\begin{lemma}[Congruence (Substitution)]
-  Given $\tmseq{\gamma}{\gamma'}{\Gamma}{\Delta}$, we have that
-  \begin{enumerate}[label=(\alph*)]
-    \item $\tmeq{\Delta}{\epsilon}{a}{a'}{A} 
-      \implies \tmeq{\Gamma}{\epsilon}{[\gamma]a}{[\gamma']a'}{A}$
-    \item $\lbeq{\Delta}{r}{r'}{\ms{L}} 
-      \implies \lbeq{\Gamma}{[\gamma]r}{[\gamma']r'}{\ms{L}}$
-    \item $\tmseq{\rho}{\rho'}{\Delta}{\Xi}
-      \implies \tmseq{[\gamma]\rho}{[\gamma']\rho'}{\Gamma}{\Xi}$
-    \item $\lbseq{\sigma}{\sigma'}{\Delta}{\ms{L}}{\ms{K}}
-      \implies \lbseq{[\gamma]\sigma}{[\gamma']\sigma'}{\Gamma}{\ms{L}}{\ms{K}}$
-  \end{enumerate}
-\end{lemma}
-
-\TODO{lemma: label-substitution, composition is a congruence}
-
-\begin{lemma}[Congruence (Label Substitution)]
-  Given $\lbseq{\sigma}{\sigma'}{\Gamma}{\ms{L}}{\ms{K}}$, we have that
-  \begin{enumerate}[label=(\alph*)]
-    \item $\lbeq{\Gamma}{r}{r'}{\ms{L}} \implies \lbeq{\Gamma}{[\sigma]r}{[\sigma']r'}{\ms{K}}$
-    \item $\lbseq{\kappa}{\kappa'}{\Gamma}{\ms{L}}{\ms{J}}
-      \implies \lbseq{[\sigma]\kappa}{[\sigma']\kappa'}{\Gamma}{\ms{K}}{\ms{J}}$
-  \end{enumerate}
-\end{lemma}
-
 \section{Denotational Semantics}
+
+\label{sec:densem}
 
 \subsection{Freyd Elgot Categories}
 
@@ -2494,6 +2516,8 @@ different effects are equal}
 
 \section{Concrete Models}
 
+\label{sec:concrete}
+
 \subsection{Monads and Monad Transformers}
 
 As previously stated, every strong monad over a CCC, by virtue of providing a
@@ -2522,35 +2546,44 @@ $$
   f^0\;a = \ms{some}\;(\iota_r\;a) \qquad
   f^{n + 1}\;a = \ms{bind}\;(f^{n}\;a)\;[(\ms{pure};\iota_l), f] 
 $$
-This model allows us to interpret potentially divergent but otherwise purely
-functional programs. Another very important \isotopessa model is generated by
-the \emph{powerset monad} $\mc{P}(A)$, which has fixpoint operation
+This model allows us to interpret potentially divergent but otherwise purely functional programs.
+Another very important \isotopessa model is generated by the \emph{powerset monad} $\mc{P}$ over
+\ms{Set}, which has fixpoint operation
 $$
   f^\dagger\;a = \bigcup_n\{b \mid \iota_l\;b \in f^n\;a\}
 $$
-We can use this monad to interpret \emph{nondeterministic} potentially divergent
-functional programs, which, as we will further explore later, are a strict
-superset of those which can merely diverge or terminate.
-
-\TODO{\cite{goncharov-16-complete-elgot}, \cite{goncharov-21-uniform-elgot},
-\cite{goncharov-guarded-unguarded}}
-
-We can further expand our repertoire of \isotopessa models by considering
-\emph{monad transformers}, many of which preserve Elgot-ness. For example, if
-$\ms{T}$ is strong Elgot,
+We can use this monad to interpret \emph{nondeterministic} potentially divergent functional
+programs. We can further expand our repertoire of \isotopessa models by considering \emph{monad
+transformers}, many of which preserve Elgot-ness. For example, if $\ms{T}$ is a strong Elgot over
+\ms{Set},
 \begin{itemize}
   \item For all types $R$, the \emph{reader transformer}
   $\ms{ReaderT}\;R\;\ms{T}\;A = R \to \ms{T}\;A$ is strong Elgot 
   with monad operations
-  ...
+  \begin{equation}
+    \eta\;a = \lambda - . \eta_{\ms{T}}\;a \qquad
+    \ms{bind}\;a\;f = \lambda r. \ms{bind}_{\ms{T}}\;(a\;r)\;(\lambda a. f\;a\;r)
+  \end{equation}
   and fixpoint
-  ...
+  \begin{equation}
+    f^\dagger = \lambda r.(\lambda a. f\;a\;r)^{\dagger_{\ms{T}}} 
+  \end{equation}
   \item For all monoids $W$, the \emph{writer transformer}
   $\ms{WriterT}\;W\;\ms{T}\;A = \ms{T}\;(A \times W)$ is strong Elgot 
   with monad operations
-  ...
+  \begin{equation}
+    \eta\;a = (\eta_{\ms{T}}\;a, 1) \qquad
+    \ms{bind}\;a\;f = \ms{bind}_{\ms{T}}\;a\;(\lambda (a, w). 
+      \ms{bind}\;(f\;a)\;(\lambda (b, w') . (b, w \cdot w')))
+  \end{equation}
   and fixpoint
-  ...
+  \begin{equation}
+    f^\dagger\;a = (
+        \lambda (a, w). \ms{bind}_{\ms{T}}\;(f\;a)\;
+          (\lambda (b, w') . \eta_{\ms{T}}([(\cdot, w \cdot w'), (\cdot, w \cdot w')]\;b))
+      )^{\dagger_{\ms{T}}}
+      (a, 1)
+  \end{equation}
   \item For all types $S$, the \emph{state transformer}
   $\ms{StateT}\;S\;\ms{T}\;A = S \to \ms{T}(A \times S)$ is strong Elgot 
   with monad operations
@@ -2578,6 +2611,8 @@ Similarly,
 \TODO{monad transformer lore, needs formalization...}
 
 \TODO{frame as subcategory}
+
+\TODO{more general semicategory lore?}
 
 \subsection{Trace Models}
 
@@ -2666,7 +2701,9 @@ As we can see, the trace monad is a very powerful tool for quickly constructing 
 same techniques can be used to tackle much more complex side-effects; to demonstrate this, we will
 show how to build a simple model of TSO weak memory based on that given in \citet{sparky}.
 
-\section{TSO weak memory}
+\subsection{TSO weak memory}
+
+\label{ssec:tso}
 
 To start, we need to construct an appropriate stream action monoid to take our traces over. For
 simplicity, we will consider an infinite set of named locations \(x, y, z \in \ms{Loc}\) which are
