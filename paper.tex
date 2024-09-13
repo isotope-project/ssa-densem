@@ -2587,9 +2587,16 @@ transformers}, many of which preserve Elgot-ness. For example, if $\ms{T}$ is a 
   \item For all types $S$, the \emph{state transformer}
   $\ms{StateT}\;S\;\ms{T}\;A = S \to \ms{T}(A \times S)$ is strong Elgot 
   with monad operations
-  ...
+  \begin{equation}
+    \eta\;a = \lambda s. \eta_{\ms{T}}\;(a, s) \qquad
+    \ms{bind}\;a\;f = \lambda s. \ms{bind}_{\ms{T}}\;(a\;s)\;(\lambda (a, s'). f\;a\;s')
+  \end{equation}
   and fixpoint
-  ...
+  \begin{equation}
+    f^\dagger = \lambda s.(\lambda (a, s'). 
+      \ms{bind}_{\ms{T}}\;(f\;a\;s')\;(\lambda (b, s') . 
+        \eta_{\ms{T}}([(\cdot, s'), (\cdot, s')]\;b)))^{\dagger_{\ms{T}}}
+  \end{equation}
 \end{itemize}
 
 One other important source of \isotopessa models is via \emph{Elgot submonads}
