@@ -1778,10 +1778,26 @@ nested \ms{where}-block; this is given as the rule \brle{codiag}.
 
 \TODO{think about the above w.r.t B\"ohm Jacopini}
 
-The final rule we need to cover is the rule \brle{uni}, which expresses that the \ms{where}-block
-construction is \emph{uniform} with respect to pure substitutions.
-
-\TODO{explain...}
+The final rule we need to cover is the rule \brle{uni}. In essence, this allows us to inductively
+rewrite loops. 
+\TODO{write this}
+The actual rule is quite complicated, so let's break it down point by point. Assume we are given:
+\begin{itemize}
+  \item A region $\haslb{\Gamma, \bhyp{y}{B}}{s}{\ms{L}, \kappa(B)}$ taking ``input'' $y$ of type
+    $B$ and, as ``output,'' jumping to a label $\kappa$ with an argument of type $B$. We'll
+    interpret branches to any other label as a (divergent) ``side effect.''
+  \item A region $\haslb{\Gamma, \bhyp{x}{A}}{t}{\ms{L}, \ell(A)}$ taking ``input'' $x$ of type
+    $A$ and, as ``output,'' jumping to a label $\ell$ with an argument of type $A$.
+  \item A \emph{pure} expression $\hasty{\Gamma, \bhyp{x}{A}}{\bot}{e}{B}$ parametrized by a value
+    $x$ of type $A$
+\end{itemize}
+Suppose further that the following condition holds:
+$$
+  \lbeq{\Gamma, \bhyp{x}{A}}{[e/y]s}{\where{t}{\wbranch{\ell}{x}{\brb{\kappa}{e}}}}
+    {\ms{L}, \kappa(B)}
+$$
+That is, the following two programs are equivalent:
+\TODO{this...}
 
 \begin{figure}
   \begin{gather*}
@@ -2646,8 +2662,8 @@ monoidal stream action over a set $E$, called the set of \emph{events}, where:
   monoid of finite lists of events
   \item $I = E^{\leq \omega}$ is the set of \textit{potentially} infinite
   streams of events $\epsilon \in E$
-  \item $m \cdot i$ is defined in the obvious manner, i.e. by prepending the (finite) stream $m$ to the
-  (potentially infinite) stream $i$
+  \item $m \cdot i$ is defined in the obvious manner, i.e. by prepending the (finite) list $m$ to
+  the (potentially infinite) stream $i$
   \item $\Sigma\;\sigma$ is defined as the supremum $\bigsqcup_it_i$, where $t
   \leq t'$ iff $t$ is a prefix of $t'$, $t_0 = \bot$ (the empty stream), and
   $t_{i + 1} = t_i \cdot \sigma_i$
