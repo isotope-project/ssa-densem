@@ -2372,15 +2372,17 @@ standard; in particular:
   \label{fig:ssa-expr-sem}
 \end{figure}
 
-\TODO{rework} Similarly, we can interpret \isotopessa regions $\haslb{\Gamma}{r}{\ms{L}}$ as
-morphisms $\dnt{\Gamma} \to_\epsilon \dnt{\ms{L}}$. As $\ms{L}$ is a coproduct of its constituent
-labels, we can consider the result of $r$ to be returning both a value and a label to jump to, the
-latter being encoded by ``landing" in the appropriate branch of the coproduct; this is compared to
-an expression, which only returns value information without control-flow information. In particular,
-our denotational semantics, given in Figure~\ref{fig:ssa-reg-sem}, is as follows:
+Similarly, we can interpret \isotopessa regions $\haslb{\Gamma}{r}{\ms{L}}$ as morphisms
+$\dnt{\Gamma} \to \dnt{\ms{L}}$; note that we don't assume anything about the effect of these
+morphisms. As $\ms{L}$ is a coproduct, we can view the result object of a region $r$ as encoding
+both \emph{data} and \emph{control-flow} information. In particular, we interpret a branch
+$\brb{\ell}{a}$ as simply the injection of the (pure) expression $\hasty{\Gamma}{\bot}{a}{A}$, our
+\emph{data}, into the element of the coproduct corresponding to $\ell$, which encodes the point in
+control-flow the rest of the program should jump to next. This is in contrst to \emph{expressions},
+which purely encode data, with no particular instructions on how to use it afterwards.
+Similarly,
 \begin{itemize}
-  \item \todo{branching to a label}
-  \item \todo{letting a variable}
+  \item We interpret \todo{letting a variable}
   \item \todo{letting a pair}
   \item \todo{case-expressions}
 \end{itemize}
