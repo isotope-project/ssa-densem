@@ -2189,15 +2189,32 @@ In particular, an \isotopessa model consists of:
   \item A distributive premonoidal category $\mc{C}$, equipped with an Elgot structure
   \item A complete lattice $E$, and a continuous function $\epsilon \mapsto \mc{C}_\epsilon$ from
   $E$ to wide subcategories of $\mc{C}$, such that $\mc{C}_\top = \mc{C}$, and $(\mc{C}, \mc{V} =
-  \mc{C}_\bot)$ is a Freyd category.
+  \mc{C}_\bot)$ is a Freyd category. Furthermore, we ask that each $\mc{C}_\epsilon$ is closed under
+  tensor products and coproducts, and in particular that injections are pure and therefore contained
+  in every $\mc{C}_\epsilon$.
 \end{itemize}
 We will write morphisms $\mc{C}_\epsilon(A, B)$ as $A \to_\epsilon B$, and morphisms $\mc{C}(A, B)$
 as $A \to B$. Note that, whenever $\mc{C}$ is a distributive Elgot Freyd category, we can trivially
 obtain an \isotopessa model by choosing $E = \{\top, \bot\}$; hence, this re-framing does not add
 any additional generality, but simplifies bookkeeping. We may also choose $E = \{*\}$ if and only if
 $\mc{C}$ is in fact Cartesian.
-
-\TODO{we model types in the obvious manner; as in Figure \ref{fig:ssa-ty-sem}}
+%
+We will model types in the obvious manner: 
+\begin{itemize}
+  \item The unit type $\mb{1}$ is modeled as the terminal object
+  \item The empty type $\mb{0}$ is modeled as the initial object
+  \item Products $A \otimes B$ are modeled as tensor products $\dnt{A} \otimes \dnt{B}$
+  \item Sum types $A + B$ are modeled as coproducts $\dnt{A} + \dnt{B}$
+\end{itemize}
+We'll say an \isotopessa model \emph{interprets} a signature $(\mc{T}, \mc{I})$ if we have
+\begin{itemize}
+  \item For every base type $X \in \mc{T}$, an object $\dnt{X} : |\mc{C}|$
+  \item For every primitive instruction $f \in \mc{I}_\epsilon(A, B)$, a morphism $\dnt{f} : \dnt{A}
+  \to_\epsilon \dnt{B}$.
+\end{itemize}
+This gives us all the ingredients to interpret \emph{contexts} and \emph{label contexts}, which, as
+in Figure~\ref{fig:ssa-ty-sem}, we will interpret as tensor products and coproducts of the
+denotations of their parameters, respectively.
 
 \begin{figure}
   \begin{align*}
@@ -2236,8 +2253,19 @@ $\mc{C}$ is in fact Cartesian.
   \label{fig:ssa-ty-sem}
 \end{figure}
 
-\TODO{expressions are modeled as morphisms in the obvious manner; we also have that denotations with
-different effects are equal}
+We can now interpret \isotopessa expressions $\hasty{\Gamma}{\epsilon}{a}{A}$ over a given signature
+in a model intepreting that signature as morphisms $\dnt{\Gamma} \to_\epsilon \dnt{A}$ using the
+rules in Figure~\ref{fig:ssa-expr-sem}. Up to this point, both our syntax and semantics are quite
+standard:
+\begin{itemize}
+  \item \todo{variables}
+  \item \todo{primitive instructions}
+  \item \todo{let-bindings}
+  \item \todo{pairs, unit}
+  \item \todo{let-pairs}
+  \item \todo{injections, abort}
+  \item \todo{case-expressions}
+\end{itemize}
 
 \begin{figure}
   \begin{equation*}
@@ -2284,9 +2312,18 @@ different effects are equal}
   \label{fig:ssa-expr-sem}
 \end{figure}
 
-\TODO{regions are similarly modeled as morphisms in the obvious manner}
-
-\TODO{note on how Elgot structure is like Bohm-Jacopini for conversion to structured control-flow}
+We can now interpret \isotopessa regions $\haslb{\Gamma}{r}{\ms{L}}$ as morphisms 
+$\dnt{\Gamma} \to_\epsilon \dnt{\ms{L}}$; branching to $\ms{L}$ with a parameter of type $A$ being
+interpreted as ``landing'' in the appropriate summand of the coproduct $\dnt{\ms{L}}$. Other than
+the semantics of \ms{where}-blocks, all the rules given in Figure~\ref{fig:ssa-reg-sem} are quite
+standard; in particular, we have
+\begin{itemize}
+  \item \todo{branching to a label}
+  \item \todo{letting a variable}
+  \item \todo{letting a pair}
+  \item \todo{case-expressions}
+\end{itemize}
+\TODO{semantics of \ms{where}-blocks}
 
 \begin{figure}
   \begin{equation*}
@@ -2333,6 +2370,8 @@ different effects are equal}
   \Description{Denotational semantics for isotope-SSA regions}
   \label{fig:ssa-reg-sem}
 \end{figure}
+
+\subsection{Metatheory}
 
 \TODO{weakenings are modeled as projections, label-weakenings as injections}
 
@@ -2397,8 +2436,6 @@ different effects are equal}
   \Description{}
   \label{fig:ssa-vsubst-sem} 
 \end{figure}
-
-\subsection{Rewriting and Substitution}
 
 \TODO{most simple substitution theorem is \emph{rewriting}:}
 
