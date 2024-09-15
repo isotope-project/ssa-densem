@@ -1778,9 +1778,25 @@ nested \ms{where}-block; this is given as the rule \brle{codiag}.
 
 \TODO{think about the above w.r.t B\"ohm Jacopini}
 
-The final rule we need to cover is the rule \brle{uni}. In essence, this allows us to inductively
-rewrite loops. 
-\TODO{write this}
+The final property we will need for equational rewriting is \emph{uniformity}, which is described by
+the rule \brle{uni}. In essence, this lets us commute pure expressions with loop bodies, enabling
+rewrites like
+\begin{equation}
+  \ms{loop}\;\{ x = x + 1; \ms{if}\;p\;3x\;\{\ms{ret}\;3x\} \}
+  \qquad \teqv \qquad 
+  y = 3x; \ms{loop}\;\{ y = y + 3; \ms{if}\;p\;y\;\{\ms{ret}\;y\} \}
+  \label{eqn:simple-loop-comm} 
+\end{equation}
+Note that substitution alone would not allow us to derive Equation~\ref{eqn:simple-loop-comm} above,
+since $x$ and $y$ change each iteration, and hence, in SSA, would need to become parameters as
+follows:
+\begin{multline}
+  \where{\brb{\ell}{x}}{\wbranch{\ell}{x}
+    {\letexpr{x'}{x + 1}{\ms{if}\;p\;3x'\;\{\ms{ret}\;3x'\}\;\ms{else}\;\{\brb{\ell}{x'}\}}}}
+  \\ \teqv
+  \where{\letexpr{y}{3x}{\brb{\kappa}{y}}}{\wbranch{\kappa}{y}
+    {\letexpr{y'}{y + 3}{\ms{if}\;p\;y'\;\{\ms{ret}\;y'\}\;\ms{else}\;\{\brb{\kappa}{y'}\}}}}
+\end{multline}
 The actual rule is quite complicated, so let's break it down point by point. Assume we are given:
 \begin{itemize}
   \item A region $\haslb{\Gamma, \bhyp{y}{B}}{s}{\ms{L}, \kappa(B)}$ taking ``input'' $y$ of type
@@ -1797,7 +1813,49 @@ $$
     {\ms{L}, \kappa(B)}
 $$
 That is, the following two programs are equivalent:
-\TODO{this...}
+\begin{enumerate}[label=(\alph*)]
+  \item Given input $x$, evaluate $e$ and, taking it's output to be input $y$, evaluate $s$,
+  (implicitly) yielding as output a new value of $y$. In imperative pseudocode,
+  $$
+    y = e; x = s
+  $$
+  \item Given input $x$, evaluate $t$ and, taking it's output to be the \emph{new} value of $x$,
+  evaluate $e$, (implicitly) yielding as output a new value $y$. In imperative pseudocode,
+  $$
+    x = t; y = e
+  $$
+\end{enumerate}
+\emph{Then}, for any well-typed entry block $\haslb{\Gamma}{r}{\ms{L}, \ell(A)}$ (which can produce
+an appropriate input $x : A$ at label $\ell$), we have that
+$$
+  \lbeq{\Gamma}{\where{(\where{r}{\wbranch{\ell}{x}{\brb{\kappa}{e}}})}
+    {\wbranch{\kappa}{y}{s}}}{\where{r}{t}}{\ms{L}}
+$$
+i.e., in imperative pseudocode,
+$$
+  x = r; y = e; \ms{loop}\;\{ y = s \} \qquad \teqv \qquad x = r; \ms{loop}\;\{ x = t \}
+$$
+where $s$ and $t$ may branch out of the loop.
+
+The reason why we require $e$ to be \emph{pure} is that impure expressions do not necessarily
+commute with infinite loops, even if they commute with any finite number of iterations of the loop.
+For example, if $\ms{hi}$ is some effectful opperation (say, printing ``hello''), it is quite
+obvious that,
+$$
+  \ms{hi} ; x = x + 1 ; \ms{if}\;x = y\;\{\ms{ret}\;y\}
+  \qquad \teqv \qquad 
+  x = x + 1 
+  ; \ms{if}\;x = y\;\{\ms{hi} ; \ms{ret}\;y\} 
+  ;  \ms{hi}
+$$
+whereas
+$$
+  \ms{hi} ; \ms{loop} \{ x = x + 1 ; \ms{if}\;x = y\;\{\ms{ret}\;y\} \} 
+  \qquad \not\teqv \qquad 
+  \ms{loop} \{ x = x + 1 ;  \ms{if}\;x = y\;\{\ms{hi} ; \ms{ret}\;y\} \} ;
+$$
+since, in particular, we may have $y \leq x$, in which case the loop will never exit and hence
+$\ms{hi}$ will never be executed.
 
 \begin{figure}
   \begin{gather*}
@@ -1844,7 +1902,7 @@ That is, the following two programs are equivalent:
         }
         {
           \lbeq{\Gamma, \bhyp{x}{A}}
-            {[e/y]s}
+            {\letexpr{y}{e}{s}}
             {\where{t}{\wbranch{\ell}{x}{\brb{\kappa}{e}}}}
             {\ms{L}, \kappa(B)}
         }
