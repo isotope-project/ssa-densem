@@ -2379,14 +2379,37 @@ both \emph{data} and \emph{control-flow} information. In particular, we interpre
 $\brb{\ell}{a}$ as simply the injection of the (pure) expression $\hasty{\Gamma}{\bot}{a}{A}$, our
 \emph{data}, into the element of the coproduct corresponding to $\ell$, which encodes the point in
 control-flow the rest of the program should jump to next. This is in contrst to \emph{expressions},
-which purely encode data, with no particular instructions on how to use it afterwards.
-Similarly,
+which purely encode data, with no particular instructions on how to use it afterwards. Our
+interpretation of \ms{let}-statements and \ms{case}-statements, given in
+Figure~\ref{fig:ssa-reg-sem}, is exactly the same as that of the corresponding expressions.
+
+We now come to the interpretation of \ms{where}-blocks, which is where Elgot structure comes in.
+Since the semantics for \ms{where} blocks has a lot of moving parts, it makes sense to break it
+down ``imperatively" as follows:
 \begin{itemize}
-  \item We interpret \todo{letting a variable}
-  \item \todo{letting a pair}
-  \item \todo{case-expressions}
+  \item First, we split the context using the diagonal morphism $\Delta_{\dnt{\Gamma}}$
+  \item Then, using the right copy of the context, we execute the program
+  $\dnt{\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}$
+  \item We reassociate the result using $\alpha^+$ and apply the inverse distributor $\delta^{-1}$
+  to get to the coproduct $\dnt{\Gamma} \otimes \dnt{\ms{L}} + \dnt{\Gamma} \otimes \Sigma_i
+  \dnt{A_i}$
+  \item In the left ($\dnt{\Gamma} \otimes \dnt{\ms{L}}$), we discard $\dnt{\Gamma}$ and return
+  immediately
+  \item \emph{Entering a loop} (represented by the Elgot iteration operator), in the right
+  ($\dnt{\Gamma} \otimes \Sigma_i\dnt{A_i}$) case, we split the context using the diagonal morphism
+  and reassociate to reach $\dnt{\Gamma} \otimes (\dnt{\Gamma} \otimes \Sigma_i\dnt{A_i})$
+  \item We apply the inverse distributor to the right component of the tensor to reach
+  $\Sigma_i(\dnt{\Gamma} \otimes \dnt{A_i})$, then
+  \item For each branch $i$ in the sum, we execute the program $\dnt{\haslb{\Gamma,
+  \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}$ on the right component of the tensor,
+  reaching $\dnt{\Gamma} \otimes \dnt{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}$
+  \item We reassociate and apply the distributor to reach $\dnt{\Gamma} \otimes \dnt{\ms{L}} +
+  \dnt{\Gamma} \otimes \Sigma_i\dnt{A_i}$
+  \item In the left ($\dnt{\Gamma} \otimes \dnt{\ms{L}}$) case, we discard $\dnt{\Gamma}$ and break
+  out of the loop
+  \item In the right ($\dnt{\Gamma} \otimes \Sigma_i\dnt{A_i}$) case, we return to the beginning
+  of the loop for another iteration
 \end{itemize}
-\TODO{semantics of \ms{where}-blocks}
 
 \begin{figure}
   \begin{equation*}
@@ -2418,16 +2441,17 @@ Similarly,
       &=  
       \Delta_{\dnt{\Gamma}}
       ; \dnt{\Gamma} \otimes \dnt{\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}} 
-      ; \delta^{-1} ;
-      \alpha^+_{}
-      \\ &\quad\;
-      (
-        \Sigma_i (\Delta_{\dnt{\Gamma}} 
-          ; \dnt{\Gamma} \otimes 
+      ; \delta^{-1}_{\Gamma} ; \alpha^+ ; 
+      \\ &\quad [\ms{id}_{\dnt{\ms{L}}}
+        (
+          \Delta_{\dnt{\Gamma}} ; \alpha ;
+          \dnt{\Gamma} \otimes (\delta^{-1} ;
+      \\ & \qquad
+          [ 
             \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
-          ; 
-          )
-      )^\dagger
+          ]_i ; \alpha^+) ; \delta^{-1}
+        )^\dagger
+      \\ & \quad ]
   \end{align*}
   \caption{Denotational semantics for \isotopessa regions}
   \Description{Denotational semantics for isotope-SSA regions}
@@ -2436,10 +2460,12 @@ Similarly,
 
 \subsection{Metatheory}
 
-\TODO{weakenings are modeled as projections, label-weakenings as injections}
-
-\TODO{text for weakening lemma}
-
+We can now begin to state the metatheoretic properties of our denotational semantics. We begin with
+weakening: as shown in Figure~\ref{fig:ssa-ty-sem}, weakenings are modeled, essentially, as
+projections from a larger product $\dnt{\Gamma}$ to a smaller product $\dnt{\Delta}$, while
+label-weakenings are modeled as injections from a smaller coproduct $\dnt{\ms{L}}$ to a larger
+coproduct $\dnt{\ms{K}}$; in particular, in both cases, the morphisms are pure. We can state a
+weakening lemmas as follows:
 \begin{lemma}[(Label) Weakening]
   Given $\Gamma \leq \Gamma'$ and $\ms{L}' \leq \ms{L}$, $\ms{K}' \leq \ms{K}$, we have
   \begin{enumerate}[label=(\alph*)]
@@ -2460,6 +2486,31 @@ Similarly,
       $
   \end{enumerate}
 \end{lemma}
+The proof for this proceeds mostly as a straightforward induction.
+
+\TODO{discuss uniformity lore}.
+
+\TODO{most simple substitution theorem is \emph{rewriting}:}
+
+\begin{theorem}[Soundness (Rewriting)]
+  Given substitutions $\issubst{\gamma, \gamma'}{\Gamma}{\Delta}$ such that, for all 
+  $\thyp{x}{A}{\epsilon} \in \Delta$, $\dnt{\hasty{\Gamma}{\epsilon}{\gamma\;x}{A}} =
+  \dnt{\hasty{\Gamma}{\epsilon}{\gamma'\;x}{A}}$, we have
+  \begin{enumerate}[label=(\alph*)]
+    \item Given $\hasty{\Delta}{\epsilon}{a}{A}$, 
+      $\dnt{\hasty{\Gamma}{\epsilon}{[\gamma]a}{A}} = \dnt{\hasty{\Gamma}{\epsilon}{[\gamma']a}{A}}$
+    \item Given $\issubst{\rho}{\Delta}{\Xi}$, $\dnt{\issubst{[\gamma]\rho}{\Gamma}{\Xi}} =
+      \dnt{\issubst{[\gamma']\rho}{\Gamma}{\Xi}}$
+    \item Given $\haslb{\Delta}{r}{\ms{L}}$, $\dnt{\haslb{\Gamma}{[\gamma]r}{\ms{L}}} =
+      \dnt{\haslb{\Gamma}{[\gamma']r}{\ms{L}}}$
+    \item Given $\lbsubst{\rho}{\Delta}{\ms{L}}{\ms{K}}$,
+      $\dnt{\lbsubst{\Gamma}{[\gamma]\rho}{\ms{L}}{\ms{K}}} =
+      \dnt{\lbsubst{\Gamma}{[\gamma']\rho}{\ms{L}}{\ms{K}}}$ 
+  \end{enumerate}
+\end{theorem}
+
+(Label) substitutions can also be modeled analogously to weakenings, except that their
+corresponding substitutions are not always pure.
 
 \TODO{(label) substitutions are modeled as morphisms}
 
@@ -2499,25 +2550,6 @@ Similarly,
   \Description{}
   \label{fig:ssa-vsubst-sem} 
 \end{figure}
-
-\TODO{most simple substitution theorem is \emph{rewriting}:}
-
-\begin{theorem}[Soundness (Rewriting)]
-  Given substitutions $\issubst{\gamma, \gamma'}{\Gamma}{\Delta}$ such that, for all 
-  $\thyp{x}{A}{\epsilon} \in \Delta$, $\dnt{\hasty{\Gamma}{\epsilon}{\gamma\;x}{A}} =
-  \dnt{\hasty{\Gamma}{\epsilon}{\gamma'\;x}{A}}$, we have
-  \begin{enumerate}[label=(\alph*)]
-    \item Given $\hasty{\Delta}{\epsilon}{a}{A}$, 
-      $\dnt{\hasty{\Gamma}{\epsilon}{[\gamma]a}{A}} = \dnt{\hasty{\Gamma}{\epsilon}{[\gamma']a}{A}}$
-    \item Given $\issubst{\rho}{\Delta}{\Xi}$, $\dnt{\issubst{[\gamma]\rho}{\Gamma}{\Xi}} =
-      \dnt{\issubst{[\gamma']\rho}{\Gamma}{\Xi}}$
-    \item Given $\haslb{\Delta}{r}{\ms{L}}$, $\dnt{\haslb{\Gamma}{[\gamma]r}{\ms{L}}} =
-      \dnt{\haslb{\Gamma}{[\gamma']r}{\ms{L}}}$
-    \item Given $\lbsubst{\rho}{\Delta}{\ms{L}}{\ms{K}}$,
-      $\dnt{\lbsubst{\Gamma}{[\gamma]\rho}{\ms{L}}{\ms{K}}} =
-      \dnt{\lbsubst{\Gamma}{[\gamma']\rho}{\ms{L}}{\ms{K}}}$ 
-  \end{enumerate}
-\end{theorem}
 
 \TODO{if our substitution \emph{is} pure, we can also prove that substitution is \emph{sound}:}
 
