@@ -100,7 +100,7 @@
 \newcommand{\lbsubst}[4]{#1 \vdash #2: #3 \rightsquigarrow #4}
 \newcommand{\teqv}{\approx}
 \newcommand{\tmeq}[5]{#1 \vdash_{#2} #3 \teqv #4 : {#5}}
-\newcommand{\lbeq}[4]{#1 \vdash #2 \teqv #3 : {#4}}
+\newcommand{\lbeq}[4]{#1 \vdash #2 \teqv #3 \rhd {#4}}
 \newcommand{\tmseq}[4]{\issubst{#1 \teqv #2}{#3}{#4}}
 \newcommand{\lbseq}[5]{\lbsubst{#1 \teqv #2}{#3}{#4}{#5}}
 \newcommand{\brle}[1]{{\scriptsize\textsf{#1}}}
@@ -718,16 +718,13 @@ since we know that:
   (i_0 + 1, a_0 * (i_0 + 1)) &= (\ms{let}\;(x, y) = (i_0, a_0)\;\ms{in}\;(x + 1, y * (x + 1))) \\
   (1, 1) &= (\ms{let}\;(x, y) = (0, 1)\;\ms{in}\;(x + 1, y * (x + 1)))
 \end{align*} 
-we can rewrite the program in Figure~\ref{fig:fact-subst-2} to that in
-Figure~\ref{fig:fact-dinat}. We can then apply general rewrite rules such as
-\textit{dinaturality} (\todo{explain, cite Elgot lore?}) to rewrite
-Figure~\ref{fig:fact-dinat} to Figure~\ref{fig:fact-zero}. This allows us to
-build up justifications for complex optimizations, such as rewriting
-\ref{fig:fact-zero} to \ref{fig:fact-opt}, in terms of simple rewriting steps.
-In particular, we can do \textit{complex}, \textit{error-prone} loop and
-control-flow graph optimizations by breaking them down into closed set of simple
-algebraic steps, with each step rigorously justified via our denotational
-semantics
+we can rewrite the program in Figure~\ref{fig:fact-subst-2} to that in Figure~\ref{fig:fact-dinat}.
+We can then apply general rewrite rules such as \textit{dinaturality} to rewrite
+Figure~\ref{fig:fact-dinat} to Figure~\ref{fig:fact-zero}. This allows us to build up justifications
+for complex optimizations, such as rewriting \ref{fig:fact-zero} to \ref{fig:fact-opt}, in terms of
+simple rewriting steps. In particular, we can do \textit{complex}, \textit{error-prone} loop and
+control-flow graph optimizations by breaking them down into closed set of simple algebraic steps,
+with each step rigorously justified via our denotational semantics
 
 % \begin{itemize}
 %   \item 
@@ -806,6 +803,7 @@ semantics
     verify complex optimizations through decomposition.
   } 
   \Description{}
+  \label{fig:fact-dinat-rewrites}
 \end{figure}
 
 \section{Type Theory}
@@ -1079,16 +1077,24 @@ induces a partial order on label contexts.
       {\ms{L}, \lhyp{\ell}{A} \leq \ms{K}, \lhyp{\ell}{A}} \\
     \boxed{\issubst{\gamma}{\Gamma}{\Delta}} \\
     \prftree[r]{\rle{sb-nil}}{}{\issubst{\cdot}{\Gamma}{\cdot}} \qquad
-    \prftree[r]{\rle{sb-skip}}{}{\issubst{\gamma}{\Gamma}{\Delta}}
-      {\issubst{\gamma, x \mapsto e}{\Gamma}{\Delta}} \qquad
     \prftree[r]{\rle{sb-cons}}{\issubst{\gamma}{\Gamma}{\Delta}}{\hasty{\Gamma}{\epsilon}{e}{A}}
       {\issubst{\gamma, x \mapsto e}{\Gamma}{\Delta, \thyp{x}{A}{\epsilon}}} \\
+    \prftree[r]{\rle{sb-skip}}{\issubst{\gamma}{\Gamma}{\Delta}}
+      {\issubst{\gamma, x \mapsto e}{\Gamma}{\Delta}} \qquad
+    \prftree[r]{\rle{sb-id}}{\issubst{\gamma}{\Gamma}{\Delta}}{x \notin \gamma}
+      {\issubst{\gamma}{\Gamma, \thyp{x}{A}{\epsilon}}{\Delta}, \thyp{x}{A}{\epsilon}}
+       \\
     \boxed{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}} \\
     \prftree[r]{\rle{ls-nil}}{}{\lbsubst{\Gamma}{\cdot}{\cdot}{\ms{K}}} 
     \qquad
     \prftree[r]{\rle{ls-skip}}
       {\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}}
-      {\lbsubst{\Gamma}{\sigma, \ell(x) \mapsto r}{\ms{L}}{\ms{K}}} \\
+      {\lbsubst{\Gamma}{\sigma, \ell(x) \mapsto r}{\ms{L}}{\ms{K}}}
+    \qquad
+    \prftree[r]{\rle{ls-id}}
+      {\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}}{\ell \notin \sigma}
+      {\lbsubst{\Gamma}{\sigma}{\ms{L}, \lhyp{\ell}{A}}{\ms{K}, \lhyp{\ell}{A}}}
+    \\
     \prftree[r]{\rle{ls-cons}}
       {\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}}{\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{K}}}
       {\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}}
@@ -1126,16 +1132,18 @@ assignment of such variables $\gamma : x \mapsto \gamma_x$ is called a
 $\issubst{\gamma}{\Gamma}{\Delta}$ as per the rules given in Figure
 \ref{fig:ssa-reg-rules}. In particular,
 \begin{itemize}
-  \item \brle{sb-nil} says that the empty substitution takes every context to
-  the empty context, while \brle{sb-skip} says that we can ignore variables
-  defined in a substitution which do not appear in the right-hand side of the
-  substitution well-typedness judgement. Together, these say that \emph{every}
-  substitution can be interpreted as taking every context to the empty context,
+  \item \brle{sb-nil} says that the empty substitution takes every context to the empty context,
+  while \brle{sb-skip} says that we can ignore variables defined in a substitution which do not
+  appear in the right-hand side of the substitution well-typedness judgement. Together, these say
+  that \emph{every} substitution can be interpreted as taking every context to the empty context,
   i.e., $\forall \gamma, \Gamma. \issubst{\gamma}{\Gamma}{\cdot}$.
   \item \brle{sb-cons} says that if $\gamma$ takes $\Gamma$ to $\Delta$ and
-  $\hasty{\Gamma}{\epsilon}{e}{A}$, then $\gamma$ with the additional
-  substitution $x \mapsto e$ adjoined takes $\Gamma$ to $\Delta,
-  \thyp{x}{A}{\epsilon}$
+  $\hasty{\Gamma}{\epsilon}{e}{A}$, then $\gamma$ with the additional substitution $x \mapsto e$
+  adjoined takes $\Gamma$ to $\Delta, \thyp{x}{A}{\epsilon}$
+  \item \brle{sb-id} says that, for any variables $x$ not appearing in a substitution $\gamma$, we
+  can type $\gamma$ using the fact that the action of $\gamma$ on $x$ is the identity. This is
+  useful as it allows us to implicitly extend substitutions to larger contexts without defining
+  unwieldy operators. \todo{clean this up}
 \end{itemize}
 To \emph{use} a substitution, we simply need to perform standard
 capture-avoiding substitution, as made explicit in Figure
@@ -1143,6 +1151,10 @@ capture-avoiding substitution, as made explicit in Figure
 
 \begin{figure}
   \begin{gather*}
+    (\gamma, x \mapsto e)(x) = e \qquad
+    (\gamma, y \mapsto e)(x) = \gamma(x) \qquad
+    (\cdot)(x) = x
+    \\ \\
     [\gamma]x = \gamma(x) \qquad
     [\gamma](\letexpr{x}{a}{e}) = \letexpr{x}{[\gamma]a}{[\gamma]e} \qquad
     [\gamma](a, b) = ([\gamma]a, [\gamma]b) \qquad
@@ -1172,7 +1184,8 @@ capture-avoiding substitution, as made explicit in Figure
     = ([\gamma]\sigma, \ell(x) \mapsto [\gamma]r)
     \\ \\
     (\sigma, \ell(x) \mapsto r)(\ell, a) = [a/x]r \qquad
-    (\sigma, \kappa(x) \mapsto r)(\ell, a) = \sigma(\ell, a)
+    (\sigma, \kappa(x) \mapsto r)(\ell, a) = \sigma(\ell, a) \qquad
+    (\cdot)(\ell, a) = \brb{\ell}{a}
     \\ \\
     [\sigma](\brb{\ell}{a}) = \sigma(\ell, a) \qquad
     [\sigma](\letstmt{x}{a}{r}) = \letstmt{x}{a}{[\sigma]r} \\
@@ -1185,6 +1198,7 @@ capture-avoiding substitution, as made explicit in Figure
     [\sigma](\sigma', \ell(x) \mapsto r) 
     = ([\sigma]\sigma', \ell(x) \mapsto [\sigma]r)
   \end{gather*}
+  \TODO{split figure}
   \caption{ 
     Capture-avoiding (label) substititon for \isotopessa terms, regions, and
     (label) substitutions; in particular, we assume bound variables and labels
@@ -1209,23 +1223,20 @@ is as follows:
 %   By induction. \todo{pointer to formalization?}
 % \end{proof}
 Note in particular that this allows us to take the \emph{composition}
-$\issubst{[\gamma']\gamma}{\Gamma'}{\Delta}$ of substitutions
-$\issubst{\gamma'}{\Gamma'}{\Gamma}$ and $\issubst{\gamma}{\Gamma}{\Delta}$; the
-composition associates as expected: $[[\gamma_1]\gamma_2]\gamma_3 =
-[\gamma_1]([\gamma_2]\gamma_3)$, and has identity $[\ms{id}]\gamma = \gamma$,
-yielding a category of substitutions with variable contexts $\Gamma$ as objects.
+$\issubst{[\gamma']\gamma}{\Gamma'}{\Delta}$ of substitutions $\issubst{\gamma'}{\Gamma'}{\Gamma}$
+and $\issubst{\gamma}{\Gamma}{\Delta}$; the composition associates as expected:
+$[[\gamma_1]\gamma_2]\gamma_3 = [\gamma_1]([\gamma_2]\gamma_3)$, and has identity $[\ms{id}]\gamma =
+\gamma$, yielding a category of substitutions with variable contexts $\Gamma$ as objects.
 
-Finally, just as we can substitute generalizes weakening by substituting
-expressions for variables, we can generalize label weakening by substituting
-\emph{labels} for \emph{(parametrized) regions} via \emph{label substitution}.
-In particular, a label-substitution $\lbsubst{\sigma}{\Gamma}{\ms{L}}{\ms{K}}$
-maps every label $\ell(A) \in \ms{L}$ to a region $\haslb{\Gamma, x :
-A}{r}{\ms{K}}$ parametrized by $x : A$. As shown in Figure
-\ref{fig:ssa-subst-def}, we may then define label-substitution recursively in
-the obvious manner, mapping $\ms{br}\;\ell\;a$ to $[a/x]r$ as a base case. We
-can similarly define the composition of label substitutions $[\sigma']\sigma$ in
-the expected manner. This allows us to state \emph{label substitution} as
-follows:
+Finally, just as we can generalize weakening by substituting expressions for variables via
+substitution, we can generalize label weakening by substituting \emph{labels} for
+\emph{(parametrized) regions} via \emph{label substitution}. In particular, a label-substitution
+$\lbsubst{\sigma}{\Gamma}{\ms{L}}{\ms{K}}$ maps every label $\ell(A) \in \ms{L}$ to a region
+$\haslb{\Gamma, x : A}{r}{\ms{K}}$ parametrized by $x : A$. As shown in Figure
+\ref{fig:ssa-subst-def}, we may then define label-substitution recursively in the obvious manner,
+mapping $\ms{br}\;\ell\;a$ to $[a/x]r$ as a base case. We can similarly define the composition of
+label substitutions $[\sigma']\sigma$ in the expected manner. This allows us to state \emph{label
+substitution} as follows:
 
 \begin{lemma}[Label substitution]
   Given $\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}$, we have that
@@ -1776,11 +1787,9 @@ However, on it's own, it's not quite enough to get rid of nested \ms{where}-bloc
 it turns out that we only need to add as an axiom the ability to get rid of a single, trivially
 nested \ms{where}-block; this is given as the rule \brle{codiag}.
 
-\TODO{think about the above w.r.t B\"ohm Jacopini}
-
-The final property we will need for equational rewriting is \emph{uniformity}, which is described by
-the rule \brle{uni}. In essence, this lets us commute pure expressions with loop bodies, enabling
-rewrites like
+To be able to soundly perform equational rewriting, we will need the \emph{uniformity} property,
+which is described by the rule \brle{uni}. In essence, this lets us commute pure expressions with
+loop bodies, enabling rewrites like
 \begin{equation}
   \ms{loop}\;\{ x = x + 1; \ms{if}\;p\;3x\;\{\ms{ret}\;3x\} \}
   \qquad \teqv \qquad 
@@ -1825,6 +1834,9 @@ That is, the following two programs are equivalent:
     x = t; y = e
   $$
 \end{enumerate}
+
+\TODO{align $\teqv$ in below explanation}
+
 \emph{Then}, for any well-typed entry block $\haslb{\Gamma}{r}{\ms{L}, \ell(A)}$ (which can produce
 an appropriate input $x : A$ at label $\ell$), we have that
 $$
@@ -1856,6 +1868,27 @@ $$
 $$
 since, in particular, we may have $y \leq x$, in which case the loop will never exit and hence
 $\ms{hi}$ will never be executed.
+
+Note that, due to \brle{let$_1$-$\beta$}, \brle{cfg-$\eta$}, and \brle{cfg-$\beta_1$}, 
+this is equivalent to
+\begin{equation}
+\prftree[r]{\rle{uni'}}
+{
+  \haslb{\Gamma}{r}{\ms{L}, \ell(A)}
+}
+{
+  \lbeq{\Gamma, \bhyp{x}{A}}
+    {[e/y]s}
+    {[\ell(x) \mapsto \brb{\kappa}{e}]t}
+    {\ms{L}, \kappa(B)}
+}
+{
+  \lbeq{\Gamma}
+    {(\where{([\ell(x) \mapsto \brb{\kappa}{e}]r)}{\wbranch{\kappa}{y}{s}})}
+    {(\where{r}{t})}
+    {\ms{L}}
+}
+\end{equation}
 
 \begin{figure}
   \begin{gather*}
@@ -1917,11 +1950,93 @@ $\ms{hi}$ will never be executed.
       {\hasty{\Gamma, \bhyp{x}{A}}{\bot}{e}{B}}, \quad
       {\haslb{\Gamma, \bhyp{y}{B}}{s}{\ms{L}, \kappa(B)}}, \quad \text{and} \quad
       {\haslb{\Gamma, \bhyp{x}{A}}{t}{\ms{L}, \ell(A)}}
+      \\
+      \\
+      \prftree[r]{\rle{dinat}}
+        {
+          \haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}
+        }{
+          \lbsubst{\kappa}{\Gamma}{(\lhyp{\ell_i}{A_i},)_i}{(\lhyp{\kappa_j}{A_j},)_j}
+        }{
+          \forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}
+        }{
+          \lbeq{\Gamma}
+            {\where{([\sigma]r)}{(\wbranch{\kappa_i}{x_i}{[\sigma]t_i},)_i}}
+            {\where{r}{\wbranch{\ell_i}{x_i}{[(\kappa_i(x_i) \mapsto t_i,)](\sigma_i\;x_i)},)_i}}
+            {}
+        }
   \end{gather*}
   \Description{}
   \caption{Rewriting rules for \isotopessa \ms{where}-blocks}
   \label{fig:ssa-where-rules}
 \end{figure}
+
+This format illuminates a very important potential use for uniformity; namely, formalizing rewrites
+like those in Figure~\ref{fig:fact-dinat-rewrites}. In particular, consider a program of the form
+\begin{equation*}
+  \haslb{\Gamma}{\where{([\ell(x) \mapsto \brb{\kappa}{e}]r)}{
+    \wbranch{\kappa}{y}{[\ell(x) \mapsto \brb{\kappa}{e}]s}
+  }}{\ms{L}}
+\end{equation*}
+where $\haslb{\Gamma}{r}{\ms{L}, \ell(A)}$, $\haslb{\Gamma, y : B}{s}{\ms{L}, \ell(A)}$, and
+$\hasty{\Gamma, \bhyp{x}{A}}{\bot}{e}{B}$ is pure. Then we have that
+\begin{multline*}
+  [e/y][\ell(x) \mapsto \brb{\kappa}{(e)}]s 
+  \\ \teqv
+  [\ell(x) \mapsto \brb{\kappa}{[e/y](e)}][e/y]s
+  \\ \teqv
+  [\ell(x) \mapsto \brb{\kappa}{(e)}][e/y]s
+\end{multline*}
+and therefore that
+\begin{multline*}
+  \Gamma \vdash \where{([\ell(x) \mapsto \brb{\kappa}{e}]r)}{
+    \wbranch{\kappa}{z}{[\ell(x) \mapsto \brb{\kappa}{e}]s}} \\ \teqv
+    \where{r}{
+    \wbranch{\ell}{x}{[e/y]s}} \\ \teqv
+    \where{r}{
+    \wbranch{\ell}{x}{\letstmt{y}{e}{s}}} 
+\end{multline*}
+In particular, for example, we can then easily derive the rewrite from Figure~\ref{fig:fact-dinat}
+to Figure~\ref{fig:fact-zero} by noting the \emph{equalities} (an equivalence would be enough, of
+course)
+\begin{multline*}
+  \ms{if}\;i_0 < n\;\{
+    \ms{br}\;\ms{loop}(
+      \letexpr{(x, y)}{(i_0, a_0)}{(x + 1, y * x + 1)}
+    )
+  \}\;\ms{else}\;\{
+    \ms{ret}(a_0)
+  \} \\
+  =
+  [\ms{loop}(i_0, a_0) \mapsto \letexpr{(x, y)}{(i_0, a_0)}{(x + 1, y * x + 1)}](
+    \ms{if}\;i_0 < n\;\{
+      \ms{br}\;\ms{loop}(i_0, a_0)
+    \}\;\ms{else}\;\{
+      \ms{ret}(a_0)
+    \}
+  )
+\end{multline*}
+and
+\begin{multline*}
+  \letstmt{n}{10}{\ms{br}\;\ms{loop}(
+    \letstmt{(x, y)}{(0, 1)}{(x + 1, y * (x + 1))}
+  )} \\
+  =
+  [\ms{loop}(i_0, a_0) \mapsto \letexpr{(x, y)}{(i_0, a_0)}{(x + 1, y * x + 1)}](
+    \letstmt{n}{10}{\ms{br}\;\ms{loop}(0, 1)}
+  )
+\end{multline*}
+Rewrites like this are an instance of the principle we call \emph{dinaturality}, which
+
+\TODO{explain, give for-loop example or something similar}
+
+\TODO{but, what about side-effecting things}
+
+\TODO{dinaturality should allow this specifically}
+
+\TODO{we also want to natively handle cfgs in general}
+
+\TODO{which is going to turn out to be Very Useful (TM)}
 
 \subsection{Metatheory}
 
@@ -2004,11 +2119,22 @@ in Section~\ref{ssec:completeness}.
     \prftree[r]{\rle{ls-skip-r}}
       {\lbseq{\sigma}{\sigma'}{\Gamma}{\ms{L}}{\ms{K}}}
       {\lbseq{\sigma}{\sigma', \ell(x) \mapsto r'}{\Gamma}{\ms{L}}{\ms{K}}}
+    \\
+    \prftree[r]{\rle{sb-id}}
+      {\tmseq{\gamma}{\gamma'}{\Gamma, \thyp{x}{A}{\epsilon}}{\Delta, \thyp{x}{A}{\epsilon}}}
+      {\tmseq{\gamma}{\gamma'}{\Gamma}{\Delta}} \qquad
+    \prftree[r]{\rle{ls-id}}
+      {\lbseq{\sigma}{\sigma'}{\Gamma}{\ms{L}, \lhyp{\ell}{A}}{\ms{K}, \lhyp{\ell}{A}}}
+      {\lbseq{\sigma}{\sigma'}{\Gamma}{\ms{L}}{\ms{K}}}
   \end{gather*}
   \Description{}
   \caption{Rules for the equivalence relation on \isotopessa substitutions and label-substitutions}
   \label{fig:ssa-subst-equiv}
 \end{figure}
+
+\subsection{B\"ohm-Jacopini for SSA}
+
+\TODO{this}
 
 \section{Denotational Semantics}
 
@@ -2526,10 +2652,14 @@ corresponding substitutions are not always pure.
     \qquad
     \dnt{\issubst{\gamma, x \mapsto e}{\Gamma}{\Delta}} 
     = \dnt{\issubst{\gamma}{\Gamma}{\Delta}}
+  \end{gather*}
+  \begin{align*}
+    \dnt{\issubst{\gamma}{\Gamma, \thyp{x}{A}{\epsilon}}{\Delta, \thyp{x}{A}{\epsilon}}} 
+    &= \dnt{\issubst{\gamma}{\Gamma}{\Delta}} \otimes \dnt{A}
     \\
     \dnt{\issubst{\gamma, x \mapsto e}{\Gamma}{\Delta, \thyp{x}{A}{\epsilon}}}
-    = \dmor{\dnt{\Gamma}};\dnt{\issubst{\gamma}{\Gamma}{\Delta}}
-  \end{gather*}
+    &= \dmor{\dnt{\Gamma}};\dnt{\issubst{\gamma}{\Gamma}{\Delta}}
+  \end{align*}
   \begin{equation*}
     \boxed{\dnt{\lbsubst{\Gamma}{\kappa}{\ms{L}}{\ms{K}}} 
       : \dnt{\Gamma} \otimes \dnt{\ms{L}} \to \dnt{\ms{K}}}
@@ -2539,13 +2669,17 @@ corresponding substitutions are not always pure.
       = \tmor{\dnt{\Gamma} \otimes \mb{1}};0_{\ms{K}} \qquad
     \dnt{\lbsubst{\kappa, \ell(x) \mapsto r}{\Gamma}{\ms{L}}{\ms{K}}}
       = \dnt{\lbsubst{\kappa}{\Gamma}{\ms{L}}{\ms{K}}}
+  \end{gather*}
+  \begin{align*}
+    \dnt{\lbsubst{\kappa}{\Gamma}{\ms{L}, \ell(A)}{\ms{K}, \ell(A)}}
+      &= \delta ; [\dnt{\lbsubst{\kappa}{\Gamma}{\ms{L}}{\ms{K}}}, \iota_r]
     \\
     \dnt{\lbsubst{\kappa, \ell(x) \mapsto r}{\Gamma}{\ms{L}, \ell(A)}{\ms{K}}}
-      = [
+      &= \delta ; [
         \dnt{\lbsubst{\kappa}{\Gamma}{\ms{L}}{\ms{K}}}, 
         \dnt{\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{K}}}
       ]
-  \end{gather*}
+  \end{align*}
   \caption{Denotational semantics for \isotopessa (label) substitutions}
   \Description{}
   \label{fig:ssa-vsubst-sem} 
@@ -2617,6 +2751,8 @@ corresponding substitutions are not always pure.
 
 \TODO{text}
 
+\TODO{factor out packing lore and initiality lore, actually describe category with text}
+
 \begin{theorem}[Completeness (Expressions)]
   The category $\ms{Th}^\otimes(\Gamma)$ with
   \begin{itemize}
@@ -2652,11 +2788,12 @@ corresponding substitutions are not always pure.
       $\delta^{-1} = \ms{let}\;(x, y) = \invar; 
         \caseexpr{y}{z}{\ms{inl}(x, z)}{z}{\ms{inr}(x, z)}$
   \end{itemize}
-  % In particular, taking $\ms{Th}(\cdot)$ as our model, we have 
-  % $
-  %   \tmeq{\Gamma}{\epsilon}{e}{e'}{A} 
-  %   \iff \dnt{\hasty{\Gamma}{\epsilon}{e}{A}} = \dnt{\hasty{\Gamma}{\epsilon}{e'}{A}}
-  % $
+  In particular, taking $\ms{Th}(\cdot)$ as our model, we have 
+  $
+    \tmeq{\Gamma}{\epsilon}{e}{e'}{A} 
+    \iff \dnt{\hasty{\Gamma}{\epsilon}{e}{A}} = \dnt{\hasty{\Gamma}{\epsilon}{e'}{A}}
+  $
+  i.e. $\ms{Th}(\cdot)$ is the initial model
 \end{theorem}
 
 \TODO{text}
@@ -2711,14 +2848,13 @@ corresponding substitutions are not always pure.
       \ms{Th}_\bot(\Gamma, \ms{L})(A, B)$ restricting to \ref{ret-functor} on
       $\ms{Th}^\otimes_\bot(\Gamma)$
   \end{enumerate}
-  % In particular, taking $\ms{Th}(\cdot, \cdot)$ as our model, we have 
-  % $
-  %   \lbeq{\Gamma}{r}{r'}{\ms{L}} 
-  %   \iff \dnt{\haslb{\Gamma}{r}{\ms{L}}} = \dnt{\haslb{\Gamma}{r'}{\ms{L}}}
-  % $
+  In particular, taking $\ms{Th}(\cdot, \cdot)$ as our model, we have 
+  $
+    \lbeq{\Gamma}{r}{r'}{\ms{L}} 
+    \iff \dnt{\haslb{\Gamma}{r}{\ms{L}}} = \dnt{\haslb{\Gamma}{r'}{\ms{L}}}
+  $
+  i.e. $\ms{Th}(\cdot, \cdot)$ is the initial model.
 \end{theorem}
-
-\TODO{B\"ohm-Jacopini based completeness}
 
 \section{Concrete Models}
 
