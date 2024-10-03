@@ -3198,9 +3198,23 @@ buffer is also empty, giving us the following definition:
 
 \section{Discussion and Related Work}
 
-\TODO{Maybe cite how we're doing \citet{liang-95-interpreters} here}
-
 \TODO{Release-acquire lore; event structure lore}
+
+\TODO{Ye Olde Related Work List:}
+\begin{itemize}
+  \item \citet{liang-95-interpreters} to build interpreters supporting effects using monad stacks
+  \item Alternative pomset lore: \citet{jagadeesan-pwp-20}, \citet{leaky-semicolon}
+  \item Event structures lore: ask Neel
+  \item \citet{fuhrmann-direct-1999} for:
+  \begin{itemize}
+    \item Linearity (relevant -- copyability, affine -- discardability)
+    \item Lambda functions, thunkability
+    \item Are abstract Kleisli-categories + coproducts + Elgot structure \isotopessa models, or do
+    we need our linear generalization? How do abstract Kleisli categories interact with coproducts +
+    Elgot structure?
+    \item See also: \citet{Thielecke1997CategoricalSO}
+  \end{itemize}
+\end{itemize}
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references}
