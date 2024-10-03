@@ -23,6 +23,8 @@
 \usepackage{subcaption}
 \usepackage{fancyvrb}
 \usepackage{enumitem}
+\usepackage{string-diagrams}
+\usetikzlibrary{calc}
 
 \definecolor{codegreen}{rgb}{0,0.6,0}
 \definecolor{codegray}{rgb}{0.5,0.5,0.5}
@@ -2340,17 +2342,44 @@ cartesian and co-cartesian categories are monoidal (with the product and coprodu
 respectively), we can use string diagrams to reason about both. In the co-cartesian case, string
 diagrams behave much like control-flow diagrams, with boxes representing sub-programs, input wires
 entry points, and output wires exit points. In particular, a \emph{region} is just a box with a
-single input wire, as in Figure~\todo{this}. Continuing this analogy, we draw the codiagonal
-morphism the codiagonal morphism $[\ms{id}_A, \ms{id}_A]$ as joining two wires, and the morphism $0$
-from the initial object as a wire coming from nowhere. 
+single input wire. Continuing this analogy, we draw the codiagonal morphism $[\ms{id}_A, \ms{id}_A]$
+as joining two wires, and the zero morphism as a wire coming from nowhere, as in
+Figure~\ref{fig:coproduct-string-diagrams}. 
+
+\begin{figure}
+  \begin{tikzpicture}
+    \node[] (S1) at (-0.6, 1) {};
+    \node[] (S2) at (0.6, 1) {};
+    \node[box=2/0/2/0] (A) at (0, 0) {\text{subprogram 1}};
+    \node[box=1/0/2/0] (B) at (-1, -1.5) {\text{subprogram 2}};
+    \node[box=2/0/2/0] (C) at (2, -1.5) {\text{subprogram 3}};
+    \node[box=3/0/1/0] (D) at (1.5, -3) {\text{subprogram 4}};
+    \node[dot] (zero) at ($(C.north.2)+(0, 0.5)$) {};
+    \node[dot] (codiag) at (0, -4) {};
+    \node[] (end) at (0, -4.5) {};
+    \wires[-stealth]{
+      S1 = { south = A.north.1 },
+      S2 = { south = A.north.2 },
+      A = { south.1 = B.north.1, south.2 = C.north.1 },
+      B = { south.1 = codiag.west, south.2 = D.north.1 },
+      C = { south.1 = D.north.2, south.2 = D.north.3 },
+      D = { south = codiag.east },
+      zero = { south = C.north.2 },
+      codiag = { south = end.north }
+    }{}
+  \end{tikzpicture}
+  \caption{...}
+  \label{fig:coproduct-string-diagrams}
+  \Description{A string diagram using the coproduct as symmetric monoidal structure, showing how to
+  draw the codiagonal morphism and zero morphism, as well as showing what the analogue to a
+  subprogram and region might look like.}
+\end{figure}
 
 The power of string diagrams comes from the fact that many syntactically distinct ways to write
 equal values are obviously graphically equivalent by \emph{isotopy}: essentially, moving boxes and
-wires around. For example, we have \todo{these}
-
-String diagrams also give us an elegant way to represent and reason about Elgot structures. It turns
-out that \todo{cite Hyland and Hasegawa} Elgot structures induce a \emph{trace} on the coproduct:
-given $f : A + C \to B + C$, we can define 
+wires around. String diagrams also give us an elegant way to represent and reason about Elgot
+structures. It turns out that \todo{cite Hyland and Hasegawa} Elgot structures induce a \emph{trace}
+on the coproduct: given $f : A + C \to B + C$, we can define 
 \begin{equation}
   \ms{Tr}_{A, B}^C(f) 
   = \iota_l ; [f ; B + \iota_r]^\dagger 
