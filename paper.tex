@@ -280,7 +280,7 @@ branching to arbitrary code, rather than only labels, to obtain \textit{A-normal
 \cite{flanagan-93-anf}, analogously to~\citet{chakravarty-functional-ssa-2003}; a straightforward
 argument shows that this adds no expressive power. Finally, to allow for substitution, we will
 further generalize our syntax to allow for arbitrary expression nesting, as well as let-expressions,
-to obtain \textit{type-theoretic SSA}, or \isotopessa, which will be the subject of the rest of this
+to obtain \textit{type-theoretic SSA}, or \isotopessa{}, which will be the subject of the rest of this
 paper.
 
 As a running example, consider the simple imperative program to compute $10!$ given in
@@ -709,7 +709,7 @@ can be eliminated in the obvious manner, such as by taking
 \end{figure}
 
 
-This gives us our final \isotopessa language. We can now state
+This gives us our final \isotopessa{} language. We can now state
 \textit{substitutions}, like, in Figure~\ref{fig:fact-cse}, which can be used to
 build up optimizations such as \textit{common-subexpression elimination}.
 Substitution, in particular, lets us do algebra \textit{algebra}, for example,
@@ -731,11 +731,11 @@ with each step rigorously justified via our denotational semantics
 %   \item We can 
 %   \item We can show that our steps are \textit{complete} by showing that quotienting by them gives
 %         a model of our denotational semantics
-%   \item That's why we use \isotopessa
-%   \item But we gain no additional power: SSA $\subseteq$ \isotopessa; this is a retraction
+%   \item That's why we use \isotopessa{}
+%   \item But we gain no additional power: SSA $\subseteq$ \isotopessa{}; this is a retraction
 %   (embedding-projection)
-%   \item In particular, using the steps, every \isotopessa program can be converted to an SSA program with
-%         equivalent semantics, while every SSA program is already a \isotopessa program (just add brackets!)
+%   \item In particular, using the steps, every \isotopessa{} program can be converted to an SSA program with
+%         equivalent semantics, while every SSA program is already a \isotopessa{} program (just add brackets!)
 %   \item Unproven conjecture: this should take \~linear time, and the resuling program should be
 %   \~linearly sized. Do on paper?
 % \end{itemize}
@@ -810,7 +810,7 @@ with each step rigorously justified via our denotational semantics
 
 \label{sec:typing}
 
-We now give a formal account of \isotopessa, starting with the types. Our types are first order, and
+We now give a formal account of \isotopessa{}, starting with the types. Our types are first order, and
 consists of binary sums $A + B$, products $A \otimes B$, the unit type $\mathbf{1}$, and the empty
 type $\mb{0}$, all parametrized over a set of base types $X \in \mc{T}$. We write our set of types
 as $\ms{Ty}(X)$. We also parametrize over:
@@ -830,7 +830,7 @@ as $\ms{Ty}(X)$. We also parametrize over:
 
 \end{itemize}
 We'll call a tuple $Sg = (\mc{E}, \mc{T}, \mc{I})$ of types and instructions
-over these types an \emph{\isotopessa-signature}.
+over these types an \emph{\isotopessa{}-signature}.
 
 A (variable )\textit{context} $\Gamma$ is a list of \textit{typing hypotheses}
 $\thyp{x}{A}{\epsilon}$, where $x$ is a variable name, $A$ is the type of that
@@ -872,12 +872,12 @@ must be passed on a jump to the label $\ell$.
       <\(\ms{L}\)> ::= \(\cdot\) \;|\; \(\ms{L}, \lhyp{\ell}{A}\)
     \end{grammar}
   \end{center}
-  \caption{Grammar for \isotopessa, parametrized over an \isotopessa signature}
+  \caption{Grammar for \isotopessa{}, parametrized over an \isotopessa{} signature}
   \Description{}
   \label{fig:ssa-grammar}
 \end{figure}
 
-As shown in Figure~\ref{fig:ssa-grammar}, \isotopessa terms are divided into two
+As shown in Figure~\ref{fig:ssa-grammar}, \isotopessa{} terms are divided into two
 syntactic categories, each of with associated with a judgement:
 \begin{itemize}
   \item \emph{Expressions} $a, b, c, e$ typed with the judgement
@@ -946,7 +946,7 @@ primitives:
       {\hasty{\Gamma, \bhyp{y}{A}}{\epsilon}{b}{C}}
       {\hasty{\Gamma}{\epsilon}{\caseexpr{e}{x}{a}{y}{b}}{C}}
   \end{gather*}
-  \caption{Rules for typing \isotopessa expressions}
+  \caption{Rules for typing \isotopessa{} expressions}
   \Description{}
   \label{fig:ssa-expr-rules}
 \end{figure}
@@ -1024,14 +1024,14 @@ admits that, \emph{if} both sides are well-typed and there is no shadowing,
       {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
       {\haslb{\Gamma}{\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}}
   \end{gather*}
-  \caption{Rules for typing \isotopessa regions}
+  \caption{Rules for typing \isotopessa{} regions}
   \Description{}
   \label{fig:ssa-reg-rules}
 \end{figure}
 
 \subsection{Metatheory}
 
-We can now begin to state the syntactic metatheory of \isotopessa. One of the
+We can now begin to state the syntactic metatheory of \isotopessa{}. One of the
 most important metatheorems, and a basic santity check of our type theory, is
 \emph{weakening}; essentially, if things typecheck in a context $\Delta$, and
 $\Gamma$ contains all the variables of $\Delta$ (written $\Gamma \leq \Delta$,
@@ -1100,7 +1100,7 @@ induces a partial order on label contexts.
       {\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}}
       {\lbsubst{\Gamma}{\sigma, \ell(x) \mapsto r}{\ms{L}, \lhyp{\ell}{A}}{\ms{K}}}
   \end{gather*}
-  \caption{Rules for typing \isotopessa weakening and substitution}
+  \caption{Rules for typing \isotopessa{} weakening and substitution}
   \Description{}
   \label{fig:ssa-meta-rules}
 \end{figure}
@@ -1148,6 +1148,8 @@ $\issubst{\gamma}{\Gamma}{\Delta}$ as per the rules given in Figure
 To \emph{use} a substitution, we simply need to perform standard
 capture-avoiding substitution, as made explicit in Figure
 \ref{fig:ssa-subst-def}.
+
+\TODO{deal with skip rule causing problems for rewriting...}
 
 \begin{figure}
   \begin{gather*}
@@ -1200,7 +1202,7 @@ capture-avoiding substitution, as made explicit in Figure
   \end{gather*}
   \TODO{split figure}
   \caption{ 
-    Capture-avoiding (label) substititon for \isotopessa terms, regions, and
+    Capture-avoiding (label) substititon for \isotopessa{} terms, regions, and
     (label) substitutions; in particular, we assume bound variables and labels
     are $\alpha$-converted so as not to appear in $\gamma$/$\sigma$. 
   }
@@ -1252,13 +1254,17 @@ program transformations which splice and manipulate the control-flow graph.
 
 \TODO{this...}
 
+\subsection{Control-Flow Graphs}
+
+\TODO{this?}
+
 \section{Equational Theory}
 
 \label{sec:equations}
 
 \subsection{Expressions}
 
-We can now give an equational theory for \isotopessa expressions. In particular,
+We can now give an equational theory for \isotopessa{} expressions. In particular,
 we will inductively define an equivalence relation
 $
 \tmeq{\Gamma}{\epsilon}{a}{a'}{A}
@@ -1346,7 +1352,7 @@ We also include the following \emph{type-directed} rules as part of our congruen
       {\hasty{\Gamma}{\bot}{a'}{\mb{1}}}
       {\tmeq{\Gamma}{\epsilon}{a}{a'}{\mb{1}}}
   \end{gather*}
-  \caption{Congruence rules for \isotopessa expressions}
+  \caption{Congruence rules for \isotopessa{} expressions}
   \Description{}
   \label{fig:ssa-expr-congr-rules}
 \end{figure}
@@ -1456,7 +1462,7 @@ summarized in Figure~\ref{fig:ssa-unary-let-expr}:
       }
   \end{gather*}
   \Description{}
-  \caption{Rewriting rules for \isotopessa unary \ms{let} expressions}
+  \caption{Rewriting rules for \isotopessa{} unary \ms{let} expressions}
   \label{fig:ssa-unary-let-expr}
 \end{figure}
 
@@ -1535,7 +1541,7 @@ adding a separate rule, we can instead derive (types omitted for simplicity) it 
       {\letexpr{z}{e}{\caseexpr{z}{x}{c}{y}{d}}}{C}}
   \end{gather*}
   \Description{}
-  \caption{Rewriting rules for \isotopessa binary \ms{let} and \ms{case} expressions}
+  \caption{Rewriting rules for \isotopessa{} binary \ms{let} and \ms{case} expressions}
   \label{fig:ssa-let2-case-expr}
 \end{figure}
 
@@ -1571,7 +1577,7 @@ bind-rule for operations as follows:
   \teqv (\letexpr{x}{a}{f\;x})
 \end{align*}
 
-This completes the equational theory for \isotopessa terms; in Section \ref{ssec:completeness}, we
+This completes the equational theory for \isotopessa{} terms; in Section \ref{ssec:completeness}, we
 will show that this is enough to state a relatively powerful completeness theorem.
 
 \subsection{Regions}
@@ -1646,7 +1652,7 @@ rules are given in Figure~\ref{fig:ssa-reg-let2-case-expr}.
       {\lbeq{\Gamma}{r}{s}{\ms{L}}}
   \end{gather*}
   \Description{}
-  \caption{Congruence rules for \isotopessa regions}
+  \caption{Congruence rules for \isotopessa{} regions}
   \label{fig:ssa-reg-congr-rules}
 \end{figure}
 
@@ -1704,7 +1710,7 @@ rules are given in Figure~\ref{fig:ssa-reg-let2-case-expr}.
         {\letstmt{x}{a}{\letstmt{y}{\labort{x}}{r}}}{\ms{L}}}
   \end{gather*}
   \Description{}
-  \caption{Rewriting rules for \isotopessa unary \ms{let}-statements}
+  \caption{Rewriting rules for \isotopessa{} unary \ms{let}-statements}
   \label{fig:ssa-reg-unary-let}
 \end{figure}
 
@@ -1740,7 +1746,7 @@ rules are given in Figure~\ref{fig:ssa-reg-let2-case-expr}.
     {\lbeq{\Gamma}{\caseexpr{e}{x}{r}{y}{s}}{\letstmt{z}{e}{\caseexpr{z}{x}{r}{y}{s}}}{\ms{L}}}
   \end{gather*}
   \Description{}
-  \caption{Rewriting rules for \isotopessa binary \ms{let}-statements and \ms{case}-statements}
+  \caption{Rewriting rules for \isotopessa{} binary \ms{let}-statements and \ms{case}-statements}
   \label{fig:ssa-reg-let2-case-expr}
 \end{figure}
 
@@ -1967,7 +1973,7 @@ this is equivalent to
         }
   \end{gather*}
   \Description{}
-  \caption{Rewriting rules for \isotopessa \ms{where}-blocks}
+  \caption{Rewriting rules for \isotopessa{} \ms{where}-blocks}
   \label{fig:ssa-where-rules}
 \end{figure}
 
@@ -2128,7 +2134,7 @@ in Section~\ref{ssec:completeness}.
       {\lbseq{\sigma}{\sigma'}{\Gamma}{\ms{L}}{\ms{K}}}
   \end{gather*}
   \Description{}
-  \caption{Rules for the equivalence relation on \isotopessa substitutions and label-substitutions}
+  \caption{Rules for the equivalence relation on \isotopessa{} substitutions and label-substitutions}
   \label{fig:ssa-subst-equiv}
 \end{figure}
 
@@ -2326,12 +2332,14 @@ Elgot structure} as follows:
   we say a \emph{strong} monad is strong Elgot if its Kliesli category has a strong Elgot structure.
 \end{definition}
 
-\TODO{discuss string diagrams? string diagrammatic proofs?}
+\subsection{String Diagrams}
+
+\TODO{this...}
 
 \subsection{Semantics}
 
-We now have all the ingredients we need to give a semantics to \isotopessa expressions and regions.
-In particular, an \isotopessa model consists of:
+We now have all the ingredients we need to give a semantics to \isotopessa{} expressions and regions.
+In particular, an \isotopessa{} model consists of:
 \begin{itemize}
   \item A distributive premonoidal category $\mc{C}$, equipped with an Elgot structure
   \item A complete lattice $E$, and a continuous function $\epsilon \mapsto \mc{C}_\epsilon$ from
@@ -2342,7 +2350,7 @@ In particular, an \isotopessa model consists of:
 \end{itemize}
 We will write morphisms $\mc{C}_\epsilon(A, B)$ as $A \to_\epsilon B$, and morphisms $\mc{C}(A, B)$
 as $A \to B$. Note that, whenever $\mc{C}$ is a distributive Elgot Freyd category, we can trivially
-obtain an \isotopessa model by choosing $E = \{\top, \bot\}$; hence, this re-framing does not add
+obtain an \isotopessa{} model by choosing $E = \{\top, \bot\}$; hence, this re-framing does not add
 any additional generality, but simplifies bookkeeping. We may also choose $E = \{*\}$ if and only if
 $\mc{C}$ is in fact Cartesian.
 %
@@ -2353,7 +2361,7 @@ We will model types in the obvious manner:
   \item Products $A \otimes B$ are modeled as tensor products $\dnt{A} \otimes \dnt{B}$
   \item Sum types $A + B$ are modeled as coproducts $\dnt{A} + \dnt{B}$
 \end{itemize}
-We'll say an \isotopessa model \emph{interprets} a signature $(\mc{T}, \mc{I})$ if we have
+We'll say an \isotopessa{} model \emph{interprets} a signature $(\mc{T}, \mc{I})$ if we have
 \begin{itemize}
   \item For every base type $X \in \mc{T}$, an object $\dnt{X} : |\mc{C}|$
   \item For every primitive instruction $f \in \mc{I}_\epsilon(A, B)$, a morphism $\dnt{f} : \dnt{A}
@@ -2395,12 +2403,12 @@ denotations of their parameters, respectively.
     \dnt{\ms{L}, \lhyp{\ell}{A} \leq \ms{K}, \lhyp{\ell}{A}}
     = \dnt{\ms{L} \leq \ms{K}} + \dnt{A}
   \end{gather*}
-  \caption{Denotational semantics for \isotopessa types, contexts, and weakenings}
+  \caption{Denotational semantics for \isotopessa{} types, contexts, and weakenings}
   \Description{}
   \label{fig:ssa-ty-sem}
 \end{figure}
 
-We can now interpret \isotopessa expressions $\hasty{\Gamma}{\epsilon}{a}{A}$ over a given signature
+We can now interpret \isotopessa{} expressions $\hasty{\Gamma}{\epsilon}{a}{A}$ over a given signature
 in a model intepreting that signature as morphisms $\dnt{\Gamma} \to_\epsilon \dnt{A}$ using the
 rules in Figure~\ref{fig:ssa-expr-sem}. Up to this point, both our syntax and semantics are quite
 standard; in particular:
@@ -2493,12 +2501,12 @@ standard; in particular:
     \pi_{(\Gamma, x : A), x} = \pi_r \qquad
     \pi_{(\Gamma, y : B), x} = \pi_l ; \pi_{\Gamma, x}
   \end{equation*}
-  \caption{Denotational semantics for \isotopessa expressions}
+  \caption{Denotational semantics for \isotopessa{} expressions}
   \Description{Denotational semantics for isotope-SSA expressions}
   \label{fig:ssa-expr-sem}
 \end{figure}
 
-Similarly, we can interpret \isotopessa regions $\haslb{\Gamma}{r}{\ms{L}}$ as morphisms
+Similarly, we can interpret \isotopessa{} regions $\haslb{\Gamma}{r}{\ms{L}}$ as morphisms
 $\dnt{\Gamma} \to \dnt{\ms{L}}$; note that we don't assume anything about the effect of these
 morphisms. As $\ms{L}$ is a coproduct, we can view the result object of a region $r$ as encoding
 both \emph{data} and \emph{control-flow} information. In particular, we interpret a branch
@@ -2579,7 +2587,7 @@ down ``imperatively" as follows:
         )^\dagger
       \\ & \quad ]
   \end{align*}
-  \caption{Denotational semantics for \isotopessa regions}
+  \caption{Denotational semantics for \isotopessa{} regions}
   \Description{Denotational semantics for isotope-SSA regions}
   \label{fig:ssa-reg-sem}
 \end{figure}
@@ -2680,7 +2688,7 @@ corresponding substitutions are not always pure.
         \dnt{\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{K}}}
       ]
   \end{align*}
-  \caption{Denotational semantics for \isotopessa (label) substitutions}
+  \caption{Denotational semantics for \isotopessa{} (label) substitutions}
   \Description{}
   \label{fig:ssa-vsubst-sem} 
 \end{figure}
@@ -2872,11 +2880,11 @@ induces a Freyd category with pure morphisms given by
   \subseteq \ms{C}(A, \ms{T}B) = \ms{C}_{\ms{T}}(A, B)
 \end{equation}
 It follows that every strong Elgot monad over a CCC with all coproducts is an
-\isotopessa model (since, in particular, every CCC with coproducts is
+\isotopessa{} model (since, in particular, every CCC with coproducts is
 distributive). This allows us to very quickly amass a large collection of
-\isotopessa models from the literature on strong Elgot monads.
+\isotopessa{} models from the literature on strong Elgot monads.
 
-Probably the simplest example of an \isotopessa model is given by the
+Probably the simplest example of an \isotopessa{} model is given by the
 \emph{option monad} $\ms{Option}\;A = A + \mb{1}$, with fixpoint operation
 $$
   f^\dagger = \ms{some}\;b \quad \text{if} \quad \exists n, f^n\;a = \ms{some}\;(\iota_l\;b)
@@ -2889,13 +2897,13 @@ $$
   f^{n + 1}\;a = \ms{bind}\;(f^{n}\;a)\;[(\ms{pure};\iota_l), f] 
 $$
 This model allows us to interpret potentially divergent but otherwise purely functional programs.
-Another very important \isotopessa model is generated by the \emph{powerset monad} $\mc{P}$ over
+Another very important \isotopessa{} model is generated by the \emph{powerset monad} $\mc{P}$ over
 \ms{Set}, which has fixpoint operation
 $$
   f^\dagger\;a = \bigcup_n\{b \mid \iota_l\;b \in f^n\;a\}
 $$
 We can use this monad to interpret \emph{nondeterministic} potentially divergent functional
-programs. We can further expand our repertoire of \isotopessa models by considering \emph{monad
+programs. We can further expand our repertoire of \isotopessa{} models by considering \emph{monad
 transformers}, many of which preserve Elgot-ness. For example, if $\ms{T}$ is a strong Elgot over
 \ms{Set},
 \begin{itemize}
@@ -2941,7 +2949,7 @@ transformers}, many of which preserve Elgot-ness. For example, if $\ms{T}$ is a 
   \end{equation}
 \end{itemize}
 
-One other important source of \isotopessa models is via \emph{Elgot submonads}
+One other important source of \isotopessa{} models is via \emph{Elgot submonads}
 of monads on \ms{Set}, which we define as follows:
 \begin{definition}[Elgot submonad]
   A monad $(\ms{S}, \eta', \mu')$ is a submonad of $(\ms{T}, \eta, \mu)$ if
@@ -2965,7 +2973,7 @@ Similarly,
 
 \subsection{Trace Models}
 
-A particularly important class of \isotopessa models are what we will call
+A particularly important class of \isotopessa{} models are what we will call
 \emph{trace models}, which can be viewed as programs which either diverge or
 produce a result, while also producting (potentially nondeterministic,
 potentially infinite) traces of events $\epsilon \in \mc{E}$.
@@ -3026,7 +3034,7 @@ Other important examples include:
 As a simple, concrete example of type type of model this construction lets us define, consider the
 \textbf{nondeterministic printing monad}, which is simply defined as \(\ms{Print}\;A \equiv
 \ms{Traces}\;\Sigma\), where \(\Sigma: (\ms{byte}^*)^\omega \to \ms{byte}^{\leq \omega}\) denotes
-concatenation of bytestrings into a potentially infinite bytestream. This gives us us an \isotopessa
+concatenation of bytestrings into a potentially infinite bytestream. This gives us us an \isotopessa{}
 model supporting effectful instructions \(\ms{print}: \ms{byte}^* \to \mb{1}\) and \(\ms{nondet}:
 \mb{1} \to A\) (for \(A\) nonempty), with semantics \(\dnt{\ms{print}} = \lambda b.\{\iota_0 ((),
 b)\}\), \(\dnt{\ms{nondet}} = \lambda (). \{\iota_0 (a, []) \mid a \in A\}\).
@@ -3035,7 +3043,7 @@ We can make things a little more interesting by adding a heap to the mix, defini
 \(\ms{Comp} = \ms{StateT}\;\ms{Heap}\;\ms{Print}\), where \(\ms{Heap} = \nats \rightharpoonup
 \nats\) is simply a partial function with finite support. The Kleisli category of this monad is also
 a Freyd category and inherits an Elgot structure from that on \(\ms{Set}_{\ms{Print}}\); we
-therefore have an \isotopessa model supporting the instructions \(\ms{set}: \nats \times \nats \to
+therefore have an \isotopessa{} model supporting the instructions \(\ms{set}: \nats \times \nats \to
 \mb{1}\), \(\ms{get}: \nats \to \nats\), \(\ms{alloc}: \nats \to \nats)\), and \(\ms{free}: \nats
 \to \mb{1}\). We can assign semantics to \(\ms{set}\) in the standard fashion, with \(\dnt{\ms{set}}
 = \lambda (p, v)\;h. \{\iota_0((), [p \mapsto v]h, [])\}\). \(\ms{get}\) is a bit more tricky, since
@@ -3046,7 +3054,7 @@ an arbitrary value, with \(\dnt{\ms{get}} = \lambda p\;h. \{\iota_0(v, h, []) \m
 the cell, while \(\dnt{\ms{free}} = \lambda p\;h. \{\iota_0\;((), h \setminus p, [])\}\).
 
 As we can see, the trace monad is a very powerful tool for quickly constructing families of
-\isotopessa models, at least for relatively simple side-effects. It turns out, however, that the
+\isotopessa{} models, at least for relatively simple side-effects. It turns out, however, that the
 same techniques can be used to tackle much more complex side-effects; to demonstrate this, we will
 show how to build a simple model of TSO weak memory based on that given in \citet{sparky}.
 
@@ -3086,7 +3094,7 @@ We define a \textbf{program order pomset} to be a pomset with \(\mc{A}_{\ms{PO}}
 \(\mc{A}_w\) consists of \textit{writes} of the form \(x := v\) for locations \(x\) and values \(v
 \in \ms{Word}\). We define the \textbf{program order monad} \(\ms{PO}\;A = \ms{Traces}\;\Sigma\;A\),
 where \(\Sigma\) is taken as a stream action on finite program order pomsets. This yields an
-\isotopessa model with support for concurrent read and write operations \(\ms{read}_x:
+\isotopessa{} model with support for concurrent read and write operations \(\ms{read}_x:
 \mc{I}^\varnothing_0(\mb{1}, \ms{Word})\), \(\ms{write}_x: \mc{I}^\varnothing_0(\ms{Word}, \mb{1})\)
 with semantics
 \(
@@ -3203,17 +3211,24 @@ buffer is also empty, giving us the following definition:
 \TODO{Ye Olde Related Work List:}
 \begin{itemize}
   \item \citet{liang-95-interpreters} to build interpreters supporting effects using monad stacks
-  \item Alternative pomset lore: \citet{jagadeesan-pwp-20}, \citet{leaky-semicolon}
+  \item Alternative pomset lore: 
+  \begin{itemize}
+    \item \citet{jagadeesan-pwp-20}
+    \item \citet{leaky-semicolon}
+  \end{itemize}
+  \item Release/acquire lore from \citet{release-acquire}
   \item Event structures lore: ask Neel
   \item \citet{fuhrmann-direct-1999} for:
   \begin{itemize}
     \item Linearity (relevant -- copyability, affine -- discardability)
     \item Lambda functions, thunkability
-    \item Are abstract Kleisli-categories + coproducts + Elgot structure \isotopessa models, or do
+    \item Are abstract Kleisli-categories + coproducts + Elgot structure \isotopessa{} models, or do
     we need our linear generalization? How do abstract Kleisli categories interact with coproducts +
     Elgot structure?
     \item See also: \citet{Thielecke1997CategoricalSO}
   \end{itemize}
+  \item Monadic models of syntax: \citet{ullrich-22-do-unchained}
+  \item Rewriting in the presence of weak memory: \citet{sevcik-drf-sc}
 \end{itemize}
 
 \bibliographystyle{ACM-Reference-Format}
@@ -3350,7 +3365,7 @@ buffer is also empty, giving us the following definition:
 %       {\tmeq{\Gamma}{\epsilon}{\caseexpr{e}{x}{a}{y}{a}}{a}{A}}
 %   \end{gather*}
 %   \Description{}
-%   \caption{Derivable rules rules for \isotopessa \ms{case} expressions}
+%   \caption{Derivable rules rules for \isotopessa{} \ms{case} expressions}
 % \end{figure}
 
 \end{document}
