@@ -2334,7 +2334,51 @@ Elgot structure} as follows:
 
 \subsection{String Diagrams}
 
-\TODO{this...}
+\emph{String diagrams} provide a graphical calculus for reasoning about (symmetric) monoidal
+categories, which allows us to succinctly express complex morphisms and rewrites. Since both
+cartesian and co-cartesian categories are monoidal (with the product and coproduct as tensor,
+respectively), we can use string diagrams to reason about both. In the co-cartesian case, string
+diagrams behave much like control-flow diagrams, with boxes representing sub-programs, input wires
+entry points, and output wires exit points. In particular, a \emph{region} is just a box with a
+single input wire, as in Figure~\todo{this}. Continuing this analogy, we draw the codiagonal
+morphism the codiagonal morphism $[\ms{id}_A, \ms{id}_A]$ as joining two wires, and the morphism $0$
+from the initial object as a wire coming from nowhere. 
+
+The power of string diagrams comes from the fact that many syntactically distinct ways to write
+equal values are obviously graphically equivalent by \emph{isotopy}: essentially, moving boxes and
+wires around. For example, we have \todo{these}
+
+String diagrams also give us an elegant way to represent and reason about Elgot structures. It turns
+out that \todo{cite Hyland and Hasegawa} Elgot structures induce a \emph{trace} on the coproduct:
+given $f : A + C \to B + C$, we can define 
+\begin{equation}
+  \ms{Tr}_{A, B}^C(f) 
+  = \iota_l ; [f ; B + \iota_r]^\dagger 
+  = \iota_l ; f ; [\ms{id}, (\iota_l;f)^\dagger] : A \to B
+\end{equation}
+Since this satisfies the axioms of a trace over a symmetric monoidal category, we can draw it, and
+therefore the Elgot operator, as in Figure~\todo{this}. Continuing with the control-flow diagram
+analogy, such traces can be interpreted as \emph{loops}, with the Elgot axioms, now drawn as
+diagrams in Figure~\todo{this}, suddenly seeming a lot more obvious.
+
+Unfortunately, unmodified string diagrams do not work for premonoidal categories, and hence for
+Freyd categories. The reason is because, since not all morphisms are central, premonoidal categories
+do not in general validate \emph{sliding}, as in Figure~\todo{this}. However, this is easy enough to
+fix: we can postulate a ``state'' wire, drawn in red, which all impure morphisms require as an input
+and output, as in Figure~\todo{this}. Since the state wire linearly threads through all impure
+boxes, it establishes a unique order in which they must be executed; this construction is shown to
+be sound in \citet{promonad}. Pure morphisms do not have a state wire, but, if necessary, can be
+drawn between them. This gives us a convenient way to distinguish between string diagrams using the
+monodial structure induced by the coproduct and those using the premonoidal structure induced by the
+tensor product in a category having both (such as a distributive premonoidal category): the latter
+will have a state wire, while the former will not.
+
+One interesting thing this allows us to do is to \emph{nest} coproduct and premonoidal string
+diagrams within each other, by replacing the label in the box with a string diagram, as in
+Figure~\todo{this}. Note that the input wires factor the input (if unlabelled, we should be able to
+determine their type by context), while the output wires are tensored/added together to form the
+output. This will make it a lot easier to express morphisms such as the distributor, which uses both
+the coproduct and premonoidal structure, diagramatically as in Figure~\todo{this}.
 
 \subsection{Semantics}
 
@@ -3159,8 +3203,9 @@ Given a buffer \(\ms{Buf}\), we can define the result of reads \([\cdot]_x: \ms{
 \(
   [][x] = \bot
 \).
-% Note that writes at the \textit{end} of the buffer are prioritized, since
-% later writes overwrite earlier ones! 
+Note that writes at the \textit{end} of the buffer are prioritized, since later writes overwrite
+earlier ones! 
+
 The semantics of reads and writes can then be given by
 \begin{equation}
   \begin{aligned}
