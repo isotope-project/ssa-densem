@@ -1256,10 +1256,6 @@ program transformations which splice and manipulate the control-flow graph.
 
 \TODO{this...}
 
-\subsection{Control-Flow Graphs}
-
-\TODO{this?}
-
 \section{Equational Theory}
 
 \label{sec:equations}
@@ -2357,7 +2353,7 @@ Figure~\ref{fig:coproduct-string-diagrams}.
     \node[dot] (zero) at ($(C.north.2)+(0, 0.5)$) {};
     \node[dot] (codiag) at (0, -4) {};
     \node[] (end) at (0, -4.5) {};
-    \wires[-stealth]{
+    \wires{
       S1 = { south = A.north.1 },
       S2 = { south = A.north.2 },
       A = { south.1 = B.north.1, south.2 = C.north.1 },
@@ -2367,8 +2363,18 @@ Figure~\ref{fig:coproduct-string-diagrams}.
       zero = { south = C.north.2 },
       codiag = { south = end.north }
     }{}
+
+    \node[] (zerolabel) at (4, 0) {Zero morphism};
+    \node[] (regionlabel) at (-4, -1) {Region};
+    \node[] (codiaglabel) at (-3, -4) {Codiagonal morphism};
+
+    \draw[gray, dashed, ->] (zerolabel) to (zero);
+    \draw[gray, dashed, ->] (regionlabel) to (B);
+    \draw[gray, dashed, ->] (codiaglabel) to (codiag);
   \end{tikzpicture}
-  \caption{...}
+  \caption{
+    A string diagram using the coproduct as symmetric monoidal structure, interpreted as a CFG
+  }
   \label{fig:coproduct-string-diagrams}
   \Description{A string diagram using the coproduct as symmetric monoidal structure, showing how to
   draw the codiagonal morphism and zero morphism, as well as showing what the analogue to a
@@ -2386,28 +2392,126 @@ on the coproduct: given $f : A + C \to B + C$, we can define
   = \iota_l ; f ; [\ms{id}, (\iota_l;f)^\dagger] : A \to B
 \end{equation}
 Since this satisfies the axioms of a trace over a symmetric monoidal category, we can draw it, and
-therefore the Elgot operator, as in Figure~\todo{this}. Continuing with the control-flow diagram
-analogy, such traces can be interpreted as \emph{loops}, with the Elgot axioms, now drawn as
-diagrams in Figure~\todo{this}, suddenly seeming a lot more obvious.
+therefore the Elgot operator, as in Figure~\ref{fig:elgot-string-diagrams}. Continuing with the
+control-flow diagram analogy, such traces can be interpreted as \emph{loops}, with the Elgot axioms,
+now drawn as diagrams in Figure~\todo{this}, all following by geometric manipulation except for
+fixpoint (Figure~\todo{this}).
+
+\begin{figure}
+  \begin{subfigure}{0.5\textwidth}
+    \centering
+    \begin{tikzpicture}
+      \node[] (Atrf) at (0, 2) {$A$};
+      \node[box] (trf) at (0, 0) {\ms{Tr}_{A, B}^C(f)};
+      \node[] (Btrf) at (0, -2) {$B$};
+      \node[] (eq) at (2, 0) {=};
+      \node[] (A) at (3.5, 2) {$A$};
+      \node[box=2/0/2/0] (f) at (3.5, 0) {\quad f \quad};
+      \node[] (B) at (3.5, -2) {$B$};
+      \coordinate[label=right:$C$] (C) at (4.9, 0) {};
+      \coordinate[] (cup) at (4.5, -1) {};
+      \coordinate[] (cap) at (4.5, 1) {};
+      \wires{
+        Atrf = { south = trf.north },
+        trf  = { south = Btrf },
+        A    = { south = f.north.1 },
+        f    = { south.1 = B, south.2 = cup.west },
+        cap  = { west = f.north.2, east = C.north },
+        C    = { south = cup.east },
+      }{}
+    \end{tikzpicture}
+    \caption{The trace of $f : A + C \to B + C$}
+  \end{subfigure}%
+  \begin{subfigure}{0.5\textwidth}
+    \centering
+    \begin{tikzpicture}
+      \node[] (Atrf) at (0, 2) {$A$};
+      \node[box] (trf) at (0, 0) {f^\dagger};
+      \node[] (Btrf) at (0, -2) {$B$};
+      \node[] (eq) at (1.5, 0) {=};
+      \node[] (A) at (3, 2) {$A$};
+      \node[box=1/0/2/0] (f) at (3, 0) {\quad f \quad};
+      \node[] (B) at (3, -2) {$B$};
+      \node[dot] (codiag) at (3, 1) {};
+      \coordinate[label=right:$C$] (C) at (4.4, 0) {};
+      \coordinate[] (cup) at (4, -1) {};
+      \coordinate[] (cap) at (4, 1) {};
+      \wires{
+        Atrf    = { south = trf.north },
+        trf     = { south = Btrf },
+        A       = { south = codiag.north },
+        f       = { south.1 = B, south.2 = cup.west },
+        codiag  = { south = f.north, east = C.north },
+        C       = { south = cup.east },
+      }{}
+    \end{tikzpicture}
+    \caption{
+      The fixpoint of $f : A \to B + A$
+    }
+  \end{subfigure}
+  \caption{Representations of the coproduct trace and Elgot structure as string diagrams}
+  \label{fig:elgot-string-diagrams}
+  \Description{Representations of the coproduct trace and Elgot structure as string diagrams}
+\end{figure}
 
 Unfortunately, unmodified string diagrams do not work for premonoidal categories, and hence for
 Freyd categories. The reason is because, since not all morphisms are central, premonoidal categories
-do not in general validate \emph{sliding}, as in Figure~\todo{this}. However, this is easy enough to
-fix: we can postulate a ``state'' wire, drawn in red, which all impure morphisms require as an input
-and output, as in Figure~\todo{this}. Since the state wire linearly threads through all impure
-boxes, it establishes a unique order in which they must be executed; this construction is shown to
-be sound in \citet{promonad}. Pure morphisms do not have a state wire, but, if necessary, can be
-drawn between them. This gives us a convenient way to distinguish between string diagrams using the
-monodial structure induced by the coproduct and those using the premonoidal structure induced by the
-tensor product in a category having both (such as a distributive premonoidal category): the latter
-will have a state wire, while the former will not.
+do not in general validate \emph{sliding}. However, this is easy enough to fix: we can postulate a
+``state'' wire, drawn in red, which all impure morphisms require as an input and output, as in
+Figure~\ref{fig:premonoidal-string-diagram}. Since the state wire linearly threads through all
+impure boxes, it establishes a unique order in which they must be executed; this construction is
+shown to be sound in \citet{promonad}. Pure morphisms do not have a state wire, so a digram
+representing a pure morphism will simply have a red ``stripe'' on the side. This gives us a
+convenient way to distinguish between string diagrams using the monodial structure induced by the
+coproduct and those using the premonoidal structure induced by the tensor product in a category
+having both (such as a distributive premonoidal category): the latter will have a state wire, while
+the former will not.
 
-One interesting thing this allows us to do is to \emph{nest} coproduct and premonoidal string
-diagrams within each other, by replacing the label in the box with a string diagram, as in
-Figure~\todo{this}. Note that the input wires factor the input (if unlabelled, we should be able to
-determine their type by context), while the output wires are tensored/added together to form the
-output. This will make it a lot easier to express morphisms such as the distributor, which uses both
-the coproduct and premonoidal structure, diagramatically as in Figure~\todo{this}.
+\begin{figure}
+  \begin{tikzpicture}
+    \node[] (SIa) at (-2.5, 3.5) {};
+    \node[] (Na) at (-1.5, 3.5) {$\nats$};
+    \node[dot] (codiaga) at (-1.5, 3) {};
+    \node[box] (adda) at (0.5, 1) {\cdot + 2};
+    \node[box=2/0/1/0] (print1a) at (-2, 2) {\texttt{print}};
+    \node[box=2/0/1/0] (print2a) at (0, 0) {\texttt{print}};
+    \node[] (SOa) at (0, -1) {};
+    \node[] (neq) at (2, 1.7) {$\neq$};
+    \node[] (SIb) at (3, 3.5) {};
+    \node[] (Nb) at (4, 3.5) {$\nats$};
+    \node[dot] (codiagb) at (4, 3) {};
+    \node[box=2/0/1/0] (print1b) at (5, 1) {\texttt{print}};
+    \node[box] (addb) at (5.5, 2) {\cdot + 2};
+    \node[box=2/0/1/0] (print2b) at (3, 0) {\texttt{print}};
+    \node[] (SOb) at (3, -1) {};
+    \wires{
+      Na = { south = codiaga.north },
+      codiaga = { south = print1a.north.2, east = adda.north },
+      adda = { south = print2a.north.2 },
+      Nb = { south = codiagb.north },
+      codiagb = { south = print2b.north.2, east = addb.north },
+      addb = { south = print1b.north.2 },
+    }{}
+    \wires[red]{
+      SIa = { south = print1a.north.1 },
+      print1a = { south = print2a.north.1 },
+      print2a = { south = SOa.north },
+      SIb = { south = print1b.north.1 },
+      print1b = { south = print2b.north.1 },
+      print2b = { south = SOb.north },
+    }{}
+  \end{tikzpicture}
+  \caption{A string diagram in a premonoidal category, using a red state wire}
+  \label{fig:premonoidal-string-diagram}
+  \Description{A string diagram in a premonoidal category, using a red state wire}
+\end{figure}
+
+% One interesting thing this allows us to do is to \emph{nest} coproduct and premonoidal string
+% diagrams within each other, by replacing the label in the box with a string diagram, as in
+% Figure~\todo{this}. Note that the input wires factor the input (if unlabelled, we should be able to
+% determine their type by context), while the output wires are tensored/added together to form the
+% output. This will make it a lot easier to express morphisms such as the distributor, which uses both
+% the coproduct and premonoidal structure, diagramatically as in Figure~\todo{this}.
 
 \subsection{Semantics}
 
