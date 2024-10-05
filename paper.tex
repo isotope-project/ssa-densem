@@ -72,8 +72,8 @@
 % Syntax atoms
 \newcommand{\lbl}[1]{{`#1}}
 \newcommand{\lto}{:}
-\newcommand{\linl}[1]{\ms{inl}\;{#1}}
-\newcommand{\linr}[1]{\ms{inr}\;{#1}}
+\newcommand{\linl}[1]{\iota_l\;{#1}}
+\newcommand{\linr}[1]{\iota_r\;{#1}}
 \newcommand{\labort}[1]{\ms{abort}\;{#1}}
 
 % Syntax
@@ -914,7 +914,7 @@ primitives:
   \item An empty tuple $()$, which types in any context by \brle{unit}
   \item Injections, typed by \brle{inl} and \brle{inr}
   \item Pattern matching on sum types, typed by \brle{case}. Operationally, we interpret this as
-  executing $e$, and then, if $e$ is a left injection $\ms{inl}\;x$, executing $a$ with its value
+  executing $e$, and then, if $e$ is a left injection $\iota_l\;x$, executing $a$ with its value
   ($x$), otherwise executing $b$.
   \item An operator $\ms{abort}\;e$ allowing us to abort execution if given a value of the empty
   type.
@@ -963,7 +963,7 @@ primitives:
   
   \item Pattern matching on sum types, typed by \brle{case}. Operationally, we interpret this as
   executing the (potentially effectful) expression $e$, and then, if $e$ is a left injection
-  $\ms{inl}\;x$, executing $r$ with its value ($x$), otherwise executing $s$.
+  $\iota_l\;x$, executing $r$ with its value ($x$), otherwise executing $s$.
   
   \item \emph{\ms{where}-statements} of the form
   ``$\where{r}{(\wbranch{\ell_i}{x_i}{t_i})_i}$", which consist of a collection
@@ -1120,7 +1120,7 @@ variables $\gamma : x \mapsto \gamma_x$ is called a \emph{substitution}, which w
 judgement $\issubst{\gamma}{\Gamma}{\Delta}$ as per the rules given in Figure
 \ref{fig:ssa-reg-rules}. In particular,
 \begin{itemize}
-  \item \brle{sb-nil} says that the empty substitution takes the empty context to the empty context.
+  \item \brle{sb-nil} says that the empty substitution takes every context to the empty context.
   \item \brle{sb-cons} says that if $\gamma$ takes $\Gamma$ to $\Delta$ and
   $\hasty{\Gamma}{\epsilon}{e}{A}$, then $\gamma$ with the additional substitution $x \mapsto e$
   adjoined takes $\Gamma$ to $\Delta, \thyp{x}{A}{\epsilon}$
@@ -2194,24 +2194,54 @@ enough to prove a form of the B\"ohm-Jacopini theorem, which states that all pro
 converted to programs with equivalent semantics using only structured control-flow constructs, i.e.
 if-then-else, while, and sequence.
 
+We first need to define what structured control-flow means in the context of \isotopessa{} regions.
+Since a region $\haslb{\Gamma}{r}{\ms{L}}$ can jump to any of the exit-points in $\ms{L}$, it does
+not quite make sense to restrict the top-level of such a region to have only a single exit-point.
+
+\TODO{rest...}
+
 We begin by defining a ``packing'' operation $[\cdot]$ on label-contexts yielding a sum type
 encoding what branch of the label-context we are on as follows:
 \begin{equation}
   [\cdot] = \mb{0} \qquad [\ms{L}, \ell(A)] = [\ms{L}] + A
 \end{equation}
+We may now define ``packing'' and ``unpacking'' label-substitutions
+$\lbsubst{\cdot}{\ms{pack}_\kappa(\ms{L})}{\ms{L}}{\kappa([\ms{L}])}$,
+$\lbsubst{\cdot}{\ms{unpack}_\kappa(\ms{L})}{\kappa([\ms{L}])}{\ms{L}}$ as follows:
+\begin{equation}
+  \ms{pack}_\kappa(\cdot) = \cdot \qquad
+  \ms{pack}_\kappa(\ms{L}, \ell(A)) 
+  = [\kappa(x) \mapsto \brb{\kappa}{\iota_l\;x}]\ms{pack}_\kappa(\ms{L}), 
+    \ell(x) \mapsto \brb{\kappa}{\iota_r\;x}  
+\end{equation}
+\begin{equation}
+  \begin{aligned}
+  \ms{unpack}_\kappa(\cdot) &= \kappa(x) \mapsto \ms{loop} \\
+  \ms{unpack}_\kappa(\ms{L}, \ell(A)) &= \kappa(x) \mapsto 
+    \caseexpr{x}{l}{[\ms{unpack}_\kappa(\ms{L})]\brb{\kappa}{l}}{r}{\brb{\ell}{r}}
+  \end{aligned}
+\end{equation}
+We can further show that these substitutions are mutually inverse, i.e., that
+\begin{equation}
+  \begin{aligned}
+  \lbsubst{\Gamma}
+    {[\ms{unpack}_\kappa(\ms{L})]\ms{pack}_\kappa(\ms{L}) &\teqv \ms{id}_{\ms{L}}}{\ms{L}}{\ms{L}}
+  \\
+  \lbsubst{\Gamma}
+    {[\ms{pack}_\kappa(\ms{L})]\ms{unpack}_\kappa(\ms{L}) &\teqv \ms{id}_{\kappa([\ms{L}])}}
+    {\kappa([\ms{L}])}{\kappa([\ms{L}])}
+  \end{aligned}
+\end{equation}
+Fixing a distinguished label ``\ms{r}'', we can define a ``packing'' operation on regions as
+follows:
+\begin{equation}
+  \haslb{\Gamma}{r}{\ms{L}} \implies 
+  \haslb{\Gamma}{[r]^+ := [\ms{pack}_{\ms{r}}(\ms{L})]r}{\ms{r}([\ms{L}])}
+\end{equation}
 
-and
-label-substitutions $\lbsubst{\cdot}{\ms{pack}_\ell(\ms{L})}{\ms{L}}{\ell([\ms{L}])}$,
-$\lbsubst{\cdot}{\ms{unpack}_\ell(\ms{L})}{\ell([\ms{L}])}{\ms{L}}$, which we will show to
-be mutually inverse
+\TODO{rest...}
 
-We will prove this somewhat indirectly, via the following:
-\begin{itemize}
-  \item 
-  \item 
-\end{itemize}
-
-\TODO{this}
+\TODO{dataflow conversion, full packing...}
 
 \section{Denotational Semantics}
 
@@ -2874,9 +2904,9 @@ can then be used to derive the following weakening lemmas:
 \end{lemma}
 
 Our first proper semantic theorem is that \emph{rewriting} is sound: if two (potentially impure!)
-substitutions are pointwise equal, then...
-
-\TODO{most simple substitution theorem is \emph{rewriting}:}
+substitutions have pointwise equal semantics, then substituting by either yields a result with
+the same semantics. That is, value-substitution is a well-defined operation when quotienting by the
+semantics, or, more formally:
 
 \begin{theorem}[Soundness (Rewriting)]
   Given substitutions $\issubst{\gamma, \gamma'}{\Gamma}{\Delta}$ such that, for all 
@@ -2895,6 +2925,12 @@ substitutions are pointwise equal, then...
   \end{enumerate}
 \end{theorem}
 
+This result allows us to safely perform peephole rewrites which we can indepedently prove
+semantically valid, including on potentially impure operations. However, for pure substitutions, it
+is possible to relate the semantics of the substituted term to the original more precisely. To do
+this, we first need to give a denotational semantics to substitutions themselves, which we interpret
+as morphisms as in Figure~\ref{fig:ssa-subst-sem}. We can then state the following soundness
+
 (Label) substitutions can also be modeled analogously to weakenings, except that their
 corresponding substitutions are not always pure.
 
@@ -2910,39 +2946,27 @@ corresponding substitutions are not always pure.
   \begin{gather*}
     \dnt{\issubst{\cdot}{\Gamma}{\cdot}} = \tmor{\dnt{\Gamma}}
     \qquad
-    \dnt{\issubst{\gamma, x \mapsto e}{\Gamma}{\Delta}} 
-    = \dnt{\issubst{\gamma}{\Gamma}{\Delta}}
-  \end{gather*}
-  \begin{align*}
-    \dnt{\issubst{\gamma}{\Gamma, \thyp{x}{A}{\epsilon}}{\Delta, \thyp{x}{A}{\epsilon}}} 
-    &= \dnt{\issubst{\gamma}{\Gamma}{\Delta}} \otimes \dnt{A}
-    \\
     \dnt{\issubst{\gamma, x \mapsto e}{\Gamma}{\Delta, \thyp{x}{A}{\epsilon}}}
-    &= \dmor{\dnt{\Gamma}};\dnt{\issubst{\gamma}{\Gamma}{\Delta}}
-  \end{align*}
+    = \dmor{\dnt{\Gamma}};\dnt{\issubst{\gamma}{\Gamma}{\Delta}} 
+      \otimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A}}
+  \end{gather*}
   \begin{equation*}
     \boxed{\dnt{\lbsubst{\Gamma}{\kappa}{\ms{L}}{\ms{K}}} 
       : \dnt{\Gamma} \otimes \dnt{\ms{L}} \to \dnt{\ms{K}}}
   \end{equation*}
   \begin{gather*}
-    \dnt{\lbsubst{\cdot}{\Gamma}{\cdot}{\ms{K}}} 
-      = \tmor{\dnt{\Gamma} \otimes \mb{1}};0_{\ms{K}} \qquad
-    \dnt{\lbsubst{\kappa, \ell(x) \mapsto r}{\Gamma}{\ms{L}}{\ms{K}}}
-      = \dnt{\lbsubst{\kappa}{\Gamma}{\ms{L}}{\ms{K}}}
-  \end{gather*}
-  \begin{align*}
-    \dnt{\lbsubst{\kappa}{\Gamma}{\ms{L}, \ell(A)}{\ms{K}, \ell(A)}}
-      &= \delta ; [\dnt{\lbsubst{\kappa}{\Gamma}{\ms{L}}{\ms{K}}}, \iota_r]
+    \dnt{\lbsubst{\Gamma}{\cdot}{\cdot}{\ms{K}}} 
+      = \tmor{\dnt{\Gamma} \otimes \mb{1}};0_{\ms{K}}
     \\
     \dnt{\lbsubst{\kappa, \ell(x) \mapsto r}{\Gamma}{\ms{L}, \ell(A)}{\ms{K}}}
-      &= \delta ; [
-        \dnt{\lbsubst{\kappa}{\Gamma}{\ms{L}}{\ms{K}}}, 
-        \dnt{\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{K}}}
-      ]
-  \end{align*}
+      = \delta ; [
+      \dnt{\lbsubst{\kappa}{\Gamma}{\ms{L}}{\ms{K}}}, 
+      \dnt{\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{K}}}
+    ]
+  \end{gather*}
   \caption{Denotational semantics for \isotopessa{} (label) substitutions}
   \Description{}
-  \label{fig:ssa-vsubst-sem} 
+  \label{fig:ssa-subst-sem} 
 \end{figure}
 
 \TODO{if our substitution \emph{is} pure, we can also prove that substitution is \emph{sound}:}
@@ -3038,15 +3062,15 @@ corresponding substitutions are not always pure.
     \item Projections $\ms{let}\;(x, y) = \invar; x$ and  
       $\ms{let}\;(x, y) = \invar; y$
     \item Diagonal: $(\invar, \invar)$
-    \item Injections: $\ms{inl}\;\invar$, $\ms{inr}\;\invar$
+    \item Injections: $\iota_l\;\invar$, $\iota_r\;\invar$
     \item Sums: $
       [a, b] = \caseexpr{\invar}{\invar}{a}{\invar}{b}
     $
     \item Distributor
-      $\delta = \caseexpr{\invar}{(x, y)}{(x, \ms{inl}\;y)}{(x, y)}{(x, \ms{inr}\;y)}$
+      $\delta = \caseexpr{\invar}{(x, y)}{(x, \iota_l\;y)}{(x, y)}{(x, \iota_r\;y)}$
       with inverse
       $\delta^{-1} = \ms{let}\;(x, y) = \invar; 
-        \caseexpr{y}{z}{\ms{inl}(x, z)}{z}{\ms{inr}(x, z)}$
+        \caseexpr{y}{z}{\iota_l(x, z)}{z}{\iota_r(x, z)}$
   \end{itemize}
   In particular, taking $\ms{Th}(\cdot)$ as our model, we have 
   $
@@ -3081,15 +3105,15 @@ corresponding substitutions are not always pure.
     \item Projections $\ms{let}\;(x, y) = \invar; \ms{ret}\;x$ and  
       $\ms{let}\;(x, y) = \invar; \ms{ret}\;y$
     \item Diagonal: $\ms{ret}\;(\invar, \invar)$
-    \item Injections: $\ms{ret}\;\ms{inl}\;\invar$, $\ms{ret}\;\ms{inr}\;\invar$
+    \item Injections: $\ms{ret}\;\iota_l\;\invar$, $\ms{ret}\;\iota_r\;\invar$
     \item Sums: $
       [r, r'] = \casestmt{\invar}{\invar}{r}{\invar}{r'}
     $
     \item Distributor
-      $\delta = \casestmt{\invar}{(x, y)}{\ms{ret}\;(x, \ms{inl}\;y)}{(x, y)}{\ms{ret}\;(x, \ms{inr}\;y)}$
+      $\delta = \casestmt{\invar}{(x, y)}{\ms{ret}\;(x, \iota_l\;y)}{(x, y)}{\ms{ret}\;(x, \iota_r\;y)}$
       with inverse
       $\delta^{-1} = \ms{let}\;(x, y) = \invar; 
-        \casestmt{y}{z}{\ms{ret}\;\ms{inl}(x, z)}{z}{\ms{ret}\;\ms{inr}(x, z)}$
+        \casestmt{y}{z}{\ms{ret}\;\iota_l(x, z)}{z}{\ms{ret}\;\iota_r(x, z)}$
     \item Elgot structure 
     $$
       r^\dagger = \where{\ms{br}\;\ms{body}\;\invar}{\wbranch{\ms{body}}{\invar : A}
@@ -3491,135 +3515,6 @@ buffer is also empty, giving us the following definition:
 
 \appendix
 
-\section{Böhm-Jacopini Theorem}
-
-\TODO{this...}
-
-\section{Normalization}
-
-\TODO{to Expr...}
-
-\TODO{to BBRegion...}
-
-\TODO{to TRegion ...}
-
-\TODO{to ContRegion ...}
-
-% \begin{figure}
-%   \begin{gather*}
-%     \prftree[r]{\rle{let$_1$-case}}
-%       {\hasty{\Gamma}{\epsilon}{a}{A + B}}
-%       {\hasty{\Gamma, \bhyp{x}{A + B}}{\epsilon}{c}{C}}
-%       {
-%         \prfStackPremises
-%         {\hasty{\Gamma, \bhyp{x}{A + B}, \bhyp{y}{C}, \bhyp{z}{A}}{\epsilon}{d}{D}}
-%         {\hasty{\Gamma, \bhyp{x}{A + B}, \bhyp{y}{C}, \bhyp{z'}{B}}{\epsilon}{d'}{D}}
-%       }
-%       {
-%         \prfStackPremises
-%         {\Gamma \vdash_\epsilon \letexpr{x}{a}{\letexpr{y}{c}{\caseexpr{x}{z}{d}{z'}{d'}}}}
-%         {\hspace{6em} \teqv 
-%                  \letexpr{x}{a}{\caseexpr{x}{z}{\letexpr{y}{c}{d}}{z'}{\letexpr{y}{c}{d'}}} 
-%         : D}
-%       }
-%     \\
-%     \prftree[r]{\rle{let$_2$-case}}
-%       {\hasty{\Gamma}{\epsilon}{a}{A + B}}
-%       {\hasty{\Gamma, \bhyp{x}{A + B}}{\epsilon}{c}{C \otimes D}}
-%       {
-%         \prfStackPremises
-%         {\hasty{\Gamma, \bhyp{x}{A + B}, \bhyp{y}{C}, \bhyp{z}{D}, \bhyp{w}{A}}{\epsilon}{e}{E}}
-%         {\hasty{\Gamma, \bhyp{x}{A + B}, \bhyp{y}{C}, \bhyp{z}{D}, \bhyp{w'}{B}}{\epsilon}{e'}{E}}
-%       }
-%       {
-%         \prfStackPremises
-%         {\Gamma \vdash_\epsilon \letexpr{x}{a}{\letexpr{(y, z)}{c}{\caseexpr{x}{w}{e}{w'}{e'}}}}
-%         {\hspace{5em} \teqv \letexpr{x}{a}
-%           {\caseexpr{x}
-%             {w}{\letexpr{(y, z)}{c}{e}}
-%             {w'}{\letexpr{(y, z)}{c}{e'}}} 
-%         : E}
-%       }
-%     \\
-%     \prftree[r]{\rle{case-case}}
-%       {\hasty{\Gamma}{\epsilon}{a}{A_1 + A_2}}
-%       {\hasty{\Gamma, \bhyp{x}{A + B}}{\epsilon}{b}{B_1 + B_2}}
-%       {
-%         \forall i j.
-%         \hasty{\Gamma, \bhyp{x}{A_1 + A_2}, \bhyp{y_i}{B_i}, \bhyp{z_j}{A_j}}{\epsilon}
-%               {c_{ij}}{C}
-%       }
-%       {
-%         \prfStackPremises
-%         {\Gamma \vdash_\epsilon 
-%           \ms{let}\;x = a;
-%           \ms{case}\;b\;\{\ms{inl}\;y_1 \lto \caseexpr{x}{z_1}{e_{11}}{z_2}{e_{12}}
-%         }
-%         {
-%           \hspace{10em} \ms{inr}\;y_2 \lto \caseexpr{x}{z_1}{e_{21}}{z_2}{e_{22}} \}
-%         }
-%         {\hspace{1.3em} \teqv
-%           \ms{let}\;x = a;
-%           \ms{case}\;x\;\{\ms{inl}\;z_1 \lto \caseexpr{b}{y_1}{e_{11}}{y_2}{e_{21}}
-%         }
-%         {
-%           \hspace{10em} \ms{inr}\;z_2 \lto \caseexpr{b}{y_1}{e_{12}}{y_2}{e_{22}} \}
-%         }
-%       }
-%     \\
-%     \prftree[r]{\rle{op-case}}
-%       {\hasty{\Gamma}{\epsilon}{e}{A + B}}
-%       {\isop{f}{C}{D}{\epsilon}}
-%       {\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{c}{C}}
-%       {\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{c'}{C}}
-%       {\tmeq{\Gamma}{\epsilon}{\caseexpr{e}{x}{f\;c}{y}{f\;c'}}{f\;\caseexpr{e}{x}{c}{y}{c'}}{D}}
-%     \\
-%     \prftree[r]{\rle{inl-case}}
-%       {\hasty{\Gamma}{\epsilon}{e}{A + B}}
-%       {\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{c}{C}}
-%       {\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{c'}{C}}
-%       {\tmeq{\Gamma}{\epsilon}
-%         {\caseexpr{e}{x}{\linl{c}}{y}{\linl{c'}}}
-%         {\linl{\caseexpr{e}{x}{c}{y}{c'}}}
-%         {C + D}}
-%     \\
-%     \prftree[r]{\rle{inr-case}}
-%       {\hasty{\Gamma}{\epsilon}{e}{A + B}}
-%       {\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{d}{D}}
-%       {\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{d'}{D}}
-%       {\tmeq{\Gamma}{\epsilon}
-%         {\caseexpr{e}{x}{\linr{d}}{y}{\linr{d'}}}
-%         {\linr{\caseexpr{e}{x}{d}{y}{d'}}}
-%         {C + D}}
-%     \\
-%     \prftree[r]{\rle{abort-case}}
-%     {\hasty{\Gamma}{\epsilon}{e}{A + B}}
-%     {\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{c}{\mb{0}}}
-%     {\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{c'}{\mb{0}}}
-%     {
-%       \prfStackPremises
-%       {\Gamma \vdash_\epsilon \caseexpr{e}{x}{\labort{c}}{y}{\labort{c'}}}
-%       {\teqv \labort{\caseexpr{e}{x}{c}{y}{c'}} : C}
-%     }
-%     \\
-%     \prftree[r]{\rle{pair-case}}
-%       {\hasty{\Gamma}{\epsilon}{e}{A_1 + A_2}}
-%       {\forall i, \hasty{\Gamma, \bhyp{x_i}{A_i}}{\epsilon}{b_{ij}}{B_j}}
-%       {
-%         \prfStackPremises
-%         {\Gamma \vdash_\epsilon \caseexpr{e}{x}{(b_{11}, b_{12})}{y}{(b_{21}, b_{22})}}
-%         {\teqv (\caseexpr{e}{x}{b_{11}}{y}{b_{21}}, \caseexpr{e}{x}{b_{12}}{y}{b_{22}}) 
-%         : B_1 \otimes B_2}
-%       }
-%     \\
-%     \prftree[r]{\rle{case$_0$}}
-%       {\hasty{\Gamma}{\epsilon}{e}{A_1 + A_2}}
-%       {\hasty{\Gamma}{\epsilon}{a}{A}}
-%       {\tmeq{\Gamma}{\epsilon}{\caseexpr{e}{x}{a}{y}{a}}{a}{A}}
-%   \end{gather*}
-%   \Description{}
-%   \caption{Derivable rules rules for \isotopessa{} \ms{case} expressions}
-% \end{figure}
 
 \end{document}
 \endinput
