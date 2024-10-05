@@ -2929,14 +2929,24 @@ This result allows us to safely perform peephole rewrites which we can indepeden
 semantically valid, including on potentially impure operations. However, for pure substitutions, it
 is possible to relate the semantics of the substituted term to the original more precisely. To do
 this, we first need to give a denotational semantics to substitutions themselves, which we interpret
-as morphisms as in Figure~\ref{fig:ssa-subst-sem}. We can then state the following soundness
+as morphisms as in Figure~\ref{fig:ssa-subst-sem}. 
 
-(Label) substitutions can also be modeled analogously to weakenings, except that their
-corresponding substitutions are not always pure.
-
-\TODO{(label) substitutions are modeled as morphisms}
-
-\TODO{not always pure! but pure when all target variables are, and sometimes other times!}
+We can then state the following soundness theorem:
+\begin{theorem}[Soundness (Substitution)]
+  Given $\dnt{\issubst{\gamma}{\Gamma}{\Delta}} : \dnt{\Gamma} \to_\bot
+  \dnt{\Delta}$ (in particular, this is always the case when \todo{the effect
+  of $\Delta$ is $\bot$, but write this down}, we have that
+  \begin{enumerate}[label=(\alph*)]
+    \item $\dnt{\hasty{\Gamma}{\epsilon}{[\gamma]a}{A}} 
+      = \dnt{\issubst{\gamma}{\Gamma}{\Delta}};\dnt{\hasty{\Delta}{\epsilon}{a}{A}}$
+    \item $\dnt{\haslb{\Gamma}{[\gamma]r}{\ms{L}}}
+      = \dnt{\issubst{\gamma}{\Gamma}{\Delta}};\dnt{\haslb{\Delta}{r}{\ms{L}}}$
+    \item $\dnt{\issubst{[\gamma]\rho}{\Delta}{\Xi}}
+      = \dnt{\issubst{\gamma}{\Gamma}{\Delta}};\dnt{\issubst{\rho}{\Delta}{\Xi}}$
+    \item $\dnt{\lbsubst{\Gamma}{[\gamma]\sigma}{\ms{L}}{\ms{K}}}
+      = \dnt{\issubst{\gamma}{\Gamma}{\Delta}};\dnt{\lbsubst{\Delta}{\sigma}{\ms{L}}{\ms{K}}}$
+  \end{enumerate}
+\end{theorem}
 
 \begin{figure}
   \begin{equation*}
@@ -2971,21 +2981,6 @@ corresponding substitutions are not always pure.
 
 \TODO{if our substitution \emph{is} pure, we can also prove that substitution is \emph{sound}:}
 
-\begin{theorem}[Soundness (Substitution)]
-  Given $\dnt{\issubst{\gamma}{\Gamma}{\Delta}} : \dnt{\Gamma} \to_\bot
-  \dnt{\Delta}$ (in particular, this is always the case when \todo{the effect
-  of $\Delta$ is $\bot$, but write this down}, we have that
-  \begin{enumerate}[label=(\alph*)]
-    \item $\dnt{\hasty{\Gamma}{\epsilon}{[\gamma]a}{A}} 
-      = \dnt{\issubst{\gamma}{\Gamma}{\Delta}};\dnt{\hasty{\Delta}{\epsilon}{a}{A}}$
-    \item $\dnt{\haslb{\Gamma}{[\gamma]r}{\ms{L}}}
-      = \dnt{\issubst{\gamma}{\Gamma}{\Delta}};\dnt{\haslb{\Delta}{r}{\ms{L}}}$
-    \item $\dnt{\issubst{[\gamma]\rho}{\Delta}{\Xi}}
-      = \dnt{\issubst{\gamma}{\Gamma}{\Delta}};\dnt{\issubst{\rho}{\Delta}{\Xi}}$
-    \item $\dnt{\lbsubst{\Gamma}{[\gamma]\sigma}{\ms{L}}{\ms{K}}}
-      = \dnt{\issubst{\gamma}{\Gamma}{\Delta}};\dnt{\lbsubst{\Delta}{\sigma}{\ms{L}}{\ms{K}}}$
-  \end{enumerate}
-\end{theorem}
 
 \TODO{note that soundness $\implies$ rewriting, but rewriting works for \emph{all} substitutions
 (including impure ones), whereas soundness is only for pure substitutions!}
