@@ -87,6 +87,7 @@
 \newcommand{\wbranch}[3]{#1(#2) \lto \{#3\}}
 \newcommand{\cfgsubst}[1]{\ms{cfgs}\;\{#1\}}
 \newcommand{\wseq}[2]{{#1} \mathbin{{;}{;}} {#2}}
+\newcommand{\upg}[1]{{#1}^\uparrow}
 
 % Judgements
 \newcommand{\cwk}[2]{#1 \mapsto #2}
@@ -1080,16 +1081,10 @@ induces a partial order on label contexts.
     \boxed{\issubst{\gamma}{\Gamma}{\Delta}} \\
     \prftree[r]{\rle{sb-nil}}{}{\issubst{\cdot}{\Gamma}{\cdot}} \qquad
     \prftree[r]{\rle{sb-cons}}{\issubst{\gamma}{\Gamma}{\Delta}}{\hasty{\Gamma}{\epsilon}{e}{A}}
-      {\issubst{\gamma, x \mapsto e}{\Gamma}{\Delta, \thyp{x}{A}{\epsilon}}} \qquad
-    \prftree[r]{\rle{sb-id}}{\issubst{\gamma}{\Gamma}{\Delta}}{x \notin \gamma}
-      {\issubst{\gamma}{\Gamma, \thyp{x}{A}{\epsilon}}{\Delta}, \thyp{x}{A}{\epsilon}}
+      {\issubst{\gamma, x \mapsto e}{\Gamma}{\Delta, \thyp{x}{A}{\epsilon}}}
        \\
     \boxed{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}} \\
-    \prftree[r]{\rle{ls-nil}}{}{\lbsubst{\Gamma}{\cdot}{\cdot}{\ms{K}}} 
-    \qquad
-    \prftree[r]{\rle{ls-id}}
-      {\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}}{\ell \notin \sigma}
-      {\lbsubst{\Gamma}{\sigma}{\ms{L}, \lhyp{\ell}{A}}{\ms{K}, \lhyp{\ell}{A}}}
+    \prftree[r]{\rle{ls-nil}}{}{\lbsubst{\Gamma}{\cdot}{\cdot}{\ms{K}}}
     \\
     \prftree[r]{\rle{ls-cons}}
       {\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}}{\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{K}}}
@@ -1115,32 +1110,23 @@ We can now state weakening formally as follows:
 %   By induction. \todo{pointer to formalization?}
 % \end{proof}
 
-If we look at the proof of variable weakening, we might arrive at the alternate
-statement that all the variables in $\Delta$ are also available with the same
-type in $\Gamma$, i.e., if $\hasty{\Delta}{\epsilon}{x}{A} \implies
-\hasty{\Gamma}{\epsilon}{x}{A}$, then anything which can be typed in $\Delta$
-can be typed in $\Gamma$. More generally, we might ask if every variable
+If we look at the proof of variable weakening, we might arrive at the alternate statement that all
+the variables in $\Delta$ are also available with the same type in $\Gamma$, i.e., if
+$\hasty{\Delta}{\epsilon}{x}{A} \implies \hasty{\Gamma}{\epsilon}{x}{A}$, then anything which can be
+typed in $\Delta$ can be typed in $\Gamma$. More generally, we might ask if every variable
 $\hasty{\Delta}{\epsilon}{x}{A}$ in $\Delta$ can be associated with a term
-$\hasty{\Gamma}{\epsilon}{\gamma_x}{A}$ which is well-typed in $\Gamma$. An
-assignment of such variables $\gamma : x \mapsto \gamma_x$ is called a
-\emph{substitution}, which we can type with the judgement
-$\issubst{\gamma}{\Gamma}{\Delta}$ as per the rules given in Figure
+$\hasty{\Gamma}{\epsilon}{\gamma_x}{A}$ which is well-typed in $\Gamma$. An assignment of such
+variables $\gamma : x \mapsto \gamma_x$ is called a \emph{substitution}, which we can type with the
+judgement $\issubst{\gamma}{\Gamma}{\Delta}$ as per the rules given in Figure
 \ref{fig:ssa-reg-rules}. In particular,
 \begin{itemize}
   \item \brle{sb-nil} says that the empty substitution takes the empty context to the empty context.
   \item \brle{sb-cons} says that if $\gamma$ takes $\Gamma$ to $\Delta$ and
   $\hasty{\Gamma}{\epsilon}{e}{A}$, then $\gamma$ with the additional substitution $x \mapsto e$
   adjoined takes $\Gamma$ to $\Delta, \thyp{x}{A}{\epsilon}$
-  \item \brle{sb-id} says that, for any variables $x$ not appearing in a substitution $\gamma$, we
-  can type $\gamma$ using the fact that the action of $\gamma$ on $x$ is the identity. This is
-  useful as it allows us to implicitly extend substitutions to larger contexts without defining
-  unwieldy operators. In particular, this implies that the empty substitution always acts as the
-  identity substitution.
 \end{itemize}
-To \emph{use} a substitution, we simply need to perform standard
-capture-avoiding substitution, as made explicit in Figure
-\ref{fig:ssa-subst-def}.
-
+To \emph{use} a substitution, we simply need to perform standard capture-avoiding substitution, as
+made explicit in Figure \ref{fig:ssa-subst-def}.
 \begin{figure}
   \begin{gather*}
     (\gamma, x \mapsto e)(x) = e \qquad
@@ -1174,25 +1160,9 @@ capture-avoiding substitution, as made explicit in Figure
     [\gamma](\cdot) = \cdot \qquad
     [\gamma](\sigma, \ell(x) \mapsto r) 
     = ([\gamma]\sigma, \ell(x) \mapsto [\gamma]r)
-    \\ \\
-    (\sigma, \ell(x) \mapsto r)(\ell, a) = [a/x]r \qquad
-    (\sigma, \kappa(x) \mapsto r)(\ell, a) = \sigma(\ell, a) \qquad
-    (\cdot)(\ell, a) = \brb{\ell}{a}
-    \\ \\
-    [\sigma](\brb{\ell}{a}) = \sigma(\ell, a) \qquad
-    [\sigma](\letstmt{x}{a}{r}) = \letstmt{x}{a}{[\sigma]r} \\
-    [\sigma](\letstmt{(x, y)}{e}{r}) = \letstmt{(x, y)}{e}{[\sigma]r} \\
-    [\sigma](\casestmt{e}{x}{r}{y}{s}) = \casestmt{e}{x}{[\sigma]r}{y}{[\sigma]s} \\
-    [\sigma](\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}) =
-    \where{([\sigma]r)}{(\wbranch{\ell_i}{x_i}{[\sigma]t_i},)_i} 
-    \\ \\
-    [\sigma](\cdot) = \cdot \qquad
-    [\sigma](\sigma', \ell(x) \mapsto r) 
-    = ([\sigma]\sigma', \ell(x) \mapsto [\sigma]r)
   \end{gather*}
-  \TODO{split figure}
   \caption{ 
-    Capture-avoiding (label) substititon for \isotopessa{} terms, regions, and
+    Capture-avoiding substititon for \isotopessa{} terms, regions, and
     (label) substitutions; in particular, we assume bound variables and labels
     are $\alpha$-converted so as not to appear in $\gamma$/$\sigma$. 
   }
@@ -1220,15 +1190,28 @@ and $\issubst{\gamma}{\Gamma}{\Delta}$; the composition associates as expected:
 $[[\gamma_1]\gamma_2]\gamma_3 = [\gamma_1]([\gamma_2]\gamma_3)$, and has identity $[\ms{id}]\gamma =
 \gamma$, yielding a category of substitutions with variable contexts $\Gamma$ as objects.
 
+We will define an ``upgrade'' operation $\uparrow_\Xi$ on substitutions
+$\issubst{\gamma}{\Gamma}{\Delta}$ to yield $\issubst{\upg{\gamma}_{\Xi}}{\Gamma, \Xi}{\Delta, \Xi}$
+which appends the identity substitution for each variable in $\Xi$ in the obvious manner:
+\begin{equation}
+  \upg{\gamma}_{\cdot} = \gamma \qquad 
+  \upg{\gamma}_{\Xi, \thyp{x}{A}{\epsilon}} = \upg{\gamma}_{\Xi}, x \mapsto x
+\end{equation}
+We will usually infer $\Xi$ from context; sometimes, for convenience, we may even omit the
+$\uparrow$ operator entirely, due to the fact that for any $\gamma$, we have $[\gamma]a =
+[\upg{\gamma}_\Xi]a$. The identity substitution on $\Gamma$ can therefore be written as
+$\upg{\cdot}_{\Gamma}$. One other particularly important form of substitution is that of
+substituting an expression $a$ for an individual variable $x$, which we will write $[a/x] := \upg{(x
+\mapsto a)}$.
+
 Finally, just as we can generalize weakening by substituting expressions for variables via
 substitution, we can generalize label weakening by substituting \emph{labels} for
 \emph{(parametrized) regions} via \emph{label substitution}. In particular, a label-substitution
 $\lbsubst{\sigma}{\Gamma}{\ms{L}}{\ms{K}}$ maps every label $\ell(A) \in \ms{L}$ to a region
 $\haslb{\Gamma, x : A}{r}{\ms{K}}$ parametrized by $x : A$. As shown in Figure
-\ref{fig:ssa-subst-def}, we may then define label-substitution recursively in the obvious manner,
-mapping $\ms{br}\;\ell\;a$ to $[a/x]r$ as a base case. We can similarly define the composition of
-label substitutions $[\sigma']\sigma$ in the expected manner. This allows us to state \emph{label
-substitution} as follows:
+\ref{fig:ssa-label-subst-def}, we may then define label-substitution recursively in the obvious
+manner, mapping $\ms{br}\;\ell\;a$ to $[a/x]r$ as a base case. Composition of label-substitutions is
+pointwise. This allows us to state \emph{label substitution} as follows:
 
 \begin{lemma}[Label substitution]
   Given $\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}$, we have that
@@ -1239,10 +1222,42 @@ substitution} as follows:
   \end{enumerate}
 \end{lemma}
 
-Label substitution is powerful since it allows us to reason directly about
-program transformations which splice and manipulate the control-flow graph.
+We may similarly define extensions $\lbsubst{\Gamma}{\upg{\sigma}_{\ms{K}}}{\ms{L}, \ms{J}}{\ms{K},
+\ms{J}}$ for label substitutions $\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}$ in the obvious manner:
+\begin{equation}
+  \upg{\sigma}_{\cdot} = \sigma \qquad 
+  \upg{\sigma}_{\ms{K}, \ell(A)} = \upg{\sigma}_{\ms{K}}, \ell(x) \mapsto \brb{\ell}{x}
+\end{equation}
+We will often omit the context $\ms{L}$ when it is clear from the context, or even omit the
+$\uparrow$ operator entirely, due to the fact that for any $\sigma$, we have $[\sigma]r =
+[\upg{\sigma}_{\ms{K}}]r$. Similarly to for variable substitutions, the identity label
+substitution on a context $\ms{L}$ is simply given by $\upg{\cdot}_{\ms{L}}$.
 
-\TODO{this...}
+\begin{figure}
+  \begin{gather*}
+    (\sigma, \ell(x) \mapsto r)(\ell, a) = [a/x]r \qquad
+    (\sigma, \kappa(x) \mapsto r)(\ell, a) = \sigma(\ell, a) \qquad
+    (\cdot)(\ell, a) = \brb{\ell}{a}
+    \\ \\
+    [\sigma](\brb{\ell}{a}) = \sigma(\ell, a) \qquad
+    [\sigma](\letstmt{x}{a}{r}) = \letstmt{x}{a}{[\sigma]r} \\
+    [\sigma](\letstmt{(x, y)}{e}{r}) = \letstmt{(x, y)}{e}{[\sigma]r} \\
+    [\sigma](\casestmt{e}{x}{r}{y}{s}) = \casestmt{e}{x}{[\sigma]r}{y}{[\sigma]s} \\
+    [\sigma](\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}) =
+    \where{([\sigma]r)}{(\wbranch{\ell_i}{x_i}{[\sigma]t_i},)_i} 
+    \\ \\
+    [\sigma](\cdot) = \cdot \qquad
+    [\sigma](\sigma', \ell(x) \mapsto r) 
+    = ([\sigma]\sigma', \ell(x) \mapsto [\sigma]r)
+  \end{gather*}
+  \caption{ 
+    Capture-avoiding label substititon for \isotopessa{} regions and label substitutions; in 
+    particular, we assume bound variables and labels are $\alpha$-converted  so as not to appear in 
+    $\sigma$. 
+  } 
+  \Description{}
+  \label{fig:ssa-label-subst-def}
+\end{figure}
 
 \section{Equational Theory}
 
@@ -1948,12 +1963,12 @@ this is equivalent to
         {
           \haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}
         }{
-          \lbsubst{\kappa}{\Gamma}{(\lhyp{\ell_i}{A_i},)_i}{(\lhyp{\kappa_j}{A_j},)_j}
+          \lbsubst{\Gamma}{\sigma}{(\lhyp{\ell_i}{A_i},)_i}{(\lhyp{\kappa_j}{A_j},)_j}
         }{
           \forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}
         }{
           \lbeq{\Gamma}
-            {\where{([\sigma]r)}{(\wbranch{\kappa_i}{x_i}{[\sigma]t_i},)_i}}
+            {\where{([\upg{\sigma}]r)}{(\wbranch{\kappa_i}{x_i}{[\upg{\sigma}]t_i},)_i}}
             {\where{r}{\wbranch{\ell_i}{x_i}{[(\kappa_i(x_i) \mapsto t_i,)](\sigma_i\;x_i)},)_i}}
             {}
         }
@@ -2018,17 +2033,63 @@ and
     \letstmt{n}{10}{\ms{br}\;\ms{loop}(0, 1)}
   )
 \end{multline*}
-Rewrites like this are an instance of the principle we call \emph{dinaturality}, which
+Rewrites like this are an instance of the principle we call \emph{dinaturality}, which, for
+structured control-flow, can be best expressed as an equivalence between the the control-flow graphs
+in Figure~\ref{fig:dinat-struct-cfg}. Unlike in the case of uniformity, however, this is true even
+when the program fragment $P$ is \emph{impure}, since we do not commute $P$ over an infinite number
+of iterations; hence, we cannot simply use uniformity to derive this rewrite rule in its most
+general form. We instead postulate our final rewriting rule, \brle{dinat}, which generalizes the
+above rewrite from sequential composition on a structured control-flow graph to label substitution
+on an arbitrary control-flow graph. 
 
-\TODO{explain, give for-loop example or something similar}
+\begin{figure}
+  \begin{tikzpicture}
+    \node[] (Al) at (0, 0) {};
+    \node[box] (Pl1) at (0, -1) {P};
+    \node[dot] (cdl) at (0, -1.5) {};
+    \node[box=1/0/2/0] (Ql) at (0, -2) {\quad Q \quad};
+    \node[box] (Pl2) at (0.5, -3) {P};
+    \coordinate[] (cupl) at (1, -4) {};
+    \coordinate[] (capl) at (1, -1.2) {};
+    \node[] (Bl) at (0, -5) {};
+    \wires{
+      Al = { south = Pl1.north },
+      Pl1 = { south = cdl.north, },
+      cdl = { south = Ql.north },
+      Ql = { south.1 = Bl.north, south.2 = Pl2.north},
+      Pl2 = { south = cupl.west },
+      cupl = { east = capl.east },
+      capl = { west = cdl.east },
+    }{}
 
-\TODO{but, what about side-effecting things}
+    \node[] (eq) at (3.5, -2.5) {=};
+    
+    \node[] (Al) at (6, 0) {};
+    \node[dot] (cdl) at (6, -1.25) {};
+    \node[box] (Pl) at (6, -2) {P};
+    \node[box=1/0/2/0] (Ql) at (6, -3) {\quad Q \quad};
+    \coordinate[] (cupl) at (7, -4) {};
+    \coordinate[] (capl) at (7, -0.5) {};
+    \node[] (Bl) at (6, -5) {};
+    \wires{
+      Al = { south = cdl.north },
+      cdl = { south = Pl.north },
+      Pl = { south = Ql.north, },
+      Ql = { south.1 = Bl.north, south.2 = cupl.west },
+      cupl = { east = capl.east },
+      capl = { west = cdl.east },
+    }{}
+  \end{tikzpicture}
+  \caption{
+    Dinaturality on a structured loop
+  }
+  \Description{}
+  \label{fig:dinat-struct-cfg}
+\end{figure}
 
-\TODO{dinaturality should allow this specifically}
-
-\TODO{we also want to natively handle cfgs in general}
-
-\TODO{which is going to turn out to be Very Useful (TM)}
+It turns out that this generalization is essential, as it allows us to relate unary and $n$-ary
+control-flow graphs and, in particular, prove a form of the B\"ohm-Jacopini theorem
+\cite{bohm-jacopini} for our language, which we will discuss in Section~\ref{ssec:bohm-jacopini}.
 
 \subsection{Metatheory}
 
@@ -2125,6 +2186,30 @@ in Section~\ref{ssec:completeness}.
 \end{figure}
 
 \subsection{B\"ohm-Jacopini for SSA}
+
+\label{ssec:bohm-jacopini}
+
+We now come to one of the major results of this paper: that the above rules on \isotopessa{} are
+enough to prove a form of the B\"ohm-Jacopini theorem, which states that all programs can be
+converted to programs with equivalent semantics using only structured control-flow constructs, i.e.
+if-then-else, while, and sequence.
+
+We begin by defining a ``packing'' operation $[\cdot]$ on label-contexts yielding a sum type
+encoding what branch of the label-context we are on as follows:
+\begin{equation}
+  [\cdot] = \mb{0} \qquad [\ms{L}, \ell(A)] = [\ms{L}] + A
+\end{equation}
+
+and
+label-substitutions $\lbsubst{\cdot}{\ms{pack}_\ell(\ms{L})}{\ms{L}}{\ell([\ms{L}])}$,
+$\lbsubst{\cdot}{\ms{unpack}_\ell(\ms{L})}{\ell([\ms{L}])}{\ms{L}}$, which we will show to
+be mutually inverse
+
+We will prove this somewhat indirectly, via the following:
+\begin{itemize}
+  \item 
+  \item 
+\end{itemize}
 
 \TODO{this}
 
@@ -2765,8 +2850,8 @@ We can now begin to state the metatheoretic properties of our denotational seman
 weakening: as shown in Figure~\ref{fig:ssa-ty-sem}, weakenings are modeled, essentially, as
 projections from a larger product $\dnt{\Gamma}$ to a smaller product $\dnt{\Delta}$, while
 label-weakenings are modeled as injections from a smaller coproduct $\dnt{\ms{L}}$ to a larger
-coproduct $\dnt{\ms{K}}$; in particular, in both cases, the morphisms are pure. We can state a
-weakening lemmas as follows:
+coproduct $\dnt{\ms{K}}$; in particular, in both cases, the morphisms are pure.  A simple induction
+can then be used to derive the following weakening lemmas:
 \begin{lemma}[(Label) Weakening]
   Given $\Gamma \leq \Gamma'$ and $\ms{L}' \leq \ms{L}$, $\ms{K}' \leq \ms{K}$, we have
   \begin{enumerate}[label=(\alph*)]
@@ -2787,9 +2872,9 @@ weakening lemmas as follows:
       $
   \end{enumerate}
 \end{lemma}
-The proof for this proceeds mostly as a straightforward induction.
 
-\TODO{discuss uniformity lore}.
+Our first proper semantic theorem is that \emph{rewriting} is sound: if two (potentially impure!)
+substitutions are pointwise equal, then...
 
 \TODO{most simple substitution theorem is \emph{rewriting}:}
 
