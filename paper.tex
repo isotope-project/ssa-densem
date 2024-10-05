@@ -1080,18 +1080,12 @@ induces a partial order on label contexts.
     \boxed{\issubst{\gamma}{\Gamma}{\Delta}} \\
     \prftree[r]{\rle{sb-nil}}{}{\issubst{\cdot}{\Gamma}{\cdot}} \qquad
     \prftree[r]{\rle{sb-cons}}{\issubst{\gamma}{\Gamma}{\Delta}}{\hasty{\Gamma}{\epsilon}{e}{A}}
-      {\issubst{\gamma, x \mapsto e}{\Gamma}{\Delta, \thyp{x}{A}{\epsilon}}} \\
-    \prftree[r]{\rle{sb-skip}}{\issubst{\gamma}{\Gamma}{\Delta}}
-      {\issubst{\gamma, x \mapsto e}{\Gamma}{\Delta}} \qquad
+      {\issubst{\gamma, x \mapsto e}{\Gamma}{\Delta, \thyp{x}{A}{\epsilon}}} \qquad
     \prftree[r]{\rle{sb-id}}{\issubst{\gamma}{\Gamma}{\Delta}}{x \notin \gamma}
       {\issubst{\gamma}{\Gamma, \thyp{x}{A}{\epsilon}}{\Delta}, \thyp{x}{A}{\epsilon}}
        \\
     \boxed{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}} \\
     \prftree[r]{\rle{ls-nil}}{}{\lbsubst{\Gamma}{\cdot}{\cdot}{\ms{K}}} 
-    \qquad
-    \prftree[r]{\rle{ls-skip}}
-      {\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}}
-      {\lbsubst{\Gamma}{\sigma, \ell(x) \mapsto r}{\ms{L}}{\ms{K}}}
     \qquad
     \prftree[r]{\rle{ls-id}}
       {\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}}{\ell \notin \sigma}
@@ -1113,8 +1107,7 @@ We can now state weakening formally as follows:
   \begin{enumerate}[label=(\alph*)]
     \item $\hasty{\Delta}{\epsilon}{a}{A} \implies \hasty{\Gamma}{\epsilon'}{a}{A}$
     \item $\haslb{\Delta}{r}{\ms{L}} \implies \haslb{\Gamma}{r}{\ms{K}}$
-    \item $\issubst{\sigma}{\Gamma}{\Xi} \implies \issubst{\sigma}{\Delta}{\Xi}$ and 
-          $\issubst{\sigma}{\Xi}{\Gamma} \implies \issubst{\sigma}{\Xi}{\Delta}$
+    \item $\issubst{\sigma}{\Delta}{\Xi} \implies \issubst{\sigma}{\Gamma}{\Xi}$
     \item $\lbsubst{\Delta}{\sigma}{\ms{L}}{\ms{K}} \implies \lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}$
   \end{enumerate}
 \end{lemma}
@@ -1134,24 +1127,19 @@ assignment of such variables $\gamma : x \mapsto \gamma_x$ is called a
 $\issubst{\gamma}{\Gamma}{\Delta}$ as per the rules given in Figure
 \ref{fig:ssa-reg-rules}. In particular,
 \begin{itemize}
-  \item \brle{sb-nil} says that the empty substitution takes every context to the empty context,
-  while \brle{sb-skip} says that we can ignore variables defined in a substitution which do not
-  appear in the right-hand side of the substitution well-typedness judgement. Together, these say
-  that \emph{every} substitution can be interpreted as taking every context to the empty context,
-  i.e., $\forall \gamma, \Gamma. \issubst{\gamma}{\Gamma}{\cdot}$.
+  \item \brle{sb-nil} says that the empty substitution takes the empty context to the empty context.
   \item \brle{sb-cons} says that if $\gamma$ takes $\Gamma$ to $\Delta$ and
   $\hasty{\Gamma}{\epsilon}{e}{A}$, then $\gamma$ with the additional substitution $x \mapsto e$
   adjoined takes $\Gamma$ to $\Delta, \thyp{x}{A}{\epsilon}$
   \item \brle{sb-id} says that, for any variables $x$ not appearing in a substitution $\gamma$, we
   can type $\gamma$ using the fact that the action of $\gamma$ on $x$ is the identity. This is
   useful as it allows us to implicitly extend substitutions to larger contexts without defining
-  unwieldy operators. \todo{clean this up}
+  unwieldy operators. In particular, this implies that the empty substitution always acts as the
+  identity substitution.
 \end{itemize}
 To \emph{use} a substitution, we simply need to perform standard
 capture-avoiding substitution, as made explicit in Figure
 \ref{fig:ssa-subst-def}.
-
-\TODO{deal with skip rule causing problems for rewriting...}
 
 \begin{figure}
   \begin{gather*}
@@ -2501,7 +2489,9 @@ the former will not.
       print2b = { south = SOb.north },
     }{}
   \end{tikzpicture}
-  \caption{A string diagram in a premonoidal category, using a red state wire}
+  \caption{
+    A string diagram in a premonoidal category, demonstrating the necessity of using a state wire
+  }
   \label{fig:premonoidal-string-diagram}
   \Description{A string diagram in a premonoidal category, using a red state wire}
 \end{figure}
