@@ -3203,9 +3203,9 @@ Freyd category. To do so, we may define an inverse distributor morphism
 \end{equation}
 which can easily be shown to be an inverse to the obvious distributor morphism. We may now note that
 \begin{equation}
-  \dnt{\cdot}_{\ms{Th}^\otimes(\cdot)} = \mb{0}, \quad
-  \dnt{\Delta, \thyp{x}{A}{\epsilon}}_{\ms{Th}^\otimes(\cdot)} 
-    = \dnt{\Delta}_{\ms{Th}^\otimes(\cdot)} \otimes A
+  \dnt{\cdot}_{\ms{Th}^\otimes(\Gamma)} = \mb{1}, \quad
+  \dnt{\Delta, \thyp{x}{A}{\epsilon}}_{\ms{Th}^\otimes(\Gamma)} 
+    = \dnt{\Delta}_{\ms{Th}^\otimes(\Gamma)} \otimes A
   \qquad \implies \qquad
   \dnt{\Delta}_{\ms{Th}^\otimes(\Gamma)} = [\Gamma]
 \end{equation}
@@ -3289,14 +3289,47 @@ of a morphism $\haslb{\Gamma, \invar : A}{r}{\ms{L}, \outlb(B + A)}$ as follows:
         {r ; \casestmt{\invar}{x}{\ms{ret}\;x}{y}{\ms{br}\;\ms{go}\;y}}}}
     {\ms{L}, \outlb(B)}
 \end{equation}
-where $\ms{go}$ is an (arbitrary) fresh label.
-
-\TODO{packlore}
-
-\TODO{equalore}
-
-\TODO{segue}
-
+where $\ms{go}$ is an (arbitrary) fresh label. We can verify this indeed satisfies the axioms of
+an Elgot structure through a somewhat tedious calculation. We may now note that
+\begin{equation}
+  \begin{aligned}
+    \dnt{\cdot}_{\ms{Th}(\Gamma, \ms{L})} 
+      &= \mb{1}, &
+    \dnt{\Delta, \thyp{x}{A}{\epsilon}}_{\ms{Th}(\Gamma, \ms{L})} 
+      &= \dnt{\Delta}_{\ms{Th}(\Gamma, \ms{L})} \otimes A
+    &\qquad \implies \qquad
+    \dnt{\Delta}_{\ms{Th}(\Gamma, \ms{L})} &= [\Gamma] \\
+    \dnt{\cdot^+}_{\ms{Th}(\Gamma, \ms{L})} &= \mb{0}, &
+    \dnt{\ms{K}, \ell(A)}_{\ms{Th}(\Gamma, \ms{L})} 
+      &= \dnt{\ms{K}}_{\ms{Th}(\Gamma, \ms{L})} + A
+    &\qquad \implies \qquad
+    \dnt{\ms{K}}_{\ms{Th}(\Gamma, \ms{L})} &= [\ms{K}]
+  \end{aligned}
+\end{equation}
+and hence that 
+\begin{equation*}
+  \haslb{\Gamma, \invar : [\Delta]}
+        {\dnt{\hasty{\Delta}{\epsilon}{a}{A}}_{\ms{Th}(\Gamma, \ms{L})}}{\ms{L}, \outlb(A)}
+      \qquad
+  \haslb{\Gamma, \invar : [\Delta]}
+    {\dnt{\haslb{\Delta}{r}{\ms{K}}}_{\ms{Th}(\Gamma, \ms{L})}}{\ms{L}, \outlb([\ms{K}])}
+\end{equation*}
+as expected. It is relatively easy to derive that
+\begin{equation*}
+  \lbeq{\Gamma, \invar : [\Delta]}
+        {\dnt{\hasty{\Delta}{\epsilon}{a}{A}}_{\ms{Th}(\Gamma, \ms{L})}}
+        {\ms{ret}\;[a]}
+        {\ms{L}, \outlb(A)}
+\end{equation*}
+by a relatively straightforward induction. A much more tedious induction is required to prove that
+\begin{equation*}
+  \lbeq{\Gamma, \invar : [\Delta]}
+        {\dnt{\haslb{\Delta}{r}{\ms{K}}}_{\ms{Th}(\Gamma, \ms{L})}}
+        {[r]}
+        {\ms{L}, \outlb([\ms{K}])}
+\end{equation*}
+since the case for \ms{where}-statements is particularly complex. However, after this point, we're
+essentially done, and can state our completeness theorem as follows:
 \begin{theorem}[Completeness (Regions)]
   We have that, for all pure $\ms{eff}(\Gamma) = \bot$,
   $$
