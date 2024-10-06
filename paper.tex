@@ -2232,11 +2232,11 @@ We can further show that these substitutions are mutually inverse, i.e., that
     {\kappa([\ms{L}])}{\kappa([\ms{L}])}
   \end{aligned}
 \end{equation}
-Fixing a distinguished label ``\ms{r}'', we can define a ``packing'' operation on regions as
+Fixing a distinguished label ``\ms{o}'', we can define a ``packing'' operation on regions as
 follows:
 \begin{equation}
   \haslb{\Gamma}{r}{\ms{L}} \implies 
-  \haslb{\Gamma}{[r]^+ := [\ms{pack}_{\ms{r}}(\ms{L})]r}{\ms{r}([\ms{L}])}
+  \haslb{\Gamma}{[r]^+ := [\ms{pack}_{\ms{o}}(\ms{L})]r}{\ms{o}([\ms{L}])}
 \end{equation}
 
 \TODO{rest...}
@@ -2923,19 +2923,27 @@ semantics, or, more formally:
       $\dnt{\lbsubst{\Gamma}{[\gamma]\rho}{\ms{L}}{\ms{K}}} =
       \dnt{\lbsubst{\Gamma}{[\gamma']\rho}{\ms{L}}{\ms{K}}}$ 
   \end{enumerate}
+  \label{thm:rewriting}
 \end{theorem}
 
 This result allows us to safely perform peephole rewrites which we can indepedently prove
 semantically valid, including on potentially impure operations. However, for pure substitutions, it
-is possible to relate the semantics of the substituted term to the original more precisely. To do
-this, we first need to give a denotational semantics to substitutions themselves, which we interpret
-as morphisms as in Figure~\ref{fig:ssa-subst-sem}. 
-
-We can then state the following soundness theorem:
+is possible to relate the semantics of the substituted term to the original more precisely. By
+\emph{pure} substitutions, we mean substitutions which do not replace variables with impure terms.
+More precisely, we can define the \emph{effect} of a context using the lattice structure on effects
+as follows
+\begin{equation}
+  \ms{eff}(\cdot) = \bot \qquad 
+  \ms{eff}(\Gamma, \thyp{x}{A}{\epsilon}) = \ms{eff}(\Gamma) \sqcup \epsilon
+\end{equation}
+We can now give a denotational semantics to substitutions in which a substitution
+$\issubst{\gamma}{\Gamma}{\Delta}$ is interpreted as a morphism from $\dnt{\Gamma}$ to
+$\dnt{\Delta}$ with effect $\leq \ms{eff}(\Delta)$, as in Figure~\ref{fig:ssa-subst-sem}. A
+substitution is \emph{pure} if its effect is $\bot$, which in particular is the case if
+$\ms{eff}(\Delta) = \bot$. We can now state the soundness of variable substitution as follows:
 \begin{theorem}[Soundness (Substitution)]
-  Given $\dnt{\issubst{\gamma}{\Gamma}{\Delta}} : \dnt{\Gamma} \to_\bot
-  \dnt{\Delta}$ (in particular, this is always the case when \todo{the effect
-  of $\Delta$ is $\bot$, but write this down}, we have that
+  Given $\dnt{\issubst{\gamma}{\Gamma}{\Delta}} : \dnt{\Gamma} \to_\bot \dnt{\Delta}$ (in
+  particular, this is always the case when $\ms{eff}(\Delta) = \bot$), we have that
   \begin{enumerate}[label=(\alph*)]
     \item $\dnt{\hasty{\Gamma}{\epsilon}{[\gamma]a}{A}} 
       = \dnt{\issubst{\gamma}{\Gamma}{\Delta}};\dnt{\hasty{\Delta}{\epsilon}{a}{A}}$
@@ -2947,11 +2955,19 @@ We can then state the following soundness theorem:
       = \dnt{\issubst{\gamma}{\Gamma}{\Delta}};\dnt{\lbsubst{\Delta}{\sigma}{\ms{L}}{\ms{K}}}$
   \end{enumerate}
 \end{theorem}
+In particular, this implies that, when $\gamma$ is pure, the semantics of substitution composition
+$[\gamma]\rho$is just composition of the denotations of $\gamma, \rho$; note in general that this is
+\emph{not} true in general if only the $\rho$ is pure, as can trivially be seen from the example
+\(\gamma = x \mapsto \ms{print}; x\), \(\rho = x \mapsto ()\). Note also that we can derive
+rewriting (Theorem~\ref{thm:rewriting}) for pure substitutions from soundness of substitution, but
+not vice versa; however, rewriting also covers \emph{impure} substitutions; this is similar to the
+distinction between \emph{uniformity} (which only holds for pure operations) and \emph{dinaturality}
+(which holds in general, but has a more restricted form).
 
 \begin{figure}
   \begin{equation*}
     \boxed{\dnt{\issubst{\gamma}{\Gamma}{\Delta}} 
-      : \dnt{\Gamma} \to \dnt{\Delta}}
+      : \dnt{\Gamma} \to_{\ms{eff}(\Delta)} \dnt{\Delta}}
   \end{equation*}
   \begin{gather*}
     \dnt{\issubst{\cdot}{\Gamma}{\cdot}} = \tmor{\dnt{\Gamma}}
@@ -2979,14 +2995,12 @@ We can then state the following soundness theorem:
   \label{fig:ssa-subst-sem} 
 \end{figure}
 
-\TODO{if our substitution \emph{is} pure, we can also prove that substitution is \emph{sound}:}
-
-
-\TODO{note that soundness $\implies$ rewriting, but rewriting works for \emph{all} substitutions
-(including impure ones), whereas soundness is only for pure substitutions!}
-
-\TODO{On the other hand, \emph{all} label substitutions are sound:}
-
+We can now move on to stating the metatheoretic properties of label-substitutions, which,
+thankfully, turn out to be a little bit simpler. In particular, in Figure~\ref{fig:ssa-subst-sem},
+we interpret label substitutions $\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}$ as morphisms taking
+a copy of the context $\dnt{\Gamma}$ and an element of the coproduct $\dnt{\ms{L}}$ to an element
+of the coproduct $\dnt{\ms{K}}$, with an arbitrary effect. Label substitution is then sound in
+general, as stated in the following theorem:
 \begin{theorem}[Soundness (Label Substitution)]
   Given $\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}$, we have
   \begin{enumerate}[label=(\alph*)]
@@ -3001,36 +3015,112 @@ We can then state the following soundness theorem:
   \end{enumerate}
 \end{theorem}
 
-\TODO{text}
-
 \subsection{Equational Theory}
 
-\TODO{text}
-
+Using the metatheory in the previous section, our goal is now to prove the equational theory given
+in Section~\ref{sec:equations} sound with respect to any valid \isotopessa{} model. Stated more
+precisely, we have the following:
 \begin{theorem}[Soundness (Equational Theory)]
   We have that
   \begin{enumerate}[label=(\alph*)]
     \item $\tmeq{\Gamma}{\epsilon}{a}{a'}{A} \implies 
       \dnt{\hasty{\Gamma}{\epsilon}{a}{A}} = \dnt{\hasty{\Gamma}{\epsilon}{a'}{A}}$
+      \label{itm:eqn-sound-expr}
     \item $\lbeq{\Gamma}{r}{r'}{\ms{L}} \implies
       \dnt{\haslb{\Gamma}{r}{\ms{L}}} = \dnt{\haslb{\Gamma}{r'}{\ms{L}}}$
+      \label{itm:eqn-sound-region}
     \item $\tmseq{\gamma}{\gamma'}{\Gamma}{\Delta} \implies
       \dnt{\issubst{\gamma}{\Gamma}{\Delta}} = \dnt{\issubst{\gamma'}{\Gamma}{\Delta}}$
+      \label{itm:eqn-sound-vsubst}
     \item $\lbseq{\sigma}{\sigma'}{\Gamma}{\ms{L}}{\ms{K}} \implies
       \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}} 
-      = \dnt{\lbsubst{\Gamma}{\sigma'}{\ms{L}}{\ms{K}}}$
+      = \dnt{\lbsubst{\Gamma}{\sigma'}{\ms{L}}{\ms{K}}}$ 
+      \label{itm:eqn-sound-lsubst}
   \end{enumerate}
 \end{theorem}
+The rest of this section will consist of a sketch of some of the more difficult components of this
+proof, in the hope that this will also illuminate the equational theory somewhat. As
+\ref{itm:eqn-sound-vsubst} and \ref{itm:eqn-sound-lsubst} follow trivially from
+\ref{itm:eqn-sound-expr} and \ref{itm:eqn-sound-region} respectively, we will only cover the latter.
 
-\TODO{text; diagram for each rule?}
+\subsubsection{Expressions}
+
+\begin{proof}
+  Our proof is by rule induction on the equational theory. We sketch the cases as follows:
+  \begin{itemize}
+    \item \emph{Congruence}: \todo{trivially by induction}
+    \item \emph{Initial, Terminal}: \todo{trivial}
+    \item \emph{Binding}, \brle{let$_2$-$\beta$}: \todo{follows trivially from string diagrammatic
+    reasoning}
+    \item \brle{let$_1$-$\beta$}: \todo{single substitution and let binding look the same by
+    soundness of substitution}
+    \item \brle{let$_2$-$\eta$}, \brle{case-$\eta$}, \brle{case-inl}, \brle{case-inr}: \todo{by
+    universal property}
+  \end{itemize}
+\end{proof}
+
+\subsubsection{Regions}
+
+\begin{proof}
+  Our proof is by rule induction on the equational theory. We sketch the cases as follows:
+  \begin{itemize}
+    \item \emph{Congruence}: \todo{trivially by induction}
+    \item \emph{Initial}: \todo{trivial}
+    \item \emph{Binding}, \brle{let$_2$-$\beta$}: \todo{like before, follows trivially from string
+    diagrammatic reasoning}
+    \item \brle{let$_1$-$\beta$}: \todo{exactly analogous to expressions}
+    \item \brle{let$_2$-$\eta$}, \brle{case-$\eta$}, \brle{case-inl}, \brle{case-inr}: \todo{exactly
+    analogous to expressions}
+    \item \brle{cfg-$\beta_1$}: \todo{this}
+    \item \brle{cfg-$\beta_2$}: \todo{this}
+    \item \brle{cfg-$\eta$}: \todo{this}
+    \item \brle{codiag}: \todo{this}
+    \item \brle{uni}: \todo{this}
+    \item \brle{dinat}: \todo{this}
+  \end{itemize}
+\end{proof}
 
 \subsection{Completeness}
 
 \label{ssec:completeness}
 
-\TODO{text}
+Now that we've proved the \emph{soundness} of our equational theory, what remains is to prove that
+it is \emph{complete}, i.e., that every equation which holds in all \isotopessa{} models can be
+derived from it, or, stated more categorically, that our syntax quotiented by the equational theory
+forms an initial \isotopessa{} model.
+%
+Our strategy for doing this is as follows:
+\begin{enumerate}
+  \item We begin by constructing a category of expressions $\ms{Th}^\otimes(\Gamma)$ and a category
+  of regions $\ms{Th}(\Gamma, \ms{L})$ quotiented by our equational theory, and constructing a
+  functor from the former to the latter.
+  \item We then show that the category of expressions has the structure of a distributive Freyd
+  category, whereas the category of regions has the structure of an \isotopessa{} model, and hence
+  that expressions may be interpreted in the former and regions in the latter.
 
-\TODO{factor out packing lore and initiality lore, actually describe category with text}
+  If we extend the corresponding judgements to the quotient in the obvious manner, it will turn out
+  that, for a distinguished variable $\ms{i}$ and label $\ms{o}$,
+  \begin{equation}
+    \hasty{\ms{i} : [\Gamma]}{\epsilon}{\dnt{\hasty{\Gamma}{\epsilon}{a}{A}}}{A}
+    \qquad
+    \haslb{\ms{i} : [\Gamma]}{\dnt{\haslb{\Gamma}{r}{L}}}{\ms{o}([\ms{L}])}
+  \end{equation}
+  where packing of contexts is defined as in Section~\ref{ssec:bohm-jacopini}.
+  
+  \item Finally, we refine this result to show that
+  \begin{equation}
+    \tmeq{\ms{i} : [\Gamma]}{\epsilon}{\dnt{\hasty{\Gamma}{\epsilon}{a}{A}}}{[a]}{A}
+    \qquad
+    \lbeq{\ms{i} : [\Gamma]}{\dnt{\haslb{\Gamma}{r}{L}}}{[r]}{\ms{o}([\ms{L}])}
+  \end{equation}
+  Since the packing operator $[\cdot]$ on terms and regions from Section~\ref{ssec:bohm-jacopini} is
+  injective for pure contexts $\ms{eff}(\Gamma) = \bot$, it follows that in this case the category
+  of expressions and the category of regions are the initial distributive Freyd category and
+  distributive Freyd-Elgot category respectively.
+\end{enumerate}
+Each of these steps has been formalized in Lean 4.
+
+\subsection{Expressions}
 
 \begin{theorem}[Completeness (Expressions)]
   The category $\ms{Th}^\otimes(\Gamma)$ with
@@ -3076,6 +3166,8 @@ We can then state the following soundness theorem:
 \end{theorem}
 
 \TODO{text}
+
+\subsection{Regions}
 
 \begin{theorem}[Completeness (Regions)]
   The category $\ms{Th}(\Gamma, \ms{L})$ with
