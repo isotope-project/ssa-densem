@@ -2622,22 +2622,25 @@ the former will not.
 \subsection{Semantics}
 
 We now have all the ingredients we need to give a semantics to \isotopessa{} expressions and regions.
-In particular, an \isotopessa{} model consists of:
+In particular, an \isotopessa{} expression model consists of:
 \begin{itemize}
-  \item A distributive premonoidal category $\mc{C}$, equipped with an Elgot structure
+  \item A distributive premonoidal category $\mc{C}$
   \item A complete lattice $E$, and a continuous function $\epsilon \mapsto \mc{C}_\epsilon$ from
   $E$ to wide subcategories of $\mc{C}$, such that $\mc{C}_\top = \mc{C}$, and $(\mc{C}, \mc{V} =
   \mc{C}_\bot)$ is a Freyd category. Furthermore, we ask that each $\mc{C}_\epsilon$ is closed under
   tensor products and coproducts, and in particular that injections are pure and therefore contained
   in every $\mc{C}_\epsilon$.
 \end{itemize}
+If an \isotopessa{} expression model additionally has an Elgot structure, we will refer to it simply
+as an \isotopessa{} model.
+
 We will write morphisms $\mc{C}_\epsilon(A, B)$ as $A \to_\epsilon B$, and morphisms $\mc{C}(A, B)$
 as $A \to B$. Note that, whenever $\mc{C}$ is a distributive Elgot Freyd category, we can trivially
 obtain an \isotopessa{} model by choosing $E = \{\top, \bot\}$; hence, this re-framing does not add
 any additional generality, but simplifies bookkeeping. We may also choose $E = \{*\}$ if and only if
 $\mc{C}$ is in fact Cartesian.
 %
-We will model types in the obvious manner: 
+Fixing an \isotopessa{} expression model, we can model types in the obvious manner: 
 \begin{itemize}
   \item The unit type $\mb{1}$ is modeled as the monoidal unit $I$
   \item The empty type $\mb{0}$ is modeled as the initial object $\mb{0}$
@@ -2691,10 +2694,10 @@ denotations of their parameters, respectively.
   \label{fig:ssa-ty-sem}
 \end{figure}
 
-We can now interpret \isotopessa{} expressions $\hasty{\Gamma}{\epsilon}{a}{A}$ over a given signature
-in a model intepreting that signature as morphisms $\dnt{\Gamma} \to_\epsilon \dnt{A}$ using the
-rules in Figure~\ref{fig:ssa-expr-sem}. Up to this point, both our syntax and semantics are quite
-standard; in particular:
+We can now interpret \isotopessa{} expressions $\hasty{\Gamma}{\epsilon}{a}{A}$ over a given
+signature in a model intepreting that signature as morphisms $\dnt{\Gamma} \to_\epsilon \dnt{A}$
+using the rules in Figure~\ref{fig:ssa-expr-sem}. Up to this point, both our syntax and semantics
+are quite standard; in particular:
 \begin{itemize}
   \item Variables $x$ are modeled as projections from the appropriate index in the context's
   denotation $\pi_{\Gamma, x} : \dnt{\Gamma} \to_\bot \dnt{A}$
@@ -2789,15 +2792,15 @@ standard; in particular:
   \label{fig:ssa-expr-sem}
 \end{figure}
 
-Similarly, we can interpret \isotopessa{} regions $\haslb{\Gamma}{r}{\ms{L}}$ as morphisms
-$\dnt{\Gamma} \to \dnt{\ms{L}}$; note that we don't assume anything about the effect of these
-morphisms. As $\ms{L}$ is a coproduct, we can view the result object of a region $r$ as encoding
-both \emph{data} and \emph{control-flow} information. In particular, we interpret a branch
-$\brb{\ell}{a}$ as simply the injection of the (pure) expression $\hasty{\Gamma}{\bot}{a}{A}$, our
-\emph{data}, into the element of the coproduct corresponding to $\ell$, which encodes the point in
-control-flow the rest of the program should jump to next. This is in contrst to \emph{expressions},
-which purely encode data, with no particular instructions on how to use it afterwards. Our
-interpretation of \ms{let}-statements and \ms{case}-statements, given in
+Similarly, if we in fact have an \isotopessa{} model, we can interpret \isotopessa{} regions
+$\haslb{\Gamma}{r}{\ms{L}}$ as morphisms $\dnt{\Gamma} \to \dnt{\ms{L}}$; note that we don't assume
+anything about the effect of these morphisms. As $\ms{L}$ is a coproduct, we can view the result
+object of a region $r$ as encoding both \emph{data} and \emph{control-flow} information. In
+particular, we interpret a branch $\brb{\ell}{a}$ as simply the injection of the (pure) expression
+$\hasty{\Gamma}{\bot}{a}{A}$, our \emph{data}, into the element of the coproduct corresponding to
+$\ell$, which encodes the point in control-flow the rest of the program should jump to next. This is
+in contrst to \emph{expressions}, which purely encode data, with no particular instructions on how
+to use it afterwards. Our interpretation of \ms{let}-statements and \ms{case}-statements, given in
 Figure~\ref{fig:ssa-reg-sem}, is exactly the same as that of the corresponding expressions.
 
 We now come to the interpretation of \ms{where}-blocks, which is where Elgot structure comes in.
@@ -3095,32 +3098,45 @@ Our strategy for doing this is as follows:
   \item We begin by constructing a category of expressions $\ms{Th}^\otimes(\Gamma)$ and a category
   of regions $\ms{Th}(\Gamma, \ms{L})$ quotiented by our equational theory, and constructing a
   functor from the former to the latter.
-  \item We then show that the category of expressions has the structure of a distributive Freyd
-  category, whereas the category of regions has the structure of an \isotopessa{} model, and hence
-  that expressions may be interpreted in the former and regions in the latter.
+  \item We then show that the category of expressions and the category of regions have the structure
+  of an \isotopessa{} expression model and \isotopessa{} model, respectively, and hence that
+  expressions may be interpreted in the former and both expressions and regions in the latter.
 
   If we extend the corresponding judgements to the quotient in the obvious manner, it will turn out
   that, for a distinguished variable $\invar$ and label $\outlb$,
   \begin{equation}
-    \hasty{\Gamma, \invar : [\Delta]}{\epsilon}{\dnt{\hasty{\Delta}{\epsilon}{a}{A}}}{A}
-    \qquad
-    \haslb{\Gamma, \invar : [\Delta]}{\dnt{\haslb{\Delta}{r}{\ms{K}}}}{\ms{L}, \outlb([\ms{K}])}
+    \begin{gathered}
+      \hasty{\Gamma, \invar : [\Delta]}{\epsilon}
+        {\dnt{\hasty{\Delta}{\epsilon}{a}{A}}_{\ms{Th}^\otimes(\Gamma)}}{A}
+        \qquad
+      \haslb{\Gamma, \invar : [\Delta]}
+        {\dnt{\hasty{\Delta}{\epsilon}{a}{A}}_{\ms{Th}(\Gamma, \ms{L})}}{\ms{L}, \outlb(A)}
+        \\
+      \haslb{\Gamma, \invar : [\Delta]}
+        {\dnt{\haslb{\Delta}{r}{\ms{K}}}_{\ms{Th}(\Gamma, \ms{L})}}{\ms{L}, \outlb([\ms{K}])}
+    \end{gathered}
   \end{equation}
   where packing of contexts is defined as in Section~\ref{ssec:bohm-jacopini}.
   
   \item Finally, we refine this result to show that
   \begin{equation}
-    \tmeq{\Gamma, \invar : [\Delta]}{\epsilon}{\dnt{\hasty{\Delta}{\epsilon}{a}{A}}}{[a]}{A}
-    \qquad
-    \lbeq{\Gamma \invar : [\Delta]}{\dnt{\haslb{\Delta}{r}{\ms{K}}}}{[r]}{\ms{L}, \outlb([\ms{K}])}
+    \begin{gathered}
+    \tmeq{\Gamma, \invar : [\Delta]}{\epsilon}
+      {\dnt{\hasty{\Delta}{\epsilon}{a}{A}}_{\ms{Th}^\otimes(\Gamma)}}{[a]}{A}
+    \\
+    \lbeq{\Gamma, \invar : [\Delta]}
+      {\dnt{\hasty{\Delta}{\epsilon}{a}{A}}_{\ms{Th}(\Gamma, \ms{L})}}{\ms{ret}\;[a]}{\ms{L}, \outlb(A)}
+    \\
+    \lbeq{\Gamma, \invar : [\Delta]}
+      {\dnt{\haslb{\Delta}{r}{\ms{K}}}_{\ms{Th}(\Gamma, \ms{L})}}{[r]}{\ms{L}, \outlb([\ms{K}])}
+    \end{gathered}
   \end{equation}
-  Since the packing operator $[\cdot]$ on terms and regions from Section~\ref{ssec:bohm-jacopini} is
-  injective for pure contexts $\ms{eff}(\Gamma) = \bot$, and hence in particular for $\Gamma =
-  \cdot$, $\ms{L} = \cdot$, it follows that in this case the category of expressions and the
-  category of regions are the initial distributive Freyd category and distributive Freyd-Elgot
-  category respectively.
+  where $\ms{ret}\;a := \brb{\outlb}{a}$. Since the packing operator $[\cdot]$ on terms and regions
+  from Section~\ref{ssec:bohm-jacopini} is injective for pure contexts $\ms{eff}(\Gamma) = \bot$,
+  and hence in particular for $\Gamma = \cdot$, $\ms{L} = \cdot$, it follows that in this case the
+  category of expressions and the category of regions are the initial distributive \isotopessa{}
+  expression model and \isotopessa{} model respectively.
 \end{enumerate}
-Each of these steps has been formalized in Lean 4.
 
 \subsection{Expressions}
 
@@ -3146,50 +3162,73 @@ In general, the category of expressions $\ms{Th}^\otimes(\Gamma)$ is simply then
 $\ms{Th}_\top^\otimes(\Gamma)$, which can be viewed as the union of all
 $\ms{Th}_\epsilon^\otimes(\Gamma)$.
 
-\TODO{tensor functors + codiagonal + projections + pure subcategory $\bot$}
+We now need to equip $\ms{Th}_\epsilon^\otimes(\Gamma)$ with the structure of a premonoidal
+category. Obviously, we wish to define the tensor product of types $A$ and $B$ to be simply $A
+\otimes B$; we can then begin by defining projections
+\begin{equation}
+  \hasty{\Gamma, \invar : A \otimes B}{\epsilon}{\pi_l := \ms{let}\;(x, y) = \invar; x}{A} \qquad 
+  \hasty{\Gamma, \invar : A \otimes B}{\epsilon}{\ms{let}\;(x, y) = \invar; y}{B}
+\end{equation}
+By simply using the pair constructor as a cartesian product $\langle a, b \rangle = (a, b)$, this
+can be shown to endow $\ms{Th}_\bot^\otimes(\Gamma)$ with the structure of a cartesian category,
+allowing us to define the associators, symmetries, and unitors in the natural manner. If we then
+define tensor functors
+\begin{equation}
+  - \otimes X : e \mapsto \ms{let}\;(\invar, x) = \invar; (e ; (\invar, x)) \qquad
+  X \otimes - : e \mapsto \ms{let}\;(x, \invar) = \invar; (e ; (x, \invar))
+\end{equation}
+we find that $\ms{Th}_\epsilon^\otimes(\Gamma)$ and hence in particular $\ms{Th}^\otimes(\Gamma)$ is
+endowed with the structure of a Freyd category with pure subcategory $\ms{Th}_\bot^\otimes(\Gamma)$.
 
-\TODO{coproducts}
-
-\TODO{inverse distributor}
-
-% is a distributive Freyd category, with:
-% \begin{itemize}
-%   \item Pure morphisms generated by, given $\hasty{\Gamma, \bhyp{\invar}{A}}{\epsilon}{e}{B}$ and
-%         $\haslb{\Gamma, \bhyp{\invar}{A}}{\ms{ret}\;e}{B, \ms{L}}$
-%   \item Tensor functors 
-%     $- \otimes X : e \mapsto \ms{let}\;(\invar, x) 
-%       = \invar; (e ; (\invar, x))$
-%     and 
-%     $X \otimes - : e \mapsto \ms{let}\;(x, \invar) 
-%     = \invar; (e ; (x, \invar))$
-%   \item Projections $\ms{let}\;(x, y) = \invar; x$ and  
-%     $\ms{let}\;(x, y) = \invar; y$
-%   \item Diagonal: $(\invar, \invar)$
-%   \item Injections: $\iota_l\;\invar$, $\iota_r\;\invar$
-%   \item Sums: $
-%     [a, b] = \caseexpr{\invar}{\invar}{a}{\invar}{b}
-%   $
-%   \item Distributor
-%     $\delta = \caseexpr{\invar}{(x, y)}{(x, \iota_l\;y)}{(x, y)}{(x, \iota_r\;y)}$
-%     with inverse
-%     $\delta^{-1} = \ms{let}\;(x, y) = \invar; 
-%       \caseexpr{y}{z}{\iota_l(x, z)}{z}{\iota_r(x, z)}$
-% \end{itemize}
-
-\TODO{pack typing}
-
-\TODO{pack equality lore}
-
-\TODO{text}
-
+Similarly, we wish to show that $A + B$ is the coproduct of $A$ and $B$ in
+$\ms{Th}_\epsilon^\otimes(\Gamma)$. Since we already have obvious injection morphisms
+\begin{equation}
+  \hasty{\Gamma, \invar : A}{\epsilon}{\iota_l := \iota_l\;\invar}{A + B} \qquad
+  \hasty{\Gamma, \invar : B}{\epsilon}{\iota_r := \iota_r\;\invar}{A + B}
+\end{equation}
+we can define the coproduct of morphisms $\hasty{\Gamma, \invar : A}{\epsilon}{a}{C}$ and 
+$\hasty{\Gamma, \invar : B}{\epsilon}{b}{C}$ to be simply given by
+\begin{equation}
+  \hasty{\Gamma, \invar : A + B}{\epsilon}{[a, b] := \caseexpr{\invar}{\invar}{a}{\invar}{b}}{C}
+\end{equation}
+It is straightforward to verify that this indeed induces a coproduct on
+$\ms{Th}_\epsilon^\otimes(\Gamma)$ and hence on $\ms{Th}^\otimes(\Gamma)$
+All that remains is to show that $\ms{Th}_\epsilon^\otimes(\Gamma)$ is in fact a \emph{distributive}
+Freyd category. To do so, we may define an inverse distributor morphism
+\begin{equation}
+  \hasty{\Gamma, \invar : A \otimes (B + C)}
+    {\epsilon}
+    {\delta^{-1} := \ms{let}\;(x, y) = \invar; \caseexpr{y}{z}{\iota_l(x, z)}{z}{\iota_r(x, z)}}
+    {A \otimes B + A \otimes C}
+\end{equation}
+which can easily be shown to be an inverse to the obvious distributor morphism. We may now note that
+\begin{equation}
+  \dnt{\cdot}_{\ms{Th}^\otimes(\cdot)} = \mb{0}, \quad
+  \dnt{\Delta, \thyp{x}{A}{\epsilon}}_{\ms{Th}^\otimes(\cdot)} 
+    = \dnt{\Delta}_{\ms{Th}^\otimes(\cdot)} \otimes A
+  \qquad \implies \qquad
+  \dnt{\Delta}_{\ms{Th}^\otimes(\Gamma)} = [\Gamma]
+\end{equation}
+Therefore, it follows that, as expected, that
+$
+  \hasty{\Gamma, \invar : [\Delta]}{\epsilon}
+          {\dnt{\hasty{\Delta}{\epsilon}{a}{A}}_{\ms{Th}^\otimes(\Gamma)}}{A}
+$
+and it remains to show that we in fact have
+$$
+  \tmeq{\Gamma, \invar : [\Delta]}{\epsilon}
+        {\dnt{\hasty{\Delta}{\epsilon}{a}{A}}_{\ms{Th}^\otimes(\Gamma)}}{[a]}{A}
+$$
+which can be done by a relatively straightforward induction, implying, since $[\cdot]$ is injective
+w.r.t. our equational theory for pure contexts, the following theorem:
 \begin{theorem}[Completeness (Expressions)]
-  We have that
+  We have that, for all pure $\ms{eff}(\Gamma) = \bot$,
   $$
     \tmeq{\Gamma}{\epsilon}{e}{e'}{A} 
     \iff \dnt{\hasty{\Gamma}{\epsilon}{e}{A}}_{\ms{Th}^\otimes(\cdot)} 
          = \dnt{\hasty{\Gamma}{\epsilon}{e'}{A}}_{\ms{Th}^\otimes(\cdot)}
   $$
-  In particular, this implies that $\ms{Th}(\cdot)$ is the initial distributive Freyd category
+  In particular, this implies that $\ms{Th}(\cdot)$ is the initial \isotopessa{} expression model
 \end{theorem}
 
 \subsection{Regions}
