@@ -2190,6 +2190,8 @@ in Section~\ref{ssec:completeness}.
 
 \label{ssec:bohm-jacopini}
 
+\TODO{Reflow to B\"ohm-Jacopini + elimination of $\phi$-nodes}
+
 We now come to one of the major results of this paper: that the above rules on \isotopessa{} are
 enough to prove a form of the B\"ohm-Jacopini theorem, which states that all programs can be
 converted to programs with equivalent semantics using only structured control-flow constructs, i.e.
@@ -2198,6 +2200,8 @@ if-then-else, while, and sequence.
 We first need to define what structured control-flow means in the context of \isotopessa{} regions.
 Since a region $\haslb{\Gamma}{r}{\ms{L}}$ can jump to any of the exit-points in $\ms{L}$, it does
 not quite make sense to restrict the top-level of such a region to have only a single exit-point.
+Instead, we'll define a predicate $\ms{structured}(\ms{L})$ parametrized by a \emph{set} of
+acceptable targets.
 
 \TODO{rest...}
 
@@ -2207,29 +2211,30 @@ encoding what branch of the label-context we are on as follows:
   [\cdot] = \mb{0} \qquad [\ms{L}, \ell(A)] = [\ms{L}] + A
 \end{equation}
 We may now define ``packing'' and ``unpacking'' label-substitutions
-$\lbsubst{\cdot}{\ms{pack}_\kappa(\ms{L})}{\ms{L}}{\kappa([\ms{L}])}$,
-$\lbsubst{\cdot}{\ms{unpack}_\kappa(\ms{L})}{\kappa([\ms{L}])}{\ms{L}}$ as follows:
+$\lbsubst{\cdot}{\ms{pack}_\kappa^+(\ms{L})}{\ms{L}}{\kappa([\ms{L}])}$,
+$\lbsubst{\cdot}{\ms{unpack}_\kappa^+(\ms{L})}{\kappa([\ms{L}])}{\ms{L}}$ as follows:
 \begin{equation}
-  \ms{pack}_\kappa(\cdot) = \cdot \qquad
-  \ms{pack}_\kappa(\ms{L}, \ell(A)) 
-  = [\kappa(x) \mapsto \brb{\kappa}{\iota_l\;x}]\ms{pack}_\kappa(\ms{L}), 
+  \ms{pack}_\kappa^+(\cdot) = \cdot \qquad
+  \ms{pack}_\kappa^+(\ms{L}, \ell(A)) 
+  = [\kappa(x) \mapsto \brb{\kappa}{\iota_l\;x}]\ms{pack}_\kappa^+(\ms{L}), 
     \ell(x) \mapsto \brb{\kappa}{\iota_r\;x}  
 \end{equation}
 \begin{equation}
   \begin{aligned}
-  \ms{unpack}_\kappa(\cdot) &= \kappa(x) \mapsto \ms{loop} \\
-  \ms{unpack}_\kappa(\ms{L}, \ell(A)) &= \kappa(x) \mapsto 
-    \caseexpr{x}{l}{[\ms{unpack}_\kappa(\ms{L})]\brb{\kappa}{l}}{r}{\brb{\ell}{r}}
+  \ms{unpack}_\kappa^+(\cdot) &= \kappa(x) \mapsto \ms{loop} \\
+  \ms{unpack}_\kappa^+(\ms{L}, \ell(A)) &= \kappa(x) \mapsto 
+    \caseexpr{x}{l}{[\ms{unpack}_\kappa^+(\ms{L})]\brb{\kappa}{l}}{r}{\brb{\ell}{r}}
   \end{aligned}
 \end{equation}
 We can further show that these substitutions are mutually inverse, i.e., that
 \begin{equation}
   \begin{aligned}
   \lbsubst{\Gamma}
-    {[\ms{unpack}_\kappa(\ms{L})]\ms{pack}_\kappa(\ms{L}) &\teqv \ms{id}_{\ms{L}}}{\ms{L}}{\ms{L}}
+    {[\ms{unpack}_\kappa^+(\ms{L})]\ms{pack}_\kappa^+(\ms{L}) 
+      &\teqv \ms{id}_{\ms{L}}}{\ms{L}}{\ms{L}}
   \\
   \lbsubst{\Gamma}
-    {[\ms{pack}_\kappa(\ms{L})]\ms{unpack}_\kappa(\ms{L}) &\teqv \ms{id}_{\kappa([\ms{L}])}}
+    {[\ms{pack}_\kappa^+(\ms{L})]\ms{unpack}_\kappa^+(\ms{L}) &\teqv \ms{id}_{\kappa([\ms{L}])}}
     {\kappa([\ms{L}])}{\kappa([\ms{L}])}
   \end{aligned}
 \end{equation}
@@ -2237,12 +2242,58 @@ Fixing a distinguished label ``$\outlb$'', we can define a ``packing'' operation
 follows:
 \begin{equation}
   \haslb{\Gamma}{r}{\ms{L}} \implies 
-  \haslb{\Gamma}{[r]^+ := [\ms{pack}_{\outlb}(\ms{L})]r}{\outlb([\ms{L}])}
+  \haslb{\Gamma}{[r]^+ := [\ms{pack}_{\outlb}^+(\ms{L})]r}{\outlb([\ms{L}])}
 \end{equation}
 
 \TODO{rest...}
 
 \TODO{dataflow conversion, full packing...}
+
+\begin{equation}
+  [\cdot] = \mb{1} \qquad [\Gamma, \thyp{x}{A}{\epsilon}] = [\Gamma] \otimes A
+\end{equation}
+
+\TODO{segue to conversions}
+
+\TODO{define projections}
+
+\begin{equation}
+  \ms{pack}_y^\otimes(\cdot) = \cdot \qquad
+  \ms{pack}_y^\otimes(\Gamma, \thyp{x}{A}{\epsilon}) 
+  = [y \mapsto \pi_l\;y]\ms{pack}_y^\otimes(\Gamma), x \mapsto \pi_r\;y 
+\end{equation}
+\begin{equation}
+  \ms{unpack}_y^\otimes(\Gamma) = y \mapsto \ms{packed}(\Gamma)
+\end{equation}
+
+\TODO{packed lore...}
+
+\begin{equation}
+  \ms{packed}(\cdot) = \cdot \qquad
+  \ms{packed}(\Gamma, \thyp{x}{A}{\epsilon}) = (\ms{packed}(\Gamma), x)
+\end{equation}
+
+\TODO{segue...}
+
+\begin{equation}
+  \hasty{\Gamma}{\epsilon}{a}{A} \implies 
+  \hasty{\invar : [\Gamma]}{\epsilon}
+    {[a] := [\ms{unpack}_{\outlb}^\otimes(\Gamma)]a}{A}
+\end{equation}
+
+\begin{equation}
+  \haslb{\Gamma}{r}{\ms{L}} \implies 
+  \haslb{\invar : [\Gamma]}{[r]^\otimes := [\ms{unpack}_{\outlb}^\otimes(\Gamma)]r}{\ms{L}}
+\end{equation}
+
+\TODO{use for $\phi$-node elimination...}
+
+\TODO{segue}...
+
+\begin{equation}
+  \haslb{\Gamma}{r}{\ms{L}} \implies 
+  \haslb{\invar : [\Gamma]}{[r] := [[r]^+]^\otimes = [[r]^\otimes]^+}{\outlb(\ms{L})}
+\end{equation}
 
 \section{Denotational Semantics}
 
