@@ -477,16 +477,22 @@
   keywords   = {LLVM, intermediate representation, Regionalized value state dependence graph (RVSDG)}
 }
 
-%TODO: fix this with a proper citation
-@misc{carette-central-2022,
-  title         = {Central Submonads and Notions of Computation: Soundness, Completeness
-                   and Internal Languages},
-  author        = {Titouan Carette and Louis Lemonnier},
-  year          = {2022},
-  month         = {6},
-  eprint        = {2207.09190},
-  archiveprefix = {arXiv},
-  primaryclass  = {Logic in Computer Science}
+@inproceedings{carette-central-2022,
+  author       = {Titouan Carette and
+                  Louis Lemonnier and
+                  Vladimir Zamdzhiev},
+  title        = {Central Submonads and Notions of Computation: Soundness, Completeness
+                  and Internal Languages},
+  booktitle    = {38th Annual {ACM/IEEE} Symposium on Logic in Computer Science, {LICS}
+                  2023, Boston, MA, USA, June 26-29, 2023},
+  pages        = {1--13},
+  publisher    = {{IEEE}},
+  year         = {2023},
+  url          = {https://doi.org/10.1109/LICS56636.2023.10175687},
+  doi          = {10.1109/LICS56636.2023.10175687},
+  timestamp    = {Wed, 29 May 2024 16:05:22 +0200},
+  biburl       = {https://dblp.org/rec/conf/lics/CaretteLZ23.bib},
+  bibsource    = {dblp computer science bibliography, https://dblp.org}
 }
 
 @inproceedings{fuhrmann-direct-1999,
@@ -953,4 +959,111 @@ journal = {Commun. ACM},
 month = may,
 pages = {366–371},
 numpages = {6}
+}
+
+@article{batty-compositional-17,
+author = {Batty, Mark },
+title = {Compositional relaxed concurrency},
+journal = {Philosophical Transactions of the Royal Society A: Mathematical, Physical and Engineering Sciences},
+volume = {375},
+number = {2104},
+pages = {20150406},
+year = {2017},
+doi = {10.1098/rsta.2015.0406},
+URL = {https://royalsocietypublishing.org/doi/abs/10.1098/rsta.2015.0406},
+eprint = {https://royalsocietypublishing.org/doi/pdf/10.1098/rsta.2015.0406}
+}
+
+@article{brookes-full-abstraction-96,
+  author       = {Stephen D. Brookes},
+  title        = {Full Abstraction for a Shared-Variable Parallel Language},
+  journal      = {Inf. Comput.},
+  volume       = {127},
+  number       = {2},
+  pages        = {145--163},
+  year         = {1996},
+  url          = {https://doi.org/10.1006/inco.1996.0056},
+  doi          = {10.1006/INCO.1996.0056},
+  timestamp    = {Fri, 12 Feb 2021 22:16:48 +0100},
+  biburl       = {https://dblp.org/rec/journals/iandc/Brookes96.bib},
+  bibsource    = {dblp computer science bibliography, https://dblp.org}
+}
+
+@inproceedings{jagadeesan-brookes-relaxed-12,
+  author       = {Radha Jagadeesan and
+                  Gustavo Petri and
+                  James Riely},
+  editor       = {Lars Birkedal},
+  title        = {Brookes Is Relaxed, Almost!},
+  booktitle    = {Foundations of Software Science and Computational Structures - 15th
+                  International Conference, {FOSSACS} 2012, Held as Part of the European
+                  Joint Conferences on Theory and Practice of Software, {ETAPS} 2012,
+                  Tallinn, Estonia, March 24 - April 1, 2012. Proceedings},
+  series       = {Lecture Notes in Computer Science},
+  volume       = {7213},
+  pages        = {180--194},
+  publisher    = {Springer},
+  year         = {2012},
+  url          = {https://doi.org/10.1007/978-3-642-28729-9\_12},
+  doi          = {10.1007/978-3-642-28729-9\_12},
+  timestamp    = {Tue, 14 May 2019 10:00:55 +0200},
+  biburl       = {https://dblp.org/rec/conf/fossacs/JagadeesanPR12.bib},
+  bibsource    = {dblp computer science bibliography, https://dblp.org}
+}
+
+@inproceedings{coinductive-resumption-levy-goncharov-19,
+  author       = {Paul Blain Levy and
+                  Sergey Goncharov},
+  editor       = {Markus Roggenbach and
+                  Ana Sokolova},
+  title        = {Coinductive Resumption Monads: Guarded Iterative and Guarded Elgot},
+  booktitle    = {8th Conference on Algebra and Coalgebra in Computer Science, {CALCO}
+                  2019, June 3-6, 2019, London, United Kingdom},
+  series       = {LIPIcs},
+  volume       = {139},
+  pages        = {13:1--13:17},
+  publisher    = {Schloss Dagstuhl - Leibniz-Zentrum f{\"{u}}r Informatik},
+  year         = {2019},
+  url          = {https://doi.org/10.4230/LIPIcs.CALCO.2019.13},
+  doi          = {10.4230/LIPICS.CALCO.2019.13},
+  timestamp    = {Wed, 21 Aug 2024 22:46:00 +0200},
+  biburl       = {https://dblp.org/rec/conf/calco/Levy019.bib},
+  bibsource    = {dblp computer science bibliography, https://dblp.org}
+}
+
+@inproceedings{mlir-effect-handlers-yu-23,
+author = {Yu, Pingshi},
+title = {Reasoning about MLIR Semantics through Effects and Handlers},
+year = {2023},
+isbn = {9798400702211},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3597926.3605239},
+doi = {10.1145/3597926.3605239},
+abstract = {MLIR is a novel framework for developing intermediate representations (IRs) of compilers. At its core, MLIR is a framework for the specification of syntax fragments (dialects) and optimisations, which can be combined \`{a}−la−carte to form customised IRs. Through this, MLIR allows IR abstractions to be shared across different domains. With rapid adoption of MLIR across industry, techniques for formalised semantics which matches the flexibility and extensibility offered by MLIR are urgently needed. We propose a framework for MLIR semantics based on effect handlers, which allows for dialect semantics to be specified in a modular and composable way, parallel to MLIR. We also describe several research directions continuing on from handlers-based MLIR semantics.},
+booktitle = {Proceedings of the 32nd ACM SIGSOFT International Symposium on Software Testing and Analysis},
+pages = {1552–1554},
+numpages = {3},
+keywords = {interpreters, algebraic effects, Semantics, MLIR},
+location = {Seattle, WA, USA},
+series = {ISSTA 2023}
+}
+
+@InProceedings{siddharth-24-peephole,
+  author =	{Bhat, Siddharth and Keizer, Alex and Hughes, Chris and Goens, Andr\'{e}s and Grosser, Tobias},
+  title =	{{Verifying Peephole Rewriting in SSA Compiler IRs}},
+  booktitle =	{15th International Conference on Interactive Theorem Proving (ITP 2024)},
+  pages =	{9:1--9:20},
+  series =	{Leibniz International Proceedings in Informatics (LIPIcs)},
+  ISBN =	{978-3-95977-337-9},
+  ISSN =	{1868-8969},
+  year =	{2024},
+  volume =	{309},
+  editor =	{Bertot, Yves and Kutsia, Temur and Norrish, Michael},
+  publisher =	{Schloss Dagstuhl -- Leibniz-Zentrum f{\"u}r Informatik},
+  address =	{Dagstuhl, Germany},
+  URL =		{https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ITP.2024.9},
+  URN =		{urn:nbn:de:0030-drops-207372},
+  doi =		{10.4230/LIPIcs.ITP.2024.9},
+  annote =	{Keywords: compilers, semantics, mechanization, MLIR, SSA, regions, peephole rewrites}
 }

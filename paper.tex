@@ -3734,18 +3734,9 @@ buffer is also empty, giving us the following definition:
 
 \section{Discussion and Related Work}
 
-\TODO{Release-acquire lore; event structure lore}
+\subsection{Linearity, Guardedness, and Friends}
 
-\TODO{Ye Olde Related Work List:}
 \begin{itemize}
-  \item \citet{liang-95-interpreters} to build interpreters supporting effects using monad stacks
-  \item Alternative pomset lore: 
-  \begin{itemize}
-    \item \citet{jagadeesan-pwp-20}
-    \item \citet{leaky-semicolon}
-  \end{itemize}
-  \item Release/acquire lore from \citet{release-acquire}
-  \item Event structures lore: ask Neel
   \item \citet{fuhrmann-direct-1999} for:
   \begin{itemize}
     \item Linearity (relevant -- copyability, affine -- discardability)
@@ -3755,8 +3746,88 @@ buffer is also empty, giving us the following definition:
     Elgot structure?
     \item See also: \citet{Thielecke1997CategoricalSO}
   \end{itemize}
-  \item Monadic models of syntax: \citet{ullrich-22-do-unchained}
-  \item Rewriting in the presence of weak memory: \citet{sevcik-drf-sc}
+  \item \citet{coinductive-resumption-levy-goncharov-19} introduce guarded Elgot categories +
+  monads, which allow us to reason about guarded iteration:
+  \begin{itemize}
+    \item Identity is the initial guarded Elgot monad, admits only acyclic CFGs, this is interesting
+    as these are equivalent to expressions
+    \item Can reason about e.g. productivity, terminating programs, etc. under the \isotopessa{}
+    framework this way
+    \item The coinductive resumption monad defined in this paper might be useful for reasoning about
+    potentially nonterminating processes in \isotopessa{} models, somehow...
+  \end{itemize}
+\end{itemize}
+
+\subsection{General Models}
+
+
+\begin{itemize}
+  \item \citet{liang-95-interpreters} to build interpreters supporting effects using monad stacks;
+  because Elgot monads become \isotopessa{} models and many monad transformers preserve Elgot
+  structure, this can let us build up many useful models.
+\end{itemize}
+
+
+\subsection{Compositional Relaxed Memory Concurrency}
+
+\begin{itemize}
+  \item \citet{batty-compositional-17} is a survey which describes why one would want to use
+  denotational semantics for relaxed memory concurrency, and some basic compositionality properties
+  \item \citet{jagadeesan-pwp-20} is an attempt to build a denotational model with pomsets, pomsets
+  with preconditions, but semicolon is \emph{not} associative, \citet{leaky-semicolon} works on this
+  to get pomsets with predicate transformers, and makes things associative, which is an important
+  feature for reasoning about composition since it lets us do category theory. However, it does not
+  yet support loops.
+  \item \citet{brookes-full-abstraction-96} uses traces to model SC; pretty sure you can get a monad
+  out of this
+  \item There is a \citet{brookes-full-abstraction-96}-style semantics for x86 TSO in
+  \citet{jagadeesan-brookes-relaxed-12}; does this give an alternative monad? How does it compare to
+  \citet{sparky}?
+  \item Release/acquire lore from \citet{release-acquire}: already a monad, but would need to show
+  it's Elgot to get an \isotopessa{} model
+  \item \citet{paviotti-modular-relaxed-dep-20} uses event structures to build a denotational
+  semantics for relaxed memory concurrency, compositionality is via the ``hole''
+  method.
+  \item Something about step indexing...
+\end{itemize}
+
+\subsection{Other SSA type systems}
+
+\begin{itemize}
+  \item \citet{typed-effect-ssa-rigon-torrens-vasconcellos-20} give a typed translation
+  from SSA into the lambda calculus, into a type-and-effect system.
+  \item \citet{ssa-types-matsuno-ohori-06} give a type theory for what appear to be
+  ordinary three-address code programs. However, every well-typed program can be
+  placed into SSA-form by inserting $\phi$-nodes in a fully type-directed way.
+  This lets them model SSA without any $\phi$-nodes, lets them use the standard
+  semantics for three-address code.
+  \item \citet{hua-explicit-ssa-2010} give another type system and direct operational
+  semantics for SSA, and proves type safety for it. 
+  \item Many operational semantics for SSA have arisen from compiler verification
+  efforts. \citet{barthe-compcert-ssa-2014} give an operational semantics as part
+  of the CompCertSSA project, and give a semantics-preserving translation from
+  three-address code into SSA. \citet{herklotz-gsa-2023} formalise "gated SSA" and
+  give semantics-preserving translations between it and ordinary SSA. Going beyond
+  CompCertSSA, \citet{vellum} have studied the semantics of the LLVM IR itself.  
+  \item 
+  There has been much less work on denotational semantics for SSA, or directly on
+  its equational theory. \citet{pop-ssa-inout-2009} give an unusual denotational
+  model of SSA in terms of the iteration structure of a program, which they use to
+  better understand the loop-closing $\phi$-nodes found both in the gated SSA
+  representation as well as practical compilers such as GCC.
+  \citet{garbuzov-structural-cfg-2018} exhibit a correspondence between an
+  operational semantics for SSA, and an operational semantics for
+  call-by-push-value~\cite{cbpv}. They use the normal-form bisimulations of
+  \citet{lassen-bisim} to derive an equational theory for use in justifying
+  optimisations. Their operational semantics is effect-free, which means that it
+  cannot justify optimisations such as eliminating redundant writes.
+\end{itemize}
+
+\subsection{MLIR lore}
+
+\begin{itemize}
+  \item \citet{siddharth-24-peephole} for verifying peephole optimisations in SSA, also formalized
+  in Lean 4, in the context of MLIR
 \end{itemize}
 
 \bibliographystyle{ACM-Reference-Format}
