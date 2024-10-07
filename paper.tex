@@ -2089,8 +2089,8 @@ on an arbitrary control-flow graph.
 \end{figure}
 
 It turns out that this generalization is essential, as it allows us to relate unary and $n$-ary
-control-flow graphs and, in particular, prove a form of the B\"ohm-Jacopini theorem
-\cite{bohm-jacopini} for our language, which we will discuss in Section~\ref{ssec:bohm-jacopini}.
+control-flow graphs and, in particular, interchange data-flow and control-flow, which we will
+discuss further in Section~\ref{ssec:data-control}.
 
 \subsection{Metatheory}
 
@@ -2186,11 +2186,63 @@ in Section~\ref{ssec:completeness}.
   \label{fig:ssa-subst-equiv}
 \end{figure}
 
-\subsection{B\"ohm-Jacopini for SSA}
+\subsection{Basic Data-flow and Control-flow Transformations}
 
-\label{ssec:bohm-jacopini}
+\label{ssec:data-control}
 
-\TODO{Reflow to B\"ohm-Jacopini + elimination of $\phi$-nodes}
+Now that we have given our equational theory, we want to show it is ``good enough'' to reason about
+the properties inherent to all SSA-based languages (versus properties specific to the actual
+SSA-based language targeted, such as that $1 + 0$ can be optimized to $1$). While we state and prove
+a rigorous formulation of this statement in Section~\ref{ssec:completeness}, we would also like to
+describe some practical examples, which will turn out to be helpful in setting up the machinery for
+our proof later. Particularly, we want to make sure that we can effectively reason about simple
+transformations such as the elimination and introduction of $\phi$-nodes (i.e. basic block
+arguments) and state machine optimizations.
+
+\subsubsection{$\phi$-node elimination}
+
+\TODO{dataflow conversion, full packing...}
+
+\begin{equation}
+  [\cdot] = \mb{1} \qquad [\Gamma, \thyp{x}{A}{\epsilon}] = [\Gamma] \otimes A
+\end{equation}
+
+\TODO{segue to conversions}
+
+\TODO{define projections}
+
+\begin{equation}
+  \ms{pack}_y^\otimes(\cdot) = \cdot \qquad
+  \ms{pack}_y^\otimes(\Gamma, \thyp{x}{A}{\epsilon}) 
+  = [y \mapsto \pi_l\;y]\ms{pack}_y^\otimes(\Gamma), x \mapsto \pi_r\;y 
+\end{equation}
+\begin{equation}
+  \ms{unpack}_y^\otimes(\Gamma) = y \mapsto \ms{packed}(\Gamma)
+\end{equation}
+
+\TODO{packed lore...}
+
+\begin{equation}
+  \ms{packed}(\cdot) = \cdot \qquad
+  \ms{packed}(\Gamma, \thyp{x}{A}{\epsilon}) = (\ms{packed}(\Gamma), x)
+\end{equation}
+
+\TODO{segue...}
+
+\begin{equation}
+  \hasty{\Gamma}{\epsilon}{a}{A} \implies 
+  \hasty{\invar : [\Gamma]}{\epsilon}
+    {[a] := [\ms{unpack}_{\outlb}^\otimes(\Gamma)]a}{A}
+\end{equation}
+
+\begin{equation}
+  \haslb{\Gamma}{r}{\ms{L}} \implies 
+  \haslb{\invar : [\Gamma]}{[r]^\otimes := [\ms{unpack}_{\outlb}^\otimes(\Gamma)]r}{\ms{L}}
+\end{equation}
+
+\TODO{use for $\phi$-node elimination...}
+
+\subsubsection{B\"ohm-Jacopini for SSA}
 
 We now come to one of the major results of this paper: that the above rules on \isotopessa{} are
 enough to prove a form of the B\"ohm-Jacopini theorem, which states that all programs can be
@@ -2247,48 +2299,11 @@ follows:
 
 \TODO{rest...}
 
-\TODO{dataflow conversion, full packing...}
+\TODO{interpretation as state machine optimization}
 
-\begin{equation}
-  [\cdot] = \mb{1} \qquad [\Gamma, \thyp{x}{A}{\epsilon}] = [\Gamma] \otimes A
-\end{equation}
+\TODO{float B\"ohm-Jacopini stuff down}
 
-\TODO{segue to conversions}
-
-\TODO{define projections}
-
-\begin{equation}
-  \ms{pack}_y^\otimes(\cdot) = \cdot \qquad
-  \ms{pack}_y^\otimes(\Gamma, \thyp{x}{A}{\epsilon}) 
-  = [y \mapsto \pi_l\;y]\ms{pack}_y^\otimes(\Gamma), x \mapsto \pi_r\;y 
-\end{equation}
-\begin{equation}
-  \ms{unpack}_y^\otimes(\Gamma) = y \mapsto \ms{packed}(\Gamma)
-\end{equation}
-
-\TODO{packed lore...}
-
-\begin{equation}
-  \ms{packed}(\cdot) = \cdot \qquad
-  \ms{packed}(\Gamma, \thyp{x}{A}{\epsilon}) = (\ms{packed}(\Gamma), x)
-\end{equation}
-
-\TODO{segue...}
-
-\begin{equation}
-  \hasty{\Gamma}{\epsilon}{a}{A} \implies 
-  \hasty{\invar : [\Gamma]}{\epsilon}
-    {[a] := [\ms{unpack}_{\outlb}^\otimes(\Gamma)]a}{A}
-\end{equation}
-
-\begin{equation}
-  \haslb{\Gamma}{r}{\ms{L}} \implies 
-  \haslb{\invar : [\Gamma]}{[r]^\otimes := [\ms{unpack}_{\outlb}^\otimes(\Gamma)]r}{\ms{L}}
-\end{equation}
-
-\TODO{use for $\phi$-node elimination...}
-
-\TODO{segue}...
+\TODO{segue, or drag this definition down to Section~\ref{ssec:completeness}}
 
 \begin{equation}
   \haslb{\Gamma}{r}{\ms{L}} \implies 
@@ -3167,7 +3182,7 @@ Our strategy for doing this is as follows:
         {\dnt{\haslb{\Delta}{r}{\ms{K}}}_{\ms{Th}(\Gamma, \ms{L})}}{\ms{L}, \outlb([\ms{K}])}
     \end{gathered}
   \end{equation}
-  where packing of contexts is defined as in Section~\ref{ssec:bohm-jacopini}.
+  where packing of contexts is defined as in Section~\ref{ssec:data-control}.
   
   \item Finally, we refine this result to show that
   \begin{equation}
@@ -3183,7 +3198,7 @@ Our strategy for doing this is as follows:
     \end{gathered}
   \end{equation}
   where $\ms{ret}\;a := \brb{\outlb}{a}$. Since the packing operator $[\cdot]$ on terms and regions
-  from Section~\ref{ssec:bohm-jacopini} is injective for pure contexts $\ms{eff}(\Gamma) = \bot$,
+  from Section~\ref{ssec:data-control} is injective for pure contexts $\ms{eff}(\Gamma) = \bot$,
   and hence in particular for $\Gamma = \cdot$, $\ms{L} = \cdot$, it follows that in this case the
   category of expressions and the category of regions are the initial distributive \isotopessa{}
   expression model and \isotopessa{} model respectively.
