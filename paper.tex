@@ -55,9 +55,9 @@
 \newcounter{todos}
 \newcommand{\TODO}[1]{{
   \stepcounter{todos}
-  \begin{center}\large{\textcolor{red}{\textbf{TODO \arabic{todos}:} #1}}\end{center}
+  \begin{center}\large{\textcolor{red}{\emph{TODO \arabic{todos}:} #1}}\end{center}
 }}
-\newcommand{\sorry}{\textcolor{red}{\textbf{sorry}}}
+\newcommand{\sorry}{\textcolor{red}{\emph{sorry}}}
 
 \newcommand{\todo}[1]{\stepcounter{todos} \textcolor{red}{TODO \arabic{todos}: #1}}
 
@@ -3486,17 +3486,8 @@ of monads on \ms{Set}, which we define as follows:
   \in A \to \ms{S}\;(A + B)$, $f^\dagger \in A \to \ms{S}\;B$ (i.e. the fixpoint
   operation sends the Kleisli category of $\ms{S}$ to itself).
 \end{definition}
-
-\TODO{does there exist an Elgot monad which is not strong Elgot?}
-
-As a concrete example, interpreting $\ms{some}\;A = \{a\}$ and $\ms{none} =
-\varnothing$, we can view $\ms{Option}$ as an Elgot submonad of $\mc{P}$.
-Similarly, 
-\TODO{monad transformer lore, needs formalization...}
-
-\TODO{frame as subcategory}
-
-\TODO{more general semicategory lore?}
+One useful property this definition has is that the intersection of arbitrarily many (Elgot)
+submonads forms an (Elgot) submonad, i.e., the (Elgot) submonads form a complete lattice.
 
 \subsection{Trace Models}
 
@@ -3546,25 +3537,32 @@ Other important examples include:
   $
   with monad operations
   $$
-  \eta = (\lambda a. \iota_l (a, 0)) ; \eta_{\ms{T}} \qquad
-  \ms{bind}\;a\;f = \sorry
-  %\ms{bind}_{\ms{T}}\;a\;[\lambda (a, m). m \cdot f a, \lambda i. \eta_{\ms{T}}(\iota_r\;i)]
+    \eta = (\lambda a. \iota_l (a, 0)) ; \eta_{\ms{T}} \qquad
+    \ms{bind}\;a\;f 
+    = \ms{bind}_{\ms{T}}\;a\;[\lambda (a, m). m \cdot f a, \lambda i. \eta_{\ms{T}}(\iota_r\;i)]
   $$
-  \
+  This yields a family of useful Elgot monads, including
   \begin{itemize}
-    \item \todo{\ms{TraceT}}
-    \item \todo{\ms{Traces?}}
-    \item \todo{\ms{Traces}}
-    \item \todo{\ms{Trace}}
+    \item $\ms{Traces}?\;M\;I = \ms{TraceT}\;M\;I\;\mc{P}$, with Elgot operation
+    \TODO{elgot operation}
+    \TODO{subsingleton traces, deterministic functions}
+    \TODO{nonempty traces, total functions}
+    \item $\ms{Traces}\;M\;I = \ms{TraceT}\;M\;I\;\mc{P}^+$, which can be viewed as an Elgot submonad
+    of $\ms{Traces}?\;M\;I$ since the fixpoint of a total function is total
+    \item $\ms{Trace}?\;M\;I = \ms{TraceT}\;M\;I\;\ms{Option}$, which can be viewed as an Elgot 
+    submonad of $\ms{Traces}?\;M\;I$ since the fixpoint of a deterministic function is deterministic
+    \item $\ms{Trace}\;M\;I = \ms{TraceT}\;M\;I\;\ms{Id}$, which can be viewed as an Elgot submonad
+    of $\ms{Traces}?\;M\;I$, and in particular the intersection of $\ms{Trace}?$ and $\ms{Traces}$.
   \end{itemize}
 \end{definition}
+
 As a simple, concrete example of type type of model this construction lets us define, consider the
-\textbf{nondeterministic printing monad}, which is simply defined as \(\ms{Print}\;A \equiv
+\emph{nondeterministic printing monad}, which is simply defined as \(\ms{Print}\;A \equiv
 \ms{Traces}\;\Sigma\), where \(\Sigma: (\ms{byte}^*)^\omega \to \ms{byte}^{\leq \omega}\) denotes
-concatenation of bytestrings into a potentially infinite bytestream. This gives us us an \isotopessa{}
-model supporting effectful instructions \(\ms{print}: \ms{byte}^* \to \mb{1}\) and \(\ms{nondet}:
-\mb{1} \to A\) (for \(A\) nonempty), with semantics \(\dnt{\ms{print}} = \lambda b.\{\iota_0 ((),
-b)\}\), \(\dnt{\ms{nondet}} = \lambda (). \{\iota_0 (a, []) \mid a \in A\}\).
+concatenation of bytestrings into a (potentially infinite) bytestream. This gives us us an
+\isotopessa{} model supporting effectful instructions \(\ms{print}: \ms{byte}^* \to \mb{1}\) and
+\(\ms{nondet}: \mb{1} \to A\) (for \(A\) nonempty), with semantics \(\dnt{\ms{print}} = \lambda
+b.\{\iota_0 ((), b)\}\), \(\dnt{\ms{nondet}} = \lambda (). \{\iota_0 (a, []) \mid a \in A\}\).
 
 We can make things a little more interesting by adding a heap to the mix, defining our monad
 \(\ms{Comp} = \ms{StateT}\;\ms{Heap}\;\ms{Print}\), where \(\ms{Heap} = \nats \rightharpoonup
@@ -3594,13 +3592,13 @@ simplicity, we will consider an infinite set of named locations \(x, y, z \in \m
 subject to concurrent modification by all threads via TSO reads, writes, and fences. We begin with
 the following definitions:
 \begin{definition}[Pomset] 
-  A \textbf{pomset} \(\alpha\) over a set of actions \(\mc{A}\) with a distinguished null action
-  "\textbf{tick}" \(\delta \in \mc{A}\) is a \textit{nonempty} partially-ordered \textbf{carrier
-  set} \(P\) such that every \(p \in P\) has finitely many predecessors equipped with a mapping
-  \(\alpha: P \to \mc{A}\) quotiented over the removal of \(\delta\) such that cardinality is
-  preserved. A pomset is \textbf{finite} if its carrier set is. We will write unordered pomsets
-  using multiset notation, e.g. \(\{a, a, b\}\), and linearly ordered pomsets using list notation,
-  e.g. \([a, a, b]\).
+  A \emph{pomset} \(\alpha\) over a set of actions \(\mc{A}\) with a distinguished null action
+  "\emph{tick}" \(\delta \in \mc{A}\) is a \textit{nonempty} partially-ordered \emph{carrier set}
+  \(P\) such that every \(p \in P\) has finitely many predecessors equipped with a mapping \(\alpha:
+  P \to \mc{A}\). A pomset is \emph{finite} if its carrier set is. We will quotient pomsets over the
+  removal of arbitrarily many copies of $\delta$ as long as infinite sets are only equated to other
+  infinite pomsets. We will write unordered pomsets using multiset notation, e.g. \(\{a, a, b\}\),
+  and linearly ordered pomsets using list notation, e.g. \([a, a, b]\).
 \end{definition}
 (Finite) pomsets form a monoid under sequential composition \(\alpha;\beta\), which is defined by
 the function \([\alpha, \beta]: \ms{trim}(P + Q) \to \mc{A}\), where \(P + Q\) is given the
@@ -3616,10 +3614,10 @@ lexicographic order. In particular, choosing \(N = \nats\) makes \(\Sigma:
 \ms{Pom}_{\ms{fin}}^\omega \to \ms{Pom}\) into a stream action monoid w.r.t the sequential
 composition monoid on finite pomsets. 
 
-We define a \textbf{program order pomset} to be a pomset with \(\mc{A}_{\ms{PO}} = \mc{A}_w \cup
+We define a \emph{program order pomset} to be a pomset with \(\mc{A}_{\ms{PO}} = \mc{A}_w \cup
 \mc{A}_r \cup \{\delta\}\), where \(\mc{A}_r\) consists of \textit{reads} of the form \(x = v\) and
 \(\mc{A}_w\) consists of \textit{writes} of the form \(x := v\) for locations \(x\) and values \(v
-\in \ms{Word}\). We define the \textbf{program order monad} \(\ms{PO}\;A = \ms{Traces}\;\Sigma\;A\),
+\in \ms{Word}\). We define the \emph{program order monad} \(\ms{PO}\;A = \ms{Traces}\;\Sigma\;A\),
 where \(\Sigma\) is taken as a stream action on finite program order pomsets. This yields an
 \isotopessa{} model with support for concurrent read and write operations \(\ms{read}_x:
 \mc{I}^\varnothing_0(\mb{1}, \ms{Word})\), \(\ms{write}_x: \mc{I}^\varnothing_0(\ms{Word}, \mb{1})\)
@@ -3669,7 +3667,7 @@ may choose to \textit{flush} some of the buffered writes. We introduce the set \
 \{(\bufloc{x} := v)\}\) of \textit{buffer write actions}, where an action \(\bufloc{x} := v\) by a
 thread denotes adding a write \(x := v\) to the thread's write buffer. We may then define the set of
 TSO actions \(\mc{A}_{\ms{TSO}} = \mc{A}_{\ms{PO}} \cup \mc{A}_b\); a pomset over this set is called
-a \textbf{TSO pomset}. A buffer will be defined to be a list of write actions \(\ms{Buf} =
+a \emph{TSO pomset}. A buffer will be defined to be a list of write actions \(\ms{Buf} =
 \mc{A}_b^*\), which we will interpret as linear pomsets over \(\mc{A}_{\ms{TSO}}\) ordered by index
 (with the empty list corresponding to \(\{\delta\}\)). In particular, we define the monad \(\ms{TSO}
 = \ms{StateT}\;\ms{Buf}\;(\ms{Trace}\;\Sigma)\), where \(\Sigma\) is taken as a the stream action of
