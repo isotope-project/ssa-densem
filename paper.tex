@@ -3530,10 +3530,10 @@ Other important examples include:
 \end{itemize}
 
 \begin{definition}[Trace Monad Transformer]
-  Given a monoidal stream action $(M, I, \cdot)$, we can define the \emph{trace
+  Given a monoidal stream action $(M, I, \cdot, \Sigma)$, we can define the \emph{trace
   monad transformer} over $\ms{Set}$ as follows:
   $
-  \ms{TraceT}\;M\;I\;\ms{T}\;A = \ms{T}\;(A \times M + I)
+  \ms{TraceT}\;\Sigma\;\ms{T}\;A = \ms{T}\;(A \times M + I)
   $
   with monad operations
   $$
@@ -3543,16 +3543,27 @@ Other important examples include:
   $$
   This yields a family of useful Elgot monads, including
   \begin{itemize}
-    \item $\ms{Traces}?\;M\;I = \ms{TraceT}\;M\;I\;\mc{P}$, with Elgot operation
-    \TODO{elgot operation}
-    \TODO{subsingleton traces, deterministic functions}
-    \TODO{nonempty traces, total functions}
-    \item $\ms{Traces}\;M\;I = \ms{TraceT}\;M\;I\;\mc{P}^+$, which can be viewed as an Elgot submonad
-    of $\ms{Traces}?\;M\;I$ since the fixpoint of a total function is total
-    \item $\ms{Trace}?\;M\;I = \ms{TraceT}\;M\;I\;\ms{Option}$, which can be viewed as an Elgot 
-    submonad of $\ms{Traces}?\;M\;I$ since the fixpoint of a deterministic function is deterministic
-    \item $\ms{Trace}\;M\;I = \ms{TraceT}\;M\;I\;\ms{Id}$, which can be viewed as an Elgot submonad
-    of $\ms{Traces}?\;M\;I$, and in particular the intersection of $\ms{Trace}?$ and $\ms{Traces}$.
+    \item $\ms{Traces}?\;\Sigma = \ms{TraceT}\;\Sigma\;\mc{P}$, with the fixpoint of 
+    $f : A \to B + A$ given by
+    \begin{align}
+      f^\dagger\;a &= f^\dagger_\infty\;a \cup \bigcup_n f^\dagger_n\;a 
+        \qquad \qquad \text{where} \\
+      f^\dagger_n\;a &=
+          \{\iota_l\;(b, m) \mid \iota_l(\iota_l\;b, m) \in [\ms{id}_B, f]^n(\iota_r\;a)\}
+          \cup \{\iota_r\;i \mid \iota_r\;i \in [\ms{id}_B, f]^n(\iota_r\;a)\} \\
+      f^\infty\;a &= \{\iota_r \Sigma \sigma \mid \exists \alpha : A^\omega, 
+        \alpha_0 = a \land \forall i, \iota_l\;(\iota_r\;\alpha_{i + 1}, \sigma_i) \in f\;\alpha_i \} 
+    \end{align}
+    We say a morphism $f : A \to \ms{Traces}?\;\Sigma\;B$ is \emph{total} if all $f\;a$ are
+    nonempty, and \emph{deterministic} if all $f\;a$ are subsingletons.
+    \item $\ms{Traces}\;\Sigma = \ms{TraceT}\;\Sigma\;\mc{P}^+$, which can be viewed as an Elgot
+    submonad of $\ms{Traces}?\;\Sigma$ since the fixpoint of a total function is total
+    \item $\ms{Trace}?\;\Sigma = \ms{TraceT}\;\Sigma\;\ms{Option}$, which can be viewed as an Elgot
+    submonad of $\ms{Traces}?\;\Sigma$ since the fixpoint of a deterministic function is
+    deterministic
+    \item $\ms{Trace}\;\Sigma = \ms{TraceT}\;\Sigma\;\ms{Id}$, which can be viewed as an Elgot
+    submonad of $\ms{Traces}?\;\Sigma$, and in particular the intersection 
+    $\ms{Trace}?\;\Sigma \cap \ms{Traces}\;\Sigma$.
   \end{itemize}
 \end{definition}
 
