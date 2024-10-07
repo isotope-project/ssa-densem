@@ -3794,20 +3794,93 @@ In this category, $\ms{pflush}_A$ is the identity on $A$, since
 \end{equation}
 This is especially useful since it frees us from needing to remember to sprinkle $\ms{pflush}$
 everywhere when specifying things (and, of course, when that level of control is desired, we can
-specify in $\ms{Set}_{\ms{TSO}}$, and map using the natural identity-on-objects functor $f \mapsto
-\ms{pflush};f;\ms{pflush}$)!
+specify in $\ms{Set}_{\ms{TSO}}$ and then lift to $\ms{PTSO}$).
 
 It turns out that this is a general construction we can do, which gives us another useful way to
 build up \isotopessa{} models that can often be quite difficult to express as simply monads.
 In particular, we have the following definition
 \begin{definition}[Idempotent envelope category]
-  \todo{this, and name...}
-  \todo{coproduct preservation case}
-  \todo{Elgot preservation lore (should always be true if coproducts are preserved, I think)}
-  \todo{premonoidal preservation case, Freyd preservation case}
+  Let $\mc{C}$ be a category and $d$ be a family of morphisms for each $A \in |\mc{C}|$ such that
+  each $d_A : \mc{C}(A, A)$ is idempotent, i.e., $d_A ; d_A = d_A$. We may then define the
+  subsemicategory $\ms{Ide}(\mc{C}, d)$ of $\mc{C}$ to be given by
+  \begin{equation}
+    \ms{Ide}(\mc{C}, d)(A, B) 
+      = \{f \in \mc{C}(A, B) \mid f = d_A ; f ; d_B\}
+      = \{d_A ; f ; d_B \mid f \in \mc{C}(A, B)\}
+  \end{equation}
+  Note that $\ms{Ide}(\mc{C}, d)$ is \emph{not} a subcategory unless $d_A = \ms{id}_A$ for all $A$,
+  in which case $\ms{Ide}(\mc{C}, d) = \mc{C}$. However, $\ms{Ide}(\mc{C}, d)$ can be
+  \emph{independently} viewed as a category with identity $d_A$ at $A$.
 \end{definition}
-This gives us our final categorical model for TSO weak memory, $\ms{PTSO} =
-\ms{Ide}(\ms{Set}_{\ms{TSO}}, \ms{pflush})$.
+We have that, if $\mc{C}$ has coproducts and $d_{A + B} = d_A + d_B$, then $\ms{Ide}(\mc{C}, d)$
+inherits coproducts from $\mc{C}$ with injections 
+\begin{equation}
+  \begin{aligned}
+    d_A;\iota_l &= \iota_l;d_{A + B} &= d_A;\iota_l;d_{A + B} &\in \ms{Ide}(\mc{C}, d)(A, A + B) 
+    \\
+    d_B;\iota_r &= \iota_r;d_{A + B} &= d_B;\iota_r;d_{A + B} &\in \ms{Ide}(\mc{C}, d)(B, A + B)
+  \end{aligned}
+\end{equation}
+since, for $f \in \ms{Ide}(\mc{C}, d)(A, C)$, $g \in \ms{Ide}(\mc{C}, d)(A, C)$, we have that
+\begin{equation}
+  d_{A + B} ; [f, g] ; d_C 
+  = d_A + B ; [f, g] ; d_C
+  = [d_A ; f ; d_C, d_B ; g ; d_C]
+  = [f, g]
+\end{equation}
+In particular, it follows that $\ms{Ide}_d$ preserves coproducts. If $\mc{C}$ in addition has an
+Elgot structure, then $\ms{Ide}(\mc{C}, d)$ also inherits this structure (and therefore $\ms{Ide}_d$
+preserves it), as for $f \in \ms{Ide}(\mc{C}, d)(A, B + A)$, we have
+\begin{equation}
+  f^\dagger 
+  = (d_A ; f ; d_B + d_A)^\dagger 
+  = (d_A ; f ; d_B + d_A)^\dagger ; d_B
+  = d_A ; (f ; d_B + (d_A ; d_A))^\dagger ; d_B
+  = d_A ; f^\dagger ; d_B
+\end{equation}
+On the other hand, if $\mc{C}$ is equipped with a (symmetric) premonoidal structure and we have that
+\begin{equation}
+  d_{A \otimes B} = d_A \ltimes d_B = d_A \rtimes d_B 
+  \qquad d_{A \otimes I} = d_A \otimes I 
+  \qquad d_{I \otimes A} = I \otimes d_A
+  \label{eqn:d-premonoidal}
+\end{equation}
+(note that $d$ does \emph{not} have to be central!), it follows that $\ms{Ide}(\mc{C},
+d)$ has (symmetric) premonoidal structure as well, with inherited tensor product functors and
+associators, unitors, and symmetries given by
+\begin{equation}
+  \begin{gathered}
+    d_{(A \otimes B) \otimes C} ; \alpha_{A, B, C}
+    = \alpha_{A, B, C} ; d_{A \otimes (B \otimes C)}
+    = d_{(A \otimes B) \otimes C} ; \alpha_{A, B, C} ; d_{A \otimes (B \otimes C)} \\
+    d_{A \otimes I} ; \lambda_A = \lambda_A ; d_A = d_{A \otimes I} ; \lambda_A ; d_A \qquad
+    d_{I \otimes A} ; \rho_A = \rho_A ; d_A = d_{I \otimes A} ; \rho_A ; d_A \\
+    d_{A \otimes B} ; \sigma_{A, B} 
+      = \sigma_{A, B} ; d_{B \otimes A} 
+      = d_{A \otimes B} ; \sigma_{A, B} ; d_{B \otimes A}
+  \end{gathered}
+\end{equation} 
+respectively. It follows that if $\mc{C}$ is distributive, so is $\ms{Ide}(\mc{C}, d)$, since we can
+verify that the distributor $[d_A \otimes (d_B ; \iota_l), d_A \otimes (d_C ; \iota_r)]$ has the
+expected inverse
+\begin{equation}
+  d_{A \otimes (B + C)} ; \delta^{-1} ; d_{(A \otimes B) + (A \otimes C)}
+\end{equation}
+If we in fact have that $d_{A \otimes B} = A \otimes d_B = d_A \otimes B$ for all $A,
+B$ (which implies Equation~\ref{eqn:d-premonoidal}) and $\mc{C}$ is equipped with the structure
+of a Freyd category, then so is $\ms{Ide}(\mc{C}, d)$, with projections and diagonal given by
+\begin{equation}
+  \begin{gathered}
+  d_{A \otimes B} ; \pi_l = \pi_l ; d_A = d_{A \otimes B} ; \pi_l ; d_A \qquad
+  d_{A \otimes B} ; \pi_r = \pi_r ; d_B = d_{A \otimes B} ; \pi_r ; d_B \\
+  d_A ; \Delta = \Delta ; d_{A \otimes A} = d_A ; \Delta ; d_{A \otimes A}
+  \end{gathered}
+\end{equation}
+Note the latter equation holds since \TODO{check this...} Hence, it follows that if $\mc{C}$ is an
+\isotopessa{} (expression) model, $d_A$ is idempotent, $d_{A + B} = d_A + d_B$, and $d_{A \otimes B}
+= A \otimes d_B = d_A \otimes B$, then $\ms{Ide}(\mc{C}, d)$ is an \isotopessa{} (expression) model
+as well. It turns out that all these properties hold for $d = \ms{pflush}$, giving us our final
+categorical model for TSO weak memory, $\ms{PTSO} = \ms{Ide}(\ms{Set}_{\ms{TSO}}, \ms{pflush})$.
 
 \section{Discussion and Related Work}
 
