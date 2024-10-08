@@ -3433,7 +3433,23 @@ proof, in the hope that this will also illuminate the equational theory somewhat
     \item \brle{cfg-$\eta$}: \todo{this}
     \item \brle{codiag}: \todo{this}
     \item \brle{uni}: \todo{this}
-    \item \brle{dinat}: \todo{this}
+    \item \brle{dinat}: by label substitution, we have that
+    \begin{multline}
+      \dnt{\haslb{\Gamma}{[\sigma^\uparrow]r}{\ms{L}, (\lhyp{\kappa_j}{A_j},)_j}} 
+      \\= \Delta ; 
+      \dnt{\Gamma} \otimes \dnt{\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}} 
+        ; \delta^{-1} ; \alpha^+ ; \pi_r + \dnt{\lbsubst{\Gamma}{\sigma}
+        {(\lhyp{\ell_i}{A_i},)_i}
+        {\lhyp{\kappa_j}{A_j},)_j}}
+    \end{multline}
+    \todo{this...}
+    % \begin{multline}
+    %   \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{[\sigma^\uparrow]t_i}{\ms{L}, (\lhyp{\kappa_j}{A_j},)_j}} \\=
+    %   \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}} ; \alpha^+ ;
+    %   \dnt{\ms{L}} + \dnt{\lbsubst{\Gamma}{\sigma}
+    %     {(\lhyp{\ell_i}{A_i},)_i}
+    %     {\lhyp{\kappa_j}{A_j},)_j}}
+    % \end{multline}
   \end{itemize}
   Analogously to for expressions, all the other rules can be derived trivially from string
   diagrammatic reasoning: once all the definitions are unfolded, both sides of rule are obviously
