@@ -2204,25 +2204,28 @@ in Section~\ref{ssec:completeness}.
 
 Now that we have given our equational theory, we want to show it is ``good enough'' to reason about
 the properties inherent to all SSA-based languages (versus properties specific to the actual
-SSA-based language targeted, such as that $1 + 0$ can be optimized to $1$). While we state and prove
-a rigorous formulation of this statement in Section~\ref{ssec:completeness}, we would also like to
-describe some practical examples, which will turn out to be helpful in setting up the machinery for
-our proof later. Particularly, we want to make sure that we can effectively reason about simple
-transformations such as the elimination and introduction of $\phi$-nodes (i.e. basic block
-arguments) and state machine optimizations.
+SSA-based language targeted, such as that $x \cdot 0$ can be optimized to $0$). While we state and
+prove a rigorous formulation of this statement in Section~\ref{ssec:completeness}, we would also
+like to describe some practical examples, which will turn out to be helpful in setting up the
+machinery for our proof later. Particularly, we want to make sure that we can effectively reason
+about simple transformations such as the elimination and introduction of $\phi$-nodes (i.e. basic
+block arguments) and state machine optimizations.
 
 \subsubsection{$\phi$-node elimination}
 
-\TODO{dataflow conversion, full packing...}
-
+Rather than describe the elimination of $\phi$-nodes, it turns out to be easier to work backwards
+and describe their \emph{introduction}, making every variable passed into a basic block into an
+explicit argument. This section will describe the machinery needed to do that, which, combined with
+uniformity to reshuffle variables, is enough to justify the elimination of $\phi$-nodes. We begin by
+defining \emph{packing} of variable contexts as follows
 \begin{equation}
   [\cdot] = \mb{1} \qquad [\Gamma, \thyp{x}{A}{\epsilon}] = [\Gamma] \otimes A
 \end{equation}
-
-\TODO{segue to conversions}
-
-\TODO{define projections}
-
+We now wish to describe substitutions
+$\issubst{\ms{pack}_y^\otimes(\Gamma)}{\Gamma}{\bhyp{y}{[\Gamma]}}$
+and
+$\issubst{\ms{unpack}_y^\otimes(\Gamma)}{\bhyp{y}{[\Gamma]}}{\Gamma}$
+to convert terms to and from a ``packed'' form, which we can do as follows:
 \begin{equation}
   \ms{pack}_y^\otimes(\cdot) = \cdot \qquad
   \ms{pack}_y^\otimes(\Gamma, \thyp{x}{A}{\epsilon}) 
@@ -2231,28 +2234,56 @@ arguments) and state machine optimizations.
 \begin{equation}
   \ms{unpack}_y^\otimes(\Gamma) = y \mapsto \ms{packed}(\Gamma)
 \end{equation}
-
-\TODO{packed lore...}
-
+where
+\begin{equation}
+  \prftree[r]{\rle{$\pi_l$}}
+    {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
+    {\hasty{\Gamma}{\epsilon}{\pi_l\;e := (\letexpr{(x, y)}{e}{x})}{A}}
+  \qquad
+  \prftree[r]{\rle{$\pi_r$}}
+    {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
+    {\hasty{\Gamma}{\epsilon}{\pi_r\;e := (\letexpr{(x, y)}{e}{y})}{A}}
+\end{equation}
+and
 \begin{equation}
   \ms{packed}(\cdot) = \cdot \qquad
   \ms{packed}(\Gamma, \thyp{x}{A}{\epsilon}) = (\ms{packed}(\Gamma), x)
 \end{equation}
-
-\TODO{segue...}
-
+Given a distinguished variable $\invar$, we may then define a ``packing'' operation on expressions
+and regions as follows:
 \begin{equation}
   \hasty{\Gamma}{\epsilon}{a}{A} \implies 
   \hasty{\invar : [\Gamma]}{\epsilon}
-    {[a] := [\ms{unpack}_{\outlb}^\otimes(\Gamma)]a}{A}
+    {[a] := [\ms{unpack}_{\invar}^\otimes(\Gamma)]a}{A}
 \end{equation}
-
 \begin{equation}
   \haslb{\Gamma}{r}{\ms{L}} \implies 
-  \haslb{\invar : [\Gamma]}{[r]^\otimes := [\ms{unpack}_{\outlb}^\otimes(\Gamma)]r}{\ms{L}}
+  \haslb{\invar : [\Gamma]}{[r]^\otimes := [\ms{unpack}_{\invar}^\otimes(\Gamma)]r}{\ms{L}}
 \end{equation}
+We may define the \emph{effect} of a context using the lattice structure on effects as follows
+\begin{equation}
+  \ms{eff}(\cdot) = \bot \qquad 
+  \ms{eff}(\Gamma, \thyp{x}{A}{\epsilon}) = \ms{eff}(\Gamma) \sqcup \epsilon
+\end{equation}
+We'll say a context $\Gamma$ is \emph{pure} if $\ms{eff}(\Gamma) = \bot$. It turns out that our
+equational theory is sufficient to show that the pack and unpack substitutions are inverses of each
+other \emph{for pure contexts}, i.e.
+\begin{equation}
+  \begin{aligned}
+  \issubst
+    {[\ms{unpack}_y^\otimes(\Gamma)]\ms{pack}_y^\otimes(\Gamma) 
+      &\teqv \ms{id}_{\Gamma}}{\Gamma}{\Gamma}
+  \\
+  \issubst
+    {[\ms{pack}_y^\otimes(\Gamma)]\ms{unpack}_y^\otimes(\Gamma) &\teqv \ms{id}_{\bhyp{y}{[\Gamma]}}}
+    {\bhyp{y}{\Gamma}}{\bhyp{y}{\Gamma}}
+  \end{aligned}
+\end{equation}
+In particular, this means that for $\Gamma$ pure, the packing operation $[\cdot]$ is an injection on
+expressions and regions w.r.t. the equational theory. It remains now to show that this packing
+operation can be used to perform $\phi$-node introduction.
 
-\TODO{use for $\phi$-node elimination...}
+\TODO{cfg lore...}
 
 \subsubsection{B\"ohm-Jacopini for SSA}
 
