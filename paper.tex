@@ -98,6 +98,7 @@
 \newcommand{\rle}[1]{{\scriptsize\textsf{#1}}}
 \newcommand{\hasty}[4]{#1 \vdash_{#2} #3: {#4}}
 \newcommand{\haslb}[3]{#1 \vdash #2 \rhd #3}
+\newcommand{\shaslb}[3]{#1 \vdash_{\ms{s}} #2 \rhd #3}
 \newcommand{\isop}[4]{#1 \in \mc{I}_{#4}(#2, #3)}
 \newcommand{\issubst}[3]{#1: #2 \mapsto #3}
 \newcommand{\lbsubst}[4]{#1 \vdash #2: #3 \rightsquigarrow #4}
@@ -881,27 +882,23 @@ must be passed on a jump to the label $\ell$.
   \label{fig:ssa-grammar}
 \end{figure}
 
-As shown in Figure~\ref{fig:ssa-grammar}, \isotopessa{} terms are divided into two
-syntactic categories, each of with associated with a judgement:
+As shown in Figure~\ref{fig:ssa-grammar}, \isotopessa{} terms are divided into two syntactic
+categories, each of with associated with a judgement:
 \begin{itemize}
-  \item \emph{Expressions} $a, b, c, e$ typed with the judgement
-  $\hasty{\Gamma}{\epsilon}{a}{A}$, which says that under the typing context
-  $\Gamma$, the expression $a$ has type $A$ and effect $\epsilon$. We say a term
-  is \emph{pure} if it has effect $\bot$; note that whether an expression is
-  pure or not depends both on the expression itself and on the purity of the
-  variables used in the expression; this is to allow reasoning about impure
-  substitutions.
-  \item \emph{Regions} $r, s, t$, which recursively define a lexically-scoped
-  SSA program with a single entry and (potentially) multiple exits. This is
-  typed with the judgement $\haslb{\Gamma}{r}{\ms{L}}$, which states that given
-  that $\Gamma$ is live at the unique entry point, $r$ will either loop forever
-  or branch to one of the exit labels in $\ell(A) \in \ms{L}$ with an argument
-  of type $A$.
+  \item \emph{Expressions} $a, b, c, e$ typed with the judgement $\hasty{\Gamma}{\epsilon}{a}{A}$,
+  which says that under the typing context $\Gamma$, the expression $a$ has type $A$ and effect
+  $\epsilon$. We say a term is \emph{pure} if it has effect $\bot$; note that whether an expression
+  is pure or not depends both on the expression itself and on the purity of the variables used in
+  the expression; this is to allow reasoning about impure substitutions.
+  \item \emph{Regions} $r, s, t$, which recursively define a lexically-scoped SSA program with a
+  single entry and (potentially) multiple exits. This is typed with the judgement
+  $\haslb{\Gamma}{r}{\ms{L}}$, which states that given that $\Gamma$ is live at the unique entry
+  point, $r$ will either loop forever or branch to one of the exit labels in $\ell(A) \in \ms{L}$
+  with an argument of type $A$.
 \end{itemize}
 
-The typing rules for expressions are given in Figure~\ref{fig:ssa-expr-rules}.
-In particular, expressions may be built up from the following fairly standard
-primitives:
+The typing rules for expressions are given in Figure~\ref{fig:ssa-expr-rules}. In particular,
+expressions may be built up from the following fairly standard primitives:
 \begin{itemize}
   \item A variable $x$ in the context $\Gamma$, as typed by \brle{var}. We write $(A, \epsilon) \leq
   (B, \epsilon') \iff A = B \and \epsilon \leq \epsilon'$.
@@ -957,7 +954,7 @@ primitives:
 
 \emph{Regions}, on the other hand, can be built up as follows:
 \begin{itemize}
-  \item A branch to a label $\ell$ with pure argument $a$, typed with \rle{br}.
+  \item A branch to a label $\ell$ with pure argument $a$, typed with \brle{br}.
   
   \item Unary and binary \emph{let-bindings}, typed by \brle{let$_1$} and \brle{let$_2$}
   respectively
@@ -966,18 +963,16 @@ primitives:
   executing the (potentially effectful) expression $e$, and then, if $e$ is a left injection
   $\iota_l\;x$, executing $r$ with its value ($x$), otherwise executing $s$.
   
-  \item \emph{\ms{where}-statements} of the form
-  ``$\where{r}{(\wbranch{\ell_i}{x_i}{t_i})_i}$", which consist of a collection
-  of mutually recursive regions $\wbranch{\ell_i}{x_i}{t_i}$ and a \emph{terminator
-  region} $r$ which may branch to one of $\ell_i$ or an exit label.
+  \item \emph{\ms{where}-statements} of the form ``$\where{r}{(\wbranch{\ell_i}{x_i}{t_i})_i}$",
+  which consist of a collection of mutually recursive regions $\wbranch{\ell_i}{x_i}{t_i}$ and a
+  \emph{terminator region} $r$ which may branch to one of $\ell_i$ or an exit label.
 \end{itemize}
-We previously described SSA programs as being made up out of \emph{basic
-blocks}, each of which is made up of a sequence of instructions followed by a
-\emph{terminator} and, potentially, a list of strictly dominated basic blocks
-this terminator may jump to. Basic blocks are an \emph{implicit} feature of our
-grammar: we can view each as a list of unary or binary let-bindings, until we
-reach a terminator, which is either an unconditional branch, a
-\ms{case}-statement or a \ms{where}-statement, as follows:
+We previously described SSA programs as being made up out of \emph{basic blocks}, each of which is
+made up of a sequence of instructions followed by a \emph{terminator} and, potentially, a list of
+strictly dominated basic blocks this terminator may jump to. Basic blocks are an \emph{implicit}
+feature of our grammar: we can view each as a list of unary or binary let-bindings, until we reach a
+terminator, which is either an unconditional branch, a \ms{case}-statement or a
+\ms{where}-statement, as follows:
 \begin{gather*}
   \ms{defs}(\letstmt{x}{e}{r}) = (x, e)::r \qquad 
   \ms{defs}(\letstmt{(x, y)}{e}{r}) = ((x, y), e)::r \\
@@ -989,15 +984,14 @@ reach a terminator, which is either an unconditional branch, a
   \ms{bb}(r) = (\ms{defs}(r), \ms{terminator}(r))
 \end{gather*}
 Note in particular that the region $r$ in a \ms{where}-statement
-$\where{r}{(\wbranch{\ell_i}{x_i}{t_i})_i}$ is best interpreted as a terminator
-rather than an entry-block even if of the form, e.g., $r = \letstmt{x}{e}{s}$.
-The entry block is instead the \emph{implicit} basic-block made up of any
-let-bindings surrounding the \ms{where}-statement. The key difference is that
-variables defined in $r$ are \emph{not} visible in the blocks $t_i$, whereas
-variables defined in the entry-block are. While at first glance this can be
-unintuitive, the additional generality greatly simplifies rewriting, and we can
-always ``normalize away'' this feature, since our equational theory generally
-admits that, \emph{if} both sides are well-typed and there is no shadowing,
+$\where{r}{(\wbranch{\ell_i}{x_i}{t_i})_i}$ is best interpreted as a terminator rather than an
+entry-block even if of the form, e.g., $r = \letstmt{x}{e}{s}$. The entry block is instead the
+\emph{implicit} basic-block made up of any let-bindings surrounding the \ms{where}-statement. The
+key difference is that variables defined in $r$ are \emph{not} visible in the blocks $t_i$, whereas
+variables defined in the entry-block are. While at first glance this can be unintuitive, the
+additional generality greatly simplifies rewriting, and we can always ``normalize away'' this
+feature, since our equational theory generally admits that, \emph{if} both sides are well-typed and
+there is no shadowing,
 \begin{align*}
   \where{(\letexpr{x}{e}{r})}{(\wbranch{\ell_i}{x_i}{t_i})_i}
   &= (\letexpr{x}{e}{(\where{r}{(\wbranch{\ell_i}{x_i}{t_i})_i})}) \\
@@ -2198,26 +2192,206 @@ in Section~\ref{ssec:completeness}.
   \label{fig:ssa-subst-equiv}
 \end{figure}
 
-\subsection{Basic Data-flow and Control-flow Transformations}
+\subsection{B\"ohm-Jacopini for SSA}
 
 \label{ssec:data-control}
 
 Now that we have given our equational theory, we want to show it is ``good enough'' to reason about
 the properties inherent to all SSA-based languages (versus properties specific to the actual
-SSA-based language targeted, such as that $x \cdot 0$ can be optimized to $0$). While we state and
-prove a rigorous formulation of this statement in Section~\ref{ssec:completeness}, we would also
-like to describe some practical examples, which will turn out to be helpful in setting up the
-machinery for our proof later. Particularly, we want to make sure that we can effectively reason
-about simple transformations such as the elimination and introduction of $\phi$-nodes (i.e. basic
-block arguments) and state machine optimizations.
+SSA-based language targeted, such as that $x \cdot 0$ can be optimized to $0$). In particular, we
+wish to show that we have enough power to reason about interconversion between data-flow and
+control-flow, to be able to perform, for example, state-machine optimizations. In this section, we
+will build up some of the machinery to do this, and demonstrate how it can be used by stating and
+proving a form of the B\"ohm-Jacopini theorem \cite{bohm-jacopini} for SSA. Of course, all this has
+the ulterior motive of laying the groundwork for Section~\ref{ssec:completeness}, where we will
+rigorously prove our equational theory is \emph{complete} w.r.t. a categorical model of SSA.
 
-\subsubsection{$\phi$-node elimination}
+We begin by describing how to convert control-flow into data-flow; since our equational theory is
+symmetric, this machinery allows us us to interconvert between the two. We begin by defining a
+``packing'' operation $[\cdot]$ on label-contexts yielding a sum type encoding what branch of the
+label-context we are on as follows:
+\begin{equation}
+  [\cdot] = \mb{0} \qquad [\ms{L}, \ell(A)] = [\ms{L}] + A
+\end{equation}
+We may now define ``packing'' and ``unpacking'' label-substitutions
+$\lbsubst{\cdot}{\ms{pack}_\kappa^+(\ms{L})}{\ms{L}}{\kappa([\ms{L}])}$,
+$\lbsubst{\cdot}{\ms{unpack}_\kappa^+(\ms{L})}{\kappa([\ms{L}])}{\ms{L}}$ as follows:
+\begin{equation}
+  \ms{pack}_\kappa^+(\cdot) = \cdot \qquad
+  \ms{pack}_\kappa^+(\ms{L}, \ell(A)) 
+  = [\kappa(x) \mapsto \brb{\kappa}{\iota_l\;x}]\ms{pack}_\kappa^+(\ms{L}), 
+    \ell(x) \mapsto \brb{\kappa}{\iota_r\;x}  
+\end{equation}
+\begin{equation}
+  \ms{unpack}_\kappa^+(\ms{L}) = \kappa(x) \mapsto \ms{unpack}^+(\ms{L})\;x
+\end{equation}
+where we have
+\begin{equation}
+  \prftree[r]{\rle{unpack$^+$}}
+    {\hasty{\Gamma}{\epsilon}{e}{\ms{L}}}
+    {\haslb{\Gamma}{\ms{unpack}^+(\ms{L})\;e}{\ms{L}}} \qquad
+  \prftree[r]{$\infty$}
+    {\haslb{\Gamma}{\infty := \where{\brb{\ell}{()}}{\wbranch{\ell}{x}{\brb{\ell}{x}}}}{\ms{L}}}
+\end{equation}
+defined as follows:
+\begin{equation}
+  \ms{unpack}^+(\cdot)\;e = \infty \qquad
+  \ms{unpack}^+(\ms{L}, \ell(A))\;e = \casestmt{e}{x}{\ms{unpack}^+(\ms{L})\;x}{y}{\brb{\ell}{y}}
+\end{equation}
+We can further show that, in this case for all label contexts $\ms{L}$, these substitutions are
+mutually inverse, i.e., that
+\begin{equation}
+  \begin{aligned}
+  \lbsubst{\Gamma}
+    {[\ms{unpack}_\kappa^+(\ms{L})]\ms{pack}_\kappa^+(\ms{L}) 
+      &\teqv \ms{id}_{\ms{L}}}{\ms{L}}{\ms{L}}
+  \\
+  \lbsubst{\Gamma}
+    {[\ms{pack}_\kappa^+(\ms{L})]\ms{unpack}_\kappa^+(\ms{L}) &\teqv \ms{id}_{\kappa([\ms{L}])}}
+    {\kappa([\ms{L}])}{\kappa([\ms{L}])}
+  \end{aligned}
+\end{equation}
+Fixing a distinguished label ``$\outlb$'', we can define a ``\emph{label packing}'' operation on
+regions as follows:
+\begin{equation}
+  \haslb{\Gamma}{r}{\ms{L}} \implies 
+  \haslb{\Gamma}{[r]^+ := [\ms{pack}_{\outlb}^+(\ms{L})]r}{\outlb([\ms{L}])}
+\end{equation}
+In particular the packing substitution has an inverse, it follows that label packing is an injection
+w.r.t. the equational theory, i.e.
+\begin{equation}
+  \lbeq{\Gamma}{r}{r'}{\ms{L}} \iff \lbeq{\Gamma}{[r]^+}{[r']^+}{\ms{L}}
+\end{equation}
 
-Rather than describe the elimination of $\phi$-nodes, it turns out to be easier to work backwards
-and describe their \emph{introduction}, making every variable passed into a basic block into an
-explicit argument. This section will describe the machinery needed to do that, which, combined with
-uniformity to reshuffle variables, is enough to justify the elimination of $\phi$-nodes. We begin by
-defining \emph{packing} of variable contexts as follows
+The B\"ohm-Jacopini theorem states that every general control-flow graph program can be rewritten to
+an equivalent program which uses only structured control-flow, that it can be rewritten to be
+composed only of conditional branching, sequencing, and looping.
+
+To adapt this result to SSA, we need to figure out how we should write these combinators for SSA
+regions $\haslb{\Gamma}{r}{\ms{L}}$ so that we can build up an inductive set of structured regions.
+We will be maximally strict, and allow branching to an exit label in $\ms{L}$ only as the terminal
+statement in a structured program (and, in particular, not from within a loop!). It is obvious that
+we can represent conditional branching using \ms{case}-statements, but we need convenient primitives
+for sequencing and looping. Sequencing can be quite trivially expressed using a \ms{where}-block as
+follows:
+\begin{equation}
+  \prftree[r]{\rle{seq}}
+    {\haslb{\Gamma}{r}{\outlb(A)}}
+    {\haslb{\Gamma, \bhyp{\invar}{A}}{s}{\ms{L}}}
+    {\haslb{\Gamma}{\ms{seq}(r, s) 
+      := (\where{[\outlb(x) \mapsto \brb{\ell}{x}]r}{\wbranch{\ell}{\invar}{s}})}{\ms{L}}}
+\end{equation}
+where ``$\invar$" is a distinguished input variable. In fact, we can show that, as we might expect,
+\begin{equation}
+  \lbeq{\Gamma}{\ms{seq}(r, s)}{[\outlb(\invar) \mapsto s]r}{\ms{L}}
+\end{equation}
+To choose a convenient ``looping'' primitive is a bit more complicated, since, as we do not have
+mutable variables, we need some kind of way to pass the loop state around. It turns out it's easiest
+to base our definition off a value-based variant of a tail-controlled-loop, as follows
+\begin{equation}
+  \prftree[r]{\rle{loop}}
+    {\hasty{\Gamma}{\epsilon}{e}{\outlb(A)}}
+    {\haslb{\Gamma, \bhyp{\invar}{A}}{r}{\outlb(B + A)}}
+    {\haslb{\Gamma}{\ms{loop}(e, r) 
+      := (\where{\brb{\ell}{e}}{\wbranch{\ell}{\invar}
+        {\ms{seq}(r, \casestmt{\invar}{x}{\brb{\outlb}{x}}{y}{\brb{\ell}{y}})}})}{\outlb(B)}}
+\end{equation}
+Note that loops only support having a single exit point; to support multiple exits, we require
+sequencing something after the loop. We can now define the inductive predicate
+$\shaslb{\Gamma}{r}{\ms{L}}$, which says that $r$ is a structured region with input variables
+$\Gamma$ and output labels $\ms{L}$, as in Figure~\ref{fig:structured-regions}; note that
+$\shaslb{\Gamma}{r}{\ms{L}} \implies \haslb{\Gamma}{r}{\ms{L}}$. We can now state the
+B\"ohm-Jacopini theorem for SSA as follows:
+\begin{theorem}[B\"ohm-Jacopini for SSA]
+  There exists a function $\ms{S}_{\ms{L}}$ such that, for all $\haslb{\Gamma}{r}{\ms{L}}$,
+  \begin{equation}
+    \haslb{\Gamma}{r}{\ms{L}} \qquad \implies \qquad 
+      \shaslb{\Gamma}{\ms{S}(r)}{\ms{L}}, \quad \lbeq{\Gamma}{r}{\ms{S}(r)}{\ms{L}}
+  \end{equation}
+\end{theorem}
+\begin{proof}
+  We begin by defining a function $\ms{SP}$ on regions $\haslb{\Gamma}{r}{\ms{L}}$ as follows:
+  \begin{align*}
+    \ms{SP}(\ms{br}\;\ell\;a) &= \ms{pack}^+(\ms{L})_\ell(a) \\
+    \ms{SP}(\letstmt{x}{a}{r}) &= \letstmt{x}{a}{\ms{SP}(r)} \\
+    \ms{SP}(\letstmt{(x, y)}{a}{r}) &= \letstmt{(x, y)}{a}{\ms{SP}(r)} \\
+    \ms{SP}(\casestmt{e}{x}{r}{y}{s}) &= \casestmt{e}{x}{\ms{SP}(r)}{y}{\ms{SP}(s)} \\
+    \ms{SP}(\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}) &=
+      \ms{seq}(\ms{SP}(r), \caseexpr{\ms{ua}\;\invar}{x}{\brb{\outlb}{x}\\ & \qquad}{y}
+        {\ms{loop}(y, 
+        \ms{case}_{\ms{L}}\;\invar\;
+          \{\ell_i(x_i) : \ms{seq}(\ms{SP}(t_i), \brb{\outlb}{\ms{ua}\;\invar)}\})})
+  \end{align*}
+  where we have $\hasty{\Gamma}{\bot}{\ms{ua}_{\ms{L}}\;e}{[L] + [R]}$ for
+  $\hasty{\Gamma}{\bot}{e}{[L, R]}$ given by
+  \begin{equation}
+    \ms{ua}_{\ms{L}, \cdot}\;e = e \qquad
+    \ms{ua}_{\ms{L}, (\ms{R}, \ell(A))}\;e 
+      = \caseexpr{e}{x}{
+          \caseexpr{\ms{ua}_{\ms{L}, \ms{R}}\;x}{z}{\iota_l\;z}{w}{\iota_r\;\iota_l\;w}}
+          {y}{\iota_r\;(\iota_r\;y)}
+  \end{equation}
+  We may show by induction that:
+  \begin{equation}
+    \shaslb{\Gamma}{\ms{SP}(r)}{\outlb([\ms{L}])} \qquad
+    \lbeq{\Gamma}{[r]}{\ms{SP}(r)}{\outlb([\ms{L}])}
+  \end{equation}
+  Furthermore, it is easy to show that
+  \begin{equation}
+    \prftree[r]{\rle{s-unpack$^+$}}
+      {\hasty{\Gamma}{\epsilon}{e}{[L]}}
+      {\shaslb{\Gamma}{\ms{unpack}^+(\ms{L})\;e}{L}}
+  \end{equation}
+  It follows that we can define, for $\haslb{\Gamma}{r}{\ms{L}}$
+  \begin{equation}
+    \haslb{\Gamma}{\ms{S}_{\ms{L}}(r) 
+      := \ms{seq}(\ms{SP}(r), \ms{unpack}^+(\ms{L})\;\invar)
+      \teqv [\ms{unpack}^+_\outlb(\ms{L})][r]
+      \teqv r
+      }{\ms{L}}
+  \end{equation}
+  which we can easily verify satisfies the desired properties.
+\end{proof}
+
+\begin{figure}
+  \begin{gather*}
+    \prftree[r]{\rle{s-br}}{\hasty{\Gamma}{\bot}{a}{A}}{\ms{L}\;\ell = A}
+      {\shaslb{\Gamma}{\brb{\ell}{a}}{\ms{L}}} \qquad
+    \prftree[r]{\rle{s-let$_1$-r}}
+      {\hasty{\Gamma}{\epsilon}{a}{A}}
+      {\shaslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
+      {\shaslb{\Gamma}{\letstmt{x}{a}{r}}{\ms{L}}} \\
+    \prftree[r]{\rle{s-let$_2$-r}}
+      {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
+      {\shaslb{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{r}{\ms{L}}}
+      {\shaslb{\Gamma}{\letstmt{(x, y)}{e}{r}}{\ms{L}}} \\
+    \prftree[r]{\rle{s-case-r}}
+      {\hasty{\Gamma}{\epsilon}{e}{A + B}}
+      {\shaslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
+      {\shaslb{\Gamma, \bhyp{y}{B}}{s}{\ms{L}}}
+      {\shaslb{\Gamma}{\casestmt{e}{x}{r}{y}{s}}{\ms{L}}} \\
+    \prftree[r]{\rle{s-seq}}
+      {\shaslb{\Gamma}{r}{\outlb(A)}}
+      {\shaslb{\Gamma, \bhyp{\invar}{A}}{s}{\ms{L}}}
+      {\shaslb{\Gamma}{\ms{seq}(r, s)}{\ms{L}}} \qquad
+    \prftree[r]{\rle{s-loop}}
+      {\hasty{\Gamma}{\epsilon}{e}{\outlb(A)}}
+      {\shaslb{\Gamma, \bhyp{\invar}{A}}{r}{\outlb(B + A)}}
+      {\shaslb{\Gamma}{\ms{loop}(e, r)}{\outlb(B)}}
+  \end{gather*}
+  \caption{Typing rules for structured regions}
+  \Description{}
+  \label{fig:structured-regions}
+\end{figure}
+
+\subsection{\texorpdfstring{$\phi$}{phi}-node elimination}
+
+% Rather than describe the elimination of $\phi$-nodes, it turns out to be easier to work backwards
+% and describe their \emph{introduction}, making every variable passed into a basic block into an
+% explicit argument. This section will describe the machinery needed to do that, which, combined
+% with uniformity to reshuffle variables, is enough to justify the elimination of $\phi$-nodes. 
+
+We begin by defining \emph{packing} of variable contexts as follows:
 \begin{equation}
   [\cdot] = \mb{1} \qquad [\Gamma, \thyp{x}{A}{\epsilon}] = [\Gamma] \otimes A
 \end{equation}
@@ -2250,12 +2424,13 @@ and
   \ms{packed}(\Gamma, \thyp{x}{A}{\epsilon}) = (\ms{packed}(\Gamma), x)
 \end{equation}
 Given a distinguished variable $\invar$, we may then define a ``packing'' operation on expressions
-and regions as follows:
+as follows:
 \begin{equation}
   \hasty{\Gamma}{\epsilon}{a}{A} \implies 
   \hasty{\invar : [\Gamma]}{\epsilon}
     {[a] := [\ms{unpack}_{\invar}^\otimes(\Gamma)]a}{A}
 \end{equation}
+We may similarly define have a ``variable packing'' operation on regions:
 \begin{equation}
   \haslb{\Gamma}{r}{\ms{L}} \implies 
   \haslb{\invar : [\Gamma]}{[r]^\otimes := [\ms{unpack}_{\invar}^\otimes(\Gamma)]r}{\ms{L}}
@@ -2280,71 +2455,7 @@ other \emph{for pure contexts}, i.e.
   \end{aligned}
 \end{equation}
 In particular, this means that for $\Gamma$ pure, the packing operation $[\cdot]$ is an injection on
-expressions and regions w.r.t. the equational theory. It remains now to show that this packing
-operation can be used to perform $\phi$-node introduction.
-
-\TODO{cfg lore...}
-
-\subsubsection{B\"ohm-Jacopini for SSA}
-
-We now come to one of the major results of this paper: that the above rules on \isotopessa{} are
-enough to prove a form of the B\"ohm-Jacopini theorem, which states that all programs can be
-converted to programs with equivalent semantics using only structured control-flow constructs, i.e.
-if-then-else, while, and sequence.
-
-We first need to define what structured control-flow means in the context of \isotopessa{} regions.
-Since a region $\haslb{\Gamma}{r}{\ms{L}}$ can jump to any of the exit-points in $\ms{L}$, it does
-not quite make sense to restrict the top-level of such a region to have only a single exit-point.
-Instead, we'll define a predicate $\ms{structured}(\ms{L})$ parametrized by a \emph{set} of
-acceptable targets.
-
-\TODO{rest...}
-
-We begin by defining a ``packing'' operation $[\cdot]$ on label-contexts yielding a sum type
-encoding what branch of the label-context we are on as follows:
-\begin{equation}
-  [\cdot] = \mb{0} \qquad [\ms{L}, \ell(A)] = [\ms{L}] + A
-\end{equation}
-We may now define ``packing'' and ``unpacking'' label-substitutions
-$\lbsubst{\cdot}{\ms{pack}_\kappa^+(\ms{L})}{\ms{L}}{\kappa([\ms{L}])}$,
-$\lbsubst{\cdot}{\ms{unpack}_\kappa^+(\ms{L})}{\kappa([\ms{L}])}{\ms{L}}$ as follows:
-\begin{equation}
-  \ms{pack}_\kappa^+(\cdot) = \cdot \qquad
-  \ms{pack}_\kappa^+(\ms{L}, \ell(A)) 
-  = [\kappa(x) \mapsto \brb{\kappa}{\iota_l\;x}]\ms{pack}_\kappa^+(\ms{L}), 
-    \ell(x) \mapsto \brb{\kappa}{\iota_r\;x}  
-\end{equation}
-\begin{equation}
-  \begin{aligned}
-  \ms{unpack}_\kappa^+(\cdot) &= \kappa(x) \mapsto \ms{loop} \\
-  \ms{unpack}_\kappa^+(\ms{L}, \ell(A)) &= \kappa(x) \mapsto 
-    \caseexpr{x}{l}{[\ms{unpack}_\kappa^+(\ms{L})]\brb{\kappa}{l}}{r}{\brb{\ell}{r}}
-  \end{aligned}
-\end{equation}
-We can further show that these substitutions are mutually inverse, i.e., that
-\begin{equation}
-  \begin{aligned}
-  \lbsubst{\Gamma}
-    {[\ms{unpack}_\kappa^+(\ms{L})]\ms{pack}_\kappa^+(\ms{L}) 
-      &\teqv \ms{id}_{\ms{L}}}{\ms{L}}{\ms{L}}
-  \\
-  \lbsubst{\Gamma}
-    {[\ms{pack}_\kappa^+(\ms{L})]\ms{unpack}_\kappa^+(\ms{L}) &\teqv \ms{id}_{\kappa([\ms{L}])}}
-    {\kappa([\ms{L}])}{\kappa([\ms{L}])}
-  \end{aligned}
-\end{equation}
-Fixing a distinguished label ``$\outlb$'', we can define a ``packing'' operation on regions as
-follows:
-\begin{equation}
-  \haslb{\Gamma}{r}{\ms{L}} \implies 
-  \haslb{\Gamma}{[r]^+ := [\ms{pack}_{\outlb}^+(\ms{L})]r}{\outlb([\ms{L}])}
-\end{equation}
-
-\TODO{rest...}
-
-\TODO{interpretation as state machine optimization}
-
-\TODO{float B\"ohm-Jacopini stuff down}
+expressions and regions w.r.t. the equational theory.
 
 \TODO{segue, or drag this definition down to Section~\ref{ssec:completeness}}
 
