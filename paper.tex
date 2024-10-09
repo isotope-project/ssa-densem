@@ -24,6 +24,7 @@
 \usepackage{fancyvrb}
 \usepackage{enumitem}
 \usepackage{string-diagrams}
+\usepackage{cancel}
 \usetikzlibrary{calc}
 
 \definecolor{codegreen}{rgb}{0,0.6,0}
@@ -1970,14 +1971,14 @@ this is equivalent to
         {
           \haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}
         }{
-          \lbsubst{\Gamma}{\sigma}{(\lhyp{\ell_i}{A_i},)_i}{(\lhyp{\kappa_j}{A_j},)_j}
+          \lbsubst{\Gamma}{\sigma}{(\lhyp{\ell_i}{A_i},)_i}{(\lhyp{\kappa_j}{B_j},)_j}
         }{
-          \forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}
+          \forall i. \haslb{\Gamma, \bhyp{x_i}{B_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}
         }{
           \lbeq{\Gamma}
             {\where{([\upg{\sigma}]r)}{(\wbranch{\kappa_i}{x_i}{[\upg{\sigma}]t_i},)_i}}
-            {\where{r}{\wbranch{\ell_i}{x_i}{[(\kappa_i(x_i) \mapsto t_i,)](\sigma_i\;x_i)},)_i}}
-            {}
+            {\where{r}{\wbranch{\ell_i}{x_i}{[(\kappa_j(x_j) \mapsto t_j,)](\sigma_i\;x_i)},)_i}}
+            {\ms{L}}
         }
   \end{gather*}
   \Description{}
@@ -2655,13 +2656,16 @@ category as follows:
   \delta_{A, B, C} 
     = [(A + \iota_l), (A + \iota_r)] : (A \otimes B) + (A \otimes C) \to A \otimes (B + C)
   $$
-  has an inverse.
+  has an inverse $\delta^{-1}$. In a distributive category, for any finite coproduct $\Sigma_iB_i$,
+  we will write $\delta_{\Sigma} : \Sigma_i (A \otimes B_i) \to A \otimes \Sigma_i B_i$ and
+  $\delta_{\Sigma}^{-1} : A \otimes \Sigma_i B_i \to \Sigma_i (A \otimes B_i)$ to denote the obvious
+  morphisms
 \end{definition}
-We note in particular that every CCC with coproducts is distributive. The last piece of the puzzle,
-allowing us to model loops in regions, is the existence of an \emph{Elgot structure}. We would also
-like our Elgot structure to be \emph{strong}; that is, compatible with the distributor, so that we
-can soundly shuttle access variables in scope in the loop body. Formally, we define a \emph{(strong)
-Elgot structure} as follows:
+We note in particular that every CCC with coproducts is distributive.
+The last piece of the puzzle, allowing us to model loops in regions, is the existence of an
+\emph{Elgot structure}. We would also like our Elgot structure to be \emph{strong}; that is,
+compatible with the distributor, so that we can soundly shuttle access variables in scope in the
+loop body. Formally, we define a \emph{(strong) Elgot structure} as follows:
 \begin{definition}[(Strong) Elgot structure]
   A category $\mc{C}$ with all coproducts is said to have an \emph{Elgot structure} if we can define
   an operator $(-)^\dagger$ taking every morphism $f : A \to B + A$ to a morphism $f^\dagger : A \to
@@ -3055,28 +3059,32 @@ in contrst to \emph{expressions}, which purely encode data, with no particular i
 to use it afterwards. Our interpretation of \ms{let}-statements and \ms{case}-statements, given in
 Figure~\ref{fig:ssa-reg-sem}, is exactly the same as that of the corresponding expressions.
 
-We now come to the interpretation of \ms{where}-blocks, which is where Elgot structure comes in.
-Since the semantics for \ms{where} blocks has a lot of moving parts, it makes sense to break it
+Finally, we come to the interpretation of \ms{where}-blocks, which is where Elgot structure comes
+in. Since the semantics for \ms{where} blocks has a lot of moving parts, it makes sense to break it
 down ``imperatively" as follows:
 \begin{itemize}
   \item First, we split the context using the diagonal morphism $\Delta_{\dnt{\Gamma}}$
   \item Then, using the right copy of the context, we execute the program
-  $\dnt{\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}$
-  \item We reassociate the result using $\alpha^+$ and apply the inverse distributor $\delta^{-1}$
-  to get to the coproduct $\dnt{\Gamma} \otimes \dnt{\ms{L}} + \dnt{\Gamma} \otimes \Sigma_i
-  \dnt{A_i}$
-  \item In the left ($\dnt{\Gamma} \otimes \dnt{\ms{L}}$), we discard $\dnt{\Gamma}$ and return
-  immediately
-  \item \emph{Entering a loop} (represented by the Elgot iteration operator), in the right
-  ($\dnt{\Gamma} \otimes \Sigma_i\dnt{A_i}$) case, we split the context using the diagonal morphism
-  and reassociate to reach $\dnt{\Gamma} \otimes (\dnt{\Gamma} \otimes \Sigma_i\dnt{A_i})$
-  \item We apply the inverse distributor to the right component of the tensor to reach
-  $\Sigma_i(\dnt{\Gamma} \otimes \dnt{A_i})$, then
-  \item For each branch $i$ in the sum, we execute the program $\dnt{\haslb{\Gamma,
-  \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}$ on the right component of the tensor,
-  reaching $\dnt{\Gamma} \otimes \dnt{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}$
-  \item We reassociate and apply the distributor to reach $\dnt{\Gamma} \otimes \dnt{\ms{L}} +
-  \dnt{\Gamma} \otimes \Sigma_i\dnt{A_i}$
+  $\dnt{\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}$, and reassociate the result using
+  $\alpha^+$ to get to $\dnt{\ms{L}} + \Sigma_i\dnt{A_i}$
+  \item We apply the inverse distributor $\delta^{-1}$ to get to the coproduct $\dnt{\Gamma} \otimes
+  \dnt{\ms{L}} + \dnt{\Gamma} \otimes \Sigma_i \dnt{A_i}$
+  \item In the left ($\dnt{\Gamma} \otimes \dnt{\ms{L}}$) branch, we discard $\dnt{\Gamma}$ and
+  return immediately
+  \item In the right ($\dnt{\Gamma} \otimes \Sigma_i \dnt{A_i}$) branch, we enter a loop
+  (represented by the Elgot iteration operator), in which we:
+  \item Apply the inverse distributor $\delta^{-1}_{\Sigma}$ to get to 
+        $\Sigma_i \dnt{\Gamma} \otimes \dnt{A_i}$
+  \item For each branch $i$ in the sum, we:
+  \begin{itemize}
+    \item Split the context using the diagonal morphism $\Delta_{\dnt{\Gamma}}$, leaving the
+    argument alone; then reassociate to get to $\dnt{\Gamma} \otimes (\dnt{\Gamma} \otimes \dnt{A})$
+    \item Use the right component to execute the program $\dnt{\haslb{\Gamma,
+    \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}$, then re-associate the result in the
+    coproduct, reaching $\dnt{\Gamma} \otimes (\dnt{\ms{L}} + \Sigma_i\dnt{A_i})$
+    \item Apply the inverse distributor $\delta^{-1}$ to get to 
+      $\dnt{\Gamma} \otimes \dnt{\ms{L}} + \dnt{\Gamma} \otimes \Sigma_i\dnt{A_i}$
+  \end{itemize}
   \item In the left ($\dnt{\Gamma} \otimes \dnt{\ms{L}}$) case, we discard $\dnt{\Gamma}$ and break
   out of the loop
   \item In the right ($\dnt{\Gamma} \otimes \Sigma_i\dnt{A_i}$) case, we return to the beginning
@@ -3112,17 +3120,17 @@ down ``imperatively" as follows:
     \dnt{\haslb{\Gamma}{\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}}
       &=  
       \Delta_{\dnt{\Gamma}}
-      ; \dnt{\Gamma} \otimes \dnt{\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}} 
-      ; \delta^{-1}_{\Gamma} ; \alpha^+ ; 
-      \\ &\quad [\ms{id}_{\dnt{\ms{L}}}
-        (
-          \Delta_{\dnt{\Gamma}} ; \alpha ;
-          \dnt{\Gamma} \otimes (\delta^{-1} ;
-      \\ & \qquad
+      ; \dnt{\Gamma} \otimes (\dnt{\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}} 
+      ; \alpha^+_{\dnt{L} + \Sigma_i \dnt{A_i}} ; \delta^{-1} ; 
+      \\ &\quad [\pi_r, 
+        (\delta^{-1}_{\Sigma} ;
           [ 
+            \Delta_{\dnt{\Gamma}} \otimes \dnt{A_i} ; \alpha ;
+      \\ & \qquad
+            \dnt{\Gamma} \otimes 
             \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
-          ]_i ; \alpha^+) ; \delta^{-1}
-        )^\dagger
+          ]_i ; \alpha^+_{\dnt{L} + \Sigma_i A_i} ; \delta^{-1}
+        )^\dagger ; \pi_r
       \\ & \quad ]
   \end{align*}
   \caption{Denotational semantics for \isotopessa{} regions}
@@ -3239,7 +3247,7 @@ distinction between \emph{uniformity} (which only holds for pure operations) and
   \end{equation*}
   \begin{gather*}
     \dnt{\lbsubst{\Gamma}{\cdot}{\cdot}{\ms{K}}} 
-      = \tmor{\dnt{\Gamma} \otimes \mb{1}};0_{\ms{K}}
+      = \tmor{\dnt{\Gamma}} \otimes \mb{0}; \lambda; 0_{\ms{K}}
     \\
     \dnt{\lbsubst{\kappa, \ell(x) \mapsto r}{\Gamma}{\ms{L}, \ell(A)}{\ms{K}}}
       = \delta ; [
@@ -3434,22 +3442,86 @@ proof, in the hope that this will also illuminate the equational theory somewhat
     \item \brle{codiag}: \todo{this}
     \item \brle{uni}: \todo{this}
     \item \brle{dinat}: by label substitution, we have that
-    \begin{multline}
+    \begin{equation}
+      \begin{aligned}
       \dnt{\haslb{\Gamma}{[\sigma^\uparrow]r}{\ms{L}, (\lhyp{\kappa_j}{A_j},)_j}} 
-      \\= \Delta ; 
-      \dnt{\Gamma} \otimes \dnt{\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}} 
-        ; \delta^{-1} ; \alpha^+ ; \pi_r + \dnt{\lbsubst{\Gamma}{\sigma}
-        {(\lhyp{\ell_i}{A_i},)_i}
-        {\lhyp{\kappa_j}{A_j},)_j}}
-    \end{multline}
-    \todo{this...}
-    % \begin{multline}
-    %   \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{[\sigma^\uparrow]t_i}{\ms{L}, (\lhyp{\kappa_j}{A_j},)_j}} \\=
-    %   \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}} ; \alpha^+ ;
-    %   \dnt{\ms{L}} + \dnt{\lbsubst{\Gamma}{\sigma}
-    %     {(\lhyp{\ell_i}{A_i},)_i}
-    %     {\lhyp{\kappa_j}{A_j},)_j}}
-    % \end{multline}
+        &= D_r ; \dnt{\ms{L}} + S ; \alpha^+ \\
+      \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{[\sigma^\uparrow]t_i}{\ms{L}, (\lhyp{\kappa_j}{A_j},)_j}}
+        &= D_{t_i} ; \dnt{\ms{L}} + S ; \alpha^+
+      % \\ & = \Delta ; 
+      % \dnt{\Gamma} \otimes \dnt{\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}} 
+      %   \alpha^+ ; \delta^{-1} ; 
+      \end{aligned}
+    \end{equation}
+    where
+    \begin{equation}
+      \begin{aligned}
+        D_r &= \Delta ; 
+          \dnt{\Gamma} \otimes (\dnt{\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}} ;
+            \alpha^+) ; \delta^{-1} ; \pi_r + \dnt{\Gamma} \otimes \Sigma_i \dnt{A_i} 
+            \\
+        D_{t_i} &= \Delta ; 
+          \dnt{\Gamma} \otimes 
+            (\dnt{\haslb{\Gamma, \bhyp{x_i}{B_i}}{t_i}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}} ;
+            \alpha^+) ; \delta^{-1} ; \pi_r + \dnt{\Gamma} \otimes \Sigma_i \dnt{A_i} \\
+        S &= \dnt{\lbsubst{\Gamma}{\sigma}{(\lhyp{\ell_i}{A_i},)_i}{\lhyp{\kappa_j}{B_j},)_j}}
+      \end{aligned}
+    \end{equation}
+    Hence, we have that
+    \begin{equation}
+      \begin{aligned}
+        & \dnt{\haslb{\Gamma}
+        {\where{([\upg{\sigma}]r)}{(\wbranch{\kappa_i}{x_i}{[\upg{\sigma}]t_i},)_i}}
+        {\ms{L}}} \\
+        &= \Delta ; \dnt{\Gamma} \otimes (D_r ; \dnt{\ms{L}} + S ; \cancel{\alpha^+ ; \alpha^+})
+        ; \delta^{-1} ; [\pi_r, (
+          \delta^{-1}_\Sigma ; \\ &\qquad [
+            \Delta \otimes \dnt{B_i} ; \alpha ; \dnt{\Gamma} \otimes (D_{t_i} ; \dnt{\ms{L}} + S ; 
+              \cancel{\alpha^+}) 
+          ]_i ; \cancel{\alpha^+} ; \delta^{-1}
+        )^{\dagger}; \pi_r] \\
+        &= \Delta ; \dnt{\Gamma} \otimes D_r ; \delta^{-1} 
+                  ; [\pi_r, \dnt{\Gamma} \otimes S ; (\delta^{-1}_{\Sigma}; 
+                  \\ &\qquad [
+            \Delta \otimes \dnt{B_i} ; \alpha ; \dnt{\Gamma} \otimes D_{t_i} ; \delta^{-1} ; 
+            \dnt{\Gamma} \otimes \dnt{\ms{L}} + \dnt{\Gamma} \otimes S
+          ]_i
+        )^{\dagger}; \pi_r] \\
+        &= \Delta ; \dnt{\Gamma} \otimes D_r ; \delta^{-1} 
+                  ; [\pi_r, (\dnt{\Gamma} \otimes S ; \delta^{-1}_{\Sigma}; 
+                  [
+            \Delta \otimes \dnt{B_i} ; \alpha ; \dnt{\Gamma} \otimes D_{t_i} ; \delta^{-1}
+          ]_i
+        )^{\dagger}; \pi_r] \\
+        &= D_r ; [\dnt{\ms{L}}, 
+          \Delta \otimes \Sigma_i \dnt{A_i} 
+            ; \alpha ; (\dnt{\Gamma} \otimes S ; \delta^{-1}_{\Sigma}; 
+                  [
+            \Delta \otimes \dnt{B_i} ; \alpha ; \dnt{\Gamma} \otimes D_{t_i} ; \delta^{-1}
+          ]_i
+        )^{\dagger}; \pi_r]
+      \end{aligned}
+    \end{equation}
+    Therefore, it suffices to show that
+    \begin{equation}
+      \begin{aligned}
+        & \Delta \otimes \Sigma_i \dnt{A_i} 
+            ; \alpha ; (\dnt{\Gamma} \otimes S ; \delta^{-1}_{\Sigma}; 
+                  [
+            \Delta \otimes \dnt{B_i} ; \alpha ; \dnt{\Gamma} \otimes D_{t_i} ; \delta^{-1}
+          ]_i
+        )^{\dagger} \\
+        &= 
+      \end{aligned}
+    \end{equation}
+    % \begin{equation}
+    %   \begin{aligned}
+    %   \dnt{\Gamma} \otimes D_r ; \delta^{-1} &= \dnt{\Gamma} \otimes (\Delta ; 
+    %     \dnt{\Gamma} \otimes \dnt{\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}} ;
+    %       \alpha^+ ; \delta^{-1} ; \pi_r + \dnt{\Gamma} \otimes \Sigma_i \dnt{A_i}) ; \delta^{-1} \\
+    %       &= ..\dnt{\Gamma} \otimes 
+    %   \end{aligned}
+    % \end{equation}
   \end{itemize}
   Analogously to for expressions, all the other rules can be derived trivially from string
   diagrammatic reasoning: once all the definitions are unfolded, both sides of rule are obviously
