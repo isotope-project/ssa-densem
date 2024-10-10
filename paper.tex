@@ -4266,51 +4266,51 @@ $\ms{PTSO} = \ms{Ide}(\ms{Set}_{\ms{TSO}}, \ms{pflush})$.
 
 \TODO{Write this in a historical style}
 \begin{itemize}
-\item SSA itself
-\item SSA CPS connection \citet{Kelsey}
-\item SSA phi-is-function-args \citet{Appel}
-\item SSA ANF \citet{chakraborty}
-\item Up to here: establishing the correspondence is the contribution, but very few equations 
-\item SSA MIL \citet{benton kennedy} (they have a rich equational theory)
-\item SSA CBPV  \citet{garbuzov-structural-cfg-2018} exhibit a correspondence between an
-  operational semantics for SSA, and an operational semantics for
-  call-by-push-value~\cite{cbpv}. They use the normal-form bisimulations of
-  \citet{lassen-bisim} to derive an equational theory for use in justifying
-  optimisations. Their operational semantics is effect-free, which means that it
-  cannot justify optimisations such as eliminating redundant writes.
-\item Guarded effect handlers is guarded Elgot \citet{Goncharev and co.} (also have an equational theory)
+  \item SSA itself
+  \item SSA CPS connection \citet{kelsey-95-cps}
+  \item SSA phi-is-function-args \citet{appel-ssa}
+  \item SSA ANF \citet{chakravarty-functional-ssa-2003}
+  \item Up to here: establishing the correspondence is the contribution, but very few equations 
+  \item SSA MIL \citet{benton-kennedy-99} (they have a rich equational theory)
+  \item SSA CBPV  \citet{garbuzov-structural-cfg-2018} exhibit a correspondence between an
+    operational semantics for SSA, and an operational semantics for call-by-push-value~\cite{cbpv}.
+    They use the normal-form bisimulations of \citet{lassen-bisim} to derive an equational theory
+    for use in justifying optimisations. Their operational semantics is effect-free, which means
+    that it cannot justify optimisations such as eliminating redundant writes.
+  \item Guarded effect handlers is guarded Elgot (Goncharov) (also have an equational theory)
+  \item See also, and read, master's thesis \textit{Monadic Intermediate Language for Modular and
+  Generic Compilers}, by Dmytro Lypai
 \end{itemize}
 
 \begin{itemize}
-\item Thorin (CPS with dominance-based scoping) \citet{Leissa Koester and Hack}
+  \item Thorin (CPS with dominance-based scoping) \citet{thorin-12}
 \end{itemize}
-
+ 
 \subsection{Formalizations of SSA}
 
 \subsubsection{Other SSA type systems}
 
 \begin{itemize}
-  \item \citet{typed-effect-ssa-rigon-torrens-vasconcellos-20} give a typed translation
-  from SSA into the lambda calculus, into a type-and-effect system.
-  \item \citet{ssa-types-matsuno-ohori-06} give a type theory for what appear to be
-  ordinary three-address code programs. However, every well-typed program can be
-  placed into SSA-form by inserting $\phi$-nodes in a fully type-directed way.
-  This lets them model SSA without any $\phi$-nodes, lets them use the standard
-  semantics for three-address code.
+  \item \citet{typed-effect-ssa-rigon-torrens-vasconcellos-20} give a typed translation from SSA
+  into the lambda calculus, into a type-and-effect system.
+  \item \citet{ssa-types-matsuno-ohori-06} give a type theory for what appear to be ordinary
+  three-address code programs. However, every well-typed program can be placed into SSA-form by
+  inserting $\phi$-nodes in a fully type-directed way. This lets them model SSA without any
+  $\phi$-nodes, lets them use the standard semantics for three-address code.
   \item \citet{hua-explicit-ssa-2010} give another type system and direct operational
   semantics for SSA, and proves type safety for it. 
-  \item Many operational semantics for SSA have arisen from compiler verification
-  efforts. \citet{barthe-compcert-ssa-2014} give an operational semantics as part
-  of the CompCertSSA project, and give a semantics-preserving translation from
-  three-address code into SSA. \citet{herklotz-gsa-2023} formalise "gated SSA" and
-  give semantics-preserving translations between it and ordinary SSA. Going beyond
-  CompCertSSA, \citet{vellum} have studied the semantics of the LLVM IR itself.  
+  \item Many operational semantics for SSA have arisen from compiler verification efforts.
+  \citet{barthe-compcert-ssa-2014} give an operational semantics as part of the CompCertSSA project,
+  and give a semantics-preserving translation from three-address code into SSA.
+  \citet{herklotz-gsa-2023} formalise "gated SSA" and give semantics-preserving translations between
+  it and ordinary SSA. Going beyond CompCertSSA, \citet{vellvm-12} have studied the semantics of the
+  LLVM IR itself.  
   \item 
-  There has been much less work on denotational semantics for SSA, or directly on
-  its equational theory. \citet{pop-ssa-inout-2009} give an unusual denotational
-  model of SSA in terms of the iteration structure of a program, which they use to
-  better understand the loop-closing $\phi$-nodes found both in the gated SSA
-  representation as well as practical compilers such as GCC.
+  There has been much less work on denotational semantics for SSA, or directly on its equational
+  theory. \citet{pop-ssa-inout-2009} give an unusual denotational model of SSA in terms of the
+  iteration structure of a program, which they use to better understand the loop-closing
+  $\phi$-nodes found both in the gated SSA representation as well as practical compilers such as
+  GCC.
 
   \item \todo{maybe not relevant, but worth reading} \emph{On the Operational Theory of the CPS-Calculus: Towards a Theoretical Foundation for IRs}
 
@@ -4319,13 +4319,12 @@ $\ms{PTSO} = \ms{Ide}(\ms{Set}_{\ms{TSO}}, \ms{pflush})$.
 \subsubsection{Mechanizations of SSA}
 
 \begin{itemize}
-  \item CompcertSSA \cite{whoever did this}
-  \item Vellum
+  \item CompcertSSA \citet{compcert-ssa-12}
+  \item Vellvm \citet{vellvm-12}
   \item Verifying Fast and Sparse SSA-Based Optimizations in Coq
   \item \citet{siddharth-24-peephole} for verifying peephole optimisations in SSA, also formalized
   in Lean 4, in the context of MLIR
 \end{itemize}
-
 
 \subsection{Future work: Linearity, Guardedness, and Friends}
 
@@ -4353,68 +4352,43 @@ $\ms{PTSO} = \ms{Ide}(\ms{Set}_{\ms{TSO}}, \ms{pflush})$.
 
 \subsection{General Models}
 
-
 \begin{itemize}
   \item \citet{liang-95-interpreters} to build interpreters supporting effects using monad stacks;
   because Elgot monads become \isotopessa{} models and many monad transformers preserve Elgot
   structure, this can let us build up many useful models.
 \end{itemize}
 
-\subsection{Compositional Concurrency}
-
-\begin{itemize}
-  \item \citet{vale-linearizability-24} uses Karoubi-envelope lore which reminds me of our
-  $\ms{pflush}$-sandwich
-\end{itemize}
-
 \subsection{Compositional Relaxed Memory Concurrency}
 
-Most semantics of weak memory are inspired by the hardware that gives
-rise to the weak behaviour, and are therefore naturally whole-program
-models. \citet{batty-compositional-17} explains that it would be more
-useful to have a compositional semantics for weak memory because it
-permits reasoning about programs in a local, component-by-component
-fashion. This is very challenging to achieve, because the semantics of
-each expression must include enough information to understand how it
-interacts with arbitrary other threads, and has been the object of
-much research.
+Most semantics of weak memory are inspired by the hardware that gives rise to the weak behaviour,
+and are therefore naturally whole-program models. \citet{batty-compositional-17} explains that it
+would be more useful to have a compositional semantics for weak memory because it permits reasoning
+about programs in a local, component-by-component fashion. This is very challenging to achieve,
+because the semantics of each expression must include enough information to understand how it
+interacts with arbitrary other threads, and has been the object of much research.
 
-We believe that our SSA semantics offers a useful benchmark for weak
-memory semantics: if the weak memory semantics can be organized into a
-distributive Elgot category, then we know that it is compatible with
-the standard control-flow optimizations for SSA. It turns out that many
-of these models are close to supporting SSA, but often fall short in
-surprising ways. 
+We believe that our SSA semantics offers a useful benchmark for weak memory semantics: if the weak
+memory semantics can be organized into a distributive Elgot category, then we know that it is
+compatible with the standard control-flow optimizations for SSA. It turns out that many of these
+models are close to supporting SSA, but often fall short in surprising ways. 
 
-For example, \citet{jagadeesan-pwp-20} attempt to build a denotational
-model using \emph{pomsets with preconditions}, which are an extension
-of the pomset model of true concurrency.  \citet{leaky-semicolon}
-showed that in the PwP model, semicolon is \emph{not} associative,
-which rules out almost all common program optimizations.  They go on
-to offer a more complex model of pomsets with predicate
-transformers. This makes sequential composition associative, but their
-semantics still does not support loops. (This is a common issue in
-weak semantics, since none of the litmus tests used to distinguish
-different concurrency models include loops.)
+For example, \citet{jagadeesan-pwp-20} attempt to build a denotational model using \emph{pomsets
+with preconditions}, which are an extension of the pomset model of true concurrency.
+\citet{leaky-semicolon} showed that in the PwP model, semicolon is \emph{not} associative, which
+rules out almost all common program optimizations.  They go on to offer a more complex model of
+pomsets with predicate transformers. This makes sequential composition associative, but their
+semantics still does not support loops. (This is a common issue in weak semantics, since none of the
+litmus tests used to distinguish different concurrency models include loops.)
 
-\todo{something intelligent about castellan introducing event
-  structures into weak memory
-  semantics}. \citet{paviotti-modular-relaxed-dep-20} extend the event
-structure approach to give denotational semantics for relaxed memory
-concurrency, particularly including semantics for loops. However, they
-do this using step indexing, and so loop unrolling is only a refinement
-rather than an equation. Since event structures satisfy the axioms of
-axiomatic domain theory~\cite{fiore-axiomatic-domain-theory}, it ought
-to be possible to modify this semantics into one in which loop unrolling
-is an equation, at which point it would be a model of our calculus. 
+\todo{something intelligent about \citet{castellan-16} introducing event structures into weak memory
+semantics}. \citet{paviotti-modular-relaxed-dep-20} extend the event structure approach to give
+denotational semantics for relaxed memory concurrency, particularly including semantics for loops.
+However, they do this using step indexing, and so loop unrolling is only a refinement rather than an
+equation. Since event structures satisfy the axioms of axiomatic domain theory~\citet{fiore-phd-94},
+it ought to be possible to modify this semantics into one in which loop unrolling is an equation, at
+which point it would be a model of our calculus. 
 
 \begin{itemize}
-  \item 
-  \item \citet{jagadeesan-pwp-20} is an attempt to build a denotational model with pomsets, pomsets
-  with preconditions, but semicolon is \emph{not} associative, \citet{leaky-semicolon} works on this
-  to get pomsets with predicate transformers, and makes things associative, which is an important
-  feature for reasoning about composition since it lets us do category theory. However, it does not
-  yet support loops.
   \item \citet{brookes-full-abstraction-96} uses traces to model SC; pretty sure you can get a monad
   out of this
   \item There is a \citet{brookes-full-abstraction-96}-style semantics for x86 TSO in
@@ -4422,14 +4396,9 @@ is an equation, at which point it would be a model of our calculus.
   \citet{sparky}?
   \item Release/acquire lore from \citet{release-acquire}: already a monad, but would need to show
   it's Elgot to get an \isotopessa{} model
-  \item Simon Castellan Weak memory models using event structures and , compositionality is via the ``hole''
-  method.
-  \item Something about step indexing...
+  \item \citet{vale-linearizability-24} uses Karoubi-envelope lore which reminds me of our
+  $\ms{pflush}$-sandwich
 \end{itemize}
-
-
-\subsection{MLIR lore}
-
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references}
