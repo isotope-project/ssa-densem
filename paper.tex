@@ -4373,32 +4373,36 @@ compatible with the standard control-flow optimizations for SSA. It turns out th
 models are close to supporting SSA, but often fall short in surprising ways. 
 
 For example, \citet{jagadeesan-pwp-20} attempt to build a denotational model using \emph{pomsets
-with preconditions}, which are an extension of the pomset model of true concurrency.
+with preconditions (PwP)}, which are an extension of the pomset model of true concurrency.
 \citet{leaky-semicolon} showed that in the PwP model, semicolon is \emph{not} associative, which
 rules out almost all common program optimizations.  They go on to offer a more complex model of
-pomsets with predicate transformers. This makes sequential composition associative, but their
-semantics still does not support loops. (This is a common issue in weak semantics, since none of the
-litmus tests used to distinguish different concurrency models include loops.)
+\emph{pomsets with predicate transformers (PwT)}. This makes sequential composition associative, but
+their semantics still does not support loops. (This is a common issue in weak semantics, since none
+of the litmus tests used to distinguish different concurrency models include loops.)
 
-\todo{something intelligent about \citet{castellan-16} introducing event structures into weak memory
-semantics}. \citet{paviotti-modular-relaxed-dep-20} extend the event structure approach to give
-denotational semantics for relaxed memory concurrency, particularly including semantics for loops.
+In \cite{castellan-16}, an alternative approach to building up denotational semantics for weak
+memory is introduced using \emph{event structures}, an important idea from game semantics. They
+study a simple language supporting parallel composition of $n$ simple, linear programs defined as
+lists of loads, stores, and arithmetic operations; event structures are then used to give
+denotational semantics to these programs with respect to different \emph{memory models}, ranging
+from sequential concurrency to relaxed and non-linear models.
+\citet{paviotti-modular-relaxed-dep-20} use the event structure approach to give denotational
+semantics for relaxed memory concurrency, particularly including semantics for branches and loops.
 However, they do this using step indexing, and so loop unrolling is only a refinement rather than an
 equation. Since event structures satisfy the axioms of axiomatic domain theory~\citet{fiore-phd-94},
 it ought to be possible to modify this semantics into one in which loop unrolling is an equation, at
 which point it would be a model of our calculus. 
 
-\begin{itemize}
-  \item \citet{brookes-full-abstraction-96} uses traces to model SC; pretty sure you can get a monad
-  out of this
-  \item There is a \citet{brookes-full-abstraction-96}-style semantics for x86 TSO in
-  \citet{jagadeesan-brookes-relaxed-12}; does this give an alternative monad? How does it compare to
-  \citet{sparky}?
-  \item Release/acquire lore from \citet{release-acquire}: already a monad, but would need to show
-  it's Elgot to get an \isotopessa{} model
-  \item \citet{vale-linearizability-24} uses Karoubi-envelope lore which reminds me of our
-  $\ms{pflush}$-sandwich
-\end{itemize}
+\TODO{\citet{ghica-08}, then \citet{abramsky-algol-96}, leading to \citet{vale-linearizability-24}}
+
+\TODO{compare and contrast with \citet{brookes-full-abstraction-96}; does this have a monad}
+
+\TODO{There is a \citet{brookes-full-abstraction-96}-style semantics for x86 TSO in
+\citet{jagadeesan-brookes-relaxed-12}; does this give an alternative monad? How does it compare to
+\citet{sparky}?}
+
+\TODO{This is the style of semantics in \citet{release-acquire} which is a monad, but needs to be
+shown Elgot}
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references}
