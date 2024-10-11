@@ -2884,8 +2884,8 @@ In particular, an \isotopessa{} expression model consists of:
   \item A complete lattice $E$, and a continuous function $\epsilon \mapsto \mc{C}_\epsilon$ from
   $E$ to wide subcategories of $\mc{C}$, such that $\mc{C}_\top = \mc{C}$, and $(\mc{C}, \mc{V} =
   \mc{C}_\bot)$ is a Freyd category. Furthermore, we ask that each $\mc{C}_\epsilon$ is closed under
-  tensor products and coproducts, and in particular that injections are pure and therefore contained
-  in every $\mc{C}_\epsilon$.
+  tensor products and coproducts, and in particular that injections and (inverse) distributors are
+  pure and therefore contained in every $\mc{C}_\epsilon$.
 \end{itemize}
 If an \isotopessa{} expression model additionally has an Elgot structure, we will refer to it simply
 as an \isotopessa{} model.
@@ -4264,6 +4264,12 @@ $\ms{PTSO} = \ms{Ide}(\ms{Set}_{\ms{TSO}}, \ms{pflush})$.
 
 \subsection{SSA, FP and IRs}
 
+\TODO{Proposed structure:}
+
+\begin{enumerate}
+  \item \todo{these}
+\end{enumerate}
+
 \TODO{Write this in a historical style}
 \begin{itemize}
   \item SSA itself
@@ -4290,6 +4296,12 @@ $\ms{PTSO} = \ms{Ide}(\ms{Set}_{\ms{TSO}}, \ms{pflush})$.
 \subsection{Formalizations of SSA}
 
 \subsubsection{Other SSA type systems}
+
+\TODO{Proposed structure:}
+
+\begin{enumerate}
+  \item \todo{these}
+\end{enumerate}
 
 \begin{itemize}
   \item \citet{typed-effect-ssa-rigon-torrens-vasconcellos-20} give a typed translation from SSA
@@ -4320,6 +4332,12 @@ $\ms{PTSO} = \ms{Ide}(\ms{Set}_{\ms{TSO}}, \ms{pflush})$.
 
 \subsubsection{Mechanizations of SSA}
 
+\TODO{Proposed structure:}
+
+\begin{enumerate}
+  \item \todo{these}
+\end{enumerate}
+
 \begin{itemize}
   \item CompcertSSA \citet{compcert-ssa-12}
   \item Vellvm \citet{vellvm-12}
@@ -4328,62 +4346,62 @@ $\ms{PTSO} = \ms{Ide}(\ms{Set}_{\ms{TSO}}, \ms{pflush})$.
   in Lean 4, in the context of MLIR
 \end{itemize}
 
-\subsection{Future work: Linearity, Guardedness, and Friends}
-
-\begin{itemize}
-  \item \citet{fuhrmann-direct-1999} for:
-  \begin{itemize}
-    \item Linearity (relevant -- copyability, affine -- discardability)
-    \item Lambda functions, thunkability
-    \item Are abstract Kleisli-categories + coproducts + Elgot structure \isotopessa{} models, or do
-    we need our linear generalization? How do abstract Kleisli categories interact with coproducts +
-    Elgot structure?
-    \item See also: \citet{Thielecke1997CategoricalSO}
-  \end{itemize}
-  \item \citet{coinductive-resumption-levy-goncharov-19} introduce guarded Elgot categories +
-  monads, which allow us to reason about guarded iteration:
-  \begin{itemize}
-    \item Identity is the initial guarded Elgot monad, admits only acyclic CFGs, this is interesting
-    as these are equivalent to expressions
-    \item Can reason about e.g. productivity, terminating programs, etc. under the \isotopessa{}
-    framework this way
-    \item The coinductive resumption monad defined in this paper might be useful for reasoning about
-    potentially nonterminating processes in \isotopessa{} models, somehow...
-  \end{itemize}
-\end{itemize}
-
-% \subsection{General Models}
-
-% \begin{itemize}
-%   \item \citet{liang-95-interpreters} to build interpreters supporting effects using monad stacks;
-%   because Elgot monads become \isotopessa{} models and many monad transformers preserve Elgot
-%   structure, this can let us build up many useful models.
-% \end{itemize}
-
 \subsection{Compositional (Relaxed) Concurrency}
 
-Oftentimes, the most natural way to model a concurrent shared-memory computation is via an
-operational semantics, in which different threads of execution interleave and interact in an
-idealized, abstract machine. The issue with this formulation is it makes it quite challenging to
-reason about the behavior of large programs \emph{compositionally}, rather than attempting to model
-the entire program at once. This is especially a problem in the context of weak memory models, which
-are inspired by the hardware that gives rise to the weak behaviour and hence often in terms of the
-possible execution of entire programs. \citet{batty-compositional-17} explains that it would be more
-useful to have a compositional semantics for concurrency, and especially relaxed concurrency,
-because it permits reasoning about programs in a local, component-by-component fashion. This is very
-challenging to achieve, because the semantics of each expression must include enough information to
-understand how it interacts with arbitrary other threads, and has been the object of much research.
+\TODO{Proposed structure:}
+\begin{enumerate}
+  \item Concurrency shared-memory computation is often modeled by operational semantics for an
+  abstract machine.
+  \item This makes compositional reasoning difficult. We want a compositional way to reason about
+  the behaviour of program fragments, and what it means to put them together.
+  \item Two major approaches: \emph{traces} (see: \citet{brookes-full-abstraction-96}) (and
+  \emph{interaction trees} \citet{xia-itrees-20}), and \emph{game semantics} (see:
+  \citet{abramsky-algol-96}, later \citet{ghica-08}). See also: \citet{milner-processes-75},
+  \citet{plotkin-power-76}
+  \item Game semantics gives good categorical semantics of concurrency, and lets us effectively
+  define properties such as \emph{linearizability} \citet{vale-linearizability-24}
+  \item Traces can be used to give us a nice monadic model of SC concurrency
+  (\citet{brookes-full-abstraction-96}???)
+  \item However, real concurrency is very complicated \citet{batty-compositional-17}, especially in
+  the presence of Weak Memory (TM):
+  \begin{enumerate}
+    \item Interleaving traces is Very SC (TM)
+    \item \emph{Pomsets} let us model True Concurrency (TM) rather than weirdly quotienting traces,
+    and we get a nice monadic model
+    \item \emph{Event structures}, based on game semantics, let us try to model concurrency with
+    respect to a \emph{memory model}, as in \citet{castellan-16}, later
+    \citet{paviotti-modular-relaxed-dep-20}; these use step-indexing so loop unrolling is not an
+    equation, but due to axiomatic domain theory lore \citet{fiore-phd-94} we can probably modify
+    this away
+  \end{enumerate}
+  \item Side point: our semantics can help determine whether a weak memory model is any good for
+  Real Life SSA (TM): ``
+  We believe that our SSA semantics offers a useful benchmark for weak memory semantics: if the weak
+  memory semantics can be organized into a distributive Elgot category, then we know that it is
+  compatible with the standard control-flow optimizations for SSA. It turns out that many of these
+  models are close to supporting SSA, but often fall short in surprising ways. 
+  ''
+  \item For \emph{pomsets}, we need more structure to do weak memory stuff:
+  \begin{enumerate}
+    \item \citet{jagadeesan-pwp-20} introduces \emph{pomsets with preconditions}, but
+    \citet{leaky-semicolon} shows semicolon is not associative, which breaks $\sim$everything
+    \item \citet{leaky-semicolon} introduces \emph{pomsets with predicate transformers}, which have
+    associated semicolons, but they still don't support loops, and it's unclear how to make things
+    into a nice monad again
+    \item \citet{sparky}, which we use, just uses pomsets as an ingredient in a monad stack to build
+    up a model of TSO weak memory. Still working on how to support more complex weak
+    memory models like, e.g., release-acquire (ARM)
+  \end{enumerate}
+  \item For \emph{traces}, we need weird quotients to do weak memory stuff:
+  \begin{enumerate}
+    \item \citet{jagadeesan-brookes-relaxed-12} does a nice TSO monad based on quotiented traces, I
+    think
+    \item \citet{release-acquire} gives a model of release-acquire using quotiented traces, and
+    shows it's a monad, but does not yet show it is Elgot
+  \end{enumerate}
+\end{enumerate}
 
-\TODO{list major approaches: ideas are game semantics $\implies$ event structures, pomsets, Brookes
-traces (?)}
-
-\TODO{ideas: seqcst * 3 versions, relaxed * 3 versions? or (seqcst + relaxed) * 3?}
-
-Compositional models of \emph{sequentially consistent} concurrency, in which threads are simply
-interleaved, is a very well-studied problem in the literature. In \citet{abramsky-algol-96}, a
-denotational semantics for concurrent idealized Algol is given in terms of game semantics.
-
-\TODO{segue into below, related to game semantic approaches}
+\TODO{paper notes to include:}
 
 \begin{itemize}
   \item \citet{ghica-08} notes:
@@ -4394,7 +4412,7 @@ denotational semantics for concurrent idealized Algol is given in terms of game 
   \begin{itemize}
     \item \todo{...}
   \end{itemize}
-  \item \cite{castellan-16} notes:
+  \item \citet{castellan-16} notes:
   \begin{itemize}
     \item \todo{...}
   \end{itemize}
@@ -4403,8 +4421,6 @@ denotational semantics for concurrent idealized Algol is given in terms of game 
     \item \todo{...}
   \end{itemize}
 \end{itemize}
-
-\TODO{compare and contrast with \citet{brookes-full-abstraction-96}; does this have a monad}
 
 \begin{itemize}
   \item \citet{brookes-full-abstraction-96} notes:
@@ -4425,42 +4441,98 @@ denotational semantics for concurrent idealized Algol is given in terms of game 
   \end{itemize}
 \end{itemize}
 
-We believe that our SSA semantics offers a useful benchmark for weak memory semantics: if the weak
-memory semantics can be organized into a distributive Elgot category, then we know that it is
-compatible with the standard control-flow optimizations for SSA. It turns out that many of these
-models are close to supporting SSA, but often fall short in surprising ways. 
+\TODO{text seeds:}
 
-For example, \citet{jagadeesan-pwp-20} attempt to build a denotational model using \emph{pomsets
-with preconditions (PwP)}, which are an extension of the pomset model of true concurrency.
-\citet{leaky-semicolon} showed that in the PwP model, semicolon is \emph{not} associative, which
-rules out almost all common program optimizations.  They go on to offer a more complex model of
-\emph{pomsets with predicate transformers (PwT)}. This makes sequential composition associative, but
-their semantics still does not support loops. (This is a common issue in weak semantics, since none
-of the litmus tests used to distinguish different concurrency models include loops.)
+\begin{itemize}
 
-\TODO{think about game semantics reference here rather than above...}
+  \item Oftentimes, the most natural way to model a concurrent shared-memory computation is via an
+  operational semantics, in which different threads of execution interleave and interact in an
+  idealized, abstract machine. The issue with this formulation is it makes it quite challenging to
+  reason about the behavior of large programs \emph{compositionally}, rather than attempting to model
+  the entire program at once. This is especially a problem in the context of weak memory models, which
+  are inspired by the hardware that gives rise to the weak behaviour and hence often in terms of the
+  possible execution of entire programs. \citet{batty-compositional-17} explains that it would be more
+  useful to have a compositional semantics for concurrency, and especially relaxed concurrency,
+  because it permits reasoning about programs in a local, component-by-component fashion. This is very
+  challenging to achieve, because the semantics of each expression must include enough information to
+  understand how it interacts with arbitrary other threads, and has been the object of much research.
+  
+  Compositional models of \emph{sequentially consistent} concurrency, in which threads are simply
+  interleaved, is a very well-studied problem in the literature. In \citet{abramsky-algol-96}, a
+  denotational semantics for concurrent idealized Algol is given in terms of game semantics.
 
-In \cite{castellan-16}, an alternative approach to building up denotational semantics for weak
-memory is introduced using \emph{event structures}, an important idea from game semantics. They
-study a simple language supporting parallel composition of $n$ simple, linear programs defined as
-lists of loads, stores, and arithmetic operations; event structures are then used to give
-denotational semantics to these programs with respect to different \emph{memory models}, ranging
-from sequential concurrency to relaxed and non-linear models.
-\citet{paviotti-modular-relaxed-dep-20} use the event structure approach to give denotational
-semantics for relaxed memory concurrency, particularly including semantics for branches and loops.
-However, they do this using step indexing, and so loop unrolling is only a refinement rather than an
-equation. Since event structures satisfy the axioms of axiomatic domain theory~\citet{fiore-phd-94},
-it ought to be possible to modify this semantics into one in which loop unrolling is an equation, at
-which point it would be a model of our calculus. 
+  \item  We believe that our SSA semantics offers a useful benchmark for weak memory semantics: if
+  the weak memory semantics can be organized into a distributive Elgot category, then we know that
+  it is compatible with the standard control-flow optimizations for SSA. It turns out that many of
+  these models are close to supporting SSA, but often fall short in surprising ways. 
+  
+  For example, \citet{jagadeesan-pwp-20} attempt to build a denotational model using \emph{pomsets
+  with preconditions (PwP)}, which are an extension of the pomset model of true concurrency.
+  \citet{leaky-semicolon} showed that in the PwP model, semicolon is \emph{not} associative, which
+  rules out almost all common program optimizations.  They go on to offer a more complex model of
+  \emph{pomsets with predicate transformers (PwT)}. This makes sequential composition associative, but
+  their semantics still does not support loops. (This is a common issue in weak semantics, since none
+  of the litmus tests used to distinguish different concurrency models include loops.)
+  
+  In \cite{castellan-16}, an alternative approach to building up denotational semantics for weak
+  memory is introduced using \emph{event structures}, an important idea from game semantics. They
+  study a simple language supporting parallel composition of $n$ simple, linear programs defined as
+  lists of loads, stores, and arithmetic operations; event structures are then used to give
+  denotational semantics to these programs with respect to different \emph{memory models}, ranging
+  from sequential concurrency to relaxed and non-linear models.
+  \citet{paviotti-modular-relaxed-dep-20} use the event structure approach to give denotational
+  semantics for relaxed memory concurrency, particularly including semantics for branches and loops.
+  However, they do this using step indexing, and so loop unrolling is only a refinement rather than an
+  equation. Since event structures satisfy the axioms of axiomatic domain theory~\citet{fiore-phd-94},
+  it ought to be possible to modify this semantics into one in which loop unrolling is an equation, at
+  which point it would be a model of our calculus. 
+\end{itemize}
 
-\TODO{\citet{sparky}}
+\subsection{Premonoidal and (Guarded) Elgot Categories}
 
-\TODO{There is a \citet{brookes-full-abstraction-96}-style semantics for x86 TSO in
-\citet{jagadeesan-brookes-relaxed-12}; does this give an alternative monad? How does it compare to
-\citet{sparky}?}
+\TODO{Proposed structure:}
 
-\TODO{This is the style of semantics in \citet{release-acquire} which is a monad, but needs to be
-shown Elgot}
+\begin{enumerate}
+  \item Premonoidal categories were introduced in \todo{?} to \todo{?}; Freyd categories were
+  introduced in \todo{?} to \todo{?}. \todo{Hyland?} worked on defining recursion in this setting
+  with work on premonoidal trace structures.
+  \item \citet{promonad} generalizes premonoidal categories to \emph{effectful categories}, shows
+  how to draw string diagrams for these using a state wire, as used in this paper
+  \item \citet{fuhrmann-direct-1999} discusses abstract Kleisli categories, which are like Freyd
+  categories but have more structure, and in particular introduces the notion of \emph{central},
+  \emph{copyable}, \emph{discardable}, and \emph{thunkable} morphisms. These can be used to
+  generalize pure/impure to the effectful setting, where we have pure/relevant/affine/linear/impure,
+  for example; we have already made significant progress towards this, but have left it out of this
+  paper.
+  \item Elgot categories / monads were introduced in \todo{?} to \todo{?}
+  \item These were generalized to guarded Elgot categories / monads by \todo{?} to \todo{?}. We
+  could add support for guardedness to unify \isotopessa{} models and \isotopessa{} expression
+  models, since the identity monad is the initial guarded Elgot monad, i.e. every category is
+  vacuously guarded Elgot. Could be useful to reason about SSA for e.g. terminating languages like
+  Lean or somesuch, or reasoning about productivity.
+  \item The coinductive resumption monad from \citet{coinductive-resumption-levy-goncharov-19} could
+  be a useful place to look for freeish \isotopessa{} models
+  \item Interaction with monoidal structure was first studied by \todo{?} in terms of strong Elgot
+  categories, and \todo{something about strong \emph{guarded} Elgot categories}. \todo{How much is
+  there about interaction with premonoidal structure?}
+\end{enumerate}
+
+\TODO{paper notes to include:}
+
+\begin{itemize}
+  \item \citet{promonad} nodes:
+  \begin{itemize}
+    \item \todo{...}
+  \end{itemize}
+  \item \citet{fuhrmann-direct-1999} notes:
+  \begin{itemize}
+    \item \todo{...}
+  \end{itemize}
+  \item \citet{coinductive-resumption-levy-goncharov-19} notes:
+  \begin{itemize}
+    \item \todo{...}
+  \end{itemize}
+\end{itemize}
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references}
