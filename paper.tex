@@ -4317,9 +4317,9 @@ $\ms{PTSO} = \ms{Ide}(\ms{Set}_{\ms{TSO}}, \ms{pflush})$.
     \item Define MIL-lite compiler IR
     \item Has operational semantics, from which equational theory is derived; refinement is via
     observational equivalence
-    \item Different to Moggi's equational metalanguage as we have values and computations but no
-    computations of computations, i.e. $\ms{T}(\ms{T}\;A)$, much like a Kleisli category vs. a Freyd
-    category
+    \item Different to Moggi's equational metalanguage \citet{moggi-91-monad} as we have values and
+    computations but no computations of computations, i.e. $\ms{T}(\ms{T}\;A)$, much like a Kleisli
+    category vs. a Freyd category
     \item Uses effect-refined types, where nontermination is also treated as an effect; unlike us,
     who do not track the effects of regions, only terms. Some equivalences are effect dependent,
     e.g. swapping let-statements, much like for our equational theory. They also take into account
@@ -4367,7 +4367,7 @@ $\ms{PTSO} = \ms{Ide}(\ms{Set}_{\ms{TSO}}, \ms{pflush})$.
       traditional treatment, e.g. \citet{nakata-hoare-15}, and in particular \emph{hybrid monads}
       \citet{goncharov-hybrid-18}
       \item Interested in relations to work on adequacy for algebraic effects, see
-      \citet{plotkin-adequacy-01} \todo{read and note}
+      \citet{plotkin-adequacy-01}
       \item Interested in Levy's call-by-push-value \cite{levy-cbpv-99} as a metalanguage for guarded
       \emph{recursion} (vs. iteration)
     \end{itemize}
@@ -4392,7 +4392,7 @@ $\ms{PTSO} = \ms{Ide}(\ms{Set}_{\ms{TSO}}, \ms{pflush})$.
   \item \citet{ssa-types-matsuno-ohori-06} give a type theory for what appear to be ordinary
   three-address code programs. However, every well-typed program can be placed into SSA-form by
   inserting $\phi$-nodes in a fully type-directed way. This lets them model SSA without any
-  $\phi$-nodes, lets them use the standard semantics for three-address code.
+  $\phi$-nodes, letting them use the standard semantics for three-address code.
   \item \citet{hua-explicit-ssa-2010} give another type system and direct operational
   semantics for SSA, and proves type safety for it. 
   \item Many operational semantics for SSA have arisen from compiler verification efforts.
@@ -4401,15 +4401,16 @@ $\ms{PTSO} = \ms{Ide}(\ms{Set}_{\ms{TSO}}, \ms{pflush})$.
   \citet{herklotz-gsa-2023} formalise "gated SSA" and give semantics-preserving translations between
   it and ordinary SSA. Going beyond CompCertSSA, \citet{vellvm-12} have studied the semantics of the
   LLVM IR itself.  
-  \item 
-  There has been much less work on denotational semantics for SSA, or directly on its equational
-  theory. \citet{pop-ssa-inout-2009} give an unusual denotational model of SSA in terms of the
-  iteration structure of a program, which they use to better understand the loop-closing
+  \item \citet{vellvm-12} memory model is based on CompCert's; they provide both small-step and
+  big-step operational semantics
+  \item There has been much less work on denotational semantics for SSA, or directly on its
+  equational theory. \citet{pop-ssa-inout-2009} give an unusual denotational model of SSA in terms
+  of the iteration structure of a program, which they use to better understand the loop-closing
   $\phi$-nodes found both in the gated SSA representation as well as practical compilers such as
   GCC.
 
-  \item \todo{maybe not relevant, but worth reading} \emph{On the Operational Theory of the
-  CPS-Calculus: Towards a Theoretical Foundation for IRs}
+  % \item \todo{maybe not relevant, but worth reading} \emph{On the Operational Theory of the
+  % CPS-Calculus: Towards a Theoretical Foundation for IRs}
 
 \end{itemize}
 
@@ -4510,20 +4511,64 @@ $\ms{PTSO} = \ms{Ide}(\ms{Set}_{\ms{TSO}}, \ms{pflush})$.
 \begin{itemize}
   \item \citet{brookes-full-abstraction-96} notes:
   \begin{itemize}
-    \item \todo{...}
+    \item Goal: equationally fully abstract semantics w.r.t. a given notion of behaviour
+    \item \citet{hennessy-parallel-79} give a semantics for a parallel shared-variable language via
+    a recursively defined domain of resumptions built with a powerdomain operatyor, but the
+    resumptions semantics is \emph{too concrete}: $\ms{skip} ; \ms{skip} \neq \ms{skip}$ even though
+    they are observationally indistinguishable; you need extra features in the language for full
+    abstraction (coroutine execution counting number of atomic steps)
+    \item Another problem is fair execution yields unbounded nondeterminism; it is difficult to
+    adapt semantics like the above to this setting
+    \item This paper solves this problem, and supports infinite traces, and achieves full
+    abstraction
+    \item We do this by giving a set of transition traces for the program closed under
+    ``stuttering'' and ``mumbling''; by restricting our attention to closed sets, we avoid having
+    too few equations
+    \item Moreover, $\ms{skip}$ is an identity and $\ms{if}$ and $\ms{while}$ behave properly,
+    allowing us to build a nice Elgot structure, probably
   \end{itemize}
   \item \citet{jagadeesan-brookes-relaxed-12} notes:
   \begin{itemize}
-    \item \todo{...}
+    \item Want to consider memory models that are more relaxed than SC, for both architecture
+    reasons and because we want to do more optimizations (e.g. reordering of independent statements)
+    \item Gives a precise formalization of the denotational semantics of
+    \citet{brookes-full-abstraction-96} in the context of TSO weak memory, including $\ms{mfence}$,
+    satisfying the DRF property from \citet{adve-drf-98}
+    \item We add buffer closure properties to stuttering and mumbling: buffer update closure to
+    allow things to move from the buffers to shared state, and buffer reduction closure
+    \item Elgot structure should be fine, as $\ms{while}$-loops are supported
   \end{itemize}
   \item versus, for TSO, \citet{sparky} notes:
   \begin{itemize}
-    \item \todo{...}
+    \item gives a sound and complete semantics for TSO weak memory using pomsets
+    \item can be adapted to a nice monad, and we explicitly add an Elgot structure
+    \item uses pomsets to more clearly model true concurrency; pomsets developed in response to
+    traces being very SC
   \end{itemize}
   \item versus, for release-acquire, \citet{release-acquire} notes:
   \begin{itemize}
-    \item \todo{...}
+    \item weaker than x86 TSO, made by restricting C/C++11 to release/acquire atomics
+    \item ``causal consistency,'' ``per-location SC,'' ``RMW atomicity''
+    \item \citet{brookes-full-abstraction-96}-style semantics; totally ordered versus the usual
+    axiomatic semantics, which seems unintuitive; key observation is that we can derive things from
+    an \emph{operational} view of RA
+    \item Notion of traces compatible with \citet{kang-promising-17}'s ``view based'' machine
+    \item While full abstraction is often out of reach, we want to be able to justify various
+    optimizations which are sound under RA, allowing us to \emph{locally} justify program
+    transformations
+    \item Give operational semantics for RA
+    \item Define corresponding trace semantics
+    \item Give monadic presentation which is compositional
+    \item \citet{brookes-full-abstraction-96} relies on unrealistic $\ms{await}$ construct; so proof
+    doesn't apply rin realistic languages. This does not have full abstraction, but to the best of
+    author's knowledge all transformations proven in the existing literature are supported by given
+    semantics. Structural transformations are supported by using \citet{moggi-91-monad}'s standard
+    semantics
+    \item Also support algebraic ``laws of parallel programming'' from \citet{hoare-parallel-14};
+    we can't do this yet since we do not support \emph{refinement} yet, for simplicity
   \end{itemize}
+  \item \citet{kang-promising-17} gives an operational semantics for many of the features in the
+  C++11 concurrency model, mostly formalized in Coq
 \end{itemize}
 
 \TODO{text seeds:}
