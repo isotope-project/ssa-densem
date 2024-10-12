@@ -206,7 +206,7 @@
 
 Static single assignment form, or SSA form, has been the dominant
 compiler intermediate representation since its introduction by
-\citet{ssa-intro} in the later 1980s. Every major compiler -- GCC, Clang,
+\citet{cytron-ssa-intro-91} in the later 1980s. Every major compiler -- GCC, Clang,
 MLIR, Cranelift -- uses this representation, because it makes many
 optimizations much easier to do than traditional 3-address code IRs.
 
@@ -359,7 +359,8 @@ assignment} restriction, which says that every variable must be defined at exact
 program. We can intuitively represent this as every variable being given by an immutable
 \ms{let}-binding.
 
-\TODO{a bit more SSA history; \citet{ssa-intro} again; also look at \citet{ssa-original}}
+\TODO{a bit more SSA history; \citet{cytron-ssa-intro-91} again; also look at
+\citet{alpern-ssa-original-88}}
 
 \todo{Explain why SSA is useful -- i.e., say substitution, even though it is not totally true\ldots}
 
@@ -518,7 +519,7 @@ Figure~\ref{fig:fact-bba},
 In general, the relation ``$A$ strictly dominates $B$'' intersected with the relation ``$A$ jumps
 directly to $B$'' (i.e. ``$A$ is a \textit{direct predecessor} of $B$'') forms a tree, called the
 \textit{dominance tree} of the control-flow graph. This tree can be computed in nearly linear time
-in the size of the CFG \cite{ssa-intro}. If we topologically sort the basic blocks in a CFG by the
+in the size of the CFG \cite{cytron-ssa-intro-91}. If we topologically sort the basic blocks in a CFG by the
 corresponding partial order on blocks, we can insert brackets according to the dominance tree such
 that a variable is in lexical scope if and only if it is in scope under dominance-based scoping, as
 shown in Figure~\ref{fig:dominance-to-lexical}. This is a simple transformation, and it is easy to
@@ -4264,35 +4265,115 @@ $\ms{PTSO} = \ms{Ide}(\ms{Set}_{\ms{TSO}}, \ms{pflush})$.
 
 \subsection{SSA, FP and IRs}
 
-\TODO{Proposed structure:}
-
-\begin{enumerate}
-  \item \todo{these}
-\end{enumerate}
+\TODO{proposed structure-ify?}
 
 \TODO{Write this in a historical style}
 \begin{itemize}
   \item SSA itself
+  \begin{itemize}
+    \item First developed by \citet{alpern-ssa-original-88}, \citet{rosen-gvn-1988} to tackle
+    dataflow problems \todo{find specific citation for sparse conditional constant propagation; is
+    it \citet{wegman-sccp-91}}
+    \item \citet{cytron-ssa-intro-91} describes a translation algorithm to convert programs to SSA
+    with the minimum number of $\phi$-nodes.
+  \end{itemize}
+  \item SSA $\phi$-is-function-args \citet{appel-ssa}
+  \begin{itemize}
+    \item Shows that SSA is a ``way to extract the functional program hidden in the imperative one''
+    \item Shows that general control flow is like tail-calls, and $\phi$-nodes are like arguments
+    \item Shows in particular that nested scope and dominance-based scoping are the same
+  \end{itemize}
   \item SSA CPS connection \citet{kelsey-95-cps}
-  \item SSA phi-is-function-args \citet{appel-ssa}
+  \begin{itemize}
+    \item Not all CPS programs can be converted to SSA, but these are not the usual output of the
+    CPS transform: the difference is that continuations must be used in a somewhat restricted
+    fashion, without nonlocal returns (e.g. longjumps, call/cc)
+    \item Many optimizations which require flow analysis in CPS can be done directly in SSA; the
+    flow information from CPS programs comes from the fact that they are mostly functional
+    \item SSA language given as standard grammar, no type system
+    \item CPS language given as subset of Scheme
+  \end{itemize}
   \item SSA ANF \citet{chakravarty-functional-ssa-2003}
-  \item Up to here: establishing the correspondence is the contribution, but very few equations 
+  \begin{itemize}
+    \item Starts ``\citet{kelsey-95-cps} and \citet{appel-ssa} point to a correspondence between
+    programs in SSA form and lambda terms''
+    \item Formalizes mapping of programs in SSA to programs in A-normal form; ANF has a more clearly
+    defined operational interpretation than general lambda terms -- us: and much less requirements
+    to build up a categorical semantics, I think!
+    \item Compare to \citet{kelsey-95-cps}; \citet{flanagan-93-anf} says there is no advantage to
+    using CPS over direct-style representations such as ANF since it requires additional
+    transformations and non-distributive flow analysis is too expensive; so prefer ANF
+    \todo{check why, read \citet{flanagan-93-anf}}
+    \item This presents a mapping from SSA to ANF. (Not ANF to SSA too?)
+    \item Nice because presents a way to move towards complex functional optimizations like 0CFA
+  \end{itemize}
+  \item Thorin (CPS with dominance-based scoping) \citet{thorin-12} is interesting as it attempts to
+  add dominance-based scoping to CPS rather than add functional-style scoping to SSA \todo{collect
+  more notes}
+  \item Up to here: establishing the correspondence is the contribution, but very few equations,
+  no explicit semantics given
   \item SSA MIL \citet{benton-kennedy-99} (they have a rich equational theory)
+  \begin{itemize}
+    \item Define MIL-lite compiler IR
+    \item Has operational semantics, from which equational theory is derived; refinement is via
+    observational equivalence
+    \item Different to Moggi's equational metalanguage as we have values and computations but no
+    computations of computations, i.e. $\ms{T}(\ms{T}\;A)$, much like a Kleisli category vs. a Freyd
+    category
+    \item Uses effect-refined types, where nontermination is also treated as an effect; unlike us,
+    who do not track the effects of regions, only terms. Some equivalences are effect dependent,
+    e.g. swapping let-statements, much like for our equational theory. They also take into account
+    whether effects can be \emph{copied}, \emph{discarded}, etc, like in
+    \citet{fuhrmann-direct-1999}; in fact their swap theorem is more general since it discusses
+    whether the effect of two expressions are central \emph{relative to each other}.
+    \item Proving each equivalence w.r.t. the operational semantics is very involved. If you instead
+    show the semantics is a model of a Nice Category (TM), can use results like ours to get an
+    equational theory for free.
+  \end{itemize}
+  \item See also, and read, master's thesis \textit{Monadic Intermediate Language for Modular and
+  Generic Compilers}, by Dmytro Lypai \todo{more notes}
   \item SSA CBPV  \citet{garbuzov-structural-cfg-2018} exhibit a correspondence between an
     operational semantics for SSA, and an operational semantics for call-by-push-value~\cite{cbpv}.
     They use the normal-form bisimulations of \citet{lassen-bisim} to derive an equational theory
     for use in justifying optimisations. Their operational semantics is effect-free, which means
     that it cannot justify optimisations such as eliminating redundant writes.
-  \item Guarded effect handlers via guarded Elgot monads; closest to our work, even more than MIL
-  \cite{goncharov-metalang-21}, based on labelled-iteration from \citet{geron-iteration-16}
-  \item See also, and read, master's thesis \textit{Monadic Intermediate Language for Modular and
-  Generic Compilers}, by Dmytro Lypai
+  \item Guarded effect handlers via guarded Elgot monads \cite{goncharov-metalang-21}
+  \begin{itemize}
+    \item Gives a metalanguage for guarded iteration based on labelled-iteration from
+    \citet{geron-iteration-16}, fine-grained call-by-value, with semantics in a distributive
+    category $\mc{C}$ and a strong guarded pre-iterative monad $\mb{T}$ on $\mb{C}$, where
+    pre-iterative is just fixpoint (versus Elgot)
+    \item \emph{More general}: guarded pre-iterative rather than (total) Elgot for denotational
+    semantics
+    \item \emph{Less general}: require a Kleisli category rather than an arbitrary Freyd category;
+    but this shouldn't be necessary
+    \item Called exceptions rather than labels since they match better
+    \item Prove guardedness; furthermore, they handle functional types using Kleisli exponentials
+    but also presheaf representability assumption
+    \item They give a big-step operational semantics and prove soundness and adequacy. Following
+    \citet{geron-iteration-16}, this is given w.r.t the simplest concrete monad which illustrates
+    their semantics; in this case outputing $\nats$ to a console via $\ms{T}\;X = X \times \nats^* +
+    \nats^\omega$ vs $X + 1$ for \citet{geron-iteration-16}. Note this is \emph{not} the trace monad
+    on $\nats$, since the signature above implies productivity; the trace monad on $\nats$ is
+    $X \times \nats^* + \nats^{\leq \omega}$ to allow finite (or no) output for a divergent trace.
+    \item \emph{More general}: they support higher-order stuff via presheaf lore
+    \item \emph{Less general}: we have completnesss of an equational theory for \emph{all} models.
+    No operational semantics, though. Also their substitution lemma is only for their concrete
+    choice of monad. \emph{That said}, it should be relatively easy to generalize to a
+    semi-arbitrary monad, at least over \mb{Set}.
+    \item For the guarded iterative future work section:
+    \begin{itemize}
+      \item Interested in finding underlying guarded iteration structures for things which resist
+      traditional treatment, e.g. \citet{nakata-hoare-15}, and in particular \emph{hybrid monads}
+      \citet{goncharov-hybrid-18}
+      \item Interested in relations to work on adequacy for algebraic effects, see
+      \citet{plotkin-adequacy-01} \todo{read and note}
+      \item Interested in Levy's call-by-push-value \cite{levy-cbpv-99} as a metalanguage for guarded
+      \emph{recursion} (vs. iteration)
+    \end{itemize}
+  \end{itemize}
 \end{itemize}
 
-\begin{itemize}
-  \item Thorin (CPS with dominance-based scoping) \citet{thorin-12}
-\end{itemize}
- 
 \subsection{Formalizations of SSA}
 
 \subsubsection{Other SSA type systems}
@@ -4302,6 +4383,8 @@ $\ms{PTSO} = \ms{Ide}(\ms{Set}_{\ms{TSO}}, \ms{pflush})$.
 \begin{enumerate}
   \item \todo{these}
 \end{enumerate}
+
+\TODO{notes for below:}
 
 \begin{itemize}
   \item \citet{typed-effect-ssa-rigon-torrens-vasconcellos-20} give a typed translation from SSA
@@ -4337,6 +4420,8 @@ $\ms{PTSO} = \ms{Ide}(\ms{Set}_{\ms{TSO}}, \ms{pflush})$.
 \begin{enumerate}
   \item \todo{these}
 \end{enumerate}
+
+\TODO{notes for below:}
 
 \begin{itemize}
   \item CompcertSSA \citet{compcert-ssa-12}
@@ -4533,6 +4618,8 @@ $\ms{PTSO} = \ms{Ide}(\ms{Set}_{\ms{TSO}}, \ms{pflush})$.
     \item \todo{...}
   \end{itemize}
 \end{itemize}
+
+\TODO{future work lore from \citet{goncharov-metalang-21} w.r.t. hybrid lore} 
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references}
