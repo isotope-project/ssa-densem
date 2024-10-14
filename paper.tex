@@ -204,47 +204,38 @@
 
 \section{Introduction}
 
-Static single assignment form, or SSA form, has been the dominant
-compiler intermediate representation since its introduction by
-\citet{cytron-ssa-intro-91} in the later 1980s. Every major compiler -- GCC, Clang,
-MLIR, Cranelift -- uses this representation, because it makes many
+Static single assignment form, or SSA form, has been the dominant compiler intermediate
+representation since its introduction by \citet{cytron-ssa-intro-91} in the later 1980s. Every major
+compiler -- GCC, Clang, MLIR, Cranelift -- uses this representation, because it makes many
 optimizations much easier to do than traditional 3-address code IRs.
 
-The key i behind SSA is to adapt an idea from functional
-programming: namely, every variable is defined only once. This means
-that substitution is unconditionally valid, without first requiring a
-dataflow analysis to compute where definitions reach. Unlike in
-functional programming, though, scoping of definitions in SSA is
-traditionally not lexical. Instead, scoping is determined by
-\emph{dominance}: every variable occurence must be dominated by a
-single assignment in the control flow graph.
+The key idea behind SSA is to adapt an idea from functional programming: namely, every variable is
+defined only once. This means that substitution is unconditionally valid, without first requiring a
+dataflow analysis to compute where definitions reach. Unlike in functional programming, though,
+scoping of definitions in SSA is traditionally not lexical. Instead, scoping is determined by
+\emph{dominance}: every variable occurence must be dominated by a single assignment in the control
+flow graph.
 
-The semantics of SSA has traditionally been handled quite informally,
-because conceptually, it is a simple first-order imperative
-programming language. As a result, whether a rewrite is sound or
-not is usually obvious, without having to do a complex correctness
-argument.
+The semantics of SSA has traditionally been handled quite informally, because conceptually, it is a
+simple first-order imperative programming language. As a result, whether a rewrite is sound or not
+is usually obvious, without having to do a complex correctness argument.
 
-Unfortunately, computers are no longer as simple as they were in the
-late 1980s. Modern computers are typically multicore, and feature many
-levels of caching, and as a result the semantics of memory is no
-longer correctly modelled as a big array of bytes. Finding good
-semantics for modern weak memory systems remains an ongoing challenge.
+Unfortunately, computers are no longer as simple as they were in the late 1980s. Modern computers
+are typically multicore, and feature many levels of caching, and as a result the semantics of memory
+is no longer correctly modelled as a big array of bytes. Finding good semantics for modern weak
+memory systems remains an ongoing challenge.
 
-As a result, it is not correct to justify compiler optimizations in
-terms of a simple imperative model, and it is an open question which
-equations should hold of an SSA program. This is a particularly
-fraught question, because it is also unclear which equations weak
-memory models should satisfy.
+As a result, it is not correct to justify compiler optimizations in terms of a simple imperative
+model, and it is an open question which equations should hold of an SSA program. This is a
+particularly fraught question, because it is also unclear which equations weak memory models should
+satisfy.
 
-What we would like to know is which equations any SSA representation
-should satisfy. This would let us establish a contract between
-compiler writers and hardware designers. The compiler writers could
-rely upon the equational theory of SSA when justifying optimizations,
-without needing to know all the details of the memory model at all
-times.  Conversely, memory models could be validated by seeing if they
-satisfy the equations of SSA, without needing to study every possible
-compiler optimization.
+What we would like to know is which equations any SSA representation should satisfy. This would let
+us establish a contract between compiler writers and hardware designers. The compiler writers could
+rely upon the equational theory of SSA when justifying optimizations, without needing to know all
+the details of the memory model at all times.  Conversely, memory models could be validated by
+seeing if they satisfy the equations of SSA, without needing to study every possible compiler
+optimization.
 
 Concretely, our contributions are as follows: 
 
@@ -286,8 +277,8 @@ branching to arbitrary code, rather than only labels, to obtain \textit{A-normal
 \cite{flanagan-93-anf}, analogously to~\citet{chakravarty-functional-ssa-2003}; a straightforward
 argument shows that this adds no expressive power. Finally, to allow for substitution, we will
 further generalize our syntax to allow for arbitrary expression nesting, as well as let-expressions,
-to obtain \textit{type-theoretic SSA}, or \isotopessa{}, which will be the subject of the rest of this
-paper.
+to obtain \textit{type-theoretic SSA}, or \isotopessa{}, which will be the subject of the rest of
+this paper.
 
 As a running example, consider the simple imperative program to compute $10!$ given in
 Figure~\ref{fig:fact-program}. 
@@ -4268,44 +4259,83 @@ $\ms{PTSO} = \ms{Ide}(\ms{Set}_{\ms{TSO}}, \ms{pflush})$.
 Static Single Assignment (SSA) form was first introduced as a compiler intermediate representation
 by \citet{alpern-ssa-original-88} and \citet{rosen-gvn-1988} to address data-flow problems such as
 \emph{common subexpression elimination (CSE)}, \emph{global value numbering (GVN)}, and
-\emph{constant propagation}. Since then, SSA has become a cornerstone of modern compiler design,
-forming the basis of intermediate representations in production-grade compilers, notably the LLVM
-compiler infrastructure~\cite{llvm}. 
+\emph{constant propagation}; \citet{cytron-ssa-intro-91} provided a foundational algorithm for
+lowering programs from \emph{3-address code}, or \emph{register transfer language (RTL)}, into SSA
+form with a minimal number of $\phi$-nodes, based on the graph-theoretic notion of a \emph{dominance
+frontier}. Since then, SSA has become a cornerstone of modern compiler design, forming the basis of
+intermediate representations in production-grade compilers, notably the LLVM compiler
+infrastructure~\cite{llvm}. 
+
+\TODO{cite GCC? Cranelift and friends?}
 
 The key property that makes SSA effective for compiler implementation is that each variable is
-assigned exactly once, simplifying the tracking of variable values throughout the program. This
-property enables more straightforward algebraic reasoning about variable values, significantly
-simplifying data-flow analyses and enabling powerful optimizations. A quintessential example of an
-SSA-enabled optimization is \emph{sparse conditional constant propagation (SCCP)}, introduced by
-\citet{wegman-sccp-91}, which leverages SSA to efficiently combine constant propagation with dead
-code elimination through a lattice-based data-flow analysis. \citet{cytron-ssa-intro-91} provided a
-foundational algorithm for lowering programs into SSA form with a minimal number of $\phi$-nodes.
+assigned exactly once, simplifying the tracking of variable values throughout the program. For
+example, if we know that $x$ and $y$ are constant, and the (single) definition of $z$ is $z = x +
+y$, then we can safely assume that $z$ is constant as well without further analysis, even if this
+definition appears within a loop. A quintessential example of an SSA-enabled optimization is
+\emph{sparse conditional constant propagation (SCCP)}, introduced by \citet{wegman-sccp-91}, which
+leverages SSA to efficiently combine constant propagation with dead code elimination through a
+lattice-based data-flow analysis.
 
 \citet{appel-ssa} showed informally how SSA can be seen as a collection of mutually tail-recursive
 procedures. In this interpretation, $\phi$-nodes correspond to function arguments, and
 dominance-based scoping corresponds to the lexical scoping of the procedures themselves, with
 dominated procedures appearing inside the bodies of the procedures that dominate them. This
-functional interpretation of SSA highlights why it is so effective for optimization: by exposing the
-functional structure of programs, SSA enables algebraic reasoning techniques traditionally used in
-functional programming. Optimizations that are natural in the functional paradigm, such as inlining,
-dead code elimination, and constant propagation, become more accessible in SSA form. In essence,
-SSA ``exposes the functional program hiding inside the imperative one'' \cite{appel-ssa}.
+perspective implies that SSA effectively exposes the functional program hidden inside the imperative
+one. This functional interpretation of SSA highlights why it is so effective for optimization:
+since, just like in functional programming, variables are immutable in SSA, it enables algebraic
+reasoning techniques traditionally used in functional programming. Optimizations that are natural in
+the functional paradigm, such as inlining, dead code elimination, and constant propagation, become
+more accessible in SSA form.
 
-The correspondence between SSA and functional intermediate representations has been explored further
-in the literature. \citet{kelsey-95-cps} investigated the relationship between SSA and
-continuation-passing style (CPS), which is a commonly used intermediate representation in compilers
-for functional languages, noting that while not all CPS programs can be converted to SSA, those
-without non-local control flow (e.g., exceptions or first-class continuations) can be. This
-alignment allows many optimizations requiring flow analysis in CPS to be performed directly in SSA,
-which often drastically simplifies dataflow analysis.
+\TODO{expand, segue}
 
-However, \citet{flanagan-93-anf} suggests that optimizations are better expressed directly on
-programs in A-normal form (ANF). ANF, which restricts expressions to have at most one function call,
-provides a clearer operational interpretation than general lambda calculus terms, while allowing
-many common CPS optimizations to be expressed as simple $\beta\eta$ reductions.
-\citet{chakravarty-functional-ssa-2003} formalized Appel's observation by establishing a tight
-correspondence between SSA and ANF, using this to prove the correctness of a constant propagation
-analysis. 
+The relationship between SSA and Continuation-Passing Style (CPS) was explored by
+\cite{kelsey-95-cps}. He noted that while not all CPS programs can be directly converted to SSA
+form—particularly those using non-local returns like longjmp or call/cc—the typical outputs of CPS
+transformations avoid such features. Kelsey observed that many optimizations requiring flow analysis
+in CPS could be performed directly in SSA, largely because CPS programs are predominantly functional
+in nature.
+
+\TODO{expand, segue}
+
+Building on these insights, \citet{chakravarty-functional-ssa-2003} formalized a mapping from SSA to
+A-normal form (ANF). They argued that ANF provides a clearer operational interpretation than general
+lambda calculus, facilitating advanced functional optimizations like 0CFA (Zero-Control-Flow
+Analysis). Their work also referenced \citet{flanagan-93-anf}, who advocated for ANF over CPS as an
+intermediate representation, citing its efficiency and the reduced need for complex flow analyses.
+
+\TODO{mention $\beta\eta$ optimizations?}
+
+\TODO{Thorin \citet{thorin-12} stuff}
+
+Despite these advancements, earlier works primarily focused on establishing correspondences between
+SSA and functional representations without providing explicit semantics or comprehensive equational
+theories. \citet{benton-kennedy-99} addressed this gap by introducing the Monadic Intermediate
+Language (MIL). MIL is equipped with an operational semantics from which a rich equational theory is
+derived, allowing for refinement through observational equivalence. Their approach differs from
+Moggi's equational metalanguage \cite{moggi-91-monad} by emphasizing values and computations without
+nesting computations within computations, akin to the distinction between Kleisli and Freyd
+categories.
+
+\TODO{reflow}
+
+Further exploring the theoretical underpinnings of SSA, \citet{garbuzov-structural-cfg-2018}
+established a correspondence between an operational semantics for SSA and \emph{Call-By-Push-Value
+(CBPV)} \cite{levy-cbpv-99}. Utilizing normal-form bisimulations from \citet{lassen-bisim}, they
+derived an equational theory to justify compiler optimizations. However, their operational semantics
+is effect-free, which means it cannot justify optimizations involving side effects, such as
+eliminating redundant writes.
+
+\TODO{segue nicer}
+
+The work by \citet{goncharov-metalang-21} is particularly relevant as it presents a metalanguage for
+\emph{guarded iteration} using guarded Elgot monads, closely resembling our own approach. Their
+metalanguage, based on labeled iteration concepts from \citet{geron-iteration-16}, employs
+fine-grained call-by-value semantics within a distributive category and a strong guarded
+pre-iterative monad for denotational semantics. 
+
+\TODO{properly compare and contrast...}
 
 \TODO{Write this in a historical style}
 \begin{itemize}
@@ -4422,13 +4452,7 @@ analysis.
 
 \subsubsection{Other SSA type systems}
 
-\TODO{Proposed structure:}
-
-\begin{enumerate}
-  \item \todo{these}
-\end{enumerate}
-
-\TODO{notes for below:}
+\TODO{this}
 
 \begin{itemize}
   \item \citet{typed-effect-ssa-rigon-torrens-vasconcellos-20} give a typed translation from SSA
@@ -4458,13 +4482,25 @@ analysis.
 
 \subsubsection{Mechanizations of SSA}
 
-\TODO{Proposed structure:}
+\TODO{reflow}
 
-\begin{enumerate}
-  \item \todo{these}
-\end{enumerate}
+Mechanized formalizations of SSA have played a crucial role in advancing verified compiler
+technology. The CompCertSSA project by \citet{compcert-ssa-12} is a prominent example, where SSA was
+integrated into the CompCert \cite{leroy-compcert-09} verified compiler using translation validation
+for the conversion to SSA form. They provided a simple operational semantics for the SSA
+intermediate representation, formalized within the Coq proof assistant. The SSA middle-end was
+plugged in by using CompCert's RTL representation to generate a pruned SSA IR that could undergo
+optimizations before being deconstructed back into RTL for the rest of CompCert's compilation
+pipeline; rather than verify this procedure, \emph{translation validation}, which checks that a
+compilation pass after-the-fact using a verified checker, was employed instead.
 
-\TODO{notes for below:}
+\TODO{segue}
+
+Going beyond CompCertSSA, \citet{vellvm-12} have studied the semantics of the LLVM IR itself,
+contributing to the mechanization of SSA by providing various formalized semantics for the LLVM IR
+in Coq.
+
+\TODO{rest}
 
 \begin{itemize}
   \item CompcertSSA \citet{compcert-ssa-12}
@@ -4509,6 +4545,93 @@ analysis.
 \end{itemize}
 
 \subsection{Compositional (Relaxed) Concurrency}
+
+Concurrency in shared-memory computation is often modeled using operational semantics that describe
+the interleaving of different threads on an abstract machine. While this approach effectively
+captures the possible executions of concurrent programs, it poses significant challenges for
+\emph{compositional} reasoning. This can make it intractable to effectively reason about the
+behaviour of large software systems. To enable compositional reasoning about concurrent programs, we
+can instead try to assign program fragments a \emph{denotational semantics}, and then attempt to
+rigorously define how to combine these in a component-by-component fashion. Two major approaches to
+doing this are \emph{trace-based semantics} and \emph{game semantics}.
+
+In trace-based semantics, as exemplified by \citet{brookes-full-abstraction-96}, program behaviors
+are represented as sequences of observable actions (traces). This approach allows for a monadic
+model of sequentially consistent (SC) concurrency, facilitating compositional reasoning.
+Mechanizations like \citet{xia-itrees-20} use interaction trees to formalize effectful computations
+in a monadic framework, supporting reasoning about equivalence up to weak bisimulation.
+
+Game semantics, introduced by \citet{abramsky-algol-96} and further developed by \citet{ghica-08},
+models the interaction between a program and its environment as a game between two players: the
+program and its context. This perspective provides a rich categorical semantics of concurrency and
+has recently been effective in giving novel categorical characterizations of foundational properties
+such as \emph{linearizability}~\citep{vale-linearizability-24}.
+
+However, modeling real-world concurrency, especially in the presence of weak memory models, is
+considerably more complex, since oftentimes systems are \emph{not} linearizable: a concurrent system
+may exhibit behaviors that cannot be explained by a simple interleaving of its components on a
+single thread. Models for such systems are often inspired by the hardware that gives rise to the
+weak behaviour, and therefore it can be very challenging to abstract away from the notion of
+possible executions of entire programs. \citet{batty-compositional-17} argues that it is essential
+to have a compositional semantics for relaxed concurrency, not only to be able to reason about the
+correctness of programs running under modern architectures, but also to study how their relaxed
+interacts with the aggressive optimizations performed by modern compilers, and therefore to be able
+to determine the soundness of the latter.
+
+\paragraph{Pomsets.}
+
+One potential denotational semantics for relaxed concurrency is in terms of \emph{partially ordered
+multisets} (pomsets), which capture the partial ordering of events in concurrent computations.
+Pomsets allow for modeling true concurrency without resorting to equivalence classes of
+interleavings. They can be used to construct monadic models of concurrency, providing a structure
+that is more faithful to the behaviors observed under weak memory models.  \citet{sparky} utilize
+pomsets as an ingredient in a monad stack to build a model of Total Store Order (TSO) weak memory.
+Their approach successfully supports loops and provides a structure amenable to SSA semantics, which
+we discuss in Section~\ref{ssec:tso}.
+
+\TODO{discuss laws of parallel programming?}
+
+To extend this approach to more complex weak memory models, such as release-acquire semantics found
+in ARM architectures, is an area of ongoing research.  \citet{jagadeesan-pwp-20} introduce
+\emph{pomsets with preconditions} (PwP) to model weak memory behaviors. However,
+\citet{leaky-semicolon} demonstrate that sequential composition (the semicolon operator) in PwP is
+not associative, which undermines many common program optimizations and breaks the monadic structure
+necessary for compositional reasoning. To address this issue, \citet{leaky-semicolon} propose
+\emph{pomsets with predicate transformers} (PwT), which restore the associativity of sequential
+composition. Despite this improvement, their semantics still do not support loops, and it remains
+future work to develop a monadic structure based on PwT that fully supports recursion and iterative
+constructs.
+
+\paragraph{Event Structures}
+
+\TODO{reflow and expand raw material}
+
+Another approach involves using \emph{event structures}, rooted in game semantics, to model
+concurrency with respect to a memory model. \citet{castellan-16} and later
+\citet{paviotti-modular-relaxed-dep-20} employ event structures to provide denotational semantics
+for relaxed memory models. These models capture the complexities of weak memory behaviors and allow
+for compositional reasoning. However, \citet{paviotti-modular-relaxed-dep-20} relies on
+step-indexing, which can prevent loop unrolling from being an equation rather than a refinement.
+Techniques from axiomatic domain theory~\citep{fiore-phd-94} suggest that this limitation could be
+addressed, potentially making these models compatible with our SSA semantics.
+
+\paragraph{Trace Semantics}
+
+\TODO{reflow and expand raw material}
+
+When using trace-based models for weak memory, additional complexities arise due to the need to
+capture relaxed behaviors. \citet{jagadeesan-brookes-relaxed-12} present a TSO monad based on traces
+that are quotiented to account for relaxed memory effects. Their model extends the work of
+\citet{brookes-full-abstraction-96} to weak memory by adding buffer closure properties to the
+traces, allowing for the formalization of TSO behaviors in a compositional manner.
+
+Similarly, \citet{release-acquire} develop a monadic model for release-acquire memory semantics
+using quotiented traces. They define an operational semantics for release-acquire and provide a
+corresponding trace semantics. While their model supports many transformations and optimizations,
+they have not yet established an Elgot structure, which is necessary for modeling loops and
+recursion in SSA.
+
+\TODO{discuss laws of parallel programming?}
 
 \TODO{Proposed structure:}
 \begin{enumerate}
