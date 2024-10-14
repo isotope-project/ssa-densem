@@ -4272,8 +4272,9 @@ $\ms{PTSO} = \ms{Ide}(\ms{Set}_{\ms{TSO}}, \ms{pflush})$.
   \item SSA itself
   \begin{itemize}
     \item First developed by \citet{alpern-ssa-original-88}, \citet{rosen-gvn-1988} to tackle
-    dataflow problems \todo{find specific citation for sparse conditional constant propagation; is
-    it \citet{wegman-sccp-91}}
+    dataflow problems; poster optimization is \emph{sparse conditional constant propagation} given
+    in
+    \citet{wegman-sccp-91}
     \item \citet{cytron-ssa-intro-91} describes a translation algorithm to convert programs to SSA
     with the minimum number of $\phi$-nodes.
   \end{itemize}
@@ -4300,16 +4301,19 @@ $\ms{PTSO} = \ms{Ide}(\ms{Set}_{\ms{TSO}}, \ms{pflush})$.
     \item Formalizes mapping of programs in SSA to programs in A-normal form; ANF has a more clearly
     defined operational interpretation than general lambda terms -- us: and much less requirements
     to build up a categorical semantics, I think!
-    \item Compare to \citet{kelsey-95-cps}; \citet{flanagan-93-anf} says there is no advantage to
-    using CPS over direct-style representations such as ANF since it requires additional
-    transformations and non-distributive flow analysis is too expensive; so prefer ANF
-    \todo{check why, read \citet{flanagan-93-anf}}
-    \item This presents a mapping from SSA to ANF. (Not ANF to SSA too?)
+    \item Compare to \citet{kelsey-95-cps}; \citet{flanagan-93-anf} argues for ANF as an IR rather
+    than CPS; says there is no advantage to using CPS over direct-style representations such as ANF
+    since it requires additional transformations and non-distributive flow analysis is too
+    expensive. In particular, $\beta\eta$ optimizations on CPS are also $\beta\eta$ optimizations on
+    ANF terms.
+    \item This presents a mapping from SSA to ANF. (Not ANF to SSA!)
     \item Nice because presents a way to move towards complex functional optimizations like 0CFA
   \end{itemize}
   \item Thorin (CPS with dominance-based scoping) \citet{thorin-12} is interesting as it attempts to
-  add dominance-based scoping to CPS rather than add functional-style scoping to SSA \todo{collect
-  more notes}
+  add dominance-based scoping to CPS rather than add functional-style scoping to SSA. The argument
+  used here is that re-use of variable names makes it difficult to reason about regular CPS
+  programs, whereas standard SSA-based IRs make it very difficult to reason about closures and
+  optimize out higher-order functions.
   \item Up to here: establishing the correspondence is the contribution, but very few equations,
   no explicit semantics given
   \item SSA MIL \citet{benton-kennedy-99} (they have a rich equational theory)
@@ -4408,10 +4412,8 @@ $\ms{PTSO} = \ms{Ide}(\ms{Set}_{\ms{TSO}}, \ms{pflush})$.
   of the iteration structure of a program, which they use to better understand the loop-closing
   $\phi$-nodes found both in the gated SSA representation as well as practical compilers such as
   GCC.
-
-  % \item \todo{maybe not relevant, but worth reading} \emph{On the Operational Theory of the
-  % CPS-Calculus: Towards a Theoretical Foundation for IRs}
-
+  \item \citet{menon-verified-06} give a type-safe formalization of SSA, but it does not enforce
+  the SSA property
 \end{itemize}
 
 \subsubsection{Mechanizations of SSA}
@@ -4426,10 +4428,44 @@ $\ms{PTSO} = \ms{Ide}(\ms{Set}_{\ms{TSO}}, \ms{pflush})$.
 
 \begin{itemize}
   \item CompcertSSA \citet{compcert-ssa-12}
+  \begin{itemize}
+    \item Extends CompCert with SSA; uses translation validation for conversion to SSA
+    \item Gives simple operational semantics
+    \item Formalized in Coq
+    \item Builds on top of CompCert by enriching it with an SSA middle end; plugged in at the level
+    of RTL and generates a pruned SSA IR from it. After SSA optimizations, we deconstruct it naively
+    back to RTL for the rest of CompCert's machinery to work on
+  \end{itemize}
   \item Vellvm \citet{vellvm-12}
-  \item Verifying Fast and Sparse SSA-Based Optimizations in Coq
+  \begin{itemize}
+    \item Give various mechanized semantics for LLVM in Coq and prove relationships between them: in
+    particular, a nondeterministic semantics, and a deterministic refinement
+  \end{itemize}
+  \item Verifying Fast and Sparse SSA-Based Optimizations in Coq \citet{demange-ssa-15}
+  \begin{itemize}
+    \item \citet{compcert-ssa-12} and \citet{vellvm-12} introduced SSA techniques to \emph{verified}
+    compilers
+    \item Usually restricted; bypass by using \emph{translation validation}: optimize/transform in
+    unverified code and then use a verified checker for the result
+    \item This paper provides realistic verified implementations of sparse conditional constant
+    propagation (SCCP) \citet{wegman-sccp-91}, common subexpression elimination (CSE), and 
+    global value numbering (GVN) \citet{rosen-gvn-1988}
+    \item Done within a general framework of flow-insensitive static analysis
+    \item SSA language provided with a small-step operational semantics
+  \end{itemize}
   \item \citet{siddharth-24-peephole} for verifying peephole optimisations in SSA, also formalized
   in Lean 4, in the context of MLIR
+  \begin{itemize}
+    \item Formalize a core calculus for SSA-based IRs generic over the IR and covers \emph{regions}
+    as used in the MLIR ecosystem
+    \item User-friendly frontend to convert MLIR syntax to the calculus
+    \item Scaffolding for defining and verifying peephole rewrites, with tactics
+    \item Tested on bitvector rewrites from LLVm, structured control-flow, and fully homomorphic
+    encryption
+    \item Framework for intrinsically well-typed SSA; \emph{but} only structured control-flow via
+    regions is allowed; different from our notion of region which specifically allows for
+    unstructured control-flow!
+  \end{itemize}
 \end{itemize}
 
 \subsection{Compositional (Relaxed) Concurrency}
@@ -4440,14 +4476,16 @@ $\ms{PTSO} = \ms{Ide}(\ms{Set}_{\ms{TSO}}, \ms{pflush})$.
   abstract machine.
   \item This makes compositional reasoning difficult. We want a compositional way to reason about
   the behaviour of program fragments, and what it means to put them together.
-  \item Two major approaches: \emph{traces} (see: \citet{brookes-full-abstraction-96}) (and
-  \emph{interaction trees} \citet{xia-itrees-20}), and \emph{game semantics} (see:
-  \citet{abramsky-algol-96}, later \citet{ghica-08}). See also: \citet{milner-processes-75},
+  \item Two major approaches: \emph{traces} (see: \citet{brookes-full-abstraction-96}), and
+  \emph{game semantics} (see: \citet{abramsky-algol-96}, later \citet{ghica-08}). See also:
+  \citet{milner-processes-75},
   \citet{plotkin-power-76}
   \item Game semantics gives good categorical semantics of concurrency, and lets us effectively
   define properties such as \emph{linearizability} \citet{vale-linearizability-24}
   \item Traces can be used to give us a nice monadic model of SC concurrency
-  (\citet{brookes-full-abstraction-96}???)
+  (\citet{brookes-full-abstraction-96}); can mechanize something like this with
+  \citet{xia-itrees-20}, which also have a nice monad; our quotient for \cite{sparky} is just their
+  notion of weak bisimulation
   \item However, real concurrency is very complicated \citet{batty-compositional-17}, especially in
   the presence of Weak Memory (TM):
   \begin{enumerate}
@@ -4488,25 +4526,6 @@ $\ms{PTSO} = \ms{Ide}(\ms{Set}_{\ms{TSO}}, \ms{pflush})$.
 \end{enumerate}
 
 \TODO{paper notes to include:}
-
-\begin{itemize}
-  \item \citet{ghica-08} notes:
-  \begin{itemize}
-    \item \todo{...}
-  \end{itemize}
-  \item \citet{vale-linearizability-24} notes:
-  \begin{itemize}
-    \item \todo{...}
-  \end{itemize}
-  \item \citet{castellan-16} notes:
-  \begin{itemize}
-    \item \todo{...}
-  \end{itemize}
-  \item \citet{paviotti-modular-relaxed-dep-20} notes:
-  \begin{itemize}
-    \item \todo{...}
-  \end{itemize}
-\end{itemize}
 
 \begin{itemize}
   \item \citet{brookes-full-abstraction-96} notes:
@@ -4571,6 +4590,28 @@ $\ms{PTSO} = \ms{Ide}(\ms{Set}_{\ms{TSO}}, \ms{pflush})$.
   C++11 concurrency model, mostly formalized in Coq
 \end{itemize}
 
+\begin{itemize}
+  \item \citet{ghica-08} notes:
+  \begin{itemize}
+    \item Semantics very close to \citet{brookes-full-abstraction-96}, but \emph{fine-grained} vs.
+    \emph{coarse-grained} (Brookes is coarse-grained due to $\ms{await}$ construct)
+    \item Language allows side-effects in expressions
+    \item Give a compositional fully abstract game model for a fine-grained shared-variable language
+  \end{itemize}
+  % \item \citet{vale-linearizability-24} notes:
+  % \begin{itemize}
+  %   \item \todo{...}
+  % \end{itemize}
+  % \item \citet{castellan-16} notes:
+  % \begin{itemize}
+  %   \item \todo{...}
+  % \end{itemize}
+  % \item \citet{paviotti-modular-relaxed-dep-20} notes:
+  % \begin{itemize}
+  %   \item \todo{...}
+  % \end{itemize}
+\end{itemize}
+
 \TODO{text seeds:}
 
 \begin{itemize}
@@ -4578,14 +4619,15 @@ $\ms{PTSO} = \ms{Ide}(\ms{Set}_{\ms{TSO}}, \ms{pflush})$.
   \item Oftentimes, the most natural way to model a concurrent shared-memory computation is via an
   operational semantics, in which different threads of execution interleave and interact in an
   idealized, abstract machine. The issue with this formulation is it makes it quite challenging to
-  reason about the behavior of large programs \emph{compositionally}, rather than attempting to model
-  the entire program at once. This is especially a problem in the context of weak memory models, which
-  are inspired by the hardware that gives rise to the weak behaviour and hence often in terms of the
-  possible execution of entire programs. \citet{batty-compositional-17} explains that it would be more
-  useful to have a compositional semantics for concurrency, and especially relaxed concurrency,
-  because it permits reasoning about programs in a local, component-by-component fashion. This is very
-  challenging to achieve, because the semantics of each expression must include enough information to
-  understand how it interacts with arbitrary other threads, and has been the object of much research.
+  reason about the behavior of large programs \emph{compositionally}, rather than attempting to
+  model the entire program at once. This is especially a problem in the context of weak memory
+  models, which are inspired by the hardware that gives rise to the weak behaviour and hence often
+  in terms of the possible execution of entire programs. \citet{batty-compositional-17} explains
+  that it would be more useful to have a compositional semantics for concurrency, and especially
+  relaxed concurrency, because it permits reasoning about programs in a local,
+  component-by-component fashion. This is very challenging to achieve, because the semantics of each
+  expression must include enough information to understand how it interacts with arbitrary other
+  threads, and has been the object of much research.
   
   Compositional models of \emph{sequentially consistent} concurrency, in which threads are simply
   interleaved, is a very well-studied problem in the literature. In \citet{abramsky-algol-96}, a
@@ -4610,12 +4652,13 @@ $\ms{PTSO} = \ms{Ide}(\ms{Set}_{\ms{TSO}}, \ms{pflush})$.
   lists of loads, stores, and arithmetic operations; event structures are then used to give
   denotational semantics to these programs with respect to different \emph{memory models}, ranging
   from sequential concurrency to relaxed and non-linear models.
+
   \citet{paviotti-modular-relaxed-dep-20} use the event structure approach to give denotational
   semantics for relaxed memory concurrency, particularly including semantics for branches and loops.
-  However, they do this using step indexing, and so loop unrolling is only a refinement rather than an
-  equation. Since event structures satisfy the axioms of axiomatic domain theory~\citet{fiore-phd-94},
-  it ought to be possible to modify this semantics into one in which loop unrolling is an equation, at
-  which point it would be a model of our calculus. 
+  However, they do this using step indexing, and so loop unrolling is only a refinement rather than
+  an equation. Since event structures satisfy the axioms of axiomatic domain
+  theory~\citet{fiore-phd-94}, it ought to be possible to modify this semantics into one in which
+  loop unrolling is an equation, at which point it would be a model of our calculus. 
 \end{itemize}
 
 \subsection{Premonoidal and (Guarded) Elgot Categories}
@@ -4623,48 +4666,48 @@ $\ms{PTSO} = \ms{Ide}(\ms{Set}_{\ms{TSO}}, \ms{pflush})$.
 \TODO{Proposed structure:}
 
 \begin{enumerate}
-  \item Premonoidal categories were introduced in \todo{?} to \todo{?}; Freyd categories were
-  introduced in \todo{?} to \todo{?}. \todo{Hyland?} worked on defining recursion in this setting
-  with work on premonoidal trace structures.
-  \item \citet{promonad} generalizes premonoidal categories to \emph{effectful categories}, shows
-  how to draw string diagrams for these using a state wire, as used in this paper
+  \item The traditional semantics of functional programming is using a monad \citet{moggi-91-monad},
+  which generates a Kleisli category
+  \item A Kleisli category is a premonoidal category; if the underlying category is Cartesian, then
+  it contains a Cartesian subcategory of pure morphisms: this structure is an example of a
+  \emph{Freyd} category. 
+  \item In general, Freyd categories, made up of a premonoidal category with a Cartesian base
+  category, have less structure than monads since we often do not need ``computations of
+  computations" (i.e. $\ms{T}(\ms{T}\;A)$) in the first-order setting. These are traditionally used
+  for first-order semantics
+  \cite{power-premonoidal-02}
+  \item We can generalize to a symmetric monoidal base category as in \citet{staton-impure-13} to
+  yield \emph{effectful categories}, \citet{promonad} shows how to draw string diagrams for these
+  using a state wire, as used in this paper. This was first done pre-formally by
+  \citet{jeffrey-premonoidal-97}. The slogan is ``premonoidal categories are monoidal categories
+  with a runtime'' \cite{promonad}.
   \item \citet{fuhrmann-direct-1999} discusses abstract Kleisli categories, which are like Freyd
   categories but have more structure, and in particular introduces the notion of \emph{central},
   \emph{copyable}, \emph{discardable}, and \emph{thunkable} morphisms. These can be used to
   generalize pure/impure to the effectful setting, where we have pure/relevant/affine/linear/impure,
   for example; we have already made significant progress towards this, but have left it out of this
   paper.
-  \item Elgot categories / monads were introduced in \todo{?} to \todo{?}
-  \item These were generalized to guarded Elgot categories / monads by \todo{?} to \todo{?}. We
-  could add support for guardedness to unify \isotopessa{} models and \isotopessa{} expression
-  models, since the identity monad is the initial guarded Elgot monad, i.e. every category is
-  vacuously guarded Elgot. Could be useful to reason about SSA for e.g. terminating languages like
-  Lean or somesuch, or reasoning about productivity.
-  \item The coinductive resumption monad from \citet{coinductive-resumption-levy-goncharov-19} could
-  be a useful place to look for freeish \isotopessa{} models
-  \item Interaction with monoidal structure was first studied by \todo{?} in terms of strong Elgot
-  categories, and \todo{something about strong \emph{guarded} Elgot categories}. \todo{How much is
-  there about interaction with premonoidal structure?}
+  \item Elgot categories / monads were introduced in \citet{elgot-elgot-75} and formalized in
+  \citet{adamek-elgot-11}
+  \item These were generalized to guarded Elgot monads in
+  \citet{coinductive-resumption-levy-goncharov-19} to support partial non-unique iteration. We could
+  add support for guardedness to unify \isotopessa{} models and \isotopessa{} expression models,
+  since the identity monad is the initial guarded Elgot monad, i.e. every category is vacuously
+  guarded Elgot. Could be useful to reason about SSA for e.g. terminating languages like Lean or
+  somesuch, or reasoning about productivity.
+  
+  % \item The coinductive resumption monad from \citet{coinductive-resumption-levy-goncharov-19}
+  % could be a useful place to look for freeish \isotopessa{} models 
+  
+  %\item Interaction with monoidal structure was first studied by \todo{?} in terms of strong Elgot
+  % categories, and \todo{something about strong \emph{guarded} Elgot categories}. \todo{How much is
+  % there about interaction with premonoidal structure?}
 \end{enumerate}
 
-\TODO{paper notes to include:}
+\TODO{MLIR future work here?}
 
-\begin{itemize}
-  \item \citet{promonad} nodes:
-  \begin{itemize}
-    \item \todo{...}
-  \end{itemize}
-  \item \citet{fuhrmann-direct-1999} notes:
-  \begin{itemize}
-    \item \todo{...}
-  \end{itemize}
-  \item \citet{coinductive-resumption-levy-goncharov-19} notes:
-  \begin{itemize}
-    \item \todo{...}
-  \end{itemize}
-\end{itemize}
-
-\TODO{future work lore from \citet{goncharov-metalang-21} w.r.t. hybrid lore} 
+\TODO{put future work lore from \citet{goncharov-metalang-21} w.r.t. hybrid lore
+\citet{goncharov-hybrid-18} here} 
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references}
