@@ -4265,7 +4265,47 @@ $\ms{PTSO} = \ms{Ide}(\ms{Set}_{\ms{TSO}}, \ms{pflush})$.
 
 \subsection{SSA, FP and IRs}
 
-\TODO{proposed structure-ify?}
+Static Single Assignment (SSA) form was first introduced as a compiler intermediate representation
+by \citet{alpern-ssa-original-88} and \citet{rosen-gvn-1988} to address data-flow problems such as
+\emph{common subexpression elimination (CSE)}, \emph{global value numbering (GVN)}, and
+\emph{constant propagation}. Since then, SSA has become a cornerstone of modern compiler design,
+forming the basis of intermediate representations in production-grade compilers, notably the LLVM
+compiler infrastructure~\cite{llvm}. 
+
+The key property that makes SSA effective for compiler implementation is that each variable is
+assigned exactly once, simplifying the tracking of variable values throughout the program. This
+property enables more straightforward algebraic reasoning about variable values, significantly
+simplifying data-flow analyses and enabling powerful optimizations. A quintessential example of an
+SSA-enabled optimization is \emph{sparse conditional constant propagation (SCCP)}, introduced by
+\citet{wegman-sccp-91}, which leverages SSA to efficiently combine constant propagation with dead
+code elimination through a lattice-based data-flow analysis. \citet{cytron-ssa-intro-91} provided a
+foundational algorithm for lowering programs into SSA form with a minimal number of $\phi$-nodes.
+
+\citet{appel-ssa} showed informally how SSA can be seen as a collection of mutually tail-recursive
+procedures. In this interpretation, $\phi$-nodes correspond to function arguments, and
+dominance-based scoping corresponds to the lexical scoping of the procedures themselves, with
+dominated procedures appearing inside the bodies of the procedures that dominate them. This
+functional interpretation of SSA highlights why it is so effective for optimization: by exposing the
+functional structure of programs, SSA enables algebraic reasoning techniques traditionally used in
+functional programming. Optimizations that are natural in the functional paradigm, such as inlining,
+dead code elimination, and constant propagation, become more accessible in SSA form. In essence,
+SSA ``exposes the functional program hiding inside the imperative one'' \cite{appel-ssa}.
+
+The correspondence between SSA and functional intermediate representations has been explored further
+in the literature. \citet{kelsey-95-cps} investigated the relationship between SSA and
+continuation-passing style (CPS), which is a commonly used intermediate representation in compilers
+for functional languages, noting that while not all CPS programs can be converted to SSA, those
+without non-local control flow (e.g., exceptions or first-class continuations) can be. This
+alignment allows many optimizations requiring flow analysis in CPS to be performed directly in SSA,
+which often drastically simplifies dataflow analysis.
+
+However, \citet{flanagan-93-anf} suggests that optimizations are better expressed directly on
+programs in A-normal form (ANF). ANF, which restricts expressions to have at most one function call,
+provides a clearer operational interpretation than general lambda calculus terms, while allowing
+many common CPS optimizations to be expressed as simple $\beta\eta$ reductions.
+\citet{chakravarty-functional-ssa-2003} formalized Appel's observation by establishing a tight
+correspondence between SSA and ANF, using this to prove the correctness of a constant propagation
+analysis. 
 
 \TODO{Write this in a historical style}
 \begin{itemize}
