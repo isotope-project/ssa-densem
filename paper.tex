@@ -4323,7 +4323,8 @@ underpinned by formal semantics. Thus far, the literature we have reviewed offer
 equations for SSA, making formal reasoning about program transformations and optimizations
 challenging. One approach found in the literature is to relax SSA into forms that support richer
 substitution principles and well-defined operational semantics, which can then be used to reason
-about SSA itself, as we explore in this paper.
+about SSA itself, as we explore in this paper. Two papers which exemplify this approach are
+\citet{benton-kennedy-99} and \citet{garbuzov-structural-cfg-2018}.
 
 One of the difficulties of working with ANF as an intermediate representation is that it does not,
 in general, satisfy \emph{substitution}: replacing a variable $x$ with a compound expression like a
@@ -4407,97 +4408,67 @@ does not support any effects other than nontermination.
 
 \subsubsection{Other SSA type systems}
 
-\TODO{this}
+Several attempts have been made to provide a type-theoretic treatment of SSA. The work most similar
+to ours is by \citet{typed-effect-ssa-rigon-torrens-vasconcellos-20}, who present a typed
+translation from SSA into the lambda calculus using a type-and-effect system, observing that the
+algorithm for converting programs to SSA form may also be viewed as a mechanism for transforming
+programs in a functional language with unstructured control flow into equivalent expressions.
 
-\begin{itemize}
-  \item \citet{typed-effect-ssa-rigon-torrens-vasconcellos-20} give a typed translation from SSA
-  into the lambda calculus, into a type-and-effect system.
-  \item \citet{ssa-types-matsuno-ohori-06} give a type theory for what appear to be ordinary
-  three-address code programs. However, every well-typed program can be placed into SSA-form by
-  inserting $\phi$-nodes in a fully type-directed way. This lets them model SSA without any
-  $\phi$-nodes, letting them use the standard semantics for three-address code.
-  \item \citet{hua-explicit-ssa-2010} give another type system and direct operational
-  semantics for SSA, and proves type safety for it. 
-  \item Many operational semantics for SSA have arisen from compiler verification efforts.
-  \citet{barthe-compcert-ssa-2014} give an operational semantics as part of the CompCertSSA project,
-  and give a semantics-preserving translation from three-address code into SSA.
-  \citet{herklotz-gsa-2023} formalise "gated SSA" and give semantics-preserving translations between
-  it and ordinary SSA. Going beyond CompCertSSA, \citet{vellvm-12} have studied the semantics of the
-  LLVM IR itself.  
-  \item \citet{vellvm-12} memory model is based on CompCert's; they provide both small-step and
-  big-step operational semantics
-  \item There has been much less work on denotational semantics for SSA, or directly on its
-  equational theory. \citet{pop-ssa-inout-2009} give an unusual denotational model of SSA in terms
-  of the iteration structure of a program, which they use to better understand the loop-closing
-  $\phi$-nodes found both in the gated SSA representation as well as practical compilers such as
-  GCC.
-  \item \citet{menon-verified-06} give a type-safe formalization of SSA, but it does not enforce
-  the SSA property
-\end{itemize}
+Similarly to \isotopessa{}, they extend the lambda calculus with a mutually recursive
+\texttt{where}-binding, which allows them to directly translate unstructured SSA control flow.
+However, their calculus uses only a single syntactic category of expressions, whereas we attempt to
+model (generalized) SSA directly by distinguishing between expressions and regions. Their language
+also includes support for effect handlers, which are beyond the scope of our current study but
+represent an interesting direction for future work. While the authors do not provide an equational
+theory or a semantics for their language, we believe that our equational theory could be adapted to
+the fragment of their language without effect handlers.
+
+An interesting alternative approach is demonstrated by \citet{ssa-types-matsuno-ohori-06}, who give
+a type theory for what appear to be ordinary three-address code programs. However, every well-typed
+program can be placed into SSA-form by inserting $\phi$-nodes in a fully type-directed way. This
+lets them model SSA without any $\phi$-nodes, letting them use the standard semantics for
+three-address code. 
+
+\citet{menon-verified-06} give a type-safe formalization of SSA, along with an operational semantics
+and  formal definitions of dominance, definition/use points, and the SSA property for 3-address
+code. By augmenting SSA with first-class proof variables, they aim to give a representation which
+allows aggressive optimizations to preserve safety information. Their type system requires checking
+the SSA property separately from well-typedness, but is proven sound if the SSA property holds.
+\citet{hua-explicit-ssa-2010} give another type system and direct operational semantics for standard
+SSA, and prove type safety for it.
+
+Many operational semantics for SSA have arisen from compiler verification efforts.
+\citet{barthe-compcert-ssa-2014} give an operational semantics as part of the CompCertSSA project,
+and give a semantics-preserving translation from three-address code into SSA.
+\citet{herklotz-gsa-2023} formalise "gated SSA" and give semantics-preserving translations between
+it and ordinary SSA. Going beyond CompCertSSA, \citet{vellvm-12} have studied the semantics of the
+LLVM IR itself as part of the Vellvm project. There has been much less work on denotational
+semantics for SSA, or directly on its equational theory. \citet{pop-ssa-inout-2009} give an unusual
+denotational model of SSA in terms of the iteration structure of a program, which they use to better
+understand the loop-closing $\phi$-nodes found both in the gated SSA representation as well as
+practical compilers such as GCC.
 
 \subsubsection{Mechanizations of SSA}
 
-\TODO{reflow}
 
-Mechanized formalizations of SSA have played a crucial role in advancing verified compiler
-technology. The CompCertSSA project by \citet{compcert-ssa-12} is a prominent example, where SSA was
-integrated into the CompCert \cite{leroy-compcert-09} verified compiler using translation validation
-for the conversion to SSA form. They provided a simple operational semantics for the SSA
-intermediate representation, formalized within the Coq proof assistant. The SSA middle-end was
-plugged in by using CompCert's RTL representation to generate a pruned SSA IR that could undergo
-optimizations before being deconstructed back into RTL for the rest of CompCert's compilation
-pipeline; rather than verify this procedure, \emph{translation validation}, which checks that a
-compilation pass after-the-fact using a verified checker, was employed instead.
+CompcertSSA \cite{compcert-ssa-12} is an attempt to extend the CompCert verified compiler
+\cite{leroy-compcert-09} with an SSA-based middle-end. This is achieved by generating a pruned SSA
+IR from CompCert's RTL format. Instead of verifying the RTL-to-SSA translation within Coq, this
+translation is performed by unverified code, and a separate \emph{translation validation} stage uses
+a verified checker to ensure correctness. After performing (verified) SSA optimizations, the IR is
+naively lowered back to RTL for the rest of CompCert's machinery to work on. \citet{demange-ssa-15} build on this work by providing realistic, verified implementations of Sparse Conditional Constant Propagation (SCCP) \cite{wegman-sccp-91}, Common Subexpression Elimination (CSE), and Global Value Numbering (GVN) \cite{rosen-gvn-1988} within a general framework of flow-insensitive static analysis for CompCertSSA.
 
-\TODO{segue}
-
-Going beyond CompCertSSA, \citet{vellvm-12} have studied the semantics of the LLVM IR itself,
-contributing to the mechanization of SSA by providing various formalized semantics for the LLVM IR
-in Coq.
-
-\TODO{rest}
-
-\begin{itemize}
-  \item CompcertSSA \citet{compcert-ssa-12}
-  \begin{itemize}
-    \item Extends CompCert with SSA; uses translation validation for conversion to SSA
-    \item Gives simple operational semantics
-    \item Formalized in Coq
-    \item Builds on top of CompCert by enriching it with an SSA middle end; plugged in at the level
-    of RTL and generates a pruned SSA IR from it. After SSA optimizations, we deconstruct it naively
-    back to RTL for the rest of CompCert's machinery to work on
-  \end{itemize}
-  \item Vellvm \citet{vellvm-12}
-  \begin{itemize}
-    \item Give various mechanized semantics for LLVM in Coq and prove relationships between them: in
-    particular, a nondeterministic semantics, and a deterministic refinement
-  \end{itemize}
-  \item Verifying Fast and Sparse SSA-Based Optimizations in Coq \citet{demange-ssa-15}
-  \begin{itemize}
-    \item \citet{compcert-ssa-12} and \citet{vellvm-12} introduced SSA techniques to \emph{verified}
-    compilers
-    \item Usually restricted; bypass by using \emph{translation validation}: optimize/transform in
-    unverified code and then use a verified checker for the result
-    \item This paper provides realistic verified implementations of sparse conditional constant
-    propagation (SCCP) \citet{wegman-sccp-91}, common subexpression elimination (CSE), and 
-    global value numbering (GVN) \citet{rosen-gvn-1988}
-    \item Done within a general framework of flow-insensitive static analysis
-    \item SSA language provided with a small-step operational semantics
-  \end{itemize}
-  \item \citet{siddharth-24-peephole} for verifying peephole optimisations in SSA, also formalized
-  in Lean 4, in the context of MLIR
-  \begin{itemize}
-    \item Formalize a core calculus for SSA-based IRs generic over the IR and covers \emph{regions}
-    as used in the MLIR ecosystem
-    \item User-friendly frontend to convert MLIR syntax to the calculus
-    \item Scaffolding for defining and verifying peephole rewrites, with tactics
-    \item Tested on bitvector rewrites from LLVm, structured control-flow, and fully homomorphic
-    encryption
-    \item Framework for intrinsically well-typed SSA; \emph{but} only structured control-flow via
-    regions is allowed; different from our notion of region which specifically allows for
-    unstructured control-flow!
-  \end{itemize}
-\end{itemize}
+While CompCert is a verified implementation of a new compiler in Coq, the Vellvm project
+\cite{vellvm-12} attempts to mechanize a subset of the LLVM intermediate representation (IR),
+covering the LLVM type system, operational semantics, and the well-formedness and structural
+properties of valid LLVM IR. The authors adopt a memory model for LLVM based on CompCert's
+\cite{leroy-compcert-09}, allowing them to leverage significant portions of CompCert's Coq
+infrastructure. Similarly, \citet{siddharth-24-peephole} attempt to mechanize a well-defined subset
+of the Multi-Level Intermediate Representation (MLIR) in the Lean 4 theorem prover. Their
+formalization features a user-friendly front end to convert MLIR syntax into their calculus and
+scaffolding for defining and verifying peephole rewrites using tactics. Their framework has been
+tested on bitvector rewrites from LLVM, structured control flow, and fully homomorphic encryption;
+however, as of publication, only structured control flow was fully supported.
 
 \subsection{Compositional (Relaxed) Concurrency}
 
