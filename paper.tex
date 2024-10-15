@@ -205,9 +205,9 @@
 \section{Introduction}
 
 Static single assignment form, or SSA form, has been the dominant compiler intermediate
-representation since its introduction by \citet{cytron-ssa-intro-91} in the later 1980s. Every major
-compiler -- GCC, Clang, MLIR, Cranelift -- uses this representation, because it makes many
-optimizations much easier to do than traditional 3-address code IRs.
+representation since its introduction by \citet{alpern-ssa-original-88} and \citet{rosen-gvn-1988}
+in the late 1980s. Every major compiler -- GCC, Clang, MLIR, Cranelift -- uses this representation,
+because it makes many optimizations much easier to do than traditional 3-address code IRs.
 
 The key idea behind SSA is to adapt an idea from functional programming: namely, every variable is
 defined only once. This means that substitution is unconditionally valid, without first requiring a
@@ -4252,6 +4252,34 @@ $\ms{PTSO} = \ms{Ide}(\ms{Set}_{\ms{TSO}}, \ms{pflush})$.
 \section{Discussion and Related Work}
 
 \subsection{SSA, FP and IRs}
+
+Static Single Assignment (SSA) form was first introduced as a compiler intermediate representation
+by \citet{alpern-ssa-original-88} and \citet{rosen-gvn-1988}, with the goal of facilitating
+effective reasoning about program variable equivalence. To perform optimizations like common
+subexpression elimination (CSE) effectively, we need to determine which expressions are equal
+\emph{at a given point in time}. By transforming the program into SSA form, we introduce unique
+variables for each assignment and use $\phi$-nodes to merge variable values at points where control
+paths converge. Since each variable then corresponds to a unique value at a specific point in the
+program's execution, SSA unlocks the ability to perform \emph{algebraic reasoning} about variable
+values over time. As a result, analyses like CSE become a matter of simple algebraic rewriting based
+on variable names.
+
+\citet{cytron-ssa-intro-91} provided the first efficient algorithm for converting 3-address code
+programs to SSA form using a minimal number of $\phi$-nodes. They observed that a $\phi$-node only
+needs to be introduced at the earliest point where a variable may have different values based on
+control flow. This point is computable via the graph-theoretic notion of a \emph{dominance
+frontier}, which identifies where control paths merge in the program's control flow graph. Since
+then, SSA has become the intermediate representation of choice for essentially all production-grade
+compiler toolchains.
+
+The canonical optimization enabled by SSA's support for effective algebraic reasoning is
+\emph{sparse conditional constant propagation (SCCP)}, introduced in \citet{wegman-sccp-91}. This
+algorithm leverages the SSA property to reason about the possible set of values each variable may
+take using a lattice-based data-flow analysis, which models variable values in terms of abstract
+states like \emph{unknown}, \emph{constant}, or \emph{overdefined}. Without SSA, one could naively
+consider all variable definitions, which would likely detect fewer constants due to imprecision.
+Alternatively, achieving more precise results would require a complex and computationally intensive
+reaching-definitions analysis.
 
 \TODO{proposed structure:}
 \begin{enumerate}
