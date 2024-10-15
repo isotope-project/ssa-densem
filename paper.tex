@@ -4281,6 +4281,39 @@ consider all variable definitions, which would likely detect fewer constants due
 Alternatively, achieving more precise results would require a complex and computationally intensive
 reaching-definitions analysis.
 
+However, while SSA is an excellent representation for implementing compilers, the semantics of
+$\phi$-nodes can be quite unintuitive because they lack an obvious operational interpretation.
+\citet{kelsey-95-cps} establishes a correspondence between SSA and a subset of
+\emph{continuation-passing style (CPS)}, a common intermediate representation for functional
+compilers. In particular, while not all CPS programs can be directly converted to SSA
+form—particularly those using non-local returns like \texttt{longjmp} or \texttt{call/cc}—the
+typical outputs of CPS transformations avoid such features. Kelsey observed that many optimizations
+requiring flow analysis in CPS could be performed directly in SSA, often dramatically simplifying
+them.
+
+\citet{appel-ssa} builds on this work by informally showing that the functional subset of CPS
+programs ``hidden inside" SSA is, in fact, simply nested, mutually recursive tail-calling functions,
+with each function corresponding to a basic block. He makes the key observation that the
+dominance-based scoping of SSA corresponds to the lexical scoping of functions. For a variable to be
+visible in a function, it must appear in the lexical scope of that variable's definition and
+therefore be dominated by it; otherwise, there would be no way to call it.
+
+In fact, the subset of functional programs identified by \citet{appel-ssa} corresponds to
+\emph{A-normal form (ANF)}, another functional intermediate representation advocated by
+\citet{flanagan-93-anf}. \citet{chakravarty-functional-ssa-2003} formalizes this correspondence
+giving an algorithm to convert SSA programs to ANF, and then showing how SSA optimizations such as
+SCCP can be written to operate on ANF programs. The authors highlight that the semantic rigor of
+their notation, combined with the well-defined semantics of ANF, make their presentation of SCCP
+significantly more amenable to formal analysis.
+
+\TODO{The work we have covered so far...}
+
+\TODO{MIL}
+
+\TODO{CBPV}
+
+\TODO{Thorin aside}
+
 \TODO{proposed structure:}
 \begin{enumerate}
   \item Introduction to SSA:
