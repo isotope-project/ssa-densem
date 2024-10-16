@@ -102,7 +102,10 @@
 \newcommand{\haslb}[3]{#1 \vdash #2 \rhd #3}
 
 \newcommand{\ahasty}[4]{#1 \vdash_{#2}^{\ms{a}} #3: {#4}}
+\newcommand{\thaslb}[3]{#1 \vdash^{\ms{t}} #2 \rhd #3}
 \newcommand{\ahaslb}[3]{#1 \vdash^{\ms{a}} #2 \rhd #3}
+\newcommand{\bhaslb}[3]{#1 \vdash^{\ms{b}} #2 \rhd #3}
+\newcommand{\chaslb}[3]{#1 \vdash^{\ms{c}} #2 \rhd #3}
 
 \newcommand{\shaslb}[3]{#1 \vdash^{\ms{s}} #2 \rhd #3}
 
@@ -2181,6 +2184,18 @@ in Section~\ref{ssec:completeness}.
 
 \label{ssec:ssa-normal}
 
+\TODO{reforge to following plan:}
+\begin{enumerate}
+  \item (generalized) SSA restricts to ANF
+  \item ANF restricts to strict SSA
+  \item Strict SSA erases to standard SSA
+  \item Equational theory says semantics is invariant up to label re-ordering and label fusion
+  \item There is a single maximal label fusion tree, given by the ``uses variable'' order with the
+  entry block at the root (which is a subset of the ``dominates'' order)
+  \item Everyone which erases to the same SSA has the same maximal label fusion tree
+  \item Therefore everyone which erases to the same SSA has the same semantics, by equational theory
+\end{enumerate}
+
 The purpose of relaxing SSA to \isotopessa{} was to allow us to state our equational theory, as well
 as substitution, in a convenient manner. However, this may cause the reader to question whether we
 have really given a type-theoretic presentation of SSA as used in practice. To allay such fears, we
@@ -2219,62 +2234,63 @@ We can now give typing rules for ANF regions in Figure~\ref{fig:ssa-anf}. In par
 the same as those for regions, except that by requiring each \ms{let}-bindings in a region to bind
 an atomic expression (and, for good measure, case-statements and branches to be on variables), each
 such binding will correspond to a single SSA instruction. It is similarly obvious that
-$\ahaslb{\Gamma}{r}{\ms{L}} \implies \haslb{\Gamma}{r}{\ms{L}}$.  We may now state
-Claim~\ref{claim:anf-ssa-conv} above formally as follows:
-\begin{lemma}[A-normalization]
-  For all $\haslb{\Gamma}{r}{\ms{L}}$, there exists a region $\ms{ANF}(r)$ such that
-  $\ahaslb{\Gamma}{\ms{ANF}(r)}{\ms{L}}$ and $\lbeq{\Gamma}{r}{\ms{ANF}(r)}{\ms{L}}$
-\end{lemma}
-\begin{proof}
-  We begin by proving the following case: if $\ahaslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}$ is in ANF,
-  and $\hasty{\Gamma}{\epsilon}{a}{A}$, then there exists a region
-  $\ahaslb{\Gamma}{\ms{ANF}(\letstmt{x}{a}{r})}{\ms{L}}$ in ANF such that
-  $\lbeq{\Gamma}{(\letstmt{x}{a}{r})}{\ms{ANF}(\letstmt{x}{a}{r})}{\ms{L}}$. We proceed by induction
-  on $a$:
-  \begin{itemize}
-    \item If $\ahasty{\Gamma}{\epsilon}{a}{A}$ is atomic, we are done; otherwise
-    \item If $a = f\;e$, then we may rewrite \TODO{this}
-    \item The cases for pairs, injections, and aborts containing expressions are analogous
-    \item If $a = \caseexpr{e}{y}{b}{z}{c}$, then we may rewrite
-    \begin{equation}
-      \letstmt{x}{a}{r} 
-      \teqv \letstmt{w}{e}{\casestmt{w}{y}{\letexpr{b}{x}{r}}{z}{\letexpr{c}{x}{r}}}
-    \end{equation}
-    Since $r$ is in ANF, by induction (since $b, c$ are subterms of $a$), this is equivalent to some
-    \begin{equation}
-      \letstmt{w}{e}
-        {\casestmt{w}{y}{\ms{ANF}(\letexpr{b}{x}{r})}{z}{\ms{ANF}(\letexpr{c}{x}{r}})}
-    \end{equation}
-    As both branches of this case statement are in ANF and the discriminat is a variable, the
-    case-statement itself is in ANF, and hence by induction again (since $e$ is a subterm of $a$)
-    we have that this is equivalent to
-    \begin{equation}
-      \ms{ANF}(\letstmt{w}{e}
-        {\casestmt{w}{y}{\ms{ANF}(\letexpr{b}{x}{r})}{z}{\ms{ANF}(\letexpr{c}{x}{r}})})
-    \end{equation}
-    as desired
-    \item The cases for unary and binary $\ms{let}$ are analogous to the above
-  \end{itemize}
-  We may now prove the lemma by a straightforward induction on $r$:
-  \begin{itemize}
-    \item If $r = \brb{\ell}{a}$, by $\beta$-reduction, we may rewrite this as $r \teqv
-    \letstmt{x}{a}{\brb{\ell}{x}}$; the result then follows from a direct application of the above
-    \item If $r = \letstmt{x}{a}{r'}$, then by induction we have $r \teqv
-    \letstmt{x}{a}{\ms{ANF}(r')}$, and a direct application of the above allows us to
-    define $\ms{ANF}(\letstmt{x}{a}{r'}) = \ms{ANF}(\letstmt{x}{a}{\ms{ANF}(r')}) \teqv r$ as
-    desired.
-    \item If $r = \letstmt{(x, y)}{a}{r'}$, we may first rewrite this by induction as 
-    \begin{equation}
-      r \teqv \letstmt{z}{a}{\letstmt{(x, y)}{z}{r'}} 
-        \teqv \letstmt{z}{a}{\letstmt{(x, y)}{z}{\ms{ANF}(r')}}
-    \end{equation}
-    Since $z$ is a variable, $\letstmt{(x, y)}{z}{\ms{ANF}(r')}$ is also in ANF, so we can apply the
-    above to define $\ms{ANF}(\letstmt{(x, y)}{a}{r'}) = \ms{ANF}(\letstmt{z}{a}{\letstmt{(x,
-    y)}{z}{\ms{ANF}(r')}}) \teqv r$. The proof for case-statements is analogous.
-    \item The case for control-flow graphs is simply a straightforward application of the inductive
-    hypotheses
-  \end{itemize}
-\end{proof}
+$\thaslb{\Gamma}{r}{\ms{L}} \implies \haslb{\Gamma}{r}{\ms{L}}$ and $\chaslb{\Gamma}{r}{\ms{L}}
+\implies \haslb{\Gamma}{r}{\ms{L}}$.  We may now state Claim~\ref{claim:anf-ssa-conv} above formally
+as follows:
+% \begin{lemma}[A-normalization]
+%   For all $\haslb{\Gamma}{r}{\ms{L}}$, there exists a region $\ms{ANF}(r)$ such that
+%   $\ahaslb{\Gamma}{\ms{ANF}(r)}{\ms{L}}$ and $\lbeq{\Gamma}{r}{\ms{ANF}(r)}{\ms{L}}$
+% \end{lemma}
+% \begin{proof}
+%   We begin by proving the following case: if $\ahaslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}$ is in ANF,
+%   and $\hasty{\Gamma}{\epsilon}{a}{A}$, then there exists a region
+%   $\ahaslb{\Gamma}{\ms{ANF}(\letstmt{x}{a}{r})}{\ms{L}}$ in ANF such that
+%   $\lbeq{\Gamma}{(\letstmt{x}{a}{r})}{\ms{ANF}(\letstmt{x}{a}{r})}{\ms{L}}$. We proceed by induction
+%   on $a$:
+%   \begin{itemize}
+%     \item If $\ahasty{\Gamma}{\epsilon}{a}{A}$ is atomic, we are done; otherwise
+%     \item If $a = f\;e$, then we may rewrite \TODO{this}
+%     \item The cases for pairs, injections, and aborts containing expressions are analogous
+%     \item If $a = \caseexpr{e}{y}{b}{z}{c}$, then we may rewrite
+%     \begin{equation}
+%       \letstmt{x}{a}{r} 
+%       \teqv \letstmt{w}{e}{\casestmt{w}{y}{\letexpr{b}{x}{r}}{z}{\letexpr{c}{x}{r}}}
+%     \end{equation}
+%     Since $r$ is in ANF, by induction (since $b, c$ are subterms of $a$), this is equivalent to some
+%     \begin{equation}
+%       \letstmt{w}{e}
+%         {\casestmt{w}{y}{\ms{ANF}(\letexpr{b}{x}{r})}{z}{\ms{ANF}(\letexpr{c}{x}{r}})}
+%     \end{equation}
+%     As both branches of this case statement are in ANF and the discriminat is a variable, the
+%     case-statement itself is in ANF, and hence by induction again (since $e$ is a subterm of $a$)
+%     we have that this is equivalent to
+%     \begin{equation}
+%       \ms{ANF}(\letstmt{w}{e}
+%         {\casestmt{w}{y}{\ms{ANF}(\letexpr{b}{x}{r})}{z}{\ms{ANF}(\letexpr{c}{x}{r}})})
+%     \end{equation}
+%     as desired
+%     \item The cases for unary and binary $\ms{let}$ are analogous to the above
+%   \end{itemize}
+%   We may now prove the lemma by a straightforward induction on $r$:
+%   \begin{itemize}
+%     \item If $r = \brb{\ell}{a}$, by $\beta$-reduction, we may rewrite this as $r \teqv
+%     \letstmt{x}{a}{\brb{\ell}{x}}$; the result then follows from a direct application of the above
+%     \item If $r = \letstmt{x}{a}{r'}$, then by induction we have $r \teqv
+%     \letstmt{x}{a}{\ms{ANF}(r')}$, and a direct application of the above allows us to
+%     define $\ms{ANF}(\letstmt{x}{a}{r'}) = \ms{ANF}(\letstmt{x}{a}{\ms{ANF}(r')}) \teqv r$ as
+%     desired.
+%     \item If $r = \letstmt{(x, y)}{a}{r'}$, we may first rewrite this by induction as 
+%     \begin{equation}
+%       r \teqv \letstmt{z}{a}{\letstmt{(x, y)}{z}{r'}} 
+%         \teqv \letstmt{z}{a}{\letstmt{(x, y)}{z}{\ms{ANF}(r')}}
+%     \end{equation}
+%     Since $z$ is a variable, $\letstmt{(x, y)}{z}{\ms{ANF}(r')}$ is also in ANF, so we can apply the
+%     above to define $\ms{ANF}(\letstmt{(x, y)}{a}{r'}) = \ms{ANF}(\letstmt{z}{a}{\letstmt{(x,
+%     y)}{z}{\ms{ANF}(r')}}) \teqv r$. The proof for case-statements is analogous.
+%     \item The case for control-flow graphs is simply a straightforward application of the inductive
+%     hypotheses
+%   \end{itemize}
+% \end{proof}
 
 \begin{figure}
   \begin{equation*}
@@ -2327,6 +2343,46 @@ Claim~\ref{claim:anf-ssa-conv} above formally as follows:
   \caption{Typing rules for \isotopessa{} ANF regions}
   \Description{}
   \label{fig:ssa-anf}
+\end{figure}
+
+\begin{figure}
+  \begin{equation*}
+    \boxed{\thaslb{\Gamma}{r}{\ms{L}}}
+  \end{equation*}
+  \begin{gather*}
+    \prftree[r]{\rle{br}}{\Gamma\;x \leq (A, \epsilon)}{\ms{L}\;\ell = A}
+      {\thaslb{\Gamma}{\brb{\ell}{x}}{\ms{L}}} \qquad
+    \prftree[r]{\rle{case-t}}
+      {\Gamma\;x \leq (A + B, \epsilon)}
+      {\thaslb{\Gamma, \bhyp{y}{A}}{r}{\ms{L}}}
+      {\thaslb{\Gamma, \bhyp{z}{B}}{s}{\ms{L}}}
+      {\thaslb{\Gamma}{\casestmt{x}{y}{r}{z}{s}}{\ms{L}}} \\
+  \end{gather*}
+  \begin{equation*}
+    \boxed{\bhaslb{\Gamma}{r}{\ms{L}}}
+  \end{equation*}
+  \begin{gather*}
+    \prftree[r]{\rle{let$_1$-c}}
+      {\ahasty{\Gamma}{\epsilon}{a}{A}}
+      {\bhaslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
+      {\bhaslb{\Gamma}{\letstmt{x}{a}{r}}{\ms{L}}} \\
+    \prftree[r]{\rle{let$_2$-c}}
+      {\ahasty{\Gamma}{\epsilon}{e}{A \otimes B}}
+      {\bhaslb{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{r}{\ms{L}}}
+      {\bhaslb{\Gamma}{\letstmt{(x, y)}{e}{r}}{\ms{L}}} \\
+  \end{gather*}
+  \begin{equation*}
+    \boxed{\chaslb{\Gamma}{r}{\ms{L}}}
+  \end{equation*}
+  \begin{gather*}
+    \prftree[r]{\rle{cfg}}
+      {\chaslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
+      {\forall i. \chaslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+      {\chaslb{\Gamma}{\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}}
+  \end{gather*}
+  \caption{Typing rules for \isotopessa{} terminators and strict regions}
+  \Description{}
+  \label{fig:ssa-strict}
 \end{figure}
 
 \TODO{reforge}
