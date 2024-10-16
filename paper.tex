@@ -97,9 +97,15 @@
 \newcommand{\bhyp}[2]{#1 : #2}
 \newcommand{\lhyp}[2]{#1(#2)}
 \newcommand{\rle}[1]{{\scriptsize\textsf{#1}}}
+
 \newcommand{\hasty}[4]{#1 \vdash_{#2} #3: {#4}}
 \newcommand{\haslb}[3]{#1 \vdash #2 \rhd #3}
-\newcommand{\shaslb}[3]{#1 \vdash_{\ms{s}} #2 \rhd #3}
+
+\newcommand{\ahasty}[4]{#1 \vdash_{#2}^{\ms{a}} #3: {#4}}
+\newcommand{\ahaslb}[3]{#1 \vdash^{\ms{a}} #2 \rhd #3}
+
+\newcommand{\shaslb}[3]{#1 \vdash^{\ms{s}} #2 \rhd #3}
+
 \newcommand{\isop}[4]{#1 \in \mc{I}_{#4}(#2, #3)}
 \newcommand{\issubst}[3]{#1: #2 \mapsto #3}
 \newcommand{\lbsubst}[4]{#1 \vdash #2: #3 \rightsquigarrow #4}
@@ -850,7 +856,7 @@ must be passed on a jump to the label $\ell$.
       \alt  \(\letstmt{x}{a}{t}\)
       \;|\; \(\letstmt{(x, y)}{a}{t}\)
       \;|\; \(\casestmt{e}{x}{s}{y}{t}\)
-      \alt  \(\where{t}{(\wbranch{\ell_i}{x_i: A_i}{t_i},)_i}\)
+      \alt  \(\where{t}{(\wbranch{\ell_i}{x_i}{t_i},)_i}\)
 
       <\(\Gamma\)> ::= \(\cdot\) \;|\; \(\Gamma, \thyp{x}{A}{\epsilon}\)
 
@@ -910,7 +916,7 @@ expressions may be built up from the following fairly standard primitives:
       {\hasty{\Gamma}{\epsilon}{\letexpr{x}{a}{b}}{B}} \\
     \prftree[r]{\rle{unit}}{\hasty{\Gamma}{\epsilon}{()}{\mb{1}}} \qquad
     \prftree[r]{\rle{pair}}{\hasty{\Gamma}{\epsilon}{a}{A}}{\hasty{\Gamma}{\epsilon}{b}{B}}
-      {\hasty{\Gamma}{\epsilon}{(A, B)}{A \otimes B}} \\
+      {\hasty{\Gamma}{\epsilon}{(a, b)}{A \otimes B}} \\
     \prftree[r]{\rle{let$_2$}}
       {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
       {\hasty{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{\epsilon}{c}{C}}
@@ -2175,11 +2181,202 @@ in Section~\ref{ssec:completeness}.
 
 \label{ssec:ssa-normal}
 
-\TODO{strict SSA subset}
+The purpose of relaxing SSA to \isotopessa{} was to allow us to state our equational theory, as well
+as substitution, in a convenient manner. However, this may cause the reader to question whether we
+have really given a type-theoretic presentation of SSA as used in practice. To allay such fears, we
+will give a subset of \isotopessa{} regions, which we will call \emph{strict} regions, about which we make the
+following claims:
+\begin{enumerate}
+  \item Every \isotopessa{} region can be converted to an equivalent strict region using our
+  equational theory \label{claim:anf-ssa-conv}
+  \item Every strict region can be erased to a well-formed SSA program purely by removing
+  \ms{where}-block annotations \label{claim:anf-erase}
+  \item Every well-formed SSA program can be typed as an strict region purely by adding
+  \ms{where}-blocks to correspond to dominance \label{claim:anf-wf}
+  \item Two strict regions which erase to the same SSA program are equivalent according to our
+  equational theory
+\end{enumerate}
+Thus, we make the claim that strict regions correspond exactly to SSA, with the
+\ms{where}-bracketing being merely extra syntactic information added to make our typing rules and
+denotational semantics a bit more syntax-directed. In particular, \ms{where}-blocks can be added
+purely algorithmically by computing dominance between basic blocks.
 
-\TODO{``every region is equivalent to a region in strict SSA''}
+We begin by defining a typing judgement $\ahasty{\Gamma}{\epsilon}{a}{A}$ for \emph{atomic
+expressions} in Figure~\ref{fig:ssa-ops}. An atomic expression is either a single variable, a
+function application, injection, or pair of variables, or the unit expression. In particular, we
+forbid both \ms{case}-expressions and \ms{let}-bindings, which we will require to appear only at the
+unit level; in particular, it is obvious that $\ahasty{\Gamma}{\epsilon}{a}{A} \implies
+\hasty{\Gamma}{\epsilon}{a}{A}$. Since SSA consists of \emph{basic blocks}, that is, linear
+sequences of instructions followed by a terminator, we will introduce two judgements:
+\begin{itemize}
+  \item \todo{terminators}
+  \item \todo{regions: block + dominated sub-blocks}
+\end{itemize}
 
-\TODO{``every two strict SSA regions which erase to the same SSA program are equivalent''}
+\TODO{reforge below}
+
+We can now give typing rules for ANF regions in Figure~\ref{fig:ssa-anf}. In particular, these are
+the same as those for regions, except that by requiring each \ms{let}-bindings in a region to bind
+an atomic expression (and, for good measure, case-statements and branches to be on variables), each
+such binding will correspond to a single SSA instruction. It is similarly obvious that
+$\ahaslb{\Gamma}{r}{\ms{L}} \implies \haslb{\Gamma}{r}{\ms{L}}$.  We may now state
+Claim~\ref{claim:anf-ssa-conv} above formally as follows:
+\begin{lemma}[A-normalization]
+  For all $\haslb{\Gamma}{r}{\ms{L}}$, there exists a region $\ms{ANF}(r)$ such that
+  $\ahaslb{\Gamma}{\ms{ANF}(r)}{\ms{L}}$ and $\lbeq{\Gamma}{r}{\ms{ANF}(r)}{\ms{L}}$
+\end{lemma}
+\begin{proof}
+  We begin by proving the following case: if $\ahaslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}$ is in ANF,
+  and $\hasty{\Gamma}{\epsilon}{a}{A}$, then there exists a region
+  $\ahaslb{\Gamma}{\ms{ANF}(\letstmt{x}{a}{r})}{\ms{L}}$ in ANF such that
+  $\lbeq{\Gamma}{(\letstmt{x}{a}{r})}{\ms{ANF}(\letstmt{x}{a}{r})}{\ms{L}}$. We proceed by induction
+  on $a$:
+  \begin{itemize}
+    \item If $\ahasty{\Gamma}{\epsilon}{a}{A}$ is atomic, we are done; otherwise
+    \item If $a = f\;e$, then we may rewrite \TODO{this}
+    \item The cases for pairs, injections, and aborts containing expressions are analogous
+    \item If $a = \caseexpr{e}{y}{b}{z}{c}$, then we may rewrite
+    \begin{equation}
+      \letstmt{x}{a}{r} 
+      \teqv \letstmt{w}{e}{\casestmt{w}{y}{\letexpr{b}{x}{r}}{z}{\letexpr{c}{x}{r}}}
+    \end{equation}
+    Since $r$ is in ANF, by induction (since $b, c$ are subterms of $a$), this is equivalent to some
+    \begin{equation}
+      \letstmt{w}{e}
+        {\casestmt{w}{y}{\ms{ANF}(\letexpr{b}{x}{r})}{z}{\ms{ANF}(\letexpr{c}{x}{r}})}
+    \end{equation}
+    As both branches of this case statement are in ANF and the discriminat is a variable, the
+    case-statement itself is in ANF, and hence by induction again (since $e$ is a subterm of $a$)
+    we have that this is equivalent to
+    \begin{equation}
+      \ms{ANF}(\letstmt{w}{e}
+        {\casestmt{w}{y}{\ms{ANF}(\letexpr{b}{x}{r})}{z}{\ms{ANF}(\letexpr{c}{x}{r}})})
+    \end{equation}
+    as desired
+    \item The cases for unary and binary $\ms{let}$ are analogous to the above
+  \end{itemize}
+  We may now prove the lemma by a straightforward induction on $r$:
+  \begin{itemize}
+    \item If $r = \brb{\ell}{a}$, by $\beta$-reduction, we may rewrite this as $r \teqv
+    \letstmt{x}{a}{\brb{\ell}{x}}$; the result then follows from a direct application of the above
+    \item If $r = \letstmt{x}{a}{r'}$, then by induction we have $r \teqv
+    \letstmt{x}{a}{\ms{ANF}(r')}$, and a direct application of the above allows us to
+    define $\ms{ANF}(\letstmt{x}{a}{r'}) = \ms{ANF}(\letstmt{x}{a}{\ms{ANF}(r')}) \teqv r$ as
+    desired.
+    \item If $r = \letstmt{(x, y)}{a}{r'}$, we may first rewrite this by induction as 
+    \begin{equation}
+      r \teqv \letstmt{z}{a}{\letstmt{(x, y)}{z}{r'}} 
+        \teqv \letstmt{z}{a}{\letstmt{(x, y)}{z}{\ms{ANF}(r')}}
+    \end{equation}
+    Since $z$ is a variable, $\letstmt{(x, y)}{z}{\ms{ANF}(r')}$ is also in ANF, so we can apply the
+    above to define $\ms{ANF}(\letstmt{(x, y)}{a}{r'}) = \ms{ANF}(\letstmt{z}{a}{\letstmt{(x,
+    y)}{z}{\ms{ANF}(r')}}) \teqv r$. The proof for case-statements is analogous.
+    \item The case for control-flow graphs is simply a straightforward application of the inductive
+    hypotheses
+  \end{itemize}
+\end{proof}
+
+\begin{figure}
+  \begin{equation*}
+    \boxed{\ahasty{\Gamma}{\epsilon}{a}{A}}
+  \end{equation*}
+  \begin{gather*}    
+    \prftree[r]{\rle{var}}{\Gamma\;x \leq (A, \epsilon)}{\ahasty{\Gamma}{\epsilon}{x}{A}} \qquad
+    \prftree[r]{\rle{op}}{\isop{f}{A}{B}{\epsilon}}{\Gamma\;x \leq (A, \epsilon)}
+      {\ahasty{\Gamma}{\epsilon}{f\;x}{B}} \\
+    \prftree[r]{\rle{unit}}{\ahasty{\Gamma}{\epsilon}{()}{\mb{1}}} \qquad
+    \prftree[r]{\rle{pair}}{\Gamma\;x \leq (A, \epsilon)}{\Gamma\;y \leq (B, \epsilon)}
+      {\hasty{\Gamma}{\epsilon}{(x, y)}{A \otimes B}} \\
+    \prftree[r]{\rle{inl}}{\Gamma\;x \leq (A, \epsilon)}
+      {\hasty{\Gamma}{\epsilon}{\linl{x}}{A + B}} \qquad
+    \prftree[r]{\rle{inr}}{\Gamma\;y \leq (B, \epsilon)}
+      {\hasty{\Gamma}{\epsilon}{\linr{y}}{A + B}} \qquad
+    \prftree[r]{\rle{abort}}{\Gamma\;x \leq (\mb{0}, \epsilon)}
+      {\hasty{\Gamma}{\epsilon}{\labort{x}}{A}}
+  \end{gather*}
+  \caption{Typing rules for SSA operations}
+  \Description{}
+  \label{fig:ssa-ops}
+\end{figure}
+
+\begin{figure}
+  \begin{equation*}
+    \boxed{\ahaslb{\Gamma}{r}{\ms{L}}}
+  \end{equation*}
+  \begin{gather*}
+    \prftree[r]{\rle{br}}{\Gamma\;x \leq (A, \epsilon)}{\ms{L}\;\ell = A}
+      {\ahaslb{\Gamma}{\brb{\ell}{x}}{\ms{L}}} \qquad
+    \prftree[r]{\rle{let$_1$-r}}
+      {\ahasty{\Gamma}{\epsilon}{a}{A}}
+      {\ahaslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
+      {\ahaslb{\Gamma}{\letstmt{x}{a}{r}}{\ms{L}}} \\
+    \prftree[r]{\rle{let$_2$-r}}
+      {\ahasty{\Gamma}{\epsilon}{e}{A \otimes B}}
+      {\ahaslb{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{r}{\ms{L}}}
+      {\ahaslb{\Gamma}{\letstmt{(x, y)}{e}{r}}{\ms{L}}} \\
+    \prftree[r]{\rle{case-r}}
+      {\Gamma\;x \leq (A + B, \epsilon)}
+      {\ahaslb{\Gamma, \bhyp{y}{A}}{r}{\ms{L}}}
+      {\ahaslb{\Gamma, \bhyp{z}{B}}{s}{\ms{L}}}
+      {\ahaslb{\Gamma}{\casestmt{x}{y}{r}{z}{s}}{\ms{L}}} \\
+    \prftree[r]{\rle{cfg}}
+      {\ahaslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
+      {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+      {\ahaslb{\Gamma}{\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}}
+  \end{gather*}
+  \caption{Typing rules for \isotopessa{} ANF regions}
+  \Description{}
+  \label{fig:ssa-anf}
+\end{figure}
+
+\TODO{reforge}
+
+To substantiate Claim~\ref{claim:anf-erase}, we give a grammar for SSA programs in
+Figure~\ref{fig:ssa-standard}. It is easy to see that removing braces and \ms{where}-blocks from an
+arbitrary region gives a flat SSA program; this program will be well-formed with respect to
+dominance scoping if it is well-typed.
+
+\TODO{to show equality, we need}
+\begin{itemize}
+  \item Re-ordering within a CFG is trivial
+  \item \emph{Merging} CFGs
+  \item There is a unique, maximally merged normal-form CFG for each SSA program, and everyone is
+  equal to it
+  \item Therefore, everyone erasing to the same thing is equal, since this is unique per-program
+\end{itemize}
+
+\begin{figure}[H]
+  \begin{center}
+    \begin{grammar}
+      <\(a, b, c, e\)> ::= \(x\) 
+      \;|\;  \(f\;x\)
+      \alt  \(()\)
+      \;|\; \((x, y)\)
+      \alt  \(\linl{x}\) 
+      \;|\; \(\linr{y}\)
+      \;|\; \(\labort{x}\)
+      
+      <\(\tau\)> ::= \(\brb{\ell}{a}\) 
+      \;|\; \(\casestmt{e}{x}{\tau}{y}{\tau'}\)
+
+      <\(\beta\)> := \(\tau\)
+      \;|\; \(\letstmt{x}{a}{\beta}\)
+      \;|\; \(\letstmt{(x, y)}{a}{\beta}\)
+
+      <\(s, t\)> ::= \(\beta\) 
+      \;|\;  \(\where{t}{(\wbranch{\ell_i}{x_i}{t_i},)_i}\)
+
+      <\(G\)> ::= \(\beta\) \;|\; \(G; \wbranch{\ell}{x}{\beta}\)
+    \end{grammar}
+  \end{center}
+  \caption{ 
+    Grammar for standard SSA, parametrized over an \isotopessa{} signature. A standard SSA
+    program is made up of \emph{basic blocks} \(\beta\), and can be thought of as a \emph{region}
+    \(r\) or a \emph{control-flow graph} \(G\) (with a distinguished entry block $\beta$). 
+  }
+  \Description{}
+  \label{fig:ssa-standard}
+\end{figure}
 
 \subsection{Records and Enums}
 
@@ -2485,6 +2682,11 @@ B\"ohm-Jacopini theorem for SSA as follows:
   \Description{}
   \label{fig:structured-regions}
 \end{figure}
+
+\TODO{use variable packing for ``folk B\"ohm-Jacopini''}
+
+\TODO{use folk B\"ohm-Jacopini to argue for arbitrary bracketing theorem (??). Or is it just useful
+on its own?}
 
 \section{Denotational Semantics}
 
