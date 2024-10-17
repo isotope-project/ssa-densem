@@ -4730,6 +4730,48 @@ however, as of publication, only structured control flow was fully supported.
 
 \subsection{Compositional (Relaxed) Concurrency}
 
+The most natural way to think about concurrency is often in terms of an operational semantics on an
+abstract machine, in which concurrent threads interleave and interact. However, this approach
+suffers from the flaw that it is most naturally suited to reasoning about entire programs: it is a
+very challenging problem, in general, to reason about a small component of a concurrent system in
+isolation, since its behaviour may be drastically affected by other components running in parallel
+to it. \citet{batty-compositional-17} argues that a compositional semantics of concurrency is
+necessary to be able to reason about properties of large software systems effectively, particularly
+in the presence of complicating factors such as compiler optimizations and weak memory semantics. We
+are left with the challenge of adapting intuitive machine models to a form amenable to composition.
+
+One way to approach this problem is to consider the \emph{extension} of an abstract machine running
+interleaving threads: the set of all possible traces of externally visible states such a machine may
+have. In particular, \citet{brookes-full-abstraction-96} considers (potentially infinite)
+\emph{interaction traces} of steps $(s_i, s_i')$ in which computation takes $s_i$ to $s_i'$ while
+interruption takes $s_i'$ to $s_{i + 1}$. By requiring these sets are closed under certain
+semantics-preserving changes in machine execution (often, \emph{stuttering}, which introduces
+indentity steps $(s, s)$, and \emph{mumbling}, which fuses computational steps $(s, s')(s', s'') \to
+(s, s'')$), we can obtain a \emph{trace-based semantics} for concurrency with nice compositional
+properties such as associativity ($\dnt{\alpha;(\beta;\gamma)} = \dnt{(\alpha;\beta);\gamma}$) and
+the expected identities for branches and loops. If our model of concurrency indeed only considers
+possible interleavings of concurrent threads, i.e., satisfies \emph{sequential consistency} (all
+possible executions are equivalent to the interleaving of concurrent threads into a single thread),
+then this approach is perfectly fine. 
+
+However, for reasons of efficiency, real hardware often exhibits \emph{relaxed behaviour}, in which
+additional executions which would not be possible in this simple model arise. Similarly, there are
+many compiler optimizations we may wish to perform, such as re-ordering of independent reads and
+writes, which are perfectly valid in a single-threaded context but can change the behaviour of a
+multi-threaded program (in which, for example, another thread could distiguish the order of writes).
+In general, we may want to reason about interactions with a system that is not \emph{linearizable}
+(i.e., in which concurrent operations cannot be reduced to interleaved atomic operations on a single
+thread), of which actual hardware is only one example. There are two major approaches to this
+problem.
+
+\TODO{we can add structure to traces, and quotient}
+
+\TODO{or we can do games, which can be modified to represent... True Concurrency}
+
+\TODO{so we can do truly concurrent structures like pomsets}
+
+\TODO{and event structures}
+
 \TODO{Proposed structure:}
 
 \begin{enumerate}
