@@ -215,7 +215,7 @@
 
 Static single assignment form, or SSA form, has been the dominant compiler intermediate
 representation since its introduction by \citet{alpern-ssa-original-88} and \citet{rosen-gvn-1988}
-in the late 1980s. Every major compiler -- GCC, Clang, MLIR, Cranelift -- uses this representation,
+in the late 1980s. Most major compilers -- GCC, Clang, MLIR, Cranelift -- use this representation,
 because it makes many optimizations much easier to do than traditional 3-address code IRs.
 
 The key idea behind SSA is to adapt an idea from functional programming: namely, every variable is
@@ -4527,10 +4527,10 @@ programs to SSA form using a minimal number of $\phi$-nodes. They observed that 
 needs to be introduced at the earliest point where a variable may have different values based on
 control flow. This point is computable via the graph-theoretic notion of a \emph{dominance
 frontier}, which identifies where control paths merge in the program's control flow graph. Since
-then, SSA has become the intermediate representation of choice for essentially all production-grade
+then, SSA has become the intermediate representation of choice for most production-grade
 compiler toolchains.
 
-The canonical optimization enabled by SSA's support for effective algebraic reasoning is
+One of the most famous optimizations enabled by SSA's support for effective algebraic reasoning is
 \emph{sparse conditional constant propagation (SCCP)}, introduced in \citet{wegman-sccp-91}. This
 algorithm leverages the SSA property to reason about the possible set of values each variable may
 take using a lattice-based data-flow analysis, which models variable values in terms of abstract
@@ -4550,7 +4550,7 @@ requiring flow analysis in CPS could be performed directly in SSA, often dramati
 them.
 
 \citet{appel-ssa} builds on this work by informally showing that the functional subset of CPS
-programs ``hidden inside" SSA is, in fact, simply nested, mutually recursive tail-calling functions,
+programs ``hidden inside" SSA is, in fact, simply nested, mutually tail-recursive functions,
 with each function corresponding to a basic block. He makes the key observation that the
 dominance-based scoping of SSA corresponds to the lexical scoping of functions. For a variable to be
 visible in a function, it must appear in the lexical scope of that variable's definition and
@@ -4577,12 +4577,10 @@ The primary focus of the works we have covered so far is establishing the corres
 SSA, an imperative intermediate representation, and widely used functional intermediate
 representations. However, to advance beyond these correspondences and directly study the
 optimization and verification of SSA programs themselves, we require an equational theory
-underpinned by formal semantics. Thus far, the literature we have reviewed offers few, if any,
-equations for SSA, making formal reasoning about program transformations and optimizations
-challenging. One approach found in the literature is to relax SSA into forms that support richer
-substitution principles and well-defined operational semantics, which can then be used to reason
-about SSA itself, as we explore in this paper. Two papers which exemplify this approach are
-\citet{benton-kennedy-99} and \citet{garbuzov-structural-cfg-2018}.
+underpinned by formal semantics. One approach found in the literature (and which we also use) is
+to relax SSA into forms that support richer substitution principles and well-defined operational
+semantics, which can then be used to reason about SSA itself. Two papers which exemplify this
+approach are \citet{benton-kennedy-99} and \citet{garbuzov-structural-cfg-2018}.
 
 One of the difficulties of working with ANF as an intermediate representation is that it does not,
 in general, satisfy \emph{substitution}: replacing a variable $x$ with a compound expression like a
@@ -4739,28 +4737,28 @@ optimizations and weak memory semantics. However, it is generally very challengi
 small component of a concurrent system in isolation since its behaviour may be drastically affected
 by other components running in parallel.
 
-One way to approach this problem is to consider as our semantics the \emph{extension} of an abstract
-machine running interleaving threads: that is, the set of all possible traces of externally visible
-states such a machine may have. \citet{brookes-full-abstraction-96} gives a semantics based on sets
-of (potentially infinite) \emph{interaction traces} of steps $(s_i, s_i')$ in which computation
-takes $s_i$ to $s_i'$ while interruption takes $s_i'$ to $s_{i + 1}$. By requiring that these sets
-are closed under certain semantics-preserving transformations (often, \emph{stuttering}, which
-introduces identity steps $(s, s)$, and \emph{mumbling}, which fuses computational steps $(s,
-s')(s', s'') \to (s, s'')$), we can obtain a \emph{trace-based semantics} for concurrency with nice
-compositional properties such as associativity ($\dnt{\alpha;(\beta;\gamma)} =
-\dnt{(\alpha;\beta);\gamma}$) and the expected identities for branches and loops. 
+One natural approach to constructing denotational models of concurrency is to consider the
+extension of an abstract machine's behavior. Each thread performs a sequence of atomic actions,
+and so from the outside, the machine can produce any interleaving of the atomic actions of each
+thread. Just by itself, considering sets of possible traces is not sufficiently abstract, and so
+\citet{brookes-full-abstraction-96} takes the closure of these sets under semantics-preserving
+transformations, such as stuttering (introducing extra identity steps) and mumbling (which fuse
+sequential atomic operations, thereby hiding implementation details), to obtain a model with good
+equational properties such as associativity
+($\dnt{\alpha;(\beta;\gamma)} = \dnt{(\alpha;\beta);\gamma}$) and the expected identities for
+branches and loops. 
 
-If our model of concurrency only considers possible interleavings of concurrent threads, with each
-operation treated as atomic—that is, it satisfies \emph{sequential consistency}—then this approach
-is sufficient. However, for reasons of efficiency, real hardware often exhibits \emph{relaxed
-behaviour}, in which additional executions which would not be possible in this simple model arise.
-Similarly, many fundamental compiler optimizations, such as re-ordering of independent reads and
-writes, are perfectly valid in a single-threaded context but can change the behaviour of a
-multithreaded program — for example, another thread could distinguish the order of writes. In
-general, we need tools to reason about interactions with a system that is not \emph{linearizable}
-(i.e., in which concurrent operations cannot be reduced to interleaved atomic operations on a single
-thread), of which actual hardware is only one example. There are two major approaches to this
-problem.
+If the machine model is \emph{sequentially consistent} -- i.e., all allowed behaviors arise from
+interleavings of sequences of atomic events -- then this style of trace semantics is sufficient.
+However, real hardware often exhibits \emph{relaxed behaviour}, in which additional behaviours
+which do not correspond to the interleaving of parallel threads are allowed. Even more relaxed
+behaviours arise from fundamental compiler optimizations, such as re-ordering of independent reads
+and writes. These are perfectly valid in a single-threaded context but can introduce new
+behaviours in multithreaded programs — for example, another thread could distinguish the order of
+writes. In general, we need tools to reason about interactions with a system that is not
+\emph{linearizable} (i.e., in which concurrent operations cannot be reduced to interleaved atomic
+operations on a single thread), of which actual hardware is only one example. There are two major
+approaches to this problem.
 
 \TODO{we can add structure to traces, and quotient}
 
