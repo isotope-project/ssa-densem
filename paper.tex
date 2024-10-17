@@ -4760,13 +4760,64 @@ writes. In general, we need tools to reason about interactions with a system tha
 operations on a single thread), of which actual hardware is only one example. There are two major
 approaches to this problem.
 
-\TODO{we can add structure to traces, and quotient}
+One idea we might have is to augment traces with additional structure, which we can then quotient
+away to maintain extensionality by using an appropriate closure operator. What's nice about this
+method is that we can often use structures analogous to the additional state in the machine model
+which leads to the relaxed behaviour in the first place. For example, in
+\citet{jagadeesan-brookes-relaxed-12}, the authors extend \citet{brookes-full-abstraction-96} with
+additional state corresponding to the contents of a thread-local buffer, and then take the closure
+of their trace-set with respect to buffer operations such as nondeterministic flushing. This gives
+them a model of TSO weak memory with good equational properties and a monadic structure, which
+remains intuitive, since it has a connection to the original TSO model which can also be framed in
+terms of the abstract machine having thread-local buffers. \citet{release-acquire} use this approach
+to derive a trace-based semantics for release-acquire atomics inspired by their operational
+semantics, showing the viability of this technique even for very complex memory models.
 
-\TODO{or we can do games, which can be modified to represent... True Concurrency}
+The idea of augmenting traces leads naturally to \emph{games}, which we can view one variant of as
+sequential traces of moves between a \emph{proponent} and an \emph{opponent}. Game semantics were
+first used with great success to give a semantics to \emph{sequential computation}; for example,
+\citet{abramsky-algol-96} give an adequate denotational semantics for sequential Algol using
+Hyland-Ong games \cite{hyland-ong-00}. \citet{ghica-08} observe that the sequentiality of Hyland-Ong
+games corresponds to a highly constrained, deterministic form of interleaving between concurrent
+processes. By generalizing away many of the rules of Hyland-Ong games, and in particular
+\emph{alternation} (i.e., the proponent and the opponent must take turns), the authors obtain a form
+of game-semantics for concurrent programs, which they use to build a fully abstract semantics for
+\emph{fine-grained concurrency} (in contrast to \citet{brookes-full-abstraction-96}, which
+implements \emph{coarse-grained} concurrency using the somewhat unrealistic \ms{await} primitive).
 
-\TODO{so we can do truly concurrent structures like pomsets}
+In general, the idea of generalizing traces to represent true concurrency leads us to our other
+approach: swapping out sets of \emph{linear} traces with (sets of) \emph{partially ordered}
+structures which directly represent the concurrency of their component operations. This, in
+particular, directly represents that executing two things ``at the same time'' (i.e., not
+postulating an order relationship between them) is not the same as executing them in some particular
+order. The most basic such data structure is a \emph{partially ordered multiset}, or \emph{pomset},
+which we describe in Section~\ref{ssec:tso} of our paper. Pomsets can be used to model sequential
+consistency quite naturally, and, like for traces, can be augmented with additional structure to
+model relaxed memory models such as TSO weak memory, as in \citet{sparky}.
 
-\TODO{and event structures}
+One issue, however, is that it can be very difficult to figure out \emph{which} structures to
+augment pomsets with to model more advanced memory models. For example, \citet{jagadeesan-pwp-20}
+introduce \emph{pomsets with preconditions} (PwP), which augment pomsets with logical formulae, to
+model weak memory behaviors. However, \citet{leaky-semicolon} demonstrate that sequential
+composition (the semicolon operator) in PwP is not associative, which undermines many common program
+optimizations and breaks the monadic structure necessary for compositional reasoning. To address
+this issue, \citet{leaky-semicolon} propose \emph{pomsets with predicate transformers} (PwT), which
+restore the associativity of sequential composition. Despite this improvement, their semantics still
+do not support loops, and it remains future work to develop a monadic structure based on PwT that
+fully supports recursion and iterative constructs.
+
+Another potential generalization of pomsets inspired by game semantics is \emph{event structures},
+which introduce a \emph{conflict relation} which allows representing many potentially conflicting
+executions as a single mathematical object. \citet{castellan-16} shows how to use event structures
+to represent concurrent executions w.r.t. a \emph{memory model} -- they study a simple language
+supporting parallel composition of $n$ simple, linear programs defined as lists of loads, stores,
+and arithmetic operations, for which event structures give a denotational semantics.
+\citet{paviotti-modular-relaxed-dep-20} use the event structure approach to give denotational
+semantics for relaxed memory concurrency, particularly including semantics for branches and loops.
+However, they do this using step indexing, and so loop unrolling is only a refinement rather than an
+equation. Since event structures satisfy the axioms of axiomatic domain theory~\citet{fiore-phd-94},
+it ought to be possible to modify this semantics into one in which loop unrolling is an equation, at
+which point it would be a model of our calculus.
 
 \TODO{Proposed structure:}
 
