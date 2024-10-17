@@ -4731,35 +4731,33 @@ however, as of publication, only structured control flow was fully supported.
 \subsection{Compositional (Relaxed) Concurrency}
 
 The most natural way to think about concurrency is often in terms of an operational semantics on an
-abstract machine, in which concurrent threads interleave and interact. However, this approach
-suffers from the flaw that it is most naturally suited to reasoning about entire programs: it is a
-very challenging problem, in general, to reason about a small component of a concurrent system in
-isolation, since its behaviour may be drastically affected by other components running in parallel
-to it. \citet{batty-compositional-17} argues that a compositional semantics of concurrency is
-necessary to be able to reason about properties of large software systems effectively, particularly
-in the presence of complicating factors such as compiler optimizations and weak memory semantics. We
-are left with the challenge of adapting intuitive machine models to a form amenable to composition.
+abstract machine, in which concurrent threads interleave and interact. Such semantics, naturally,
+are designed to reason about an entire program at a time. \citet{batty-compositional-17} argues that
+a compositional semantics of concurrency is necessary to be able to reason about properties of large
+software systems effectively, particularly in the presence of complicating factors such as compiler
+optimizations and weak memory semantics. However, it is generally very challenging to reason about a
+small component of a concurrent system in isolation since its behaviour may be drastically affected
+by other components running in parallel.
 
-One way to approach this problem is to consider the \emph{extension} of an abstract machine running
-interleaving threads: the set of all possible traces of externally visible states such a machine may
-have. In particular, \citet{brookes-full-abstraction-96} considers (potentially infinite)
-\emph{interaction traces} of steps $(s_i, s_i')$ in which computation takes $s_i$ to $s_i'$ while
-interruption takes $s_i'$ to $s_{i + 1}$. By requiring these sets are closed under certain
-semantics-preserving changes in machine execution (often, \emph{stuttering}, which introduces
-indentity steps $(s, s)$, and \emph{mumbling}, which fuses computational steps $(s, s')(s', s'') \to
-(s, s'')$), we can obtain a \emph{trace-based semantics} for concurrency with nice compositional
-properties such as associativity ($\dnt{\alpha;(\beta;\gamma)} = \dnt{(\alpha;\beta);\gamma}$) and
-the expected identities for branches and loops. If our model of concurrency indeed only considers
-possible interleavings of concurrent threads, i.e., satisfies \emph{sequential consistency} (all
-possible executions are equivalent to the interleaving of concurrent threads into a single thread),
-then this approach is perfectly fine. 
+One way to approach this problem is to consider as our semantics the \emph{extension} of an abstract
+machine running interleaving threads: that is, the set of all possible traces of externally visible
+states such a machine may have. \citet{brookes-full-abstraction-96} gives a semantics based on sets
+of (potentially infinite) \emph{interaction traces} of steps $(s_i, s_i')$ in which computation
+takes $s_i$ to $s_i'$ while interruption takes $s_i'$ to $s_{i + 1}$. By requiring that these sets
+are closed under certain semantics-preserving transformations (often, \emph{stuttering}, which
+introduces identity steps $(s, s)$, and \emph{mumbling}, which fuses computational steps $(s,
+s')(s', s'') \to (s, s'')$), we can obtain a \emph{trace-based semantics} for concurrency with nice
+compositional properties such as associativity ($\dnt{\alpha;(\beta;\gamma)} =
+\dnt{(\alpha;\beta);\gamma}$) and the expected identities for branches and loops. 
 
-However, for reasons of efficiency, real hardware often exhibits \emph{relaxed behaviour}, in which
-additional executions which would not be possible in this simple model arise. Similarly, there are
-many compiler optimizations we may wish to perform, such as re-ordering of independent reads and
-writes, which are perfectly valid in a single-threaded context but can change the behaviour of a
-multi-threaded program (in which, for example, another thread could distiguish the order of writes).
-In general, we may want to reason about interactions with a system that is not \emph{linearizable}
+If our model of concurrency only considers possible interleavings of concurrent threads, with each
+operation treated as atomic—that is, it satisfies \emph{sequential consistency}—then this approach
+is sufficient. However, for reasons of efficiency, real hardware often exhibits \emph{relaxed
+behaviour}, in which additional executions which would not be possible in this simple model arise.
+Similarly, many fundamental compiler optimizations, such as re-ordering of independent reads and
+writes, are perfectly valid in a single-threaded context but can change the behaviour of a
+multithreaded program — for example, another thread could distinguish the order of writes. In
+general, we need tools to reason about interactions with a system that is not \emph{linearizable}
 (i.e., in which concurrent operations cannot be reduced to interleaved atomic operations on a single
 thread), of which actual hardware is only one example. There are two major approaches to this
 problem.
@@ -5076,7 +5074,7 @@ recursion in SSA.
   \item Oftentimes, the most natural way to model a concurrent shared-memory computation is via an
   operational semantics, in which different threads of execution interleave and interact in an
   idealized, abstract machine. The issue with this formulation is it makes it quite challenging to
-  reason about the behavior of large programs \emph{compositionally}, rather than attempting to
+  reason about the behaviour of large programs \emph{compositionally}, rather than attempting to
   model the entire program at once. This is especially a problem in the context of weak memory
   models, which are inspired by the hardware that gives rise to the weak behaviour and hence often
   in terms of the possible execution of entire programs. \citet{batty-compositional-17} explains
