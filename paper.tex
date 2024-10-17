@@ -4884,15 +4884,57 @@ where loop unrolling is an equation, at which point it would be a model of our c
 
 \subsection{Future Work}
 
-\TODO{Proposed structure:}
+\subsubsection{Substructural Types and Effects}
+
+Currently, our treatment of effects is relatively primitive, in that, while we postulate a lattice
+of effects, our equational theory only distinguishes between \emph{pure} and \emph{impure}
+functions, the latter having effect $\bot$. \citet{fuhrmann-direct-1999} studies languages with
+semantics given in an \emph{abstract Kleisli category}. In particular, he introduces the notion of
+\begin{itemize}
+  \item \emph{Central} operations, which commute with all other operations; we like to call such
+  morphisms \emph{linear}
+  \item \emph{Duplicable} operations $f$, for which $\letexpr{y}{f(x)}{(y, y)} \teqv (f(x), f(x))$
+  \item \emph{Discardable} operations $f$, for which $\letexpr{y}{f(x)}{e} \teqv e$ when $e$ does
+  not depend on $y$
+\end{itemize}
+While, as we make use of in our calculus, pure operations are central, duplicable, and discardable,
+it can be useful to study each notion in isolation, as well as to consider morphisms which are
+central and duplicable (which we have taken to calling \emph{relevant}) and morphisms which are
+both central and discardable (which we have taken to calling \emph{affine}). Examples of morphisms
+which are not pure but nontheless relevant or affine abound; for example,
+\begin{itemize}
+  \item In a programming language with nondeterminism, nondeterministic functions are impure (since
+  $\letexpr{y}{f(x)}{(y, y)}$ is a strict refinement of $(f(x), f(x))$) but are affine, assuming
+  they have no other effect
+  \item In a programming language with nontermination, nonterminating functions with no other effect
+  are impure (since $\letexpr{y}{f(x)}{e}$ may diverge even if $e$ does not) but are always
+  duplicable, and, depending on the language's other effects, may be relevant
+\end{itemize}
+All three of these concepts still make perfect sense when interpreted as-is in a Freyd category, and
+are particularly useful when reasoning about models of probablistic programming, such as Markov
+categories (which have many affine morphisms) \cite{nlab:markov-category}.
+
+Given that such relevant and affine side-effects have substitution principles which depend on how
+often a variable is used in a term, we call such side-effects \emph{substructural}. We might also
+consider how we could support substructural, and in particular linear, \emph{types}. Categorically,
+this corresponds to weakening the requirement that our base category be cartesian, instead requiring
+only a symmetric monoidal category; the resulting generalization of a Freyd category is called an
+\emph{effectful category} by \citet{promonad}. We have made siginificant progress towards
+generalizing both our effect system and our type system to support substructruality.
+
+\subsubsection{Enriched Categories}
+
+\TODO{this}
+
+\begin{enumerate}
+  \item ...
+\end{enumerate}
+
+\subsubsection{Guarded Iteration}
+
+\TODO{this}
 
 \begin{enumerate}  
-  \item \citet{fuhrmann-direct-1999} discusses abstract Kleisli categories, which are like Freyd
-  categories but have more structure, and in particular introduces the notion of \emph{central},
-  \emph{copyable}, \emph{discardable}, and \emph{thunkable} morphisms. These can be used to
-  generalize pure/impure to the effectful setting, where we have pure/relevant/affine/linear/impure,
-  for example; we have already made significant progress towards this, but have left it out of this
-  paper.
   \item ``Elgot categories / monads were introduced in \citet{elgot-elgot-75} and formalized in
   \citet{adamek-elgot-11}. These were generalized to guarded Elgot monads in
   \citet{coinductive-resumption-levy-goncharov-19} to support partial non-unique iteration. We could
@@ -4937,7 +4979,13 @@ where loop unrolling is an equation, at which point it would be a model of our c
   \end{itemize}
 \end{enumerate}
 
+\subsubsection{MLIR models}
+
 \TODO{MLIR future work here?}
+
+\begin{enumerate}
+  \item ...
+\end{enumerate}
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references}
