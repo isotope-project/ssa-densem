@@ -4785,385 +4785,102 @@ of game-semantics for concurrent programs, which they use to build a fully abstr
 \emph{fine-grained concurrency} (in contrast to \citet{brookes-full-abstraction-96}, which
 implements \emph{coarse-grained} concurrency using the somewhat unrealistic \ms{await} primitive).
 
-In general, the idea of generalizing traces to represent true concurrency leads us to our other
-approach: swapping out sets of \emph{linear} traces with (sets of) \emph{partially ordered}
-structures which directly represent the concurrency of their component operations. This, in
-particular, directly represents that executing two things ``at the same time'' (i.e., not
-postulating an order relationship between them) is not the same as executing them in some particular
-order. The most basic such data structure is a \emph{partially ordered multiset}, or \emph{pomset},
-which we describe in Section~\ref{ssec:tso} of our paper. Pomsets can be used to model sequential
-consistency quite naturally, and, like for traces, can be augmented with additional structure to
-model relaxed memory models such as TSO weak memory, as in \citet{sparky}.
+In general, generalizing traces to represent true concurrency leads us to another approach:
+replacing sets of \emph{linear} traces with (sets of) \emph{partially ordered} structures that
+directly represent the concurrency of their component operations. This approach directly captures
+the idea that executing two operations concurrently (i.e., without specifying an order between them)
+is fundamentally different from executing them in some particular order. The most basic such data
+structure is a \emph{partially ordered multiset}, or \emph{pomset}, which we describe in
+Section~\ref{ssec:tso} of our paper. Pomsets can naturally model sequential consistency, and, like
+traces, can be augmented with additional structure to model relaxed memory models such as TSO weak
+memory, as in \citet{sparky}.
 
-One issue, however, is that it can be very difficult to figure out \emph{which} structures to
-augment pomsets with to model more advanced memory models. For example, \citet{jagadeesan-pwp-20}
-introduce \emph{pomsets with preconditions} (PwP), which augment pomsets with logical formulae, to
-model weak memory behaviors. However, \citet{leaky-semicolon} demonstrate that sequential
-composition (the semicolon operator) in PwP is not associative, which undermines many common program
-optimizations and breaks the monadic structure necessary for compositional reasoning. To address
-this issue, \citet{leaky-semicolon} propose \emph{pomsets with predicate transformers} (PwT), which
-restore the associativity of sequential composition. Despite this improvement, their semantics still
-do not support loops, and it remains future work to develop a monadic structure based on PwT that
-fully supports recursion and iterative constructs.
-
-Another potential generalization of pomsets inspired by game semantics is \emph{event structures},
-which introduce a \emph{conflict relation} which allows representing many potentially conflicting
-executions as a single mathematical object. \citet{castellan-16} shows how to use event structures
-to represent concurrent executions w.r.t. a \emph{memory model} -- they study a simple language
-supporting parallel composition of $n$ simple, linear programs defined as lists of loads, stores,
-and arithmetic operations, for which event structures give a denotational semantics.
-\citet{paviotti-modular-relaxed-dep-20} use the event structure approach to give denotational
-semantics for relaxed memory concurrency, particularly including semantics for branches and loops.
-However, they do this using step indexing, and so loop unrolling is only a refinement rather than an
-equation. Since event structures satisfy the axioms of axiomatic domain theory~\citet{fiore-phd-94},
-it ought to be possible to modify this semantics into one in which loop unrolling is an equation, at
-which point it would be a model of our calculus.
-
-\TODO{Proposed structure:}
-
-\begin{enumerate}
-  \item Machine with interleaving is the primordial soup of concurrency models; cite
-  \citet{batty-compositional-17} here for why Composition Good (TM)
-  \item Trace-based semantics a la \citet{brookes-full-abstraction-96} are the \emph{extension}
-  of a machine with interleaving threads. Note we need to quotient our traces, since we started
-  with \citet{hennessy-parallel-79}
-  \item If we actually just have interleaved threads, i.e. SC, we are ``gucci"
-  \item Elas! Not all concurrency is linearizable! Weak memory is a thing! We must do something!
-  Two paths:
-  \begin{enumerate}
-    \item We can move from traces, which are linearly ordered, to partially ordered structures
-    representing True Concurrency (TM). Two paths!
-    \begin{enumerate}
-      \item We can add additional structure to our traces. Two paths!
-      \begin{enumerate}
-        \item Augmented and quotiented traces:
-        \begin{itemize}
-          \item Just like we added buffers to pomsets, we can add buffers to traces to get TSO
-          semantics a la \citet{jagadeesan-brookes-relaxed-12}. This is also nice and monadic! Yay!
-          \item In general, the extra state is like the machine state. Then we quotient to maintain
-          ``extensionality.'' Just like SC
-          \item So, we can consider the machine state of release/acquire, and reach
-          \citet{release-acquire}
-        \end{itemize}
-        \item Game semantics, which is like adding structure to traces:
-        \begin{itemize}
-          \item Gives novel categorical ways to reason about Important Stuff like linearizability
-          \citet{vale-linearizability-24}
-          \item \citet{abramsky-algol-96} gives an adequate densem for sequential Algol using game
-          semantics using \citet{hyland-ong-00}-style games previously used to model PCF (sequential
-          functional programming)
-          \item Games have \emph{sequentiality}, just like traces, embodied by \emph{alternation} of
-          moves between the proponent and opponent. This can be viewed as a highly constrained and
-          deterministic form of interleaving of concurrent actions. Let us discard the Hyland-Ong
-          rules, and be free of them! Then we get \citet{ghica-08}, which is a concurrent game, just
-          like described above. Result is very close to \citet{brookes-full-abstraction-96}, but fine
-          grained rather than coarse-grained.
-          \item In general, we are trying to make things represent true concurrency, hinting at the
-          next branch...
-        \end{itemize}
-      \end{enumerate}
-      \item Pomset lore:
-      \begin{enumerate}
-        \item \citet{sparky} original works for SC
-        \item Doing language stuff is hard, \citet{jagadeesan-pwp-20} breaks associativity
-        \item \citet{leaky-semicolon} fixes it, but no loops yet
-        \item Adding simple structures to pomsets works for TSO; see \citet{sparky}
-      \end{enumerate}
-      \item Event structure lore:
-      \begin{enumerate}
-        \item \citet{castellan-16} uses event structures for concurrency w.r.t. a \emph{memory
-        model}
-        \item \citet{paviotti-modular-relaxed-dep-20} continues down this path
-        \item Step-indexing is used, but hopefully doesn't have to be due to axiomatic domain theory
-        lore \cite{fiore-phd-94}
-      \end{enumerate}
-    \end{enumerate}
-  \end{enumerate}
-\end{enumerate}
-
-\TODO{Text seeds 2:}
-
-Concurrency in shared-memory computation is often modeled using operational semantics that describe
-the interleaving of different threads on an abstract machine. While this approach effectively
-captures the possible executions of concurrent programs, it poses significant challenges for
-\emph{compositional} reasoning. This can make it intractable to effectively reason about the
-behaviour of large software systems. To enable compositional reasoning about concurrent programs, we
-can instead try to assign program fragments a \emph{denotational semantics}, and then attempt to
-rigorously define how to combine these in a component-by-component fashion. Two major approaches to
-doing this are \emph{trace-based semantics} and \emph{game semantics}.
-
-In trace-based semantics, as exemplified by \citet{brookes-full-abstraction-96}, program behaviors
-are represented as sequences of observable actions (traces). This approach allows for a monadic
-model of sequentially consistent (SC) concurrency, facilitating compositional reasoning.
-Mechanizations like \citet{xia-itrees-20} use interaction trees to formalize effectful computations
-in a monadic framework, supporting reasoning about equivalence up to weak bisimulation.
-
-Game semantics, introduced by \citet{abramsky-algol-96} and further developed by \citet{ghica-08},
-models the interaction between a program and its environment as a game between two players: the
-program and its context. This perspective provides a rich categorical semantics of concurrency and
-has recently been effective in giving novel categorical characterizations of foundational properties
-such as \emph{linearizability}~\citep{vale-linearizability-24}.
-
-However, modeling real-world concurrency, especially in the presence of weak memory models, is
-considerably more complex, since oftentimes systems are \emph{not} linearizable: a concurrent system
-may exhibit behaviors that cannot be explained by a simple interleaving of its components on a
-single thread. Models for such systems are often inspired by the hardware that gives rise to the
-weak behaviour, and therefore it can be very challenging to abstract away from the notion of
-possible executions of entire programs. \citet{batty-compositional-17} argues that it is essential
-to have a compositional semantics for relaxed concurrency, not only to be able to reason about the
-correctness of programs running under modern architectures, but also to study how their relaxed
-interacts with the aggressive optimizations performed by modern compilers, and therefore to be able
-to determine the soundness of the latter. We believe that our SSA semantics offers a useful
-benchmark for weak memory semantics: if the weak memory semantics can be organized into a
-distributive Elgot category, then we know that it is compatible with the standard control-flow
-optimizations for SSA. It turns out that many of these models are close to supporting SSA, but often
-fall short in surprising ways.
-
-\paragraph{Pomsets.}
-
-One potential denotational semantics for relaxed concurrency is in terms of \emph{partially ordered
-multisets} (pomsets), which capture the partial ordering of events in concurrent computations.
-Pomsets allow for modeling true concurrency without resorting to equivalence classes of
-interleavings. They can be used to construct monadic models of concurrency, providing a structure
-that is more faithful to the behaviors observed under weak memory models.  \citet{sparky} utilize
-pomsets as an ingredient in a monad stack to build a model of Total Store Order (TSO) weak memory.
-Their approach successfully supports loops and provides a structure amenable to SSA semantics, which
-we discuss in Section~\ref{ssec:tso}.
-
-\TODO{discuss laws of parallel programming?}
-
-To extend this approach to more complex weak memory models, such as release-acquire semantics found
-in ARM architectures, is an area of ongoing research.  \citet{jagadeesan-pwp-20} introduce
-\emph{pomsets with preconditions} (PwP) to model weak memory behaviors. However,
-\citet{leaky-semicolon} demonstrate that sequential composition (the semicolon operator) in PwP is
-not associative, which undermines many common program optimizations and breaks the monadic structure
+One issue with this approach is that it can be very challenging to determine the appropriate
+structures to augment pomsets with in order to model more advanced memory models. For example,
+\citet{jagadeesan-pwp-20} introduce \emph{pomsets with preconditions} (PwP), which augment pomsets
+with logical formulae, to model weak memory behaviors. However, \citet{leaky-semicolon} demonstrate
+that sequential composition (the semicolon operator) in PwP is not associative. This lack of
+associativity undermines many common program optimizations and breaks the monadic structure
 necessary for compositional reasoning. To address this issue, \citet{leaky-semicolon} propose
 \emph{pomsets with predicate transformers} (PwT), which restore the associativity of sequential
-composition. Despite this improvement, their semantics still do not support loops, and it remains
-future work to develop a monadic structure based on PwT that fully supports recursion and iterative
-constructs.
+composition. Despite this improvement, their semantics still do not support loops, and developing a
+monadic structure based on PwT that fully supports recursion and iterative constructs remains future
+work. 
 
-\paragraph{Event Structures}
+Another potential generalization of pomsets, inspired by game semantics, is the use of \emph{event
+structures}, which introduce a \emph{conflict relation} to represent many potentially conflicting
+executions within a single mathematical object. \citet{castellan-16} show how to use event
+structures to represent concurrent executions with respect to a memory model. They study a simple
+language supporting parallel composition of $n$ linear programs defined as lists of loads, stores,
+and arithmetic operations, for which event structures provide a denotational semantics.
+\citet{paviotti-modular-relaxed-dep-20} use the event structure approach to give denotational
+semantics for relaxed memory concurrency in a more realistic language, including semantics for
+branches and loops. However, they employ step indexing in their semantics, and as a result, loop
+unrolling is only a refinement rather than an equation. Since event structures satisfy the axioms of
+axiomatic domain theory~\cite{fiore-phd-94}, it should be possible to modify this semantics into one
+where loop unrolling is an equation, at which point it would be a model of our calculus.
 
-\TODO{reflow and expand raw material}
+% \TODO{Proposed structure:}
 
-Another approach involves using \emph{event structures}, rooted in game semantics, to model
-concurrency with respect to a memory model. \citet{castellan-16} and later
-\citet{paviotti-modular-relaxed-dep-20} employ event structures to provide denotational semantics
-for relaxed memory models. These models capture the complexities of weak memory behaviors and allow
-for compositional reasoning. However, \citet{paviotti-modular-relaxed-dep-20} relies on
-step-indexing, which can prevent loop unrolling from being an equation rather than a refinement.
-Techniques from axiomatic domain theory~\citep{fiore-phd-94} suggest that this limitation could be
-addressed, potentially making these models compatible with our SSA semantics.
-
-\paragraph{Trace Semantics}
-
-\TODO{reflow and expand raw material}
-
-When using trace-based models for weak memory, additional complexities arise due to the need to
-capture relaxed behaviors. \citet{jagadeesan-brookes-relaxed-12} present a TSO monad based on traces
-that are quotiented to account for relaxed memory effects. Their model extends the work of
-\citet{brookes-full-abstraction-96} to weak memory by adding buffer closure properties to the
-traces, allowing for the formalization of TSO behaviors in a compositional manner.
-
-Similarly, \citet{release-acquire} develop a monadic model for release-acquire memory semantics
-using quotiented traces. They define an operational semantics for release-acquire and provide a
-corresponding trace semantics. While their model supports many transformations and optimizations,
-they have not yet established an Elgot structure, which is necessary for modeling loops and
-recursion in SSA.
-
-\TODO{discuss laws of parallel programming?}
-
-\TODO{Old proposed structure:}
-\begin{enumerate}
-  \item Concurrency shared-memory computation is often modeled by operational semantics for an
-  abstract machine.
-  \item This makes compositional reasoning difficult. We want a compositional way to reason about
-  the behaviour of program fragments, and what it means to put them together.
-  \item Two major approaches: \emph{traces} (see: \citet{brookes-full-abstraction-96}), and
-  \emph{game semantics} (see: \citet{abramsky-algol-96}, later \citet{ghica-08}). See also:
-  \citet{milner-processes-75},
-  \citet{plotkin-power-76}
-  \item Game semantics gives good categorical semantics of concurrency, and lets us effectively
-  define properties such as \emph{linearizability} \citet{vale-linearizability-24}
-  \item Traces can be used to give us a nice monadic model of SC concurrency
-  (\citet{brookes-full-abstraction-96}); can mechanize something like this with
-  \citet{xia-itrees-20}, which also have a nice monad; our quotient for \cite{sparky} is just their
-  notion of weak bisimulation
-  \item However, real concurrency is very complicated \citet{batty-compositional-17}, especially in
-  the presence of Weak Memory (TM):
-  \begin{enumerate}
-    \item Interleaving traces is Very SC (TM)
-    \item \emph{Pomsets} let us model True Concurrency (TM) rather than weirdly quotienting traces,
-    and we get a nice monadic model
-    \item \emph{Event structures}, based on game semantics, let us try to model concurrency with
-    respect to a \emph{memory model}, as in \citet{castellan-16}, later
-    \citet{paviotti-modular-relaxed-dep-20}; these use step-indexing so loop unrolling is not an
-    equation, but due to axiomatic domain theory lore \citet{fiore-phd-94} we can probably modify
-    this away
-  \end{enumerate}
-  \item Side point: our semantics can help determine whether a weak memory model is any good for
-  Real Life SSA (TM): ``
-  We believe that our SSA semantics offers a useful benchmark for weak memory semantics: if the weak
-  memory semantics can be organized into a distributive Elgot category, then we know that it is
-  compatible with the standard control-flow optimizations for SSA. It turns out that many of these
-  models are close to supporting SSA, but often fall short in surprising ways. 
-  ''
-  \item For \emph{pomsets}, we need more structure to do weak memory stuff:
-  \begin{enumerate}
-    \item \citet{jagadeesan-pwp-20} introduces \emph{pomsets with preconditions}, but
-    \citet{leaky-semicolon} shows semicolon is not associative, which breaks $\sim$everything
-    \item \citet{leaky-semicolon} introduces \emph{pomsets with predicate transformers}, which have
-    associated semicolons, but they still don't support loops, and it's unclear how to make things
-    into a nice monad again
-    \item \citet{sparky}, which we use, just uses pomsets as an ingredient in a monad stack to build
-    up a model of TSO weak memory. Still working on how to support more complex weak
-    memory models like, e.g., release-acquire (ARM)
-  \end{enumerate}
-  \item For \emph{traces}, we need weird quotients to do weak memory stuff:
-  \begin{enumerate}
-    \item \citet{jagadeesan-brookes-relaxed-12} does a nice TSO monad based on quotiented traces, I
-    think
-    \item \citet{release-acquire} gives a model of release-acquire using quotiented traces, and
-    shows it's a monad, but does not yet show it is Elgot
-  \end{enumerate}
-\end{enumerate}
-
-\TODO{paper notes to include:}
-
-\begin{itemize}
-  \item \citet{brookes-full-abstraction-96} notes:
-  \begin{itemize}
-    \item Goal: equationally fully abstract semantics w.r.t. a given notion of behaviour
-    \item \citet{hennessy-parallel-79} give a semantics for a parallel shared-variable language via
-    a recursively defined domain of resumptions built with a powerdomain operatyor, but the
-    resumptions semantics is \emph{too concrete}: $\ms{skip} ; \ms{skip} \neq \ms{skip}$ even though
-    they are observationally indistinguishable; you need extra features in the language for full
-    abstraction (coroutine execution counting number of atomic steps)
-    \item Another problem is fair execution yields unbounded nondeterminism; it is difficult to
-    adapt semantics like the above to this setting
-    \item This paper solves this problem, and supports infinite traces, and achieves full
-    abstraction
-    \item We do this by giving a set of transition traces for the program closed under
-    ``stuttering'' and ``mumbling''; by restricting our attention to closed sets, we avoid having
-    too few equations
-    \item Moreover, $\ms{skip}$ is an identity and $\ms{if}$ and $\ms{while}$ behave properly,
-    allowing us to build a nice Elgot structure, probably
-  \end{itemize}
-  \item \citet{jagadeesan-brookes-relaxed-12} notes:
-  \begin{itemize}
-    \item Want to consider memory models that are more relaxed than SC, for both architecture
-    reasons and because we want to do more optimizations (e.g. reordering of independent statements)
-    \item Gives a precise formalization of the denotational semantics of
-    \citet{brookes-full-abstraction-96} in the context of TSO weak memory, including $\ms{mfence}$,
-    satisfying the DRF property from \citet{adve-drf-98}
-    \item We add buffer closure properties to stuttering and mumbling: buffer update closure to
-    allow things to move from the buffers to shared state, and buffer reduction closure
-    \item Elgot structure should be fine, as $\ms{while}$-loops are supported
-  \end{itemize}
-  \item versus, for TSO, \citet{sparky} notes:
-  \begin{itemize}
-    \item gives a sound and complete semantics for TSO weak memory using pomsets
-    \item can be adapted to a nice monad, and we explicitly add an Elgot structure
-    \item uses pomsets to more clearly model true concurrency; pomsets developed in response to
-    traces being very SC
-  \end{itemize}
-  \item versus, for release-acquire, \citet{release-acquire} notes:
-  \begin{itemize}
-    \item weaker than x86 TSO, made by restricting C/C++11 to release/acquire atomics
-    \item ``causal consistency,'' ``per-location SC,'' ``RMW atomicity''
-    \item \citet{brookes-full-abstraction-96}-style semantics; totally ordered versus the usual
-    axiomatic semantics, which seems unintuitive; key observation is that we can derive things from
-    an \emph{operational} view of RA
-    \item Notion of traces compatible with \citet{kang-promising-17}'s ``view based'' machine
-    \item While full abstraction is often out of reach, we want to be able to justify various
-    optimizations which are sound under RA, allowing us to \emph{locally} justify program
-    transformations
-    \item Give operational semantics for RA
-    \item Define corresponding trace semantics
-    \item Give monadic presentation which is compositional
-    \item \citet{brookes-full-abstraction-96} relies on unrealistic $\ms{await}$ construct; so proof
-    doesn't apply rin realistic languages. This does not have full abstraction, but to the best of
-    author's knowledge all transformations proven in the existing literature are supported by given
-    semantics. Structural transformations are supported by using \citet{moggi-91-monad}'s standard
-    semantics
-    \item Also support algebraic ``laws of parallel programming'' from \citet{hoare-parallel-14};
-    we can't do this yet since we do not support \emph{refinement} yet, for simplicity
-  \end{itemize}
-  \item \citet{kang-promising-17} gives an operational semantics for many of the features in the
-  C++11 concurrency model, mostly formalized in Coq
-\end{itemize}
-
-\begin{itemize}
-  \item \citet{ghica-08} notes:
-  \begin{itemize}
-    \item Semantics very close to \citet{brookes-full-abstraction-96}, but \emph{fine-grained} vs.
-    \emph{coarse-grained} (Brookes is coarse-grained due to $\ms{await}$ construct)
-    \item Language allows side-effects in expressions
-    \item Give a compositional fully abstract game model for a fine-grained shared-variable language
-  \end{itemize}
-  % \item \citet{vale-linearizability-24} notes:
-  % \begin{itemize}
-  %   \item \todo{...}
-  % \end{itemize}
-  % \item \citet{castellan-16} notes:
-  % \begin{itemize}
-  %   \item \todo{...}
-  % \end{itemize}
-  % \item \citet{paviotti-modular-relaxed-dep-20} notes:
-  % \begin{itemize}
-  %   \item \todo{...}
-  % \end{itemize}
-\end{itemize}
-
-\TODO{text seeds:}
-
-\begin{itemize}
-
-  \item Oftentimes, the most natural way to model a concurrent shared-memory computation is via an
-  operational semantics, in which different threads of execution interleave and interact in an
-  idealized, abstract machine. The issue with this formulation is it makes it quite challenging to
-  reason about the behaviour of large programs \emph{compositionally}, rather than attempting to
-  model the entire program at once. This is especially a problem in the context of weak memory
-  models, which are inspired by the hardware that gives rise to the weak behaviour and hence often
-  in terms of the possible execution of entire programs. \citet{batty-compositional-17} explains
-  that it would be more useful to have a compositional semantics for concurrency, and especially
-  relaxed concurrency, because it permits reasoning about programs in a local,
-  component-by-component fashion. This is very challenging to achieve, because the semantics of each
-  expression must include enough information to understand how it interacts with arbitrary other
-  threads, and has been the object of much research.
-  
-  Compositional models of \emph{sequentially consistent} concurrency, in which threads are simply
-  interleaved, is a very well-studied problem in the literature. In \citet{abramsky-algol-96}, a
-  denotational semantics for concurrent idealized Algol is given in terms of game semantics.
-
-  \item  We believe that our SSA semantics offers a useful benchmark for weak memory semantics: if
-  the weak memory semantics can be organized into a distributive Elgot category, then we know that
-  it is compatible with the standard control-flow optimizations for SSA. It turns out that many of
-  these models are close to supporting SSA, but often fall short in surprising ways. 
-  
-  For example, \citet{jagadeesan-pwp-20} attempt to build a denotational model using \emph{pomsets
-  with preconditions (PwP)}, which are an extension of the pomset model of true concurrency.
-  \citet{leaky-semicolon} showed that in the PwP model, semicolon is \emph{not} associative, which
-  rules out almost all common program optimizations.  They go on to offer a more complex model of
-  \emph{pomsets with predicate transformers (PwT)}. This makes sequential composition associative, but
-  their semantics still does not support loops. (This is a common issue in weak semantics, since none
-  of the litmus tests used to distinguish different concurrency models include loops.)
-  
-  In \cite{castellan-16}, an alternative approach to building up denotational semantics for weak
-  memory is introduced using \emph{event structures}, an important idea from game semantics. They
-  study a simple language supporting parallel composition of $n$ simple, linear programs defined as
-  lists of loads, stores, and arithmetic operations; event structures are then used to give
-  denotational semantics to these programs with respect to different \emph{memory models}, ranging
-  from sequential concurrency to relaxed and non-linear models.
-
-  \citet{paviotti-modular-relaxed-dep-20} use the event structure approach to give denotational
-  semantics for relaxed memory concurrency, particularly including semantics for branches and loops.
-  However, they do this using step indexing, and so loop unrolling is only a refinement rather than
-  an equation. Since event structures satisfy the axioms of axiomatic domain
-  theory~\citet{fiore-phd-94}, it ought to be possible to modify this semantics into one in which
-  loop unrolling is an equation, at which point it would be a model of our calculus. 
-\end{itemize}
+% \begin{enumerate}
+%   \item Machine with interleaving is the primordial soup of concurrency models; cite
+%   \citet{batty-compositional-17} here for why Composition Good (TM)
+%   \item Trace-based semantics a la \citet{brookes-full-abstraction-96} are the \emph{extension}
+%   of a machine with interleaving threads. Note we need to quotient our traces, since we started
+%   with \citet{hennessy-parallel-79}
+%   \item If we actually just have interleaved threads, i.e. SC, we are ``gucci"
+%   \item Elas! Not all concurrency is linearizable! Weak memory is a thing! We must do something!
+%   Two paths:
+%   \begin{enumerate}
+%     \item We can move from traces, which are linearly ordered, to partially ordered structures
+%     representing True Concurrency (TM). Two paths!
+%     \begin{enumerate}
+%       \item We can add additional structure to our traces. Two paths!
+%       \begin{enumerate}
+%         \item Augmented and quotiented traces:
+%         \begin{itemize}
+%           \item Just like we added buffers to pomsets, we can add buffers to traces to get TSO
+%           semantics a la \citet{jagadeesan-brookes-relaxed-12}. This is also nice and monadic! Yay!
+%           \item In general, the extra state is like the machine state. Then we quotient to maintain
+%           ``extensionality.'' Just like SC
+%           \item So, we can consider the machine state of release/acquire, and reach
+%           \citet{release-acquire}
+%         \end{itemize}
+%         \item Game semantics, which is like adding structure to traces:
+%         \begin{itemize}
+%           \item Gives novel categorical ways to reason about Important Stuff like linearizability
+%           \citet{vale-linearizability-24}
+%           \item \citet{abramsky-algol-96} gives an adequate densem for sequential Algol using game
+%           semantics using \citet{hyland-ong-00}-style games previously used to model PCF (sequential
+%           functional programming)
+%           \item Games have \emph{sequentiality}, just like traces, embodied by \emph{alternation} of
+%           moves between the proponent and opponent. This can be viewed as a highly constrained and
+%           deterministic form of interleaving of concurrent actions. Let us discard the Hyland-Ong
+%           rules, and be free of them! Then we get \citet{ghica-08}, which is a concurrent game, just
+%           like described above. Result is very close to \citet{brookes-full-abstraction-96}, but fine
+%           grained rather than coarse-grained.
+%           \item In general, we are trying to make things represent true concurrency, hinting at the
+%           next branch...
+%         \end{itemize}
+%       \end{enumerate}
+%       \item Pomset lore:
+%       \begin{enumerate}
+%         \item \citet{sparky} original works for SC
+%         \item Doing language stuff is hard, \citet{jagadeesan-pwp-20} breaks associativity
+%         \item \citet{leaky-semicolon} fixes it, but no loops yet
+%         \item Adding simple structures to pomsets works for TSO; see \citet{sparky}
+%       \end{enumerate}
+%       \item Event structure lore:
+%       \begin{enumerate}
+%         \item \citet{castellan-16} uses event structures for concurrency w.r.t. a \emph{memory
+%         model}
+%         \item \citet{paviotti-modular-relaxed-dep-20} continues down this path
+%         \item Step-indexing is used, but hopefully doesn't have to be due to axiomatic domain theory
+%         lore \cite{fiore-phd-94}
+%       \end{enumerate}
+%     \end{enumerate}
+%   \end{enumerate}
+% \end{enumerate}
 
 \subsection{Future Work}
 
