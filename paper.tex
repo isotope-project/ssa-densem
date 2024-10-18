@@ -4901,26 +4901,28 @@ While, as we make use of in our calculus, pure operations are central, duplicabl
 it can be useful to study each notion in isolation, as well as to consider morphisms which are
 central and duplicable (which we have taken to calling \emph{relevant}) and morphisms which are
 both central and discardable (which we have taken to calling \emph{affine}). Examples of morphisms
-which are not pure but nontheless relevant or affine abound; for example,
+which are not pure but nonetheless relevant or affine abound; for example,
 \begin{itemize}
-  \item In a programming language with nondeterminism, nondeterministic functions are impure (since
-  $\letexpr{y}{f(x)}{(y, y)}$ is a strict refinement of $(f(x), f(x))$) but are affine, assuming
-  they have no other effect
+  \item In a programming language with nondeterminism, nondeterministic functions are \emph{impure}
+  (since $\letexpr{y}{f(x)}{(y, y)}$ is a strict refinement of $(f(x), f(x))$), but are nontheless
+  \emph{affine}, because discarding the result of a nondeterministic function does not affect the
+  program's behavior, assuming they have no other effect.
   \item In a programming language with nontermination, nonterminating functions with no other effect
   are impure (since $\letexpr{y}{f(x)}{e}$ may diverge even if $e$ does not) but are always
-  duplicable, and, depending on the language's other effects, may be relevant
+  duplicable, because duplicating a nonterminating function does not introduce new effects beyond
+  divergence. Depending on whether the language's other effects commute with nontermination, they
+  may in fact be relevant.
 \end{itemize}
 All three of these concepts still make perfect sense when interpreted as-is in a Freyd category, and
-are particularly useful when reasoning about models of probablistic programming, such as Markov
+are particularly useful when reasoning about models of probabilistic programming, such as Markov
 categories (which have many affine morphisms) \cite{nlab:markov-category}.
 
 Given that such relevant and affine side-effects have substitution principles which depend on how
 often a variable is used in a term, we call such side-effects \emph{substructural}. We might also
 consider how we could support substructural, and in particular linear, \emph{types}. Categorically,
 this corresponds to weakening the requirement that our base category be cartesian, instead requiring
-only a symmetric monoidal category; the resulting generalization of a Freyd category is called an
-\emph{effectful category} by \citet{promonad}. Generalizing both our effect system and our type
-system to support substructruality is ongoing work.
+only a symmetric monoidal category. The resulting generalization of a Freyd category is called an
+\emph{effectful category} by \citet{promonad}.
 
 \subsubsection{Refinement and Enrichment}
 
@@ -4928,8 +4930,8 @@ Throughout this work, we have focused on the notion of program \emph{equivalence
 $\lbeq{\Gamma}{r}{r'}{\ms{L}}$. In many settings, especially when considering the nondeterminism and
 concurrency, we would also like to study program \emph{refinement} $\haslb{\Gamma}{r \sqsubseteq
 r'}{\ms{L}}$. Semantically, this corresponds to an enrichment of our model in the category of
-partial orders; it would not take too many changes to support this in our language as-is. We may
-also consider how our syntax could be extended to support explicit parallelism and how we could
+partial orders; we conjecture that adding this to our semantics would require minimal changes. We
+may also consider how our syntax could be extended to support explicit parallelism and how we could
 reflect the corresponding algebraic laws (as given in, e.g., \citet{hoare-parallel-14}), such as
 \begin{equation}
   (P \parallel Q) ; (R \parallel S) \sqsubseteq (P ; R) \parallel (Q ; S)
@@ -4937,69 +4939,95 @@ reflect the corresponding algebraic laws (as given in, e.g., \citet{hoare-parall
 in our equational theory. More generally, we can consider enrichment with further structures, such
 as distributive lattices and dcpos, and the language features these correspond to, such as
 nondeterministic choice between programs $P \lor C$. These features are particularly interesting
-from the perspective of programs as \emph{specifications}, since there is the potential of
-representing complex specifications as SSA.
+from the perspective of programs as \emph{specifications}, as they offer the potential for
+representing complex specifications within SSA.
 
 \subsubsection{Guarded Iteration}
 
 Elgot categories and monads were introduced in \citet{elgot-elgot-75}, and subsequently formalized
 in \citet{adamek-elgot-11}. \citet{coinductive-resumption-levy-goncharov-19} generalize Elgot
-categories to \emph{guarded Elgot categories}, to support partial non-unique iteration.
+categories to \emph{guarded Elgot categories} (and, correspondingly, \emph{guarded Elgot monads},
+whose Kleisli categories are guarded Elgot), to support partial non-unique iteration. Generalizing
+our language with support for guarded iteration could allow us to study applications of SSA to
+domains for which not all fixpoints exist, such as the representation of terminating languages (as,
+for example, one would find in a proof assistant) or productive processes. Another potential
+advantage of such support is that every category with coproducts can be considered \emph{vacuously}
+guarded, with the only fixpoints supported being those of loops which immediately exit. This could
+allow us to unify the notion of \isotopessa{} expression models and \isotopessa{} models into the
+single notion of \emph{guarded} \isotopessa{} models (with expression models vacuously guarded,
+while \isotopessa{} models in the original sense would have all fixpoints).
 
-\TODO{this}
+\citet{goncharov-metalang-21} introduce a metalanguage for guarded iteration based on labelled
+iteration as presented by \citet{geron-iteration-16}. Interestingly, they refer to the labels in
+their systems as \emph{exceptions}, making the claim that this more closely matches their semantics.
+Similar to our work, they provide a denotational semantics for this language using the Kleisli
+category of a strong guarded \emph{pre-iterative} monad $\mb{T}$—that is, a monad with a guarded
+fixpoint operator—on a distributive category $\mc{C}$. They then demonstrate that this semantics is
+sound and adequate with respect to a big-step operational semantics for a specific monad, namely
+$\ms{T};X = X \times \mathbb{N}^ + \mathbb{N}^\omega$ over $\ms{Set}$. Notably, unlike our trace
+monad, their monad is \emph{guarded iterative} rather than merely iterative. The infinite branch of
+the coproduct $\mathbb{N}^\omega$ represents an infinite sequence of natural numbers, effectively
+prohibiting non-productive infinite loops — that is, recursion that does not pass through a
+\emph{guard}, which in this context is emitting a natural number. Their treatment of iteration is
+thus somewhat more general than ours, as they support guarded iteration and require only a
+pre-iterative monad. However, they focus on Kleisli categories rather than providing a general
+treatment for Freyd categories. Additionally, their language supports functional types, whereas our
+language is purely first-order. We are very interested in exploring the connection between guarded
+labelled-iteration and SSA implied by the similarities between our respective syntaxes and
+semantics.
 
-\begin{enumerate}  
-  \item ``Elgot categories / monads were introduced in \citet{elgot-elgot-75} and formalized in
-  \citet{adamek-elgot-11}. These were generalized to guarded Elgot monads in
-  \citet{coinductive-resumption-levy-goncharov-19} to support partial non-unique iteration. We could
-  add support for guardedness to unify \isotopessa{} models and \isotopessa{} expression models,
-  since the identity monad is the initial guarded Elgot monad, i.e. every category is vacuously
-  guarded Elgot. Could be useful to reason about SSA for e.g. terminating languages like Lean or
-  somesuch, or reasoning about productivity.''
-  \item Guarded effect handlers via guarded Elgot monads \cite{goncharov-metalang-21}
-  \begin{itemize}
-    \item Gives a metalanguage for guarded iteration based on labelled-iteration from
-    \citet{geron-iteration-16}, fine-grained call-by-value, with semantics in a distributive
-    category $\mc{C}$ and a strong guarded pre-iterative monad $\mb{T}$ on $\mb{C}$, where
-    pre-iterative is just fixpoint (versus Elgot)
-    \item \emph{More general}: guarded pre-iterative rather than (total) Elgot for denotational
-    semantics
-    \item \emph{Less general}: require a Kleisli category rather than an arbitrary Freyd category;
-    but this shouldn't be necessary
-    \item Called exceptions rather than labels since they match better
-    \item Prove guardedness; furthermore, they handle functional types using Kleisli exponentials
-    but also presheaf representability assumption
-    \item They give a big-step operational semantics and prove soundness and adequacy. Following
-    \citet{geron-iteration-16}, this is given w.r.t the simplest concrete monad which illustrates
-    their semantics; in this case outputing $\nats$ to a console via $\ms{T}\;X = X \times \nats^* +
-    \nats^\omega$ vs $X + 1$ for \citet{geron-iteration-16}. Note this is \emph{not} the trace monad
-    on $\nats$, since the signature above implies productivity; the trace monad on $\nats$ is
-    $X \times \nats^* + \nats^{\leq \omega}$ to allow finite (or no) output for a divergent trace.
-    \item \emph{More general}: they support higher-order stuff via presheaf lore
-    \item \emph{Less general}: we have completnesss of an equational theory for \emph{all} models.
-    No operational semantics, though. Also their substitution lemma is only for their concrete
-    choice of monad. \emph{That said}, it should be relatively easy to generalize to a
-    semi-arbitrary monad, at least over \mb{Set}.
-    \item For the guarded iterative future work section:
-    \begin{itemize}
-      \item Interested in finding underlying guarded iteration structures for things which resist
-      traditional treatment, e.g. \citet{nakata-hoare-15}, and in particular \emph{hybrid monads}
-      \citet{goncharov-hybrid-18}
-      \item Interested in relations to work on adequacy for algebraic effects, see
-      \citet{plotkin-adequacy-01}
-      \item Interested in Levy's call-by-push-value \cite{levy-cbpv-99} as a metalanguage for
-      guarded \emph{recursion} (vs. iteration)
-    \end{itemize}
-  \end{itemize}
-\end{enumerate}
+% \begin{enumerate}  
+%   \item ``Elgot categories / monads were introduced in \citet{elgot-elgot-75} and formalized in
+%   \citet{adamek-elgot-11}. These were generalized to guarded Elgot monads in
+%   \citet{coinductive-resumption-levy-goncharov-19} to support partial non-unique iteration. We could
+%   add support for guardedness to unify \isotopessa{} models and \isotopessa{} expression models,
+%   since the identity monad is the initial guarded Elgot monad, i.e. every category is vacuously
+%   guarded Elgot. Could be useful to reason about SSA for e.g. terminating languages like Lean or
+%   somesuch, or reasoning about productivity.''
+%   \item Guarded effect handlers via guarded Elgot monads 
+%   \begin{itemize}
+%     \item Gives a metalanguage for guarded iteration based on labelled-iteration from
+%     \citet{geron-iteration-16}, fine-grained call-by-value, with semantics in a distributive
+%     category $\mc{C}$ and a strong guarded pre-iterative monad $\mb{T}$ on $\mb{C}$, where
+%     pre-iterative is just fixpoint (versus Elgot)
+%     \item \emph{More general}: guarded pre-iterative rather than (total) Elgot for denotational
+%     semantics
+%     \item \emph{Less general}: require a Kleisli category rather than an arbitrary Freyd category;
+%     but this shouldn't be necessary
+%     \item Called exceptions rather than labels since they match better
+%     \item Prove guardedness; furthermore, they handle functional types using Kleisli exponentials
+%     but also presheaf representability assumption
+%     \item They give a big-step operational semantics and prove soundness and adequacy. Following
+%     \citet{geron-iteration-16}, this is given w.r.t the simplest concrete monad which illustrates
+%     their semantics; in this case outputing $\nats$ to a console via $\ms{T}\;X = X \times \nats^* +
+%     \nats^\omega$ vs $X + 1$ for \citet{geron-iteration-16}. Note this is \emph{not} the trace monad
+%     on $\nats$, since the signature above implies productivity; the trace monad on $\nats$ is
+%     $X \times \nats^* + \nats^{\leq \omega}$ to allow finite (or no) output for a divergent trace.
+%     \item \emph{More general}: they support higher-order stuff via presheaf lore
+%     \item \emph{Less general}: we have completnesss of an equational theory for \emph{all} models.
+%     No operational semantics, though. Also their substitution lemma is only for their concrete
+%     choice of monad. \emph{That said}, it should be relatively easy to generalize to a
+%     semi-arbitrary monad, at least over \mb{Set}.
+%     \item For the guarded iterative future work section:
+%     \begin{itemize}
+%       \item Interested in finding underlying guarded iteration structures for things which resist
+%       traditional treatment, e.g. \citet{nakata-hoare-15}, and in particular \emph{hybrid monads}
+%       \citet{goncharov-hybrid-18}
+%       \item Interested in relations to work on adequacy for algebraic effects, see
+%       \citet{plotkin-adequacy-01}
+%       \item Interested in Levy's call-by-push-value \cite{levy-cbpv-99} as a metalanguage for
+%       guarded \emph{recursion} (vs. iteration)
+%     \end{itemize}
+%   \end{itemize}
+% \end{enumerate}
 
-\subsubsection{MLIR models}
+% \subsubsection{MLIR models}
 
-\TODO{MLIR future work here?}
+% \TODO{MLIR future work here?}
 
-\begin{enumerate}
-  \item ...
-\end{enumerate}
+% \begin{enumerate}
+%   \item ...
+% \end{enumerate}
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references}
