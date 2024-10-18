@@ -403,7 +403,7 @@ appearing in $\phi$-node branches; namely, they are allowed to use any variable 
     \caption{Converted to SSA form}
     \label{fig:fact-ssa}
   \end{subfigure}
-  \todo{add diagram showing correspondence between $\phi$-nodes and mutable bindings?}
+  % \todo{add diagram showing correspondence between $\phi$-nodes and mutable bindings?}
   \caption{
     Conversion of three address code for the program in Figure~\ref{fig:fact-program} to SSA 
     form, requring the insertion of $\phi$-nodes for $i$ and $a$ due to control-flow dependent
@@ -465,7 +465,7 @@ $\phi$-node, add an argument to the jump instruction from the appropriate source
     \label{fig:fact-bba}
   \end{subfigure}
 
-  \TODO{Add arrows with \texttt{tikzmark}?}
+  % \TODO{Add arrows with \texttt{tikzmark}?}
   
   \caption{
     The program in Figure \ref{fig:fact-program} written in standard SSA (using $\phi$ nodes),
@@ -550,14 +550,12 @@ be recovered by removing the inserted \ms{where}-blocks.
   \label{fig:dominance-to-lexical}
 \end{figure}
 
-\TODO{rework below:}
-
 Lexical scoping allows us to apply many of the techniques developed in theoretical computer science
-and functional programming for reasoning about and developing optimizations and analysis passes. In
-particular, the result of our conversion to lexical scoping looks a lot like the correspondence
-between CPS and SSA described in \citet{kelsey-95-cps}. In particular, we can now begin to develop
-an \textit{equational theory} for SSA programs to reason about complex rewriting operations in a
-compositional way. In particular, we'd like to be able to reason about:
+and functional programming for reasoning about and developing optimizations and analysis passes --
+in particular, the result of our conversion to lexical scoping looks a lot like the correspondence
+between SSA and CPS described in \citet{kelsey-95-cps}. We can use this correspondence to guide us
+in developing an \textit{equational theory} for SSA programs, with the goal of enabling
+compositional reasoning aboutq program transformations such as:
 \begin{itemize}
   \item \textit{Control-flow rewrites}, such as jump-threading or fusing two identical branches of
   an \ms{if}-statement
@@ -565,7 +563,6 @@ compositional way. In particular, we'd like to be able to reason about:
   \item Combinations of the two, such as rewriting $\ms{if}\;x > 0\;\ms{then}\;1 - x\;\ms{else}\;1 +
   x$ to $1 + \ms{abs}(x)$.
 \end{itemize}
-
 We can work towards making these easier to express by generalizing our syntax to allow the branches
 of if-statements to contain arbitrary code, rather than just unconditional branches, as in
 Figure~\ref{fig:bba-to-anf}. This clearly adds no additional expressive power, since:
@@ -579,11 +576,11 @@ Figure~\ref{fig:bba-to-anf}. This clearly adds no additional expressive power, s
         \ms{where}\;\ell_\top: \{s\},\;\ell_\bot: \{t\}
   \end{equation}
 \end{itemize}
-
-What we end up with is something which looks a lot like
-\textit{administrative normal form} (ANF), with our transformation analogous to that described in
-\citet{chakravarty-functional-ssa-2003}. The key difference is that, in our format (which is
-strictly first order), we require an explicit \ms{ret} instruction (rather than adopting an expression-oriented language), and write ``$\ms{let\;rec}\;f(x) = e; t$" as ``$t\;\ms{where}\;f(x) : \{e\}$."
+What we end up with is something which looks a lot like \textit{administrative normal form} (ANF),
+with our transformation analogous to that described in \citet{chakravarty-functional-ssa-2003}. The
+key difference is that, in our format (which is strictly first order), we require an explicit
+\ms{ret} instruction (rather than adopting an expression-oriented language), and write
+``$\ms{let\;rec}\;f(x) = e; t$" as ``$\where{t}{\wbranch{f}{x}{e}}$."
 
 \begin{figure}
   \centering
@@ -624,10 +621,10 @@ strictly first order), we require an explicit \ms{ret} instruction (rather than 
   \label{fig:bba-to-anf}
 \end{figure}
 
-ANF, however, still lacks a good substitution property, since substituting a value for a variable
-can take you out of ANF, making it difficult to express optimizations like $(i + 1) - 1 \to i$ as
-rewrite rules. To fix this, we can simply relax the restriction that expressions in a program must
-be atomic. This can again trivially be seen to add no excessive power, since we can always introduce
+ANF, however, lacks a good substitution property, since substituting a value for a variable can take
+you out of ANF, making it difficult to express optimizations like $(i + 1) - 1 \to i$ as rewrite
+rules. To fix this, we can simply relax the restriction that expressions in a program must be
+atomic. This can again trivially be seen to add no excessive power, since we can always introduce
 temporary variables via \ms{let}-bindings to make any expression atomic. For full generality, we
 will also allow \ms{let}-bindings and \ms{if}-statements \textit{inside} expressions, which again
 can be eliminated in the obvious manner, such as by taking
@@ -702,12 +699,10 @@ can be eliminated in the obvious manner, such as by taking
   \label{fig:fact-cse}
 \end{figure}
 
-
-This gives us our final \isotopessa{} language. We can now state
-\textit{substitutions}, like, in Figure~\ref{fig:fact-cse}, which can be used to
-build up optimizations such as \textit{common-subexpression elimination}.
-Substitution, in particular, lets us do algebra \textit{algebra}, for example,
-since we know that:
+This gives us our final \isotopessa{} calculus, which we will call \emph{type-theoretic SSA}. In
+this language, we can safely perform \textit{substitutions}, like in Figure~\ref{fig:fact-cse}.
+These can then be used to build up optimizations such as \textit{common-subexpression elimination}.
+More generally, substitution lets us do \textit{algebra}. For example, since we know that:
 \begin{align*}
   (i_0 + 1, a_0 * (i_0 + 1)) &= (\ms{let}\;(x, y) = (i_0, a_0)\;\ms{in}\;(x + 1, y * (x + 1))) \\
   (1, 1) &= (\ms{let}\;(x, y) = (0, 1)\;\ms{in}\;(x + 1, y * (x + 1)))
@@ -719,20 +714,6 @@ for complex optimizations, such as rewriting \ref{fig:fact-zero} to \ref{fig:fac
 simple rewriting steps. In particular, we can do \textit{complex}, \textit{error-prone} loop and
 control-flow graph optimizations by breaking them down into closed set of simple algebraic steps,
 with each step rigorously justified via our denotational semantics
-
-% \begin{itemize}
-%   \item 
-%   \item We can 
-%   \item We can show that our steps are \textit{complete} by showing that quotienting by them gives
-%         a model of our denotational semantics
-%   \item That's why we use \isotopessa{}
-%   \item But we gain no additional power: SSA $\subseteq$ \isotopessa{}; this is a retraction
-%   (embedding-projection)
-%   \item In particular, using the steps, every \isotopessa{} program can be converted to an SSA program with
-%         equivalent semantics, while every SSA program is already a \isotopessa{} program (just add brackets!)
-%   \item Unproven conjecture: this should take \~linear time, and the resuling program should be
-%   \~linearly sized. Do on paper?
-% \end{itemize}
 
 \begin{figure}
   \begin{minipage}{.5\textwidth}
@@ -764,7 +745,7 @@ with each step rigorously justified via our denotational semantics
         & \quad \} \\
         & \}
       \end{align*}
-      \caption{Equivalent to Figure \ref{fig:fact-dinat} by \textit{dinaturality}}
+      \caption{Equivalent to Figure \ref{fig:fact-zero} by \textit{dinaturality}}
       \label{fig:fact-dinat}
     \end{subfigure}
   \end{minipage}%
@@ -789,7 +770,7 @@ with each step rigorously justified via our denotational semantics
     \caption{Equivalent to Figure \ref{fig:fact-subst-2} by substitution}
     \label{fig:fact-zero}
   \end{subfigure}
-  \TODO{add arrows via \texttt{tikzmark}}
+  % \TODO{add arrows via \texttt{tikzmark}}
   \caption{
     Decomposing multi-block rewrites (from \ref{fig:fact-zero} to
     \ref{fig:fact-subst-2}, and therefore to the more optimal program 
@@ -804,10 +785,10 @@ with each step rigorously justified via our denotational semantics
 
 \label{sec:typing}
 
-We now give a formal account of \isotopessa{}, starting with the types. Our types are first order, and
-consists of binary sums $A + B$, products $A \otimes B$, the unit type $\mathbf{1}$, and the empty
-type $\mb{0}$, all parametrized over a set of base types $X \in \mc{T}$. We write our set of types
-as $\ms{Ty}(X)$. We also parametrize over:
+We now give a formal account of \isotopessa{}, starting with the types. Our types are first order,
+and consists of binary sums $A + B$, products $A \otimes B$, the unit type $\mathbf{1}$, and the
+empty type $\mb{0}$, all parametrized over a set of base types $X \in \mc{T}$. We write our set of
+types as $\ms{Ty}(X)$. We also parametrize over:
 \begin{itemize}
   
   \item A set of effects $\epsilon \in \mc{E}$, forming a join-semilattice with bottom element $\bot
@@ -823,16 +804,15 @@ as $\ms{Ty}(X)$. We also parametrize over:
   \bigcup_\epsilon\mc{I}_\epsilon$.
 
 \end{itemize}
-We'll call a tuple $Sg = (\mc{E}, \mc{T}, \mc{I})$ of types and instructions
-over these types an \emph{\isotopessa{}-signature}.
+We'll call a tuple $Sg = (\mc{E}, \mc{T}, \mc{I})$ of types and instructions over these types an
+\emph{\isotopessa{}-signature}.
 
 A (variable )\textit{context} $\Gamma$ is a list of \textit{typing hypotheses}
-$\thyp{x}{A}{\epsilon}$, where $x$ is a variable name, $A$ is the type of that
-variable, and $\epsilon$ is the effect of using that variable (used when filling
-holes with effectful expressions). If $\epsilon = \bot$, we often omit it,
-writing $\bhyp{x}{A}$. Similarly, we define a \textit{label-context} to be a
-list of \textit{labels} $\lhyp{\ell}{A}$, where $A$ is the parameter type that
-must be passed on a jump to the label $\ell$.
+$\thyp{x}{A}{\epsilon}$, where $x$ is a variable name, $A$ is the type of that variable, and
+$\epsilon$ is the effect of using that variable (used when filling holes with effectful
+expressions). If $\epsilon = \bot$, we often omit it, writing $\bhyp{x}{A}$. Similarly, we define a
+\textit{label-context} to be a list of \textit{labels} $\lhyp{\ell}{A}$, where $A$ is the parameter
+type that must be passed on a jump to the label $\ell$.
 
 \begin{figure}[H]
   \begin{center}
@@ -1838,8 +1818,6 @@ That is, the following two programs are equivalent:
   $$
 \end{enumerate}
 
-\TODO{align $\teqv$ in below explanation}
-
 \emph{Then}, for any well-typed entry block $\haslb{\Gamma}{r}{\ms{L}, \ell(A)}$ (which can produce
 an appropriate input $x : A$ at label $\ell$), we have that
 $$
@@ -1847,33 +1825,29 @@ $$
     {\wbranch{\kappa}{y}{s}}}{\where{r}{t}}{\ms{L}}
 $$
 i.e., in imperative pseudocode,
-$$
-  x = r; y = e; \ms{loop}\;\{ y = s \} \qquad \teqv \qquad x = r; \ms{loop}\;\{ x = t \}
-$$
-where $s$ and $t$ may branch out of the loop.
-
-The reason why we require $e$ to be \emph{pure} is that impure expressions do not necessarily
-commute with infinite loops, even if they commute with any finite number of iterations of the loop.
-For example, if $\ms{hi}$ is some effectful opperation (say, printing ``hello''), it is quite
-obvious that,
-$$
+\begin{align}
+  x = r; y = e; \ms{loop}\;\{ y = s \}  & \teqv x = r; \ms{loop}\;\{ x = t \} \\ 
+  \intertext{
+    where $s$ and $t$ may branch out of the loop. The reason why we require $e$ to be \emph{pure} is
+    that impure expressions do not necessarily commute with infinite loops, even if they commute with
+    any finite number of iterations of the loop. For example, if $\ms{hi}$ is some effectful opperation
+    (say, printing ``hello''), it is quite obvious that,
+  }
   \ms{hi} ; x = x + 1 ; \ms{if}\;x = y\;\{\ms{ret}\;y\}
-  \qquad \teqv \qquad 
+  & \teqv 
   x = x + 1 
   ; \ms{if}\;x = y\;\{\ms{hi} ; \ms{ret}\;y\} 
-  ;  \ms{hi}
-$$
-whereas
-$$
+  ;  \ms{hi} \\
+  \intertext{whereas}
   \ms{hi} ; \ms{loop} \{ x = x + 1 ; \ms{if}\;x = y\;\{\ms{ret}\;y\} \} 
-  \qquad \not\teqv \qquad 
+  &\not\teqv
   \ms{loop} \{ x = x + 1 ;  \ms{if}\;x = y\;\{\ms{hi} ; \ms{ret}\;y\} \} ;
-$$
+\end{align}
 since, in particular, we may have $y \leq x$, in which case the loop will never exit and hence
-$\ms{hi}$ will never be executed.
-
-Note that, due to \brle{let$_1$-$\beta$}, \brle{cfg-$\eta$}, and \brle{cfg-$\beta_1$}, 
-this is equivalent to
+$\ms{hi}$ will never be executed. 
+%
+Note that, due to \brle{let$_1$-$\beta$}, \brle{cfg-$\eta$}, and \brle{cfg-$\beta_1$}, this is
+equivalent to
 \begin{equation}
 \prftree[r]{\rle{uni'}}
 {
@@ -2855,7 +2829,7 @@ Kleisli category allows us to perform variable manipulation, when viewed as a su
 inclusion via the monad's unit), we can postulate a subcategory $\mc{C}_\bot \subseteq \mc{C}$
 equipped with only a \emph{cartesian}, rather than \emph{cartesian closed}, structure (since we do
 not want to require support for first-class functions or computations); this is called a \emph{Freyd
-category}, and is defined as follows: \TODO{cite original paper for Freyd categories?}
+category}, and is defined as follows:
 \begin{definition}[Freyd category]
   A \emph{Freyd category} is a premonoidal category $\mc{C}$ equipped with a wide subcategory
   $\mc{C}_\bot \subseteq \mc{C}$ of \emph{pure} morphisms such that
@@ -2991,8 +2965,8 @@ Figure~\ref{fig:coproduct-string-diagrams}.
 The power of string diagrams comes from the fact that many syntactically distinct ways to write
 equal values are obviously graphically equivalent by \emph{isotopy}: essentially, moving boxes and
 wires around. String diagrams also give us an elegant way to represent and reason about Elgot
-structures. It turns out that \todo{cite Hyland and Hasegawa} Elgot structures induce a \emph{trace}
-on the coproduct: given $f : A + C \to B + C$, we can define 
+structures. It turns out that Elgot structures induce a \emph{trace} on the coproduct
+\cite{hasegawa-trace-02}: given $f : A + C \to B + C$, we can define 
 \begin{equation}
   \ms{Tr}_{A, B}^C(f) 
   = \iota_l ; [f ; B + \iota_r]^\dagger 
