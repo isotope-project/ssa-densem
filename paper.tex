@@ -119,6 +119,9 @@
 \newcommand{\lbseq}[5]{\lbsubst{#1 \teqv #2}{#3}{#4}{#5}}
 \newcommand{\brle}[1]{{\scriptsize\textsf{#1}}}
 
+\newcommand{\toanf}[1]{\ms{ANF}(#1)}
+\newcommand{\letanf}[3]{\ms{ANF}_{\ms{let}}(#1, #2, #3)}
+
 % Denotational semantics
 \newcommand{\dnt}[1]{\llbracket{#1}\rrbracket}
 \newcommand{\ednt}[1]{\left\llbracket{#1}\right\rrbracket}
@@ -2158,44 +2161,144 @@ in Section~\ref{ssec:completeness}.
 
 \label{ssec:ssa-normal}
 
-\TODO{reforge to following plan:}
-\begin{enumerate}
-  \item (generalized) SSA restricts to ANF
-  \item ANF restricts to strict SSA
-  \item Strict SSA erases to standard SSA
-  \item Equational theory says semantics is invariant up to label re-ordering and label fusion
-  \item There is a single maximal label fusion tree, given by the ``uses variable'' order with the
-  entry block at the root (which is a subset of the ``dominates'' order)
-  \item Everyone which erases to the same SSA has the same maximal label fusion tree
-  \item Therefore everyone which erases to the same SSA has the same semantics, by equational theory
-\end{enumerate}
-
 The purpose of relaxing SSA to \isotopessa{} was to allow us to state our equational theory, as well
 as substitution, in a convenient manner. However, this may cause the reader to question whether we
 have really given a type-theoretic presentation of SSA as used in practice. To allay such fears, we
-will give a subset of \isotopessa{} regions, which we will call \emph{strict} regions, about which we make the
-following claims:
+will give a subset of \isotopessa{} regions, which we will call \emph{strict} regions, about which
+we make the following claims:
 \begin{enumerate}
-  \item Every \isotopessa{} region can be converted to an equivalent strict region using our
-  equational theory \label{claim:anf-ssa-conv}
-  \item Every strict region can be erased to a well-formed SSA program purely by removing
-  \ms{where}-block annotations \label{claim:anf-erase}
+  \item Every \isotopessa{} region can be converted to an equivalent strict region 
+  %using our equational theory 
+  \label{claim:ssa-conv}
+  \item Every strict region can be erased to a well-formed SSA program by removing
+  ``\ms{where}'' \label{claim:ssa-erase}
   \item Every well-formed SSA program can be typed as an strict region purely by adding
-  \ms{where}-blocks to correspond to dominance \label{claim:anf-wf}
-  \item Two strict regions which erase to the same SSA program are equivalent according to our
-  equational theory
+  ``\ms{where}'' \label{claim:ssa-wf}
+  \item Two strict regions which erase to the same SSA program are equivalent
+  % according to our equational theory
+  \label{claim:ssa-inj}
 \end{enumerate}
 Thus, we make the claim that strict regions correspond exactly to SSA, with the
-\ms{where}-bracketing being merely extra syntactic information added to make our typing rules and
-denotational semantics a bit more syntax-directed. In particular, \ms{where}-blocks can be added
-purely algorithmically by computing dominance between basic blocks.
+\ms{where}-bracketing being merely extra syntactic sugar added to make our typing rules
+syntax-directed. In particular, \ms{where}-blocks can be added purely algorithmically by computing
+dominance between basic blocks.
+
+Directly converting to strict SSA is somewhat unwieldy, so instead, we will take a detour through
+ANF (extended with mutually recursive \ms{where}-bindings), which we will define as a subset of our
+language. We will then give an algorithm for compiling programs in ANF to strict SSA, and show that
+both the \isotopessa{}-ANF and ANF-strict-SSA conversions, and hence their composition, are
+equivalence-preserving. This, as an additional bonus, extends the work of
+\citet{chakravarty-functional-ssa-2003} with a denotational semantics for ANF and an algorithm for
+converting from ANF back to SSA, which must be sound as a consequence of the soundness of our
+equational theory.
 
 We begin by defining a typing judgement $\ahasty{\Gamma}{\epsilon}{a}{A}$ for \emph{atomic
 expressions} in Figure~\ref{fig:ssa-ops}. An atomic expression is either a single variable, a
 function application, injection, or pair of variables, or the unit expression. In particular, we
 forbid both \ms{case}-expressions and \ms{let}-bindings, which we will require to appear only at the
-unit level; in particular, it is obvious that $\ahasty{\Gamma}{\epsilon}{a}{A} \implies
-\hasty{\Gamma}{\epsilon}{a}{A}$. Since SSA consists of \emph{basic blocks}, that is, linear
+region level. It is obvious that $\ahasty{\Gamma}{\epsilon}{a}{A} \implies
+\hasty{\Gamma}{\epsilon}{a}{A}$. 
+
+We can now give typing rules for ANF regions in Figure~\ref{fig:ssa-anf}. In particular, these are
+the same as those for regions, except that by requiring each \ms{let}-bindings in a region to bind
+an atomic expression (and, for good measure, case-statements and branches to be on variables), each
+such binding will correspond to a single SSA instruction. It is similarly obvious that
+$\ahaslb{\Gamma}{r}{\ms{L}}$. We can now define a syntactic function to convert an \isotopessa{}
+region to ANF inductively as follows:
+\begin{equation}
+  \begin{aligned}
+    \toanf{\brb{\ell}{a}} &= \letanf{x}{a}{\brb{\ell}{x}} \\
+    \toanf{\letexpr{x}{a}{r}} &= \letanf{x}{a}{\toanf{r}} \\
+    \toanf{\letexpr{(x, y)}{a}{r}} &= \letanf{z}{a}{\letstmt{(x, y)}{z}{\toanf{r}}} \\
+    \toanf{\casestmt{a}{x}{r}{y}{s}} &= \letanf{z}{a}{\casestmt{z}{x}{\toanf{r}}{y}{\toanf{s}}} \\
+    \toanf{\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
+      &= \where{\toanf{r}}{(\wbranch{\ell_i}{x_i}{\toanf{t_i}},)_i}
+  \end{aligned}
+\end{equation}
+where we define $\letanf{x}{a}{r}$ by induction on expressions $a$ as follows
+\begin{equation}
+  \begin{aligned}
+    \letanf{x}{a}{r} &= (\letstmt{x}{a}{r}) \hspace{8em} \text{if}\;a\;\text{atomic} \\
+    \letanf{x}{f\;e}{r} &= \letanf{y}{e}{\letstmt{x}{f\;y}{r}} \\
+    \letanf{x}{(\letexpr{y}{e}{a})}{r} &= \letanf{y}{e}{\letanf{x}{a}{r}} \\
+    \letanf{x}{(e_1, e_2)}{r} &= \letanf{y_1}{e_1}{\letanf{y_2}{e_2}{r}} \\
+    \letanf{x}{(\letexpr{(y, z)}{e}{a})}{r} 
+      &= \letanf{w}{e}{(\letstmt{(y, z)}{w}{\letanf{x}{a}{r}})} \\
+    \letanf{x}{\linl{e}}{r} &= \letanf{y}{e}{(\letstmt{x}{\linl{y}}{r})} \\
+    \letanf{x}{\linr{e}}{r} &= \letanf{y}{e}{(\letstmt{x}{\linr{y}}{r})} \\
+    \letanf{x}{\caseexpr{e}{y}{a}{z}{b}}{r} &= 
+      \letanf{w}{e}{\\ & \qquad \casestmt{w}{y}{\letanf{x}{a}{r}}{z}{\letanf{x}{b}{r}}} \\
+    \letanf{x}{\labort{e}}{r} &= \letanf{y}{e}{(\letstmt{x}{\labort{y}}{r})}
+  \end{aligned}
+\end{equation}
+We state the correctness of these functions in the following lemma:
+\begin{lemma}[A-normalization]
+  For all $\haslb{\Gamma}{r}{\ms{L}}$, we have that that $\ahaslb{\Gamma}{\ms{ANF}(r)}{\ms{L}}$ and
+  $\lbeq{\Gamma}{r}{\ms{ANF}(r)}{\ms{L}}$. Furthermore, given $\hasty{\Gamma}{\epsilon}{a}{A}$, we
+  have that
+  \begin{itemize}
+    \item $\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}} \implies 
+      \lbeq{\Gamma}{\letstmt{x}{a}{r}}{\letanf{x}{a}{r}}{\ms{L}}$
+    \item $\ahaslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}} \implies
+      \ahaslb{\Gamma}{\letanf{x}{a}{r}}{\ms{L}}$
+  \end{itemize}
+\end{lemma}
+\begin{proof}
+  We may show that $\ms{ANF}(r)$ is always in ANF and that $\ms{ANF}_{\ms{let}}(x, a, r)$ is in ANF
+  if $r$ is by a trivial induction. To prove the rest of the lemma, we begin proving the correctness
+  of $\ms{ANF}_{\ms{let}}(x, a, r)$ by induction on expressions $a$:
+  \begin{itemize}
+    \item If $\ahasty{\Gamma}{\epsilon}{a}{A}$ is atomic, we are done; otherwise
+    \item If $a = f\;e$, then, since $e$ is a subterm of $a$, by induction, we have
+    \begin{equation}
+      \letstmt{x}{a}{r} 
+      \teqv \letstmt{y}{e}{\letstmt{x}{f\;y}{r}}
+      \teqv \letanf{y}{e}{\letstmt{x}{f\;y}{r}}
+      = \letanf{x}{a}{r}
+    \end{equation}
+    as desired.
+    \item The cases for pairs, injections, and aborts containing expressions are analogous
+    \item If $a = \caseexpr{e}{y}{b}{z}{c}$, then we may rewrite
+    \begin{equation}
+      \letstmt{x}{a}{r} 
+      \teqv \letstmt{w}{e}{\casestmt{w}{y}{\letexpr{b}{x}{r}}{z}{\letexpr{c}{x}{r}}}
+    \end{equation}
+    Since $r$ is in ANF, by induction (since $b, c$ are subterms of $a$), this is equivalent to
+    \begin{equation}
+      \letstmt{w}{e}
+        {\casestmt{w}{y}{\letanf{b}{x}{r}}{z}{\letanf{c}{x}{r}}}
+    \end{equation}
+    which is equal to $\letanf{x}{a}{r}$, as desired.
+    \item The cases for unary and binary $\ms{let}$ are analogous to the above
+  \end{itemize}
+  We may now prove the correctness of $\toanf{r}$ by a straightforward induction on $r$:
+  \begin{itemize}
+    \item If $r = \brb{\ell}{a}$, by $\beta$-reduction, we have that
+    \begin{equation}
+      r \teqv \letexpr{x}{a}{\brb{\ell}{x}} \teqv \letanf{x}{a}{\brb{\ell}{x}} = \toanf{r}
+    \end{equation}
+    \item If $r = \letstmt{x}{a}{r'}$, then by induction we have that
+    \begin{equation}
+      r \teqv \letstmt{x}{a}{\toanf{r'}} \teqv \letanf{x}{a}{\toanf{r'}} = \toanf{r}
+    \end{equation}
+    as desired.
+    \item If $r = \letstmt{(x, y)}{a}{r'}$, then by induction we have that
+    \begin{equation}
+      \begin{aligned}
+        r & \teqv \letstmt{z}{a}{\letstmt{(x, y)}{z}{r'}} \\
+          & \teqv \letstmt{z}{a}{\letstmt{(x, y)}{z}{\ms{ANF}(r')}} \\
+          & \teqv \letanf{z}{a}{\letstmt{(x, y)}{z}{\ms{ANF}(r')}}
+            \teqv \toanf{r}
+      \end{aligned}
+    \end{equation}
+    The proof for \ms{case}-statements is analogous
+    \item The case for control-flow graphs follows trivially by induction
+  \end{itemize}
+\end{proof}
+
+\TODO{segue}
+
+Since SSA consists of \emph{basic blocks}, that is, linear
 sequences of instructions followed by a terminator, we will introduce two judgements:
 \begin{itemize}
   \item \todo{terminators}
@@ -2204,67 +2307,7 @@ sequences of instructions followed by a terminator, we will introduce two judgem
 
 \TODO{reforge below}
 
-We can now give typing rules for ANF regions in Figure~\ref{fig:ssa-anf}. In particular, these are
-the same as those for regions, except that by requiring each \ms{let}-bindings in a region to bind
-an atomic expression (and, for good measure, case-statements and branches to be on variables), each
-such binding will correspond to a single SSA instruction. It is similarly obvious that
-$\thaslb{\Gamma}{r}{\ms{L}} \implies \haslb{\Gamma}{r}{\ms{L}}$ and $\chaslb{\Gamma}{r}{\ms{L}}
-\implies \haslb{\Gamma}{r}{\ms{L}}$.  We may now state Claim~\ref{claim:anf-ssa-conv} above formally
-as follows:
-% \begin{lemma}[A-normalization]
-%   For all $\haslb{\Gamma}{r}{\ms{L}}$, there exists a region $\ms{ANF}(r)$ such that
-%   $\ahaslb{\Gamma}{\ms{ANF}(r)}{\ms{L}}$ and $\lbeq{\Gamma}{r}{\ms{ANF}(r)}{\ms{L}}$
-% \end{lemma}
-% \begin{proof}
-%   We begin by proving the following case: if $\ahaslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}$ is in ANF,
-%   and $\hasty{\Gamma}{\epsilon}{a}{A}$, then there exists a region
-%   $\ahaslb{\Gamma}{\ms{ANF}(\letstmt{x}{a}{r})}{\ms{L}}$ in ANF such that
-%   $\lbeq{\Gamma}{(\letstmt{x}{a}{r})}{\ms{ANF}(\letstmt{x}{a}{r})}{\ms{L}}$. We proceed by induction
-%   on $a$:
-%   \begin{itemize}
-%     \item If $\ahasty{\Gamma}{\epsilon}{a}{A}$ is atomic, we are done; otherwise
-%     \item If $a = f\;e$, then we may rewrite \TODO{this}
-%     \item The cases for pairs, injections, and aborts containing expressions are analogous
-%     \item If $a = \caseexpr{e}{y}{b}{z}{c}$, then we may rewrite
-%     \begin{equation}
-%       \letstmt{x}{a}{r} 
-%       \teqv \letstmt{w}{e}{\casestmt{w}{y}{\letexpr{b}{x}{r}}{z}{\letexpr{c}{x}{r}}}
-%     \end{equation}
-%     Since $r$ is in ANF, by induction (since $b, c$ are subterms of $a$), this is equivalent to some
-%     \begin{equation}
-%       \letstmt{w}{e}
-%         {\casestmt{w}{y}{\ms{ANF}(\letexpr{b}{x}{r})}{z}{\ms{ANF}(\letexpr{c}{x}{r}})}
-%     \end{equation}
-%     As both branches of this case statement are in ANF and the discriminat is a variable, the
-%     case-statement itself is in ANF, and hence by induction again (since $e$ is a subterm of $a$)
-%     we have that this is equivalent to
-%     \begin{equation}
-%       \ms{ANF}(\letstmt{w}{e}
-%         {\casestmt{w}{y}{\ms{ANF}(\letexpr{b}{x}{r})}{z}{\ms{ANF}(\letexpr{c}{x}{r}})})
-%     \end{equation}
-%     as desired
-%     \item The cases for unary and binary $\ms{let}$ are analogous to the above
-%   \end{itemize}
-%   We may now prove the lemma by a straightforward induction on $r$:
-%   \begin{itemize}
-%     \item If $r = \brb{\ell}{a}$, by $\beta$-reduction, we may rewrite this as $r \teqv
-%     \letstmt{x}{a}{\brb{\ell}{x}}$; the result then follows from a direct application of the above
-%     \item If $r = \letstmt{x}{a}{r'}$, then by induction we have $r \teqv
-%     \letstmt{x}{a}{\ms{ANF}(r')}$, and a direct application of the above allows us to
-%     define $\ms{ANF}(\letstmt{x}{a}{r'}) = \ms{ANF}(\letstmt{x}{a}{\ms{ANF}(r')}) \teqv r$ as
-%     desired.
-%     \item If $r = \letstmt{(x, y)}{a}{r'}$, we may first rewrite this by induction as 
-%     \begin{equation}
-%       r \teqv \letstmt{z}{a}{\letstmt{(x, y)}{z}{r'}} 
-%         \teqv \letstmt{z}{a}{\letstmt{(x, y)}{z}{\ms{ANF}(r')}}
-%     \end{equation}
-%     Since $z$ is a variable, $\letstmt{(x, y)}{z}{\ms{ANF}(r')}$ is also in ANF, so we can apply the
-%     above to define $\ms{ANF}(\letstmt{(x, y)}{a}{r'}) = \ms{ANF}(\letstmt{z}{a}{\letstmt{(x,
-%     y)}{z}{\ms{ANF}(r')}}) \teqv r$. The proof for case-statements is analogous.
-%     \item The case for control-flow graphs is simply a straightforward application of the inductive
-%     hypotheses
-%   \end{itemize}
-% \end{proof}
+\TODO{fix rules}
 
 \begin{figure}
   \begin{equation*}
