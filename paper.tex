@@ -121,8 +121,8 @@
 
 \newcommand{\toanf}[1]{\ms{ANF}(#1)}
 \newcommand{\letanf}[3]{\ms{ANF}_{\ms{let}}(#1, #2, #3)}
-\newcommand{\anfssa}[1]{\ms{SSA}(#1)}
-\newcommand{\ssawhere}[2]{\ms{SSA}(#1, #2)}
+\newcommand{\tossa}[1]{\ms{SSA}(#1)}
+\newcommand{\ssawhere}[2]{\ms{SSA}_{\ms{a}}(#1, #2)}
 
 % Denotational semantics
 \newcommand{\dnt}[1]{\llbracket{#1}\rrbracket}
@@ -2373,9 +2373,11 @@ we simply use the empty \ms{where}-block. This hints at the natural inductive re
       dominated : List BasicBlock
     }
 \end{lstlisting}
-\TODO{text}
+We can now define a function $\tossa{r}$ to convert a region $r$ to a strict SSA as follows:
 \begin{equation}
   \begin{aligned}
+    \tossa{r} &= \ssawhere{\toanf{r}}{\cdot}
+      \\
     \ssawhere{t}{(\wbranch{\ell_i}{x_i}{t_i},)_i} 
       &= \where{t}{(\wbranch{\ell_i}{x_i}{t_i},)_i} \qquad \text{where}\;t\;\text{is a terminator}
       \\
@@ -2389,6 +2391,19 @@ we simply use the empty \ms{where}-block. This hints at the natural inductive re
       &= \ssawhere{r}{(G, (\wbranch{\ell_i}{x_i}{t_i},)_i)}
   \end{aligned}
 \end{equation}
+We may state its correctness as follows:
+\begin{lemma}[SSA conversion]
+  If $\haslb{\Gamma}{r}{\ms{L}}$, then $\bhaslb{\Gamma}{\tossa{r}}{\ms{L}}$ and
+  $\lbeq{\Gamma}{r}{\tossa{r}}{\ms{L}}$. In particular, given $\ahaslb{\Gamma}{r}{\ms{L},
+  (\ell_i(A_i),)_i}$ and $\forall i, \bhaslb{\Gamma}{t_i}{\ms{L}, (\ell_i(A_i),)_i}$, we have that
+  $\bhaslb{\Gamma}{\ssawhere{\Gamma}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}$ and $\lbeq{\Gamma}
+  {(\where{\Gamma}{(\wbranch{\ell_i}{x_i}{t_i},)_i})  }
+  {\ssawhere{\Gamma}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}$
+\end{lemma}
+\begin{proof}
+    
+\end{proof}    
+
 \TODO{correctness theorem}
 
 \TODO{proof? or do we segue to densem-based proof?}
