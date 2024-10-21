@@ -123,6 +123,9 @@
 \newcommand{\letanf}[3]{\ms{ANF}_{\ms{let}}(#1, #2, #3)}
 \newcommand{\tossa}[1]{\ms{SSA}(#1)}
 \newcommand{\ssawhere}[2]{\ms{SSA}_{\ms{a}}(#1, #2)}
+\newcommand{\toentry}[1]{\ms{entry}(#1)}
+\newcommand{\todom}[1]{\ms{children}(#1)}
+\newcommand{\tocfg}[1]{\ms{CFG}(#1)}
 
 % Denotational semantics
 \newcommand{\dnt}[1]{\llbracket{#1}\rrbracket}
@@ -2359,7 +2362,9 @@ recursive judgements:
   as a tree of case-statements with unconditional branches at the leaves
   \item $\bhaslb{\Gamma}{r}{\ms{L}}$, which states that $r$ is a \emph{basic block}: a linear
   sequence of unary and binary let-bindings followed by a terminator wrapped in a where-block, which
-  contains the rest of the program (which the sequence of let-bindings strictly dominates)
+  contains the rest of the program (which the sequence of let-bindings strictly dominates).
+  
+  We will call the basic blocks in this list the entry block's \emph{children}
 \end{itemize}
 A strict region, then, is a basic block, with the block itself (made up of its component
 let-bindings followed by its terminator) the distinguished \emph{entry block}. We give typing rules
@@ -2370,9 +2375,24 @@ we simply use the empty \ms{where}-block. This hints at the natural inductive re
     struct BasicBlock {
       instructions : List LetBinding,
       terminator : Terminator,
-      dominated : List BasicBlock
+      children : List BasicBlock
     }
 \end{lstlisting}
+In particular, given a strict region $r$, we can define the following functions
+\begin{equation}
+  \begin{aligned}
+    \toentry{\letstmt{x}{a}{r}} &= (\letstmt{x}{a}{\toentry{r}}) \\
+    \toentry{\letstmt{(x, y)}{a}{r}} &= (\letstmt{(x, y)}{a}{\toentry{r}}) \\
+    \toentry{\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}} &= r
+  \end{aligned}
+\end{equation}
+\begin{equation}
+  \begin{aligned}
+    \todom{\letstmt{x}{a}{r}} &= \todom{r} \\
+    \todom{\letstmt{(x, y)}{a}{r}} &= \todom{r} \\
+    \todom{\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}} &= [\wbranch{\ell_i}{x_i}{\todom{t_i}},]_i
+  \end{aligned}
+\end{equation}
 We can now define a function $\tossa{r}$ to convert a region $r$ to a strict SSA as follows:
 \begin{equation}
   \begin{aligned}
@@ -2401,12 +2421,8 @@ We may state its correctness as follows:
   {\ssawhere{\Gamma}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}$
 \end{lemma}
 \begin{proof}
-    
-\end{proof}    
-
-\TODO{correctness theorem}
-
-\TODO{proof? or do we segue to densem-based proof?}
+    \TODO{this...}
+\end{proof}
 
 \begin{figure}
   \begin{equation*}
@@ -2443,21 +2459,42 @@ We may state its correctness as follows:
   \label{fig:ssa-strict}
 \end{figure}
 
-\TODO{reforge}
-
-To substantiate Claim~\ref{claim:anf-erase}, we give a grammar for SSA programs in
-Figure~\ref{fig:ssa-standard}. It is easy to see that removing braces and \ms{where}-blocks from an
-arbitrary region gives a flat SSA program; this program will be well-formed with respect to
-dominance scoping if it is well-typed.
-
-\TODO{to show equality, we need}
+We now come to the final part of our argument: that strict regions are equivalent to standard SSA.
+We begin by giving a grammar for standard SSA in Figure~\ref{fig:ssa-standard}. It is easy to see
+that removing \ms{where}-blocks from a strict region, gives us a function $\tocfg{\cdot}$ from
+strict regions $r$ to control-flow graphs $G$ defined as follows:
+\begin{equation}
+    \tocfg{r} = \toentry{r}, (\wbranch{\ell_i}{x_i}{\tocfg{t_i}},)_{
+      (\wbranch{\ell_i}{x_i}{t_i}) \in \todom{r}}
+\end{equation}
+where
+\begin{equation}
+  G, \wbranch{\ell}{x}{\beta, G'} := G, \wbranch{\ell}{x}{\beta}, G' 
+\end{equation}
+An SSA program is \emph{well-formed} if:
 \begin{itemize}
-  \item Re-ordering within a CFG is trivial
-  \item \emph{Merging} CFGs
-  \item There is a unique, maximally merged normal-form CFG for each SSA program, and everyone is
-  equal to it
-  \item Therefore, everyone erasing to the same thing is equal, since this is unique per-program
+  \item All variable uses are well-typed
+  \item All variable uses respect dominance-based scoping
 \end{itemize}
+It is easy to see that any erased program is well-formed, since our typing rules guaranteee every
+expression is well-typed, while our lexical scoping ensures that variables are only visible in
+basic blocks which are children of the basic blocks which define them in the dominance tree.
+To complete our argument, it hence suffices to show that:
+\begin{itemize}
+  \item We can convert any well-formed SSA program back into a strict region by inserting
+  \ms{where}-blocks
+  \item All ways of doing so are equivalent
+\end{itemize}
+\TODO{sort according to topological order}
+\TODO{construct the dominator tree, everyone is well-scoped}
+\TODO{insert where accordingly}
+\TODO{argument \#1: every toposort is equivalent}
+\TODO{argument \#2: 
+  all the strict SSA programs are the same as those which strictly reflect the 
+  dominator tree. In particular, even if we postulate less relations, i.e. fold wheres,
+  we still get an equivalent program
+}
+\TODO{idea: do by induction on length of CFGs?}
 
 \begin{figure}[H]
   \begin{center}
@@ -2477,18 +2514,12 @@ dominance scoping if it is well-typed.
       \;|\; \(\letstmt{x}{a}{\beta}\)
       \;|\; \(\letstmt{(x, y)}{a}{\beta}\)
 
-      <\(s, t\)> ::= \(\beta\) 
-      \;|\;  \(\where{t}{(\wbranch{\ell_i}{x_i}{t_i},)_i}\)
-
       <\(G\)> ::= \(\beta\) \;|\; \(G; \wbranch{\ell}{x}{\beta}\)
     \end{grammar}
   \end{center}
-  \caption{ 
-    Grammar for standard SSA, parametrized over an \isotopessa{} signature. A standard SSA
-    program is made up of \emph{basic blocks} \(\beta\), and can be thought of as a \emph{region}
-    \(r\) or a \emph{control-flow graph} \(G\) (with a distinguished entry block $\beta$). 
-  }
-  \Description{}
+  \caption{ Grammar for standard SSA, parametrized over an \isotopessa{} signature. A standard SSA
+    program is made up of \emph{basic blocks} \(\beta\), and can be thought of as a
+    \emph{control-flow graph} \(G\) (with a distinguished entry block $\beta$). } \Description{}
   \label{fig:ssa-standard}
 \end{figure}
 
