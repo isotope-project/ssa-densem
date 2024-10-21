@@ -128,6 +128,7 @@
 \newcommand{\tocfg}[1]{\ms{cfg}(#1)}
 \newcommand{\adddom}[2]{\ms{bb}(#1, #2)}
 \newcommand{\toreg}[1]{\ms{reg}(#1)}
+\newcommand{\todnf}[1]{\ms{dom}(#1)}
 
 % Denotational semantics
 \newcommand{\dnt}[1]{\llbracket{#1}\rrbracket}
@@ -2107,7 +2108,36 @@ arbitrary nested \ms{where}-blocks, and hence to justify the rule
       }
     }
 \end{equation}
-Rather than justify this rule directly, it turns out to be much more convenient to justify it using
+Also very convenient is the variant
+\begin{equation}
+  \prftree[r]{\rle{cfg-fuse$_2$}}
+    {\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i, \kappa(B)}}
+    {
+      \prfStackPremises{
+        \forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{
+          \ms{L}, (\lhyp{\ell_j}{A_j},)_j, \kappa(B)}
+      }{
+        \haslb{\Gamma, \bhyp{y}{B}}{s}{
+          \ms{L}, (\lhyp{\ell_j}{A_j},)_j, \kappa(B), (\lhyp{\ell_j'}{A_j'},)_j,}
+      }{
+        \forall i. \haslb{\Gamma, \bhyp{x_i'}{A_i'}}{t_i'}{
+          \ms{L}, (\lhyp{\ell_j}{A_j},)_j, \kappa(B), (\lhyp{\ell_j'}{A_j'},)_j}
+      }
+    }
+    {
+      \prfStackPremises{
+        \Gamma \vdash 
+          \where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i, 
+            \wbranch{\kappa}{y}{\where{s}{(\wbranch{\ell_i'}{x_i'}{t_i'},)_i}}}
+      }{
+        \hspace{8em}
+        \teqv \where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i, 
+            \wbranch{\kappa}{y}{s}, (\wbranch{\ell_i'}{x_i'}{t_i'},)_i}
+        \rhd \ms{L}
+      }
+    }
+\end{equation}
+Rather than justify these rules directly, it turns out to be much more convenient to justify it using
 our denotational semantics, which, due to our completeness result in
 Section~\ref{ssec:completeness}, is perfectly sound.
 
@@ -2466,6 +2496,36 @@ It is easy to see that these functions are mutually inverse: for any strict regi
 \begin{equation}
   r = \adddom{\toentry{r}}{\todom{r}}
 \end{equation}
+Some other useful facts about $\adddom{\cdot}{\cdot}$ include:
+\begin{itemize}
+  \item It is a congruence: if $r \teqv r'$ and each $t_i \teqv t_i'$,
+  $\adddom{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i} \teqv \adddom{r'}{(\wbranch{\ell_i}{x_i}{t_i'},)_i}$
+  \item If both sides are well-typed (in particular, if no $t_i$ use any of the variables in $r$),
+  $\wbranch{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i} \teqv \adddom{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}$
+  \item It is invariant up to permutations
+  $\sigma$: $\adddom{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i} \teqv 
+    \adddom{r}{(\wbranch{\ell_{\sigma_i}}{x_{\sigma_i}}{t_{\sigma_i}},)_i}$
+  \item Similarly, \emph{if both sides of the equation are well-typed}, i.e.,
+  \begin{itemize}
+    \item All $t_i$ do not use $y$ or any of the variables defined in $s$
+    \item All branches to $\ell_i$ come from $\kappa$ or $\ell_j$ (and not from either $r$ or $G$)
+  \end{itemize}
+  \begin{equation}
+    \adddom{r}{G, \wbranch{\kappa}{y}{s}, (\wbranch{\ell_i}{x_i}{t_i},)} \teqv
+    \adddom{r}{G, \wbranch{\kappa}{y}{\where{s}{(\wbranch{\ell_i}{x_i}{t_i},)}}}
+  \end{equation} 
+  and hence
+  \begin{equation}
+    \adddom{r}{G, \wbranch{\kappa}{y}{s}, (\wbranch{\ell_i}{x_i}{t_i},)} \teqv
+    \adddom{r}{G, \wbranch{\kappa}{y}{\adddom{s}{(\wbranch{\ell_i}{x_i}{t_i},)}}}
+  \end{equation}
+  In particular, we may apply this rule twice to obtain
+  \begin{equation}
+    \adddom{r}{G, \wbranch{\kappa}{y}{\adddom{s}{G'}}, (\wbranch{\ell_i}{x_i}{t_i},)} \teqv
+    \adddom{r}{G, \wbranch{\kappa}{y}{\adddom{s}{G', (\wbranch{\ell_i}{x_i}{t_i},)}}}
+    \label{eqn:pull-where}
+  \end{equation}
+\end{itemize}
 Now that we have defined strict regions, we can give a function $\tossa{r}$ to convert a region $r$
 to a strict SSA as follows:
 \begin{equation}
@@ -2601,12 +2661,77 @@ $\lbeq{\Gamma}{r}{r'}{\ms{L}}$. We break this down into two lemmas:
   \end{equation}
 \end{proof}
 \begin{lemma}[CFG Conversion]
-  If $\shaslb{\Gamma}{r}{\ms{L}}$, then $\lbeq{\Gamma}{r}{\toreg{\tocfg{G}}}{\ms{L}}$.
+  If $\shaslb{\Gamma}{r}{\ms{L}}$, then $\lbeq{\Gamma}{r}{\toreg{\tocfg{r}}}{\ms{L}}$.
   In particular, given $\shaslb{\Gamma}{r}{\ms{L}}$ and $\shaslb{\Gamma}{r'}{\ms{L}}$,
   if $\tocfg{r} \simeq \tocfg{r'}$, we have that $\lbeq{\Gamma}{r}{r'}{\ms{L}}$.
 \end{lemma}
 \begin{proof}
-  \todo{use cfg flattening}
+  We will proceed by induction on the length of $G = \tocfg{r}$. If $G$ consists of only an entry
+  block $\beta$, then we trivially have that $r = \toreg{\tocfg{r}}$, and so we are done. Otherwise,
+  assume $r = \adddom{\beta}{(\wbranch{\ell_i}{x_i}{t_i},)_i}$. Clearly, $\tocfg{r}$ will have entry
+  block $\beta$; moreover, since every block in $\tocfg{r}$ other than those of the form
+  $\toentry{t_i}$ can only be reached from within the region $t_i$ (due to lexical scoping of
+  labels), we have $\beta_i = \toentry{t_{\rho_i}}$ for some injection $\rho$, where $\beta_i$ are
+  the children of $\beta$ in the dominance tree of $G$. In particular, we can write
+  $\{\wbranch{\ell_i}{x_i}{\toentry{t_i}},\}_i$ as the disjoint union of:
+  \begin{itemize}
+    \item The immediate children of $\beta$, $\wbranch{\kappa_i}{y_i}{\beta_i}$, where 
+      $\kappa_i = \ell_{\rho_i}$, $y_i = x_{\rho_i}$, and $\beta_i = \toentry{t_{\rho_i}}$
+    \item The nodes dominated by each $\beta_i$ but not immediately dominated by $\beta$; we will
+    write the collection of such nodes for each $i$ as $\wbranch{\kappa_{i, j}}{y_{i, j}}{\beta_{i,
+    j}}$, where $\kappa_{i, j} = \ell_{\rho_{i, j}}$, $y_{i, j} = x_{\rho_{i, j}}$, and $\beta_{i,
+    j} = \toentry{t_{\rho_{i, j}}}$.
+  \end{itemize}
+  As in the algorithm to compute $\toreg{\cdot}$, let $G_i$ denote the control-flow graph with 
+  entry block $\beta_i$ consisting of all blocks dominated by $\beta_i$. We may write
+  \begin{equation}
+    G \simeq \beta, (\wbranch{\kappa_i}{y_i}{G_i},)_i \qquad
+    \forall i, G_i = \beta_i, (\wbranch{\kappa_{i, j}}{y_{i, j}}{\beta_{i, j}},)_j, R_i
+  \end{equation}
+  where $R_i$ is the ``remainder'' of the control-flow graph $G_i$. Note the equations for $G_i$ are
+  actually equalities, rather than being equivalence up to permutation $\simeq$, since the
+  $\beta_{i, j}$, appear in $G$ before any other elements, being immediate children of $\beta$. It
+  follows that
+  \begin{equation}
+    \toreg{\tocfg{r}}
+    = \toreg{\tocfg{\adddom{\beta}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}}
+    = \adddom{\beta}{(\wbranch{\kappa_i}{y_i}{\toreg{G_i}},)_i}
+  \end{equation}
+  Now, define the strict regions
+  \begin{equation}
+    r_i = \adddom{\beta_i}{
+      ((\wbranch{\kappa_{i, j}}{y_{i, j}}{t_{\rho_{i, j}}},)_j, \todom{t_i})
+    }
+  \end{equation}
+  It is easy to show that $\tocfg{r_i} \simeq G_i$, since every basic block dominated by $\beta_i$
+  must be dominated via either some $t_{\rho_{i, j}}$ or some child of $t_i$. Since by induction
+  $\toreg{\tocfg{r_i}} \teqv r_i$, and by the previous lemma $\toreg{\tocfg_r_i} \teqv \toreg{G_i}$,
+  it follows that
+  \begin{equation}
+    \toreg{\tocfg{r}}
+    \teqv \adddom{\beta}{(\wbranch{\kappa_i}{y_i}{r_i},)_i}
+  \end{equation}
+  Define
+  \begin{equation}
+    T_i = (\wbranch{\kappa_j}{y_j}{r_j},)_{j < i}, 
+      (\wbranch{\kappa_j}{y_j}{t_j}, 
+      (\wbranch{\kappa_{j, k}}{y_{j, k}}{t_{\rho_{j, k}}},)_k,)_{j \geq i}
+  \end{equation}
+  Using Equation~\ref{eqn:pull-where}, we may show that, for all $i$, $\adddom{\beta}{T_{i + 1}}
+  \teqv \adddom{\beta}{T_i}$, since
+  \begin{itemize}
+    \item For all $j$, $t_{\rho_{i, j}}$ cannot use variables defined in $\beta_i$, or $r$ would not
+    typecheck
+    \item For all $j$, if $r_k$ or $t_{\rho_{k, j'}}$ calls $\kappa_{i, j}$, then $k = i$, or
+    $\beta_{i, j}$ would not be dominated by $\beta_i$
+    \item Similarly, $\beta$ cannot call $\kappa_{i, j}$ or $\beta_{i, j}$ would be a direct
+    descendant of $\beta$
+  \end{itemize}
+  We hence have by induction that
+  \begin{equation}
+    \toreg{\tocfg{r}} \teqv \adddom{\beta}{T_N} \teqv \adddom{\beta}{T_0} \teqv r
+  \end{equation}
+  as desired, since $T_0$ is a permutation of $(\wbranch{\ell_i}{x_i}{t_i},)_i$.
 \end{proof}
 
 \begin{figure}[H]
