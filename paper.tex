@@ -1776,6 +1776,20 @@ to a binding rule in that it allows us to derive many of the expected commutativ
   &\teqv \letexpr{y}{a}{[\cfgsubst{(\wbranch{\ell_i}{x_i}{\brb{\ell_j}{a_j}},)_i}]r} \\
   &\teqv \letexpr{y}{a}{\where{r}{(\wbranch{\ell_i}{x_i}{\brb{\ell_j}{a_j}},)_i}}
 \end{align*}
+One particularly important application of the $\eta$-rule for control-flow graphs is in validating
+the rewrite
+\begin{equation}
+  \prftree[r]{case2cfg}
+    {\hasty{\Gamma}{\epsilon}{a}{A + B}}
+    {\haslb{\Gamma, \bhyp{x}{A}}{s}{\ms{L}}}
+    {\haslb{\Gamma, \bhyp{y}{B}}{t}{\ms{L}}}
+    {
+      \prfStackPremises{\Gamma \vdash \casestmt{a}{x}{s}{y}{t} 
+        \teqv (\casestmt{a}{x}{\brb{\ell}{x}}{y}{\brb{\ell'}{y}})}{
+        \where{\hspace{16em}}
+          {\wbranch{\ell}{x}{s}, \wbranch{\ell'}{y}{t}} \rhd \ms{L}}
+    }
+\end{equation}
 However, on it's own, it's not quite enough to get rid of nested \ms{where}-blocks. To enable this,
 it turns out that we only need to add as an axiom the ability to get rid of a single, trivially
 nested \ms{where}-block; this is given as the rule \brle{codiag}.
@@ -2068,7 +2082,50 @@ on an arbitrary control-flow graph.
 \end{figure}
 It turns out that this being able to do this is essential, as it allows us to relate unary and
 $n$-ary control-flow graphs and, in particular, use this relationship to interconvert between
-data-flow and control-flow.
+data-flow and control-flow. This means we now have enough machinery to justify the elimination of
+arbitrary nested \ms{where}-blocks, and hence to justify the rule
+\begin{equation}
+  \prftree[r]{\rle{cfg-fuse}}
+    {\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i, (\lhyp{\kappa_j}{B_j},)_j}}
+    {
+      \prfStackPremises{
+        \forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{
+        \ms{L}, (\lhyp{\ell_j}{A_j},)_j}
+      }{
+        \forall i. \haslb{\Gamma, \bhyp{y_i}{B_i}}{s_i}{
+        \ms{L}, (\lhyp{\ell_j}{A_j},)_j, (\lhyp{\kappa_k}{B_k},)_k}
+      }
+    }
+    {
+      \prfStackPremises{
+        \Gamma \vdash 
+          \where{(\where{r}{(\wbranch{\kappa_i}{y_i}{s_i}),})_i}{(\wbranch{\ell_j}{x_j}{t_j}),)_j}
+      }{
+        \hspace{8em}
+        \teqv \where{r}{(\wbranch{\kappa_i}{y_i}{s_i},)_i, (\wbranch{\ell_j}{x_j}{t_j}),)_j}
+        \rhd \ms{L}
+      }
+    }
+\end{equation}
+Rather than justify this rule directly, it turns out to be much more convenient to justify it using
+our denotational semantics, which, due to our completeness result in
+Section~\ref{ssec:completeness}, is perfectly sound.
+
+There are some other basic rules we may want to use which turn out to be
+derivable from our existing set. For example, while re-ordering labels in a \ms{where}-block looks
+like a no-op in our named syntax, to rigorously justify the following rule actually requires
+dinaturality (with the permutation done via a label-substitution):
+\begin{equation}
+  \prftree[r]{\rle{perm-cfg}}
+    {\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
+    {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+    {\sigma\;\text{permutation}}
+    {\lbeq{\Gamma}
+      {\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
+      {\where{r}{(\wbranch{\ell_{\sigma_i}}{x_{\sigma_i}}{t_{\sigma_i}},)_i}}{\ms{L}}}
+\end{equation}
+Note the implicit use of the fact that if some region $r$ typechecks in some label-context $\ms{L}$,
+then it typechecks in any permutation of $\ms{L}$ by label-substitution.
 
 \subsection{Metatheory}
 
@@ -2348,7 +2405,7 @@ We state the correctness of these functions in the following lemma:
       {\ahaslb{\Gamma}{\casestmt{x}{y}{r}{z}{s}}{\ms{L}}} \\
     \prftree[r]{\rle{cfg}}
       {\ahaslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
-      {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+      {\forall i. \ahaslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
       {\ahaslb{\Gamma}{\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}}
   \end{gather*}
   \caption{Typing rules for \isotopessa{} ANF regions}
