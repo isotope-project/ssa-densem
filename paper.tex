@@ -125,7 +125,9 @@
 \newcommand{\ssawhere}[2]{\ms{SSA}_{\ms{a}}(#1, #2)}
 \newcommand{\toentry}[1]{\ms{entry}(#1)}
 \newcommand{\todom}[1]{\ms{children}(#1)}
-\newcommand{\tocfg}[1]{\ms{CFG}(#1)}
+\newcommand{\tocfg}[1]{\ms{cfg}(#1)}
+\newcommand{\adddom}[2]{\ms{bb}(#1, #2)}
+\newcommand{\toreg}[1]{\ms{reg}(#1)}
 
 % Denotational semantics
 \newcommand{\dnt}[1]{\llbracket{#1}\rrbracket}
@@ -2421,7 +2423,7 @@ We may state its correctness as follows:
   {\ssawhere{\Gamma}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}$
 \end{lemma}
 \begin{proof}
-    \TODO{this...}
+    \todo{this...}
 \end{proof}
 
 \begin{figure}
@@ -2477,24 +2479,37 @@ An SSA program is \emph{well-formed} if:
   \item All variable uses respect dominance-based scoping
 \end{itemize}
 It is easy to see that any erased program is well-formed, since our typing rules guaranteee every
-expression is well-typed, while our lexical scoping ensures that variables are only visible in
-basic blocks which are children of the basic blocks which define them in the dominance tree.
-To complete our argument, it hence suffices to show that:
-\begin{itemize}
-  \item We can convert any well-formed SSA program back into a strict region by inserting
-  \ms{where}-blocks
-  \item All ways of doing so are equivalent
-\end{itemize}
-\TODO{sort according to topological order}
-\TODO{construct the dominator tree, everyone is well-scoped}
-\TODO{insert where accordingly}
-\TODO{argument \#1: every toposort is equivalent}
-\TODO{argument \#2: 
-  all the strict SSA programs are the same as those which strictly reflect the 
-  dominator tree. In particular, even if we postulate less relations, i.e. fold wheres,
-  we still get an equivalent program
-}
-\TODO{idea: do by induction on length of CFGs?}
+expression is well-typed, while our lexical scoping ensures that variables are only visible in basic
+blocks which are children of the basic blocks which define them in the dominance tree. On the other
+hand, we may give an algorithm to convert any well-formed SSA program $G$ into a well-typed strict
+region $r = \toreg{G}$ as follows: \TODO{go up and define $\adddom{\cdot}{\cdot}$}
+\begin{enumerate}
+  \item Compute the dominance tree of $G$, rooted at its entry block $\beta$.
+  \item For each child $\wbranch{\ell_i}{x_i}{\beta_i}$ of $\beta$, let $G_i$ denote the CFG
+  composed of the children of $\beta_i$. Recursively compute $r_i = \toreg{G_i}$.
+  \item Return the program $\adddom{\beta}{(\wbranch{\ell_i}{x_i}{r_i},)_i}$
+\end{enumerate}
+We will write $G \simeq G'$ to mean ``$G$ is a permutation of $G'$'' (in particular, $G$ and $G'$
+must have the same entry block!). It is easy to see that this algorithm gives a strict SSA region
+which erases to a permutation of $G$, i.e., $\tocfg{\toreg{G}} \simeq G$, as desired. To complete
+our argument, it hence suffices to show that, given strict regions $\shaslb{\Gamma}{r}{\ms{L}}$,
+$\shaslb{\Gamma}{r'}{\ms{L}}$, such that $\tocfg{r} \simeq \tocfg{r'}$, we have that
+$\lbeq{\Gamma}{r}{r'}{\ms{L}}$. We break this down into two lemmas:
+\begin{lemma}[Permutation Invariance]
+  If $G \simeq G'$ and $\shaslb{\Gamma}{\toreg{G}}{\ms{L}}$, then 
+    $\shaslb{\Gamma}{\toreg{G'}}{\ms{L}}$ and $\lbeq{\Gamma}{\toreg{G}}{\toreg{G'}}{\ms{L}}$
+\end{lemma}
+\begin{proof}
+  \todo{by size induction on $G$, technical dinaturality lore}
+\end{proof}
+\begin{lemma}[CFG Conversion]
+  If $\shaslb{\Gamma}{r}{\ms{L}}$, then $\lbeq{\Gamma}{r}{\toreg{\tocfg{G}}}{\ms{L}}$
+\end{lemma}
+\begin{proof}
+  \todo{use cfg flattening}
+\end{proof}
+It hence follows that, if $\tocfg{r} \simeq \tocfg{r'}$, we have $r \teqv \toreg{\tocfg{r}} \teqv
+\toreg{\tocfg{r'}} \teqv r'$, as desired.
 
 \begin{figure}[H]
   \begin{center}
