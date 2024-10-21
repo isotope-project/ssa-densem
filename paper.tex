@@ -2437,7 +2437,8 @@ we simply use the empty \ms{where}-block. This hints at the natural inductive re
       children : List BasicBlock
     }
 \end{lstlisting}
-In particular, given a strict region $r$, we can define the following functions
+In particular, given a strict region $r$, we can define the following functions to extract the
+region's entry block and a list of its children as follows
 \begin{equation}
   \begin{aligned}
     \toentry{\letstmt{x}{a}{r}} &= (\letstmt{x}{a}{\toentry{r}}) \\
@@ -2452,7 +2453,21 @@ In particular, given a strict region $r$, we can define the following functions
     \todom{\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}} &= [\wbranch{\ell_i}{x_i}{\todom{t_i}},]_i
   \end{aligned}
 \end{equation}
-We can now define a function $\tossa{r}$ to convert a region $r$ to a strict SSA as follows:
+We can similarly define a function to construct a strict region from an entry block and a list
+of children as follows:
+\begin{equation}
+  \begin{aligned}
+  \adddom{\letstmt{x}{a}{r}}{G} &= \letstmt{x}{a}{\adddom{r}}{G} \\
+  \adddom{\letstmt{(x, y)}{a}{r}}{G} &= \letstmt{(x, y)}{a}{\adddom{r}}{G} \\
+  \adddom{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i} &= \where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}
+  \end{aligned}
+\end{equation}
+It is easy to see that these functions are mutually inverse: for any strict region $r$, we have
+\begin{equation}
+  r = \adddom{\toentry{r}}{\todom{r}}
+\end{equation}
+Now that we have defined strict regions, we can give a function $\tossa{r}$ to convert a region $r$
+to a strict SSA as follows:
 \begin{equation}
   \begin{aligned}
     \tossa{r} &= \ssawhere{\toanf{r}}{\cdot}
@@ -2536,14 +2551,15 @@ An SSA program is \emph{well-formed} if:
   \item All variable uses respect dominance-based scoping
 \end{itemize}
 It is easy to see that any erased program is well-formed, since our typing rules guaranteee every
-expression is well-typed, while our lexical scoping ensures that variables are only visible in basic
-blocks which are children of the basic blocks which define them in the dominance tree. On the other
-hand, we may give an algorithm to convert any well-formed SSA program $G$ into a well-typed strict
-region $r = \toreg{G}$ as follows: \TODO{go up and define $\adddom{\cdot}{\cdot}$}
+expression is well-typed, while our lexical scoping for values ensures that variables are only
+visible in the children of the block $\beta$ in which they are defined, which the lexical scoping of
+labels guarantees are dominated by $\beta$. On the other hand, we may give an algorithm to convert
+any well-formed SSA program $G$ into a well-typed strict region $r = \toreg{G}$ as follows:
 \begin{enumerate}
   \item Compute the dominance tree of $G$, rooted at its entry block $\beta$.
   \item For each child $\wbranch{\ell_i}{x_i}{\beta_i}$ of $\beta$, let $G_i$ denote the CFG
-  composed of the children of $\beta_i$. Recursively compute $r_i = \toreg{G_i}$.
+  composed of the descendants of $\beta_i$ (with $\beta_i$ as entry block), given in the order they
+  appear in $G$. Recursively compute $r_i = \toreg{G_i}$.
   \item Return the program $\adddom{\beta}{(\wbranch{\ell_i}{x_i}{r_i},)_i}$
 \end{enumerate}
 We will write $G \simeq G'$ to mean ``$G$ is a permutation of $G'$'' (in particular, $G$ and $G'$
@@ -2557,16 +2573,41 @@ $\lbeq{\Gamma}{r}{r'}{\ms{L}}$. We break this down into two lemmas:
     $\shaslb{\Gamma}{\toreg{G'}}{\ms{L}}$ and $\lbeq{\Gamma}{\toreg{G}}{\toreg{G'}}{\ms{L}}$
 \end{lemma}
 \begin{proof}
-  \todo{by size induction on $G$, technical dinaturality lore}
+  We proceed by induction on the size of $G$. If $G$ consists only of an entry block, there is only
+  one permutation, so we are done. Otherwise, assume $G = \beta, (\wbranch{\ell_i}{x_i}{t_i},)_i$.
+  Furthermore, let:
+  \begin{itemize}
+    \item $\wbranch{\ell_i}{x_i}{\beta_i}$ be the children of $\beta$ in $G$ in order
+    \item $G_i = (\wbranch{\kappa_{i, j}}{y_{i, j}}{t_{i, j}},)_j$ be the CFG composed of the
+    descendants of $\beta_i$ in $G$, with $\beta_i$ as entry block, in order
+    \item $\wbranch{\ell_i'}{x_i'}{\beta_i'}$ be the children of $\beta$ in $G'$ in order
+    \item $G_i'$ be the CFG composed of the descendants of $\beta_i'$ in $G'$, with $\beta_i'$ as
+    entry block, in order
+  \end{itemize}
+  By assumption, there exists some permutation $\sigma$ such that $G' = \beta,
+  (\wbranch{\ell_{\sigma_i}}{x_{\sigma_i}}{t_{\sigma_i}},)_i$. It follows that, since the dominance
+  relation on labels is permutation-invariant, there exists some permutation $\rho$ such that
+  $\wbranch{\ell_i'}{x_i'}{\beta_i'} = \wbranch{\ell_{\rho_i}}{x_{\rho_i}}{\beta_{\rho_i}}$, as well
+  as permutations $\tau_i$ such that $G_i' = (\wbranch{\ell_{\rho_i, \tau_{ij}}}{x_{\rho_i,
+  \tau_{ij}}}{t_{\rho_i, \tau_{ij}}},)_j$, implying in particular that $G_i' \simeq G_{\rho_i}$. By
+  induction, we hence have that, for all $i$, $\toreg{G_i'} \teqv \toreg{G_{\rho_i}}$, and hence
+  that
+  \begin{equation}
+    \begin{aligned}
+    \toreg{G'} &:= \adddom{\beta}{(\wbranch{\ell_{\rho_i}}{x_{\rho_i}}{\toreg{G_i'}},)_i} \\
+    &\teqv \adddom{\beta}{(\wbranch{\ell_{\rho_i}}{x_{\rho_i}}{\toreg{G_{\rho_i}}},)_i} \\
+    &\teqv \adddom{\beta}{(\wbranch{\ell_i}{x_i}{\toreg{G_i}},)_i} \teqv \toreg{G}
+    \end{aligned}
+  \end{equation}
 \end{proof}
 \begin{lemma}[CFG Conversion]
-  If $\shaslb{\Gamma}{r}{\ms{L}}$, then $\lbeq{\Gamma}{r}{\toreg{\tocfg{G}}}{\ms{L}}$
+  If $\shaslb{\Gamma}{r}{\ms{L}}$, then $\lbeq{\Gamma}{r}{\toreg{\tocfg{G}}}{\ms{L}}$.
+  In particular, given $\shaslb{\Gamma}{r}{\ms{L}}$ and $\shaslb{\Gamma}{r'}{\ms{L}}$,
+  if $\tocfg{r} \simeq \tocfg{r'}$, we have that $\lbeq{\Gamma}{r}{r'}{\ms{L}}$.
 \end{lemma}
 \begin{proof}
   \todo{use cfg flattening}
 \end{proof}
-It hence follows that, if $\tocfg{r} \simeq \tocfg{r'}$, we have $r \teqv \toreg{\tocfg{r}} \teqv
-\toreg{\tocfg{r'}} \teqv r'$, as desired.
 
 \begin{figure}[H]
   \begin{center}
