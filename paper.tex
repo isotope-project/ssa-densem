@@ -3210,23 +3210,37 @@ now drawn as diagrams in Figure~\ref{fig:elgot-ax-string-diagrams}.
   \begin{subfigure}{0.5\textwidth}
     \centering
     \begin{tikzpicture}
-      \node[] (Atrf) at (0, 2) {$A$};
-      \node[box] (trf) at (0, 0) {\ms{Tr}_{A, B}^C(f)};
-      \node[] (Btrf) at (0, -2) {$B$};
-      \node[] (eq) at (2, 0) {=};
-      \node[] (A) at (3.5, 2) {$A$};
-      \node[box=2/0/2/0] (f) at (3.5, 0) {\quad f \quad};
-      \node[] (B) at (3.5, -2) {$B$};
-      \coordinate[label=right:$C$] (C) at (4.9, 0) {};
-      \coordinate[] (cup) at (4.5, -1) {};
-      \coordinate[] (cap) at (4.5, 1) {};
+      \node[] (A) at (0, 2) {$A$};
+      \node[box=1/0/3/0] (f) at (0, 0) {\quad f \quad};
+      \node[] (B) at (0, -2) {$B$};
+      \node[dot] (codiag) at (0, 0.75) {};
+      \coordinate[] (C) at (1.2, 0) {};
+      \coordinate[] (cup) at (0.75, -1) {};
+      \coordinate[] (cap) at (0.75, 1) {};
+      \node[dot] (codiag2) at (0.225, -0.75) {};
+      \node[] (eq) at (1.8, 0) {=};
+      \node[] (Ad) at (3.6, 2) {$A$};
+      \node[box=1/0/3/0] (fd) at (3.6, 0) {\quad f \quad};
+      \node[] (Bd) at (3.6, -2) {$B$};
+      \node[dot] (codiagd) at (3.6, 1.25) {};
+      \node[dot] (codiagd2) at (3.6, 0.75) {};
+      \coordinate[] (Cd) at (4.8, 0) {};
+      \coordinate[] (cupd) at (4.35, -1.25) {};
+      \coordinate[] (capd) at (4.35, 1.25) {};
+      \coordinate[] (cupd2) at (4.25, -0.75) {};
+      \coordinate[] (capd2) at (4.25, 0.75) {};
       \wires{
-        Atrf = { south = trf.north },
-        trf  = { south = Btrf },
-        A    = { south = f.north.1 },
-        f    = { south.1 = B, south.2 = cup.west },
-        cap  = { west = f.north.2, east = C.north },
-        C    = { south = cup.east },
+        A         = { south = codiag.north },
+        f         = { south.1 = B, south.2 = codiag2.west, south.3 = codiag2.east },
+        codiag2   = { south = cup.west },
+        codiag    = { south = f.north, east = cap.west },
+        C         = { south = cup.east, north = cap.east },
+        Ad        = { south = codiagd.north },
+        codiagd   = { south = codiagd2.north, east = capd.west },
+        codiagd2  = { south = fd.north, east = capd2.west },
+        fd        = { south.1 = Bd, south.2 = cupd.west, south.3 = cupd2.west },
+        cupd      = { east = capd.east },
+        cupd2     = { east = capd2.east },
       }{}
     \end{tikzpicture}
     \caption{Codiagonal}
@@ -3234,24 +3248,36 @@ now drawn as diagrams in Figure~\ref{fig:elgot-ax-string-diagrams}.
   \begin{subfigure}{0.5\textwidth}
     \centering
     \begin{tikzpicture}
-      \node[] (Atrf) at (0, 2) {$A$};
-      \node[box] (trf) at (0, 0) {f^\dagger};
-      \node[] (Btrf) at (0, -2) {$B$};
-      \node[] (eq) at (1.5, 0) {=};
-      \node[] (A) at (3, 2) {$A$};
-      \node[box=1/0/2/0] (f) at (3, 0) {\quad f \quad};
-      \node[] (B) at (3, -2) {$B$};
-      \node[dot] (codiag) at (3, 1) {};
-      \coordinate[label=right:$C$] (C) at (4.4, 0) {};
-      \coordinate[] (cup) at (4, -1) {};
-      \coordinate[] (cap) at (4, 1) {};
+      \node[] (A) at (0, 2) {$A$};
+      \node[box] (g) at (0, 1.25) {g};
+      \node[box=1/0/2/0] (f) at (0, 0.25) {\quad f \quad};
+      \node[] (B) at (0, -2) {$B$};
+      \node[dot] (codiag) at (0, 0.75) {};
+      \coordinate[] (C) at (1.2, 0) {};
+      \coordinate[] (cup) at (0.75, -1.5) {};
+      \coordinate[] (cap) at (0.75, 1) {};
+      \node[box] (g2) at (0.5, -0.75) {g};
+      \node[] (eq) at (1.8, 0) {=};
+      \node[] (Ad) at (3.6, 2) {$A$};
+      \node[box] (gd) at (3.6, 0.5) {g};
+      \node[box=1/0/2/0] (fd) at (3.6, -0.5) {\quad f \quad};
+      \node[] (Bd) at (3.6, -2) {$B$};
+      \node[dot] (codiagd) at (3.6, 1) {};
+      \coordinate[] (Cd) at (4.8, 0) {};
+      \coordinate[] (cupd) at (4.35, -1.5) {};
+      \coordinate[] (capd) at (4.35, 1.5) {};
       \wires{
-        Atrf    = { south = trf.north },
-        trf     = { south = Btrf },
-        A       = { south = codiag.north },
-        f       = { south.1 = B, south.2 = cup.west },
-        codiag  = { south = f.north, east = C.north },
-        C       = { south = cup.east },
+        A         = { south = g.north },
+        g         = { south = codiag.north },
+        f         = { south.1 = B, south.2 = g2.north },
+        g2        = { south = cup.west },
+        codiag    = { south = f.north, east = cap.west },
+        C         = { south = cup.east, north = cap.east },
+        Ad        = { south = codiagd.north },
+        codiagd   = { south = gd.north, east = capd.west },
+        gd        = { south = fd.north },
+        fd        = { south.1 = Bd, south.2 = cupd.west },
+        cupd      = { east = capd.east },
       }{}
     \end{tikzpicture}
     \caption{Dinaturality}
@@ -4335,8 +4361,6 @@ A particularly important class of \isotopessa{} models are what we will call
 \emph{trace models}, which can be viewed as programs which either diverge or
 produce a result, while also producting (potentially nondeterministic,
 potentially infinite) traces of events $\epsilon \in \mc{E}$.
-
-\TODO{naming}
 
 \begin{definition}[(Monoidal) Stream Action]
   A \textit{stream action} $(M, I, \cdot, \Sigma)$ is a set $M$ of \emph{finite
