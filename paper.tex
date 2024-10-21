@@ -2540,9 +2540,9 @@ to a strict SSA as follows:
     \ssawhere{(\casestmt{a}{x}{s}{y}{t})}{G} &=
      \where{(\casestmt{a}{x}{\brb{\ell_l}{x}}{y}
                     {\brb{\ell_r}{y}})  \\ & \qquad }
-                    {G, \wbranch{\ell_l}{x}{s}, \wbranch{\ell_r}{y}{t}} \\
+                    {G, \wbranch{\ell_l}{x}{\tossa{s}}, \wbranch{\ell_r}{y}{\tossa{t}}} \\
     \ssawhere{(\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i})}{G} 
-      &= \ssawhere{r}{(G, (\wbranch{\ell_i}{x_i}{t_i},)_i)}
+      &= \ssawhere{r}{(G, (\wbranch{\ell_i}{x_i}{\tossa{t_i}},)_i)}
   \end{aligned}
 \end{equation}
 We may state its correctness as follows:
@@ -2555,7 +2555,48 @@ We may state its correctness as follows:
   {\ssawhere{\Gamma}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}$
 \end{lemma}
 \begin{proof}
-    \todo{this...}
+  Given that $\ssawhere{r}{G} \teqv \where{r}{G}$ for $r$ in ANF, it is trivial to see
+  that
+  \begin{equation}
+    \tossa{r} := \ssawhere{\toanf{r}}{\cdot} \teqv (\where{\toanf{r}}{\cdot}) \teqv \toanf{r} 
+      \teqv r
+  \end{equation}
+  We hence only need to prove the second part of the lemma. We proceed by induction on ANF regions
+  $r$ as follows:
+  \begin{itemize}
+    \item If $r$ is a terminator, this holds trivially by reflexivity
+    \item If $r = \letstmt{x}{a}{r'}$, then by induction, we have that
+    \begin{equation}
+      \ssawhere{r}{G} 
+        := \letstmt{x}{a}{\ssawhere{r'}{G}} 
+        \teqv \letstmt{x}{a}{\where{r'}{G}} 
+        \teqv \where{\letstmt{x}{a}{r'}}{G}
+        \teqv \where{r}{G}
+    \end{equation}
+    as desired. The case for binary \ms{let}-statements is analogous.
+    \item If $r = \casestmt{a}{x}{s}{y}{t}$, then by induction, we have that
+    \begin{equation}
+      \begin{aligned}
+      \ssawhere{r}{G} 
+        &:= \where{(\casestmt{a}{x}{\brb{\ell_l}{x}}{y}
+        {\brb{\ell_r}{y}})}{G, \wbranch{\ell_l}{x}{\tossa{s}}, \wbranch{\ell_r}{y}{\tossa{t}}} \\
+        &:= \where{(\casestmt{a}{x}{\brb{\ell_l}{x}}{y}
+        {\brb{\ell_r}{y}})}{G, \wbranch{\ell_l}{x}{s}, \wbranch{\ell_r}{y}{t}} \\
+        &\teqv \where{(\where{(\casestmt{a}{x}{\brb{\ell_l}{x}}{y}
+        {\brb{\ell_r}{y}})}{\wbranch{\ell_l}{x}{s}, \wbranch{\ell_r}{y}{t}})}{G} \\
+        &\teqv \where{\casestmt{a}{x}{s}{y}{t}}{G} \teqv \where{r}{G}
+      \end{aligned}
+    \end{equation}
+    \item If $r = \where{r'}{\wbranch{\ell_i}{x_i}{t_i},)_i}$, then by induction, we have that
+    \begin{equation}
+      \begin{aligned}
+        \ssawhere{r}{G} 
+          &:= \ssawhere{r'}{G, (\wbranch{\ell_i}{x_i}{\tossa{t_i}},)_i} \\
+          &\teqv \where{r'}{G, (\wbranch{\ell_i}{x_i}{t_i},)_i} \\
+          &\teqv \where{(\where{r'}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{G} \teqv \where{r}{G} \\
+      \end{aligned}
+    \end{equation}
+  \end{itemize}
 \end{proof}
 
 \begin{figure}
@@ -2662,8 +2703,6 @@ $\lbeq{\Gamma}{r}{r'}{\ms{L}}$. We break this down into two lemmas:
 \end{proof}
 \begin{lemma}[CFG Conversion]
   If $\shaslb{\Gamma}{r}{\ms{L}}$, then $\lbeq{\Gamma}{r}{\toreg{\tocfg{r}}}{\ms{L}}$.
-  In particular, given $\shaslb{\Gamma}{r}{\ms{L}}$ and $\shaslb{\Gamma}{r'}{\ms{L}}$,
-  if $\tocfg{r} \simeq \tocfg{r'}$, we have that $\lbeq{\Gamma}{r}{r'}{\ms{L}}$.
 \end{lemma}
 \begin{proof}
   We will proceed by induction on the length of $G = \tocfg{r}$. If $G$ consists of only an entry
@@ -2733,6 +2772,11 @@ $\lbeq{\Gamma}{r}{r'}{\ms{L}}$. We break this down into two lemmas:
   \end{equation}
   as desired, since $T_0$ is a permutation of $(\wbranch{\ell_i}{x_i}{t_i},)_i$.
 \end{proof}
+We may now conclude that, given $\shaslb{\Gamma}{r}{\ms{L}}$ and $\shaslb{\Gamma}{r'}{\ms{L}}$, if
+$\tocfg{r} \simeq \tocfg{r'}$, we have that $\lbeq{\Gamma}{r}{r'}{\ms{L}}$, since in particular
+\begin{equation}
+  r \teqv \toreg{\tocfg{r}} \teqv \toreg{\tocfg{r'}} \teqv r'
+\end{equation}
 
 \begin{figure}[H]
   \begin{center}
@@ -3077,7 +3121,7 @@ B\"ohm-Jacopini theorem for SSA as follows:
 
 \subsection{Freyd Elgot Categories}
 
-\TODO{rework, expand, and fold in...}
+% \TODO{rework, expand, and fold in...}
 
 \citet{moggi-91-monad} showed that the Kleisli category of a strong monad over a CCC interprets
 effectful higher-order functional programs. We are faced, however, with two problems. On one hand,
@@ -4024,6 +4068,8 @@ general, as stated in the following theorem:
 
 \subsection{Equational Theory}
 
+\label{ssec:completeness}
+
 Using the metatheory in the previous section, our goal is now to prove the equational theory given
 in Section~\ref{sec:equations} sound with respect to any valid \isotopessa{} model. Stated more
 precisely, we have the following:
@@ -4045,234 +4091,231 @@ precisely, we have the following:
       \label{itm:eqn-sound-lsubst}
   \end{enumerate}
 \end{theorem}
-The rest of this section will consist of a sketch of some of the more difficult components of this
-proof, in the hope that this will also illuminate the equational theory somewhat. As
-\ref{itm:eqn-sound-vsubst} and \ref{itm:eqn-sound-lsubst} follow trivially from
-\ref{itm:eqn-sound-expr} and \ref{itm:eqn-sound-region} respectively, we will only cover the latter.
 
-\subsubsection{Expressions}
+% The rest of this section will consist of a sketch of some of the more difficult components of this
+% proof, in the hope that this will also illuminate the equational theory somewhat. As
+% \ref{itm:eqn-sound-vsubst} and \ref{itm:eqn-sound-lsubst} follow trivially from
+% \ref{itm:eqn-sound-expr} and \ref{itm:eqn-sound-region} respectively, we will only cover the latter.
 
-\begin{proof}
-  Our proof is by rule induction on the equational theory. We sketch the cases below:
-  \begin{itemize}
-    \item \emph{Congruence}: these follow trivially by induction
-    \item \brle{initial}, \brle{terminal}: both of these follow trivially from the universal
-    property of the initial/terminal object, respectively.
-    \item \brle{let$_1$-$\beta$}: this follows from the soundness of substitution; in particular, we
-    have that
-    \begin{align*}
-      \dnt{\hasty{\Gamma}{\epsilon}{[b/x]a}{B}}
-      &= \dnt{\issubst{\upg{(x \mapsto b)}}{\Gamma}{\Gamma, \bhyp{x}{A}}}
-        ; \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{a}{B}}
-      \quad \text{(by Thm. \ref{thm:subst-sound})} \\
-      &= \Delta_{\dnt{\Gamma}} 
-        ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{a}{A}} 
-        ; \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{b}{B}} \\
-      &= \dnt{\hasty{\Gamma}{\epsilon}{\letexpr{x}{a}{b}}{B}}
-    \end{align*}
-    \item \brle{let$_1$-case}: follows from the properties of the coproduct; in particular, we have
-    that
-    \begin{align*}
-      & \dnt{\hasty{\Gamma}{\epsilon}{\caseexpr{e}{x}{\letexpr{z}{a}{d}}{y}{\letexpr{z}{b}{d}}}{D}}
-      \\ &= \Delta ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A + B}} ; \delta^{-1} ; [
-      \\ & \qquad \Delta
-            ; \dnt{\Gamma, \bhyp{x}{A}} \otimes \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{a}{C}}
-            ; \dnt{\hasty{\Gamma, \bhyp{x}{A}, \bhyp{z}{C}}{\epsilon}{d}{D}}
-            ,
-      \\  & \qquad \Delta
-            ; \dnt{\Gamma, \bhyp{y}{B}} \otimes \dnt{\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{b}{C}}
-            ; \dnt{\hasty{\Gamma, \bhyp{y}{B}, \bhyp{z}{C}}{\epsilon}{d}{D}}
-        ]
-      \\ &= \Delta ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A + B}} ; \delta^{-1} ; [
-      \\ & \qquad \Delta \otimes \dnt{A} ; \alpha
-            ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{a}{C}}
-            ; \dnt{\hasty{\Gamma, \bhyp{z}{C}}{\epsilon}{d}{D}}
-            ,
-      \\  & \qquad \Delta \otimes \dnt{B} ; \alpha
-            ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{b}{C}}
-            ; \dnt{\hasty{\Gamma, \bhyp{z}{C}}{\epsilon}{d}{D}}
-        ]
-      \\ &= \Delta ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A + B}} ; \delta^{-1} ; [
-      \\ & \qquad \Delta \otimes \dnt{A} ; \alpha
-            ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{a}{C}}
-            ,
-      \\  & \qquad \Delta \otimes \dnt{B} ; \alpha
-            ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{b}{C}}
-        ] ; \dnt{\hasty{\Gamma, \bhyp{z}{C}}{\epsilon}{d}{D}}
-      \\ &= \Delta ; \Delta \otimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A + B}} ; \delta^{-1} ; 
-      \\ & \qquad [
-            \alpha ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{a}{C}},
-            \alpha ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{b}{C}}
-        ] ; \dnt{\hasty{\Gamma, \bhyp{z}{C}}{\epsilon}{d}{D}}
-      \\ &= \Delta ; \Delta \otimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A + B}}  
-                   ; \alpha ; \dnt{\Gamma} \otimes (\delta^{-1} ; [
-                        \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{a}{C}},
-                        \dnt{\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{b}{C}}
-                    ]) ;
-      \\ & \qquad \dnt{\hasty{\Gamma, \bhyp{z}{C}}{\epsilon}{d}{D}}
-      \\ &= \Delta ; \dnt{\Gamma} \otimes (
-                  \Delta ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A + B}} ;
-                  \delta^{-1} ; [
-                        \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{a}{C}},
-                        \dnt{\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{b}{C}}
-                    ]) ;
-      \\ & \qquad \dnt{\hasty{\Gamma, \bhyp{z}{C}}{\epsilon}{d}{D}}
-      \\ &= \dnt{\hasty{\Gamma}{\epsilon}{\letexpr{z}{(\caseexpr{e}{x}{a}{y}{b})}{d}}{D}}
-    \end{align*}
-    \item \brle{let$_2$-$\eta$}: follows from the properties of the product; in particular,
-    we have that
-    \begin{align*}
-      &\dnt{\hasty{\Gamma}{\epsilon}{\letexpr{(x, y)}{e}{(x, y)}}{A \otimes B}} \\
-      &= \Delta ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
-                ; \Delta ; 
-                \dnt{\hasty{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{\bot}{x}{A}} \otimes
-                \dnt{\hasty{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{\bot}{y}{B}} \\
-      &= \Delta ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
-                ; \Delta ; (\pi_l ; \pi_r) \otimes \pi_r
-       = \dnt{\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
-    \end{align*}
-    \item \brle{case-inl}: follows from the properties of the coproduct and inverse distributor; in
-    particular, we have that
-    \begin{align*}
-      & \dnt{\hasty{\Gamma}{\epsilon}{\caseexpr{\linl{a}}{x}{c}{y}{d}}{C}}
-      \\ &= \Delta 
-      ; \dnt{\Gamma} \otimes (\dnt{\hasty{\Gamma}{\epsilon}{a}{A}} ; \iota_l)
-      ; \delta^{-1} ; [
-        \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{c}{C}}, 
-        \dnt{\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{d}{C}}
-      ]
-      \\ &= \Delta 
-      ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{a}{A}}
-      ; \iota_l ; [
-        \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{c}{C}}, 
-        \dnt{\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{d}{C}}
-      ]
-      \\ &= \Delta 
-      ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{a}{A}}
-      ; \iota_l ; \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{c}{C}}
-      \\ &= \dnt{\hasty{\Gamma}{\epsilon}{\letexpr{x}{a}{c}}{C}}
-    \end{align*}
-    We can validate \brle{case-inr} analogously
-    \item \brle{case-$\eta$}: follows from the properties of the coproduct and distributor; in
-    particular, we have
-    \begin{align*}
-      & \dnt{\hasty{\Gamma}{\epsilon}{\caseexpr{e}{x}{\linl{x}}{y}{\linr{y}}}{A + B}} \\
-      &= \Delta ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A + B}} ; \delta^{-1} ; [
-        \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{x}{A}};\iota_l,
-        \dnt{\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{y}{B};\iota_r}
-      ] \\
-      &= \Delta ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A + B}} 
-                ; \delta^{-1} ; (\pi_r + \pi_r)
-      = \dnt{\hasty{\Gamma}{\epsilon}{e}{A + B}} 
-    \end{align*}
-  \end{itemize}
-  All the other rules can be derived trivially from string diagrammatic reasoning: once all the
-  definitions are unfolded, both sides of rule are obviously the same diagram. Some examples are
-  pictured in Figure~\todo{this}.
-\end{proof}
+% \subsubsection{Expressions}
 
-\subsubsection{Regions}
+% \begin{proof}
+%   Our proof is by rule induction on the equational theory. We sketch the cases below:
+%   \begin{itemize}
+%     \item \emph{Congruence}: these follow trivially by induction
+%     \item \brle{initial}, \brle{terminal}: both of these follow trivially from the universal
+%     property of the initial/terminal object, respectively.
+%     \item \brle{let$_1$-$\beta$}: this follows from the soundness of substitution; in particular, we
+%     have that
+%     \begin{align*}
+%       \dnt{\hasty{\Gamma}{\epsilon}{[b/x]a}{B}}
+%       &= \dnt{\issubst{\upg{(x \mapsto b)}}{\Gamma}{\Gamma, \bhyp{x}{A}}}
+%         ; \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{a}{B}}
+%       \quad \text{(by Thm. \ref{thm:subst-sound})} \\
+%       &= \Delta_{\dnt{\Gamma}} 
+%         ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{a}{A}} 
+%         ; \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{b}{B}} \\
+%       &= \dnt{\hasty{\Gamma}{\epsilon}{\letexpr{x}{a}{b}}{B}}
+%     \end{align*}
+%     \item \brle{let$_1$-case}: follows from the properties of the coproduct; in particular, we have
+%     that
+%     \begin{align*}
+%       & \dnt{\hasty{\Gamma}{\epsilon}{\caseexpr{e}{x}{\letexpr{z}{a}{d}}{y}{\letexpr{z}{b}{d}}}{D}}
+%       \\ &= \Delta ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A + B}} ; \delta^{-1} ; [
+%       \\ & \qquad \Delta
+%             ; \dnt{\Gamma, \bhyp{x}{A}} \otimes \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{a}{C}}
+%             ; \dnt{\hasty{\Gamma, \bhyp{x}{A}, \bhyp{z}{C}}{\epsilon}{d}{D}}
+%             ,
+%       \\  & \qquad \Delta
+%             ; \dnt{\Gamma, \bhyp{y}{B}} \otimes \dnt{\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{b}{C}}
+%             ; \dnt{\hasty{\Gamma, \bhyp{y}{B}, \bhyp{z}{C}}{\epsilon}{d}{D}}
+%         ]
+%       \\ &= \Delta ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A + B}} ; \delta^{-1} ; [
+%       \\ & \qquad \Delta \otimes \dnt{A} ; \alpha
+%             ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{a}{C}}
+%             ; \dnt{\hasty{\Gamma, \bhyp{z}{C}}{\epsilon}{d}{D}}
+%             ,
+%       \\  & \qquad \Delta \otimes \dnt{B} ; \alpha
+%             ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{b}{C}}
+%             ; \dnt{\hasty{\Gamma, \bhyp{z}{C}}{\epsilon}{d}{D}}
+%         ]
+%       \\ &= \Delta ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A + B}} ; \delta^{-1} ; [
+%       \\ & \qquad \Delta \otimes \dnt{A} ; \alpha
+%             ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{a}{C}}
+%             ,
+%       \\  & \qquad \Delta \otimes \dnt{B} ; \alpha
+%             ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{b}{C}}
+%         ] ; \dnt{\hasty{\Gamma, \bhyp{z}{C}}{\epsilon}{d}{D}}
+%       \\ &= \Delta ; \Delta \otimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A + B}} ; \delta^{-1} ; 
+%       \\ & \qquad [
+%             \alpha ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{a}{C}},
+%             \alpha ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{b}{C}}
+%         ] ; \dnt{\hasty{\Gamma, \bhyp{z}{C}}{\epsilon}{d}{D}}
+%       \\ &= \Delta ; \Delta \otimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A + B}}  
+%                    ; \alpha ; \dnt{\Gamma} \otimes (\delta^{-1} ; [
+%                         \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{a}{C}},
+%                         \dnt{\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{b}{C}}
+%                     ]) ;
+%       \\ & \qquad \dnt{\hasty{\Gamma, \bhyp{z}{C}}{\epsilon}{d}{D}}
+%       \\ &= \Delta ; \dnt{\Gamma} \otimes (
+%                   \Delta ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A + B}} ;
+%                   \delta^{-1} ; [
+%                         \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{a}{C}},
+%                         \dnt{\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{b}{C}}
+%                     ]) ;
+%       \\ & \qquad \dnt{\hasty{\Gamma, \bhyp{z}{C}}{\epsilon}{d}{D}}
+%       \\ &= \dnt{\hasty{\Gamma}{\epsilon}{\letexpr{z}{(\caseexpr{e}{x}{a}{y}{b})}{d}}{D}}
+%     \end{align*}
+%     \item \brle{let$_2$-$\eta$}: follows from the properties of the product; in particular,
+%     we have that
+%     \begin{align*}
+%       &\dnt{\hasty{\Gamma}{\epsilon}{\letexpr{(x, y)}{e}{(x, y)}}{A \otimes B}} \\
+%       &= \Delta ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
+%                 ; \Delta ; 
+%                 \dnt{\hasty{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{\bot}{x}{A}} \otimes
+%                 \dnt{\hasty{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{\bot}{y}{B}} \\
+%       &= \Delta ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
+%                 ; \Delta ; (\pi_l ; \pi_r) \otimes \pi_r
+%        = \dnt{\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
+%     \end{align*}
+%     \item \brle{case-inl}: follows from the properties of the coproduct and inverse distributor; in
+%     particular, we have that
+%     \begin{align*}
+%       & \dnt{\hasty{\Gamma}{\epsilon}{\caseexpr{\linl{a}}{x}{c}{y}{d}}{C}}
+%       \\ &= \Delta 
+%       ; \dnt{\Gamma} \otimes (\dnt{\hasty{\Gamma}{\epsilon}{a}{A}} ; \iota_l)
+%       ; \delta^{-1} ; [
+%         \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{c}{C}}, 
+%         \dnt{\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{d}{C}}
+%       ]
+%       \\ &= \Delta 
+%       ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{a}{A}}
+%       ; \iota_l ; [
+%         \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{c}{C}}, 
+%         \dnt{\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{d}{C}}
+%       ]
+%       \\ &= \Delta 
+%       ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{a}{A}}
+%       ; \iota_l ; \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{c}{C}}
+%       \\ &= \dnt{\hasty{\Gamma}{\epsilon}{\letexpr{x}{a}{c}}{C}}
+%     \end{align*}
+%     We can validate \brle{case-inr} analogously
+%     \item \brle{case-$\eta$}: follows from the properties of the coproduct and distributor; in
+%     particular, we have
+%     \begin{align*}
+%       & \dnt{\hasty{\Gamma}{\epsilon}{\caseexpr{e}{x}{\linl{x}}{y}{\linr{y}}}{A + B}} \\
+%       &= \Delta ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A + B}} ; \delta^{-1} ; [
+%         \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{x}{A}};\iota_l,
+%         \dnt{\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{y}{B};\iota_r}
+%       ] \\
+%       &= \Delta ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A + B}} 
+%                 ; \delta^{-1} ; (\pi_r + \pi_r)
+%       = \dnt{\hasty{\Gamma}{\epsilon}{e}{A + B}} 
+%     \end{align*}
+%   \end{itemize}
+%   All the other rules can be derived trivially from string diagrammatic reasoning: once all the
+%   definitions are unfolded, both sides of rule are obviously the same diagram. Some examples are
+%   pictured in Figure~\todo{this}.
+% \end{proof}
 
-\begin{proof}
-  Our proof is by rule induction on the equational theory. We sketch some of the cases below:
-  \begin{itemize}
-    \item \brle{let$_1$-$\beta$}, \brle{let$_1$-case}, \brle{case-inl}, \brle{case-inr}: proved
-    analgously to the corresponding rules for expressions
-    \item \brle{cfg-$\beta_1$}: \todo{this}
-    \item \brle{cfg-$\beta_2$}: \todo{this}
-    \item \brle{cfg-$\eta$}: \todo{this}
-    \item \brle{codiag}: \todo{this}
-    \item \brle{uni}: \todo{this}
-    \item \brle{dinat}: by label substitution, we have that
-    \begin{equation}
-      \begin{aligned}
-      \dnt{\haslb{\Gamma}{[\sigma^\uparrow]r}{\ms{L}, (\lhyp{\kappa_j}{A_j},)_j}} 
-        &= D_r ; \dnt{\ms{L}} + S ; \alpha^+ \\
-      \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{[\sigma^\uparrow]t_i}{\ms{L}, (\lhyp{\kappa_j}{A_j},)_j}}
-        &= D_{t_i} ; \dnt{\ms{L}} + S ; \alpha^+
-      % \\ & = \Delta ; 
-      % \dnt{\Gamma} \otimes \dnt{\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}} 
-      %   \alpha^+ ; \delta^{-1} ; 
-      \end{aligned}
-    \end{equation}
-    where
-    \begin{equation}
-      \begin{aligned}
-        D_r &= \Delta ; 
-          \dnt{\Gamma} \otimes (\dnt{\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}} ;
-            \alpha^+) ; \delta^{-1} ; \pi_r + \dnt{\Gamma} \otimes \Sigma_i \dnt{A_i} 
-            \\
-        D_{t_i} &= \Delta ; 
-          \dnt{\Gamma} \otimes 
-            (\dnt{\haslb{\Gamma, \bhyp{x_i}{B_i}}{t_i}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}} ;
-            \alpha^+) ; \delta^{-1} ; \pi_r + \dnt{\Gamma} \otimes \Sigma_i \dnt{A_i} \\
-        S &= \dnt{\lbsubst{\Gamma}{\sigma}{(\lhyp{\ell_i}{A_i},)_i}{\lhyp{\kappa_j}{B_j},)_j}}
-      \end{aligned}
-    \end{equation}
-    Hence, we have that
-    \begin{equation}
-      \begin{aligned}
-        & \dnt{\haslb{\Gamma}
-        {\where{([\upg{\sigma}]r)}{(\wbranch{\kappa_i}{x_i}{[\upg{\sigma}]t_i},)_i}}
-        {\ms{L}}} \\
-        &= \Delta ; \dnt{\Gamma} \otimes (D_r ; \dnt{\ms{L}} + S ; \cancel{\alpha^+ ; \alpha^+})
-        ; \delta^{-1} ; [\pi_r, (
-          \delta^{-1}_\Sigma ; \\ &\qquad [
-            \Delta \otimes \dnt{B_i} ; \alpha ; \dnt{\Gamma} \otimes (D_{t_i} ; \dnt{\ms{L}} + S ; 
-              \cancel{\alpha^+}) 
-          ]_i ; \cancel{\alpha^+} ; \delta^{-1}
-        )^{\dagger}; \pi_r] \\
-        &= \Delta ; \dnt{\Gamma} \otimes D_r ; \delta^{-1} 
-                  ; [\pi_r, \dnt{\Gamma} \otimes S ; (\delta^{-1}_{\Sigma}; 
-                  \\ &\qquad [
-            \Delta \otimes \dnt{B_i} ; \alpha ; \dnt{\Gamma} \otimes D_{t_i} ; \delta^{-1} ; 
-            \dnt{\Gamma} \otimes \dnt{\ms{L}} + \dnt{\Gamma} \otimes S
-          ]_i
-        )^{\dagger}; \pi_r] \\
-        &= \Delta ; \dnt{\Gamma} \otimes D_r ; \delta^{-1} 
-                  ; [\pi_r, (\dnt{\Gamma} \otimes S ; \delta^{-1}_{\Sigma}; 
-                  [
-            \Delta \otimes \dnt{B_i} ; \alpha ; \dnt{\Gamma} \otimes D_{t_i} ; \delta^{-1}
-          ]_i
-        )^{\dagger}; \pi_r] \\
-        &= D_r ; [\dnt{\ms{L}}, 
-          \Delta \otimes \Sigma_i \dnt{A_i} 
-            ; \alpha ; (\dnt{\Gamma} \otimes S ; \delta^{-1}_{\Sigma}; 
-                  [
-            \Delta \otimes \dnt{B_i} ; \alpha ; \dnt{\Gamma} \otimes D_{t_i} ; \delta^{-1}
-          ]_i
-        )^{\dagger}; \pi_r]
-      \end{aligned}
-    \end{equation}
-    Therefore, it suffices to show that
-    \begin{equation}
-      \begin{aligned}
-        & \Delta \otimes \Sigma_i \dnt{A_i} 
-            ; \alpha ; (\dnt{\Gamma} \otimes S ; \delta^{-1}_{\Sigma}; 
-                  [
-            \Delta \otimes \dnt{B_i} ; \alpha ; \dnt{\Gamma} \otimes D_{t_i} ; \delta^{-1}
-          ]_i
-        )^{\dagger} \\
-        &= 
-      \end{aligned}
-    \end{equation}
-    % \begin{equation}
-    %   \begin{aligned}
-    %   \dnt{\Gamma} \otimes D_r ; \delta^{-1} &= \dnt{\Gamma} \otimes (\Delta ; 
-    %     \dnt{\Gamma} \otimes \dnt{\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}} ;
-    %       \alpha^+ ; \delta^{-1} ; \pi_r + \dnt{\Gamma} \otimes \Sigma_i \dnt{A_i}) ; \delta^{-1} \\
-    %       &= ..\dnt{\Gamma} \otimes 
-    %   \end{aligned}
-    % \end{equation}
-  \end{itemize}
-  Analogously to for expressions, all the other rules can be derived trivially from string
-  diagrammatic reasoning: once all the definitions are unfolded, both sides of rule are obviously
-  the same diagram. Some examples are pictured in Figure~\todo{this}.
-\end{proof}
+% \subsubsection{Regions}
 
-\subsection{Completeness}
-
-\label{ssec:completeness}
+% \begin{proof}
+%   Our proof is by rule induction on the equational theory. We sketch some of the cases below:
+%   \begin{itemize}
+%     \item \brle{let$_1$-$\beta$}, \brle{let$_1$-case}, \brle{case-inl}, \brle{case-inr}: proved
+%     analgously to the corresponding rules for expressions
+%     \item \brle{cfg-$\beta_1$}: \todo{this}
+%     \item \brle{cfg-$\beta_2$}: \todo{this}
+%     \item \brle{cfg-$\eta$}: \todo{this}
+%     \item \brle{codiag}: \todo{this}
+%     \item \brle{uni}: \todo{this}
+%     \item \brle{dinat}: by label substitution, we have that
+%     \begin{equation}
+%       \begin{aligned}
+%       \dnt{\haslb{\Gamma}{[\sigma^\uparrow]r}{\ms{L}, (\lhyp{\kappa_j}{A_j},)_j}} 
+%         &= D_r ; \dnt{\ms{L}} + S ; \alpha^+ \\
+%       \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{[\sigma^\uparrow]t_i}{\ms{L}, (\lhyp{\kappa_j}{A_j},)_j}}
+%         &= D_{t_i} ; \dnt{\ms{L}} + S ; \alpha^+
+%       % \\ & = \Delta ; 
+%       % \dnt{\Gamma} \otimes \dnt{\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}} 
+%       %   \alpha^+ ; \delta^{-1} ; 
+%       \end{aligned}
+%     \end{equation}
+%     where
+%     \begin{equation}
+%       \begin{aligned}
+%         D_r &= \Delta ; 
+%           \dnt{\Gamma} \otimes (\dnt{\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}} ;
+%             \alpha^+) ; \delta^{-1} ; \pi_r + \dnt{\Gamma} \otimes \Sigma_i \dnt{A_i} 
+%             \\
+%         D_{t_i} &= \Delta ; 
+%           \dnt{\Gamma} \otimes 
+%             (\dnt{\haslb{\Gamma, \bhyp{x_i}{B_i}}{t_i}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}} ;
+%             \alpha^+) ; \delta^{-1} ; \pi_r + \dnt{\Gamma} \otimes \Sigma_i \dnt{A_i} \\
+%         S &= \dnt{\lbsubst{\Gamma}{\sigma}{(\lhyp{\ell_i}{A_i},)_i}{\lhyp{\kappa_j}{B_j},)_j}}
+%       \end{aligned}
+%     \end{equation}
+%     Hence, we have that
+%     \begin{equation}
+%       \begin{aligned}
+%         & \dnt{\haslb{\Gamma}
+%         {\where{([\upg{\sigma}]r)}{(\wbranch{\kappa_i}{x_i}{[\upg{\sigma}]t_i},)_i}}
+%         {\ms{L}}} \\
+%         &= \Delta ; \dnt{\Gamma} \otimes (D_r ; \dnt{\ms{L}} + S ; \cancel{\alpha^+ ; \alpha^+})
+%         ; \delta^{-1} ; [\pi_r, (
+%           \delta^{-1}_\Sigma ; \\ &\qquad [
+%             \Delta \otimes \dnt{B_i} ; \alpha ; \dnt{\Gamma} \otimes (D_{t_i} ; \dnt{\ms{L}} + S ; 
+%               \cancel{\alpha^+}) 
+%           ]_i ; \cancel{\alpha^+} ; \delta^{-1}
+%         )^{\dagger}; \pi_r] \\
+%         &= \Delta ; \dnt{\Gamma} \otimes D_r ; \delta^{-1} 
+%                   ; [\pi_r, \dnt{\Gamma} \otimes S ; (\delta^{-1}_{\Sigma}; 
+%                   \\ &\qquad [
+%             \Delta \otimes \dnt{B_i} ; \alpha ; \dnt{\Gamma} \otimes D_{t_i} ; \delta^{-1} ; 
+%             \dnt{\Gamma} \otimes \dnt{\ms{L}} + \dnt{\Gamma} \otimes S
+%           ]_i
+%         )^{\dagger}; \pi_r] \\
+%         &= \Delta ; \dnt{\Gamma} \otimes D_r ; \delta^{-1} 
+%                   ; [\pi_r, (\dnt{\Gamma} \otimes S ; \delta^{-1}_{\Sigma}; 
+%                   [
+%             \Delta \otimes \dnt{B_i} ; \alpha ; \dnt{\Gamma} \otimes D_{t_i} ; \delta^{-1}
+%           ]_i
+%         )^{\dagger}; \pi_r] \\
+%         &= D_r ; [\dnt{\ms{L}}, 
+%           \Delta \otimes \Sigma_i \dnt{A_i} 
+%             ; \alpha ; (\dnt{\Gamma} \otimes S ; \delta^{-1}_{\Sigma}; 
+%                   [
+%             \Delta \otimes \dnt{B_i} ; \alpha ; \dnt{\Gamma} \otimes D_{t_i} ; \delta^{-1}
+%           ]_i
+%         )^{\dagger}; \pi_r]
+%       \end{aligned}
+%     \end{equation}
+%     Therefore, it suffices to show that
+%     \begin{equation}
+%       \begin{aligned}
+%         & \Delta \otimes \Sigma_i \dnt{A_i} 
+%             ; \alpha ; (\dnt{\Gamma} \otimes S ; \delta^{-1}_{\Sigma}; 
+%                   [
+%             \Delta \otimes \dnt{B_i} ; \alpha ; \dnt{\Gamma} \otimes D_{t_i} ; \delta^{-1}
+%           ]_i
+%         )^{\dagger} \\
+%         &= 
+%       \end{aligned}
+%     \end{equation}
+%     % \begin{equation}
+%     %   \begin{aligned}
+%     %   \dnt{\Gamma} \otimes D_r ; \delta^{-1} &= \dnt{\Gamma} \otimes (\Delta ; 
+%     %     \dnt{\Gamma} \otimes \dnt{\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}} ;
+%     %       \alpha^+ ; \delta^{-1} ; \pi_r + \dnt{\Gamma} \otimes \Sigma_i \dnt{A_i}) ; \delta^{-1} \\
+%     %       &= ..\dnt{\Gamma} \otimes 
+%     %   \end{aligned}
+%     % \end{equation}
+%   \end{itemize}
+%   Analogously to for expressions, all the other rules can be derived trivially from string
+%   diagrammatic reasoning: once all the definitions are unfolded, both sides of rule are obviously
+%   the same diagram. Some examples are pictured in Figure~\todo{this}.
+% \end{proof}
 
 Now that we've proved the \emph{soundness} of our equational theory, what remains is to prove that
 it is \emph{complete}, i.e., that every equation which holds in all \isotopessa{} models can be
