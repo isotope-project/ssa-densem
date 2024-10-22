@@ -2157,9 +2157,9 @@ Also very convenient is the variant
       }
     }
 \end{equation}
-Rather than justify these rules directly, it turns out to be much more convenient to justify it using
-our denotational semantics, which, due to our completeness result in
-Section~\ref{ssec:completeness}, is perfectly sound.
+Rather than justify these rules directly, it turns out to be much more convenient to do so using our
+denotational semantics, which, due to our completeness result in Section~\ref{ssec:completeness}, is
+sound.
 
 There are some other basic rules we may want to use which turn out to be
 derivable from our existing set. For example, while re-ordering labels in a \ms{where}-block looks
@@ -2175,7 +2175,7 @@ dinaturality (with the permutation done via a label-substitution):
       {\where{r}{(\wbranch{\ell_{\sigma_i}}{x_{\sigma_i}}{t_{\sigma_i}},)_i}}{\ms{L}}}
 \end{equation}
 Note the implicit use of the fact that if some region $r$ typechecks in some label-context $\ms{L}$,
-then it typechecks in any permutation of $\ms{L}$ by label-substitution.
+then it typechecks in any permutation of $\ms{L}$, which is again proven by label-substitution.
 
 \subsection{Metatheory}
 
@@ -2275,11 +2275,11 @@ in Section~\ref{ssec:completeness}.
 
 \label{ssec:ssa-normal}
 
-The purpose of relaxing SSA to \isotopessa{} was to allow us to state our equational theory, as well
-as substitution, in a convenient manner. However, this may cause the reader to question whether we
-have really given a type-theoretic presentation of SSA as used in practice. To allay such fears, we
-will give a subset of \isotopessa{} regions, which we will call \emph{strict} regions, about which
-we make the following claims:
+The relaxation of SSA to \isotopessa{} allows us to state our equational theory and handle
+substitution more conveniently. However, this approach may lead readers to question whether we have
+truly provided a type-theoretic presentation of SSA as it is used in practice. To address this
+concern, we introduce a subset of \isotopessa{} regions called \emph{strict regions}. We make the
+following claims about these strict regions:
 \begin{enumerate}
   \item Every \isotopessa{} region can be converted to an equivalent strict region 
   %using our equational theory 
@@ -2292,31 +2292,27 @@ we make the following claims:
   % according to our equational theory
   \label{claim:ssa-inj}
 \end{enumerate}
-Thus, we make the claim that strict regions correspond exactly to SSA, with the
-\ms{where}-bracketing being merely extra syntactic sugar added to make our typing rules
-syntax-directed. In particular, \ms{where}-blocks can be added purely algorithmically by computing
-dominance between basic blocks.
+We assert that strict regions correspond exactly to SSA, with the \ms{where}-bracketing serving as
+syntactic sugar to make our typing rules syntax-directed. Specifically, \ms{where}-blocks can be
+added algorithmically by computing dominance relationships between basic blocks.
 
-Directly converting to strict SSA is somewhat unwieldy, so instead, we will take a detour through
-ANF (extended with mutually recursive \ms{where}-bindings), which we will define as a subset of our
-language. We will then give an algorithm for compiling programs in ANF to strict SSA, and show that
-both the \isotopessa{}-ANF and ANF-strict-SSA conversions, and hence their composition, are
-equivalence-preserving. This, as an additional bonus, extends the work of
-\citet{chakravarty-functional-ssa-2003} with a denotational semantics for ANF and an algorithm for
-converting from ANF back to SSA, which must be sound as a consequence of the soundness of our
-equational theory.
+Converting directly to strict SSA can be unwieldy. Therefore, we start by considering A-normal form
+(ANF), extended with mutually recursive \ms{where}-bindings, which we define as a subset of our
+language. Extending the work of \citet{chakravarty-functional-ssa-2003}, we provide an algorithm for
+converting between \isotopessa{} and ANF, which we show is equivalence preserving. We will then
+provide an algorithm for converting from ANF to strict SSA, as desired.
 
 We begin by defining a typing judgement $\ahasty{\Gamma}{\epsilon}{a}{A}$ for \emph{atomic
 expressions} in Figure~\ref{fig:ssa-ops}. An atomic expression is either a single variable, a
-function application, injection, or pair of variables, or the unit expression. In particular, we
-forbid both \ms{case}-expressions and \ms{let}-bindings, which we will require to appear only at the
-region level. It is obvious that $\ahasty{\Gamma}{\epsilon}{a}{A} \implies
+function application, injection, or pair of variables, or the unit expression. We specifically
+forbid \ms{case}-expressions and \ms{let}-bindings at this level; they are required to appear only
+at the region level. It is obvious that $\ahasty{\Gamma}{\epsilon}{a}{A} \implies
 \hasty{\Gamma}{\epsilon}{a}{A}$. 
 
-We can now give typing rules for ANF regions in Figure~\ref{fig:ssa-anf}. In particular, these are
-the same as those for regions, except that by requiring each \ms{let}-bindings in a region to bind
-an atomic expression (and, for good measure, case-statements and branches to be on variables), each
-such binding will correspond to a single SSA instruction. It is similarly obvious that
+We now present typing rules for ANF regions in Figure~\ref{fig:ssa-anf}. These rules mirror those
+for regions but with additional constraints: each \ms{let}-binding in a region must bind an atomic
+expression, and case-statements and branches must operate on variables. This ensures that each
+binding corresponds to a single SSA instruction. It is similarly obvious that
 $\ahaslb{\Gamma}{r}{\ms{L}}$. We can now define a syntactic function to convert an \isotopessa{}
 region to ANF inductively as follows:
 \begin{equation}
@@ -2359,8 +2355,8 @@ We state the correctness of these functions in the following lemma:
 \end{lemma}
 \begin{proof}
   We may show that $\ms{ANF}(r)$ is always in ANF and that $\ms{ANF}_{\ms{let}}(x, a, r)$ is in ANF
-  if $r$ is by a trivial induction. To prove the rest of the lemma, we begin proving the correctness
-  of $\ms{ANF}_{\ms{let}}(x, a, r)$ by induction on expressions $a$:
+  if $r$ is by a straightforward induction. To prove the rest of the lemma, we begin proving the
+  correctness of $\ms{ANF}_{\ms{let}}(x, a, r)$ by induction on expressions $a$:
   \begin{itemize}
     \item If $\ahasty{\Gamma}{\epsilon}{a}{A}$ is atomic, we are done; otherwise
     \item If $a = f\;e$, then, since $e$ is a subterm of $a$, by induction, we have
