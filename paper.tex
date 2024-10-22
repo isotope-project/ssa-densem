@@ -306,7 +306,7 @@ As a running example, consider the simple imperative program to compute $10!$ gi
 Figure~\ref{fig:fact-program}. Operating directly on an imperative language can be challenging,
 since having a uniform representation of code friendly to mechanized optimization and analysis is
 often in tension with features designed to improve readability and programmer productivity, such as
-syntax sugar. Early work on compiler intermediate representations, notably by Frances
+syntactic sugar. Early work on compiler intermediate representations, notably by Frances
 Allen~\cite{allen-70-cfa}, introduced \emph{three-address code}, also known as \emph{register
 transfer language (RTL)},  to normalize programs into a form more suitable for analysis and
 optimization. We can normalize our code into 3-address code, as in Figure~\ref{fig:fact-3addr}, by:
@@ -373,42 +373,40 @@ our ability to reason about programs, we introduce the \emph{static single assig
 originally proposed by \citet{alpern-ssa-original-88}, which states that every variable must be
 defined at exactly one point in the program. We can intuitively represent this as every variable
 being given by an immutable \ms{let}-binding. One immediate advantage of SSA is that it makes
-dominance-based scoping a little simpler, given a variable $x$, as we can speak about it's
-\emph{unique} definition $D_x$, $x$ is in scope at a point $P$ if and only if $D_x$ strictly
-dominates $P$.
+dominance-based scoping. In particular, given a variable $x$, which we can now associate to its
+unique definition $D_x$, $x$ is in scope at a point $P$ if and only if $D_x$ strictly dominates $P$.
 
-Na\"ively, we can attempt to convert programs to SSA form by numbering each definition of a
-variable, effectively changing references to $x$ to references to $x_t$, i.e. ``$x$ at time $t$.''
-For example, we could rewrite
+One might attempt to convert programs to SSA form by numbering each definition of a variable,
+effectively changing references to $x$ to references to $x_t$, i.e. ``$x$ at time $t$.'' For
+example, we could rewrite
 \begin{multline}
   \letexpr{x}{3y + 5}{\letexpr{x}{3x + 2}{\letexpr{x}{3x + 1}{\ms{ret}\;x}}}
   \\ \equiv \letexpr{x_0}{3y + 5}{\letexpr{x_1}{3x_0 + 2}{\letexpr{x_2}{3x_1 + 1}{\ms{ret}\;x_2}}}
 \end{multline}
-which now enables algebraic reasoning about expressions involving each $x_t$. However, since we can
-only ever define a variable once, expressing programs with loops and branches in SSA is challenging
-because the value of a variable may change with each loop iteration. For example, na\"ively trying
-to lower the prgoram in Figure~\ref{fig:fact-3addr} into SSA form would not work, since the $i$
-definition $i = i + 1$ can refer to \emph{either} the previous value of $i$ from the last iteration
-of the loop \emph{or} the original value $i = 1$. The classical solution is to introduce
-\emph{$\phi$-nodes}, which select a value based on the predecessor block from which control arrived.
-We give the lowering of our program into SSA with $\phi$-nodes in Figure~\ref{fig:fact-ssa}. 
+This transformation enables algebraic reasoning about expressions involving each $x_t$. However,
+since we can only define a variable once in SSA form, expressing programs with loops and branches
+becomes challenging. For example, na\"ively trying to lower the program in
+Figure~\ref{fig:fact-3addr} into SSA form would not work, since the $i$ definition $i = i + 1$ can
+refer to \emph{either} the previous value of $i$ from the last iteration of the loop \emph{or} the
+original value $i = 1$. The classical solution is to introduce \emph{$\phi$-nodes}, which select a
+value based on the predecessor block from which control arrived. We give the lowering of our program
+into SSA with $\phi$-nodes in Figure~\ref{fig:fact-ssa}. 
 
 \citet{cytron-ssa-intro-91} introduced the first efficient algorithm to lower a program in 3-address
 code to valid SSA while introducing a minimum number of $\phi$-nodes, making SSA practical for
 widespread use as an intermediate representation. Unfortunately, $\phi$-nodes do not have an obvious
-operational semantics. More interestingly, they also require us to adopt more complex scoping rules
-than simple dominance based scoping. For example, in basic block \ms{loop} in
-Figure~\ref{fig:fact-ssa}, $i_0$ evaluates to 1 if we came from \ms{start} and to $i_1$ if we came
-from \ms{body}. Similarly, $a_0$ evaluates to either 1 or $a_1$ based on the predecessor block. This
-does not obey dominance-based scoping, since $i_0$ and $i_1$ are defined \emph{after} the
-$\phi$-nodes $i_0$, $a_0$ that reference them, which seems counterintuitive -- after all, variables
-are typically used after they are defined. In fact, since the value of a $\phi$-node is determined
-by which basic block is our immediate predecessor, we instead need to use the rule that expressions
-in $\phi$-node branches with source $S$ can use any variable $y$ defined at the \emph{end} of $S$.
-Note that this is a strict superset of the variables visible for a normal instruction $x$, which can
-only use variables $y$ which \emph{dominate} $x$ -- i.e., such that \emph{every} path from the entry
-block to the definition of $x$ goes through $y$, rather than only those paths which also go through
-$S$.
+operational semantics. Additionally, they require us to adopt more complex scoping rules than simple
+dominance-based scoping. For example, in basic block \ms{loop} in Figure~\ref{fig:fact-ssa}, $i_0$
+evaluates to 1 if we came from \ms{start} and to $i_1$ if we came from \ms{body}. Similarly, $a_0$
+evaluates to either 1 or $a_1$ based on the predecessor block. This does not obey dominance-based
+scoping, since $i_0$ and $i_1$ are defined \emph{after} the $\phi$-nodes $i_0$, $a_0$ that reference
+them, which seems counterintuitive -- after all, variables are typically used after they are
+defined. In fact, since the value of a $\phi$-node is determined by which basic block is our
+immediate predecessor, we instead need to use the rule that expressions in $\phi$-node branches with
+source $S$ can use any variable $y$ defined at the \emph{end} of $S$. Note that this is a strict
+superset of the variables visible for a normal instruction $x$, which can only use variables $y$
+which \emph{dominate} $x$ -- i.e., such that \emph{every} path from the entry block to the
+definition of $x$ goes through $y$, rather than only those paths which also go through $S$.
 
 \begin{figure}
   \begin{subfigure}[t]{.5\textwidth}
@@ -454,18 +452,19 @@ $S$.
   \Description{}
 \end{figure}
  
-While this rule can be quite confusing, and in particular difficult to assign an operational
-semantics to, the fact that the scoping for $\phi$-node branches is based on the source block,
-rather than the block in which the $\phi$-node itself appears, hints at a possible solution. By
-\emph{moving} the expression in each branch to the \emph{call-site}, we can transition to an
-isomorphic syntax called basic blocks with arguments (BBA), as illustrated in Figure
-\ref{fig:fact-bba}. In this approach, each $\phi$-node, which lacks side effects and whose scope
-depends solely on the originating basic blocks rather than its position within its own block, can be
-moved to the top of the block. This reorganization allows us to treat each $\phi$-node as equivalent
-to an argument for the basic block, with the corresponding values passed at the jump site.
-Converting a program from BBA format back to standard SSA form with $\phi$-nodes is straightforward:
-introduce a $\phi$-node for each argument of a basic block, and for each branch corresponding to the
-$\phi$-node, add an argument to the jump instruction from the appropriate source block. 
+While this rule can be quite confusing, and in particular makes it non-obvious how to assign an
+operational semantics to $\phi$-nodes, the fact that the scoping for $\phi$-node branches is based
+on the source block, rather than the block in which the $\phi$-node itself appears, hints at a
+possible solution. By \emph{moving} the expression in each branch to the \emph{call-site}, we can
+transition to an isomorphic syntax called basic blocks with arguments (BBA), as illustrated in
+Figure \ref{fig:fact-bba}. In this approach, each $\phi$-node -- since it lacks side effects and has
+scoping rules independent of its position in the basic block, depending only on the source of each
+branch -- can be moved to the top of the block. This reorganization allows us to treat each
+$\phi$-node as equivalent to an argument for the basic block, with the corresponding values passed
+at the jump site. Converting a program from BBA format back to standard SSA form with $\phi$-nodes
+is straightforward: introduce a $\phi$-node for each argument of a basic block, and for each branch
+corresponding to the $\phi$-node, add an argument to the jump instruction from the appropriate
+source block. 
 
 This allows us to use standard dominance-based scoping without any special cases for $\phi$-nodes.
 When considering basic blocks, this means that a variable is visible within the block $D$ where it
@@ -476,7 +475,7 @@ Figure~\ref{fig:fact-bba}:
   \item \ms{start} strictly dominates \ms{loop} and \ms{body}; thus, the variable $n$ defined in
   \ms{start} is visible in \ms{loop} and \ms{body}.
   \item \ms{loop} strictly dominates \ms{body}; therefore, the parameters $i_0$, $a_0$ to \ms{loop}
-  are visible in \ms{body} without the need to use a $\phi$-node pass them as parameters.
+  are visible in \ms{body} without the need to pass them as parameters.
   \item \ms{body} does \emph{not} strictly dominate \ms{loop}, since there is a path from \ms{start}
   to \ms{loop} that does not pass through \ms{body}.
 \end{itemize}
