@@ -101,11 +101,11 @@
 \newcommand{\hasty}[4]{#1 \vdash_{#2} #3: {#4}}
 \newcommand{\haslb}[3]{#1 \vdash #2 \rhd #3}
 
-\newcommand{\ahasty}[4]{#1 \vdash_{#2}^{\ms{a}} #3: {#4}}
-\newcommand{\thaslb}[3]{#1 \vdash^{\ms{t}} #2 \rhd #3}
-\newcommand{\ahaslb}[3]{#1 \vdash^{\ms{a}} #2 \rhd #3}
-\newcommand{\bhaslb}[3]{#1 \vdash^{\ms{b}} #2 \rhd #3}
-\newcommand{\chaslb}[3]{#1 \vdash^{\ms{c}} #2 \rhd #3}
+\newcommand{\ahasty}[4]{#1 \vdash_{#2}^{\ms{anf}} #3 : {#4}}
+\newcommand{\thaslb}[3]{#1 \vdash^{\ms{t}}_{\ms{ssa}} #2 \rhd #3}
+\newcommand{\ahaslb}[3]{#1 \vdash^{\ms{anf}} #2 \rhd #3}
+\newcommand{\bhaslb}[3]{#1 \vdash^{\ms{b}}_{\ms{ssa}} #2 \rhd #3}
+% \newcommand{\chaslb}[3]{#1 \vdash^{\ms{c}}_{\ms{ssa}} #2 \rhd #3}
 
 \newcommand{\shaslb}[3]{#1 \vdash^{\ms{s}} #2 \rhd #3}
 
@@ -2296,15 +2296,19 @@ We assert that strict regions correspond exactly to SSA, with the \ms{where}-bra
 syntactic sugar to make our typing rules syntax-directed. Specifically, \ms{where}-blocks can be
 added algorithmically by computing dominance relationships between basic blocks.
 
-Converting directly to strict SSA can be unwieldy. Therefore, we start by considering A-normal form
-(ANF), extended with mutually recursive \ms{where}-bindings, which we define as a subset of our
-language. Extending the work of \citet{chakravarty-functional-ssa-2003}, we provide an algorithm for
-converting between \isotopessa{} and ANF, which we show is equivalence preserving. We will then
-provide an algorithm for converting from ANF to strict SSA, as desired.
+Converting directly to strict SSA can be unwieldy. Therefore, we do
+this in two stages, first converting \isotopessa{} into to a subset
+corresponding to A-normal form (ANF) extended with mutually recursive
+\ms{where}-bindings, and then converting the ANF regions into strict
+regions.
 
-We begin by defining a typing judgement $\ahasty{\Gamma}{\epsilon}{a}{A}$ for \emph{atomic
+\subsubsection{From \isotopessa{} to A-Normal Form}
+
+Our first step is to extend the work of \citet{chakravarty-functional-ssa-2003}, by
+providing an algorithm for converting between \isotopessa{} and ANF in an equivalence
+preserving way. We begin by defining a typing judgement $\ahasty{\Gamma}{\epsilon}{a}{A}$ for \emph{atomic
 expressions} in Figure~\ref{fig:ssa-ops}. An atomic expression is either a single variable, a
-function application, injection, or pair of variables, or the unit expression. We specifically
+function application, an injection, a pair of variables, or the unit expression. We specifically
 forbid \ms{case}-expressions and \ms{let}-bindings at this level; they are required to appear only
 at the region level. It is obvious that $\ahasty{\Gamma}{\epsilon}{a}{A} \implies
 \hasty{\Gamma}{\epsilon}{a}{A}$. 
@@ -2459,17 +2463,18 @@ We state the correctness of these functions in the following lemma:
   \label{fig:ssa-anf}
 \end{figure}
 
-We now wish to give typing rules for strict SSA. Since SSA consists of \emph{basic blocks}, that is,
+\subsubsection{From ANF to SSA}
+
+We now wish to give typing rules for strict regions. Since SSA consists of \emph{basic blocks}, that is,
 linear sequences of instructions followed by a terminator, we will introduce two mutually
 recursive judgements:
 \begin{itemize}
-  \item $\thaslb{\Gamma}{r}{\ms{L}}$, which states that $r$ is a \emph{terminator}, which we model
+  \item $\thaslb{\Gamma}{r}{\ms{L}}$, which states that $r$ is a terminator, which we model
   as a tree of case-statements with unconditional branches at the leaves
-  \item $\bhaslb{\Gamma}{r}{\ms{L}}$, which states that $r$ is a \emph{basic block}: a linear
-  sequence of unary and binary let-bindings followed by a terminator wrapped in a where-block, which
-  contains the rest of the program (which the sequence of let-bindings strictly dominates).
-  
-  We will call the basic blocks in this list the entry block's \emph{children}
+\item $\bhaslb{\Gamma}{r}{\ms{L}}$, which states that $r$ is a basic block \emph{plus} the blocks
+  which are its children in the dominator tree. The basic block itself is a linear
+  sequence of unary and binary let-bindings followed by a terminator, which is wrapped in a where-block
+  containing the child blocks. 
 \end{itemize}
 A strict region, then, is a basic block, with the block itself (made up of its component
 let-bindings followed by its terminator) the distinguished \emph{entry block}. We give typing rules
@@ -2516,8 +2521,8 @@ Some other useful facts about $\adddom{\cdot}{\cdot}$ include:
 \begin{itemize}
   \item It is a congruence: if $r \teqv r'$ and each $t_i \teqv t_i'$,
   $\adddom{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i} \teqv \adddom{r'}{(\wbranch{\ell_i}{x_i}{t_i'},)_i}$
-  \item If both sides are well-typed (in particular, if no $t_i$ use any of the variables in $r$),
-  $\wbranch{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i} \teqv \adddom{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}$
+%  \item If both sides are well-typed (in particular, if no $t_i$ use any of the variables in $r$),
+%  $\wbranch{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i} \teqv \adddom{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}$
   \item It is invariant up to permutations
   $\sigma$: $\adddom{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i} \teqv 
     \adddom{r}{(\wbranch{\ell_{\sigma_i}}{x_{\sigma_i}}{t_{\sigma_i}},)_i}$
@@ -2527,18 +2532,18 @@ Some other useful facts about $\adddom{\cdot}{\cdot}$ include:
     \item All branches to $\ell_i$ come from $\kappa$ or $\ell_j$ (and not from either $r$ or $G$)
   \end{itemize}
   \begin{equation}
-    \adddom{r}{G, \wbranch{\kappa}{y}{s}, (\wbranch{\ell_i}{x_i}{t_i},)} \teqv
-    \adddom{r}{G, \wbranch{\kappa}{y}{\where{s}{(\wbranch{\ell_i}{x_i}{t_i},)}}}
+    \adddom{r}{(G, \wbranch{\kappa}{y}{s}, (\wbranch{\ell_i}{x_i}{t_i},))} \teqv
+    \adddom{r}{(G, \wbranch{\kappa}{y}{\where{s}{(\wbranch{\ell_i}{x_i}{t_i},)}})}
   \end{equation} 
   and hence
   \begin{equation}
-    \adddom{r}{G, \wbranch{\kappa}{y}{s}, (\wbranch{\ell_i}{x_i}{t_i},)} \teqv
-    \adddom{r}{G, \wbranch{\kappa}{y}{\adddom{s}{(\wbranch{\ell_i}{x_i}{t_i},)}}}
+    \adddom{r}{(G, \wbranch{\kappa}{y}{s}, (\wbranch{\ell_i}{x_i}{t_i},))} \teqv
+    \adddom{r}{(G, \wbranch{\kappa}{y}{\adddom{s}{(\wbranch{\ell_i}{x_i}{t_i},)}})}
   \end{equation}
   In particular, we may apply this rule twice to obtain
   \begin{equation}
-    \adddom{r}{G, \wbranch{\kappa}{y}{\adddom{s}{G'}}, (\wbranch{\ell_i}{x_i}{t_i},)} \teqv
-    \adddom{r}{G, \wbranch{\kappa}{y}{\adddom{s}{G', (\wbranch{\ell_i}{x_i}{t_i},)}}}
+    \adddom{r}{(G, \wbranch{\kappa}{y}{\adddom{s}{G'}}, (\wbranch{\ell_i}{x_i}{t_i},))} \teqv
+    \adddom{r}{(G, \wbranch{\kappa}{y}{\adddom{s}{G', (\wbranch{\ell_i}{x_i}{t_i},)}})}
     \label{eqn:pull-where}
   \end{equation}
 \end{itemize}
@@ -2566,9 +2571,9 @@ We may state its correctness as follows:
   If $\haslb{\Gamma}{r}{\ms{L}}$, then $\bhaslb{\Gamma}{\tossa{r}}{\ms{L}}$ and
   $\lbeq{\Gamma}{r}{\tossa{r}}{\ms{L}}$. In particular, given $\ahaslb{\Gamma}{r}{\ms{L},
   (\ell_i(A_i),)_i}$ and $\forall i, \bhaslb{\Gamma}{t_i}{\ms{L}, (\ell_i(A_i),)_i}$, we have that
-  $\bhaslb{\Gamma}{\ssawhere{\Gamma}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}$ and $\lbeq{\Gamma}
-  {(\where{\Gamma}{(\wbranch{\ell_i}{x_i}{t_i},)_i})  }
-  {\ssawhere{\Gamma}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}$
+  $\bhaslb{\Gamma}{\ssawhere{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}$ and $\lbeq{\Gamma}
+  {(\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i})  }
+  {\ssawhere{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}$
 \end{lemma}
 \begin{proof}
   Given that $\ssawhere{r}{G} \teqv \where{r}{G}$ for $r$ in ANF, it is trivial to see
@@ -2805,8 +2810,8 @@ $\tocfg{r} \simeq \tocfg{r'}$, we have that $\lbeq{\Gamma}{r}{r'}{\ms{L}}$, sinc
       \;|\; \(\linr{y}\)
       \;|\; \(\labort{x}\)
       
-      <\(\tau\)> ::= \(\brb{\ell}{a}\) 
-      \;|\; \(\casestmt{e}{x}{\tau}{y}{\tau'}\)
+      <\(\tau\)> ::= \(\brb{\ell}{x}\) 
+      \;|\; \(\casestmt{x}{y}{\tau}{z}{\tau'}\)
 
       <\(\beta\)> := \(\tau\)
       \;|\; \(\letstmt{x}{a}{\beta}\)
