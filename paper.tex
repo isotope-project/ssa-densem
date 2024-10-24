@@ -3841,10 +3841,13 @@ are quite standard; in particular:
     \dnt{\hasty{\Gamma}{\epsilon}{\linr{b}}{A + B}}
       &= \dnt{\hasty{\Gamma}{\epsilon}{b}{B}} ; \iota_r \\
     \dnt{\hasty{\Gamma}{\epsilon}{\caseexpr{e}{x}{a}{y}{b}}{C}}
-      &= \dnt{\hasty{\Gamma}{\epsilon}{e}{A + B}}
-      ; \\& \qquad
-      \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{a}{A}}
-      + \dnt{\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{b}{B}}
+      &= \Delta_{\dnt{\Gamma}} 
+        ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A + B}}
+        ; \delta^{-1}_{\dnt{\Gamma}} ; \\& \qquad
+        [
+          \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{a}{C}}, 
+          \dnt{\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{b}{C}}
+        ]
       \\
     \dnt{\hasty{\Gamma}{\epsilon}{\labort{a}}{A}} 
       &= \dnt{\hasty{\Gamma}{\epsilon}{a}{\mb{0}}} ; 0_{\dnt{A}}
@@ -5458,10 +5461,10 @@ semantics.
       \begin{aligned}
       & \dnt{\issubst{\gamma}{\Gamma}{\Delta}} \otimes \dnt{A} 
       ; \dnt{\hasty{\Delta, \bhyp{x}{A}}{\epsilon}{b}{B}}
-      \\ &= \dnt{\issubst{\gamma, x \mapsto x}{\Gamma, \bhyp{x}{A}}{\Delta, \bhyp{x}{A}}}
+      \\ &= \dnt{\issubst{(\gamma, x \mapsto x)}{(\Gamma, \bhyp{x}{A})}{(\Delta, \bhyp{x}{A})}}
       ; \dnt{\hasty{\Delta, \bhyp{x}{A}}{\epsilon}{b}{B}}
-      \\ &= \dnt{\hasty{\Delta, \bhyp{x}{A}}{\epsilon}{[\gamma, x \mapsto x]b}{B}}
-          = \dnt{\hasty{\Gamma}{\epsilon}{[\gamma]b}{B}}
+      \\ &= \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{[\gamma, x \mapsto x]b}{B}}
+          = \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{[\gamma]b}{B}}
       \end{aligned}
     \end{equation}
     as we can assume that $x$ is a fresh variable. Hence, it follows that
@@ -5479,7 +5482,7 @@ semantics.
         ; \dnt{\hasty{\Delta, \bhyp{x}{A}}{\epsilon}{b}{B}} \\
         &= \Delta_{\dnt{\Gamma}}
         ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{[\gamma]a}{A}}
-        ; \dnt{\hasty{\Gamma}{\epsilon}{[\gamma]b}{B}} \\
+        ; \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{[\gamma]b}{B}} \\
         &= \dnt{\hasty{\Gamma}{\epsilon}{[\gamma](\letexpr{x}{a}{b})}{B}}
       \end{aligned}
     \end{equation}
@@ -5504,8 +5507,98 @@ semantics.
       = \dnt{\hasty{\Gamma}{\epsilon}{[\gamma](a, b)}{A \times B}}
       \end{aligned}
     \end{equation}
-    \item If $e = (\letexpr{(x, y)}{a}{b})$ is a binary \ms{let}-binding, then \todo{this}
-    \item If $e = \caseexpr{a}{x}{b}{y}{c}$ is a \ms{case}-expression, then \todo{this}
+    \item If $e = (\letexpr{(x, y)}{a}{b})$ is a binary \ms{let}-binding, then by induction we have
+    that
+    \begin{equation}
+      \begin{aligned}
+      & \dnt{\issubst{\gamma}{\Gamma}{\Delta}} \otimes (\dnt{A} \otimes \dnt{B}) 
+          ; \alpha ; \dnt{\hasty{\Delta, \bhyp{x}{A}, \bhyp{y}{B}}{\epsilon}{b}{C}}
+      \\ &= \alpha ; \dnt{\issubst{(\gamma, x \mapsto x, y \mapsto y)}
+        {(\Gamma, \bhyp{x}{A}, \bhyp{y}{B})}{(\Delta, \bhyp{x}{A}, \bhyp{y}{B})}}
+          ; \dnt{\hasty{\Delta, \bhyp{x}{A}, \bhyp{y}{B}}{\epsilon}{b}{C}}
+      \\ &= \dnt{\hasty{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}
+                        {\epsilon}{[\gamma, x \mapsto x, y \mapsto y]b}{C}}
+          = \dnt{\hasty{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{\epsilon}{[\gamma]b}{C}}
+      \end{aligned}
+    \end{equation}
+    as we can assume that $x, y$ are fresh variables. Hence, it follows that
+    \begin{equation}
+      \begin{aligned}
+        & \dnt{\issubst{\gamma}{\Gamma}{\Delta}} 
+        ; \dnt{\hasty{\Delta}{\epsilon}{\letexpr{(x, y)}{a}{b}}{C}} \\
+        &= \dnt{\issubst{\gamma}{\Gamma}{\Delta}}
+        ; \Delta_{\dnt{\Delta}} 
+        ; \dnt{\Delta} \otimes \dnt{\hasty{\Delta}{\epsilon}{a}{A \otimes B}}
+        ; \alpha ; \dnt{\hasty{\Delta, \bhyp{x}{A}, \bhyp{y}{B}}{\epsilon}{b}{C}} \\
+        &= \Delta_{\dnt{\Gamma}} 
+        ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{[\gamma]a}{A \otimes B}}
+        ; \dnt{\issubst{\gamma}{\Gamma}{\Delta}} \otimes (\dnt{A} \otimes \dnt{B}) ; \alpha
+        ; \dnt{\hasty{\Delta, \bhyp{x}{A}, \bhyp{y}{B}}{\epsilon}{b}{C}} \\
+        &= \Delta_{\dnt{\Gamma}}
+        ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{[\gamma]a}{A \otimes B}}
+        ; \dnt{\hasty{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{\epsilon}{[\gamma]b}{C}} \\
+        &= \dnt{\hasty{\Gamma}{\epsilon}{[\gamma](\letexpr{(x, y)}{a}{b})}{C}}
+      \end{aligned}
+    \end{equation}
+    as desired.
+    \item If $e = \caseexpr{a}{x}{b}{y}{c}$ is a \ms{case}-expression, then by induction we have
+    that
+    \begin{equation}
+      \begin{aligned}
+      & \dnt{\issubst{\gamma}{\Gamma}{\Delta}} \otimes \dnt{A} 
+      ; \dnt{\hasty{\Delta, \bhyp{x}{A}}{\epsilon}{b}{C}}
+      \\ &= \dnt{\issubst{(\gamma, x \mapsto x)}{(\Gamma, \bhyp{x}{A})}{(\Delta, \bhyp{x}{A})}}
+      ; \dnt{\hasty{\Delta, \bhyp{x}{A}}{\epsilon}{b}{C}}
+      \\ &= \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{[\gamma, x \mapsto x]b}{C}}
+          = \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{[\gamma]b}{C}}
+      \end{aligned}
+    \end{equation}
+    and
+    \begin{equation}
+      \begin{aligned}
+      & \dnt{\issubst{\gamma}{\Gamma}{\Delta}} \otimes \dnt{B} 
+      ; \dnt{\hasty{\Delta, \bhyp{y}{B}}{\epsilon}{c}{C}}
+      \\ &= \dnt{\issubst{(\gamma, y \mapsto y)}{(\Gamma, \bhyp{y}{B})}{(\Delta, \bhyp{y}{B})}}
+      ; \dnt{\hasty{\Delta, \bhyp{y}{B}}{\epsilon}{c}{C}}
+      \\ &= \dnt{\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{[\gamma, x \mapsto x]c}{C}}
+          = \dnt{\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{[\gamma]c}{C}}
+      \end{aligned}
+    \end{equation}
+    as we can assume that $x, y$ are fresh variables. Hence, it follows that
+    \begin{equation}
+      \begin{aligned}
+        & \dnt{\issubst{\gamma}{\Gamma}{\Delta}}
+        ; \Delta_{\dnt{\Delta}} 
+        ; \dnt{\Delta} \otimes \dnt{\hasty{\Delta}{\epsilon}{a}{A + B}}
+        ; \delta^{-1}_{\dnt{\Delta}} 
+        ; [
+          \dnt{\hasty{\Delta, \bhyp{x}{A}}{\epsilon}{b}{C}}, 
+          \dnt{\hasty{\Delta, \bhyp{y}{B}}{\epsilon}{c}{C}}
+        ] 
+        \\ &
+        = \Delta_{\dnt{\Gamma}}
+        ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{[\gamma]a}{A + B}}
+        ; \delta^{-1}_{\dnt{\Gamma}}
+        ;  \\ & \qquad
+        [
+          \dnt{\issubst{\gamma}{\Gamma}{\Delta}} \otimes \dnt{A} 
+            ; \dnt{\hasty{\Delta, \bhyp{x}{A}}{\epsilon}{b}{C}}, 
+          \dnt{\issubst{\gamma}{\Gamma}{\Delta}} \otimes \dnt{B} 
+            ; \dnt{\hasty{\Delta, \bhyp{y}{B}}{\epsilon}{c}{C}}
+        ] 
+        \\ &
+        = \Delta_{\dnt{\Gamma}}
+        ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{[\gamma]a}{A + B}}
+        ; \delta^{-1}_{\dnt{\Gamma}} 
+        ; [
+          \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{[\gamma]b}{C}}, 
+          \dnt{\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{[\gamma]c}{C}}
+        ]
+        \\ &
+        = \dnt{\hasty{\Gamma}{\epsilon}{[\gamma](\caseexpr{a}{x}{b}{y}{c})}{C}}
+      \end{aligned}
+    \end{equation} 
+    as desired.
     \item If $e = ()$ is the null expression, since $\dnt{\issubst{\gamma}{\Gamma}{\Delta}}$ is
     pure, the desired result holds trivially since $\mb{1}$ is the terminal object in the category
     of pure morphisms.
@@ -5513,11 +5606,139 @@ semantics.
   We may now prove the soundness of substitution for regions as follows: assuming
   $\haslb{\Gamma}{r}{\ms{L}}$, we proceed by induction on $r$ as follows:
   \begin{itemize}
-    \item If $r = \brb{\ell}{a}$, then \todo{this}
-    \item If $r = (\letstmt{x}{a}{t})$, then \todo{this}
-    \item If $r = (\letstmt{(x, y)}{a}{t})$, then \todo{this, or analogous}
-    \item If $r = \casestmt{a}{x}{s}{y}{t}$, then \todo{this}
-    \item If $r = \where{s}{(\wbranch{\ell_i}{x_i}{t_i},)_i}$, then \todo{this}
+    \item If $r = \brb{\ell}{a}$, then we have that
+    \begin{equation}
+      \begin{aligned}
+      \dnt{\issubst{\gamma}{\Gamma}{\Delta}} ; \dnt{\haslb{\Delta}{\brb{\ell}{A}}{\ms{L}}}
+      &= \dnt{\issubst{\gamma}{\Gamma}{\Delta}}  
+      ; \dnt{\hasty{\Delta}{\bot}{a}{A}} 
+      ; \iota_{\ms{L}, \ell} \\
+      &= \dnt{\hasty{\Gamma}{\bot}{[\gamma]a}{A}}
+      ; \iota_{\ms{L}, \ell}
+      = \dnt{\haslb{\Gamma}{[\gamma](\brb{\ell}{a})}{\ms{L}}} 
+      \end{aligned}
+    \end{equation}
+    \item If $r = (\letstmt{x}{a}{t})$, then we have that, by induction,
+    \begin{equation}
+      \begin{aligned}
+      & \dnt{\issubst{\gamma}{\Gamma}{\Delta}} \otimes \dnt{A} 
+      ; \dnt{\haslb{\Delta, \bhyp{x}{A}}{t}{\ms{L}}}
+      \\ &= \dnt{\issubst{(\gamma, x \mapsto x)}{(\Gamma, \bhyp{x}{A})}{(\Delta, \bhyp{x}{A})}}
+      ; \dnt{\haslb{\Delta, \bhyp{x}{A}}{t}{\ms{L}}}
+      \\ &= \dnt{\haslb{\Gamma, \bhyp{x}{A}}{[\gamma, x \mapsto x]t}{\ms{L}}}
+          = \dnt{\haslb{\Gamma, \bhyp{x}{A}}{[\gamma]t}{\ms{L}}}
+      \end{aligned}
+    \end{equation}
+    since $x$ can be taken to be a free variable. Hence,
+    \begin{equation}
+      \begin{aligned}
+        & \dnt{\issubst{\gamma}{\Gamma}{\Delta}} 
+        ; \dnt{\haslb{\Delta}{\letexpr{x}{a}{t}}{\ms{L}}} \\
+        &= \dnt{\issubst{\gamma}{\Gamma}{\Delta}}
+        ; \Delta_{\dnt{\Delta}} ; \dnt{\Delta} \otimes \dnt{\hasty{\Delta}{\epsilon}{a}{A}}
+        ; \dnt{\haslb{\Delta, \bhyp{x}{A}}{t}{\ms{L}}} \\
+        &= \Delta_{\dnt{\Gamma}} 
+        ; \dnt{\Gamma} 
+          \otimes \dnt{\hasty{\Gamma}{\epsilon}{[\gamma]a}{A}}
+        ; \dnt{\issubst{\gamma}{\Gamma}{\Delta}} \otimes \dnt{A}
+        ; \dnt{\haslb{\Delta, \bhyp{x}{A}}{t}{\ms{L}}} \\
+        &= \Delta_{\dnt{\Gamma}}
+        ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{[\gamma]a}{A}}
+        ; \dnt{\haslb{\Gamma, \bhyp{x}{A}}{[\gamma]t}{\ms{L}}} \\
+        &= \dnt{\haslb{\Gamma}{[\gamma](\letexpr{x}{a}{t})}{\ms{L}}}
+      \end{aligned}
+    \end{equation}
+    \item If $r = (\letstmt{(x, y)}{a}{t})$, then we have that, by induction,
+    \begin{equation}
+      \begin{aligned}
+      & \dnt{\issubst{\gamma}{\Gamma}{\Delta}} \otimes (\dnt{A} \otimes \dnt{B}) 
+          ; \alpha ; \dnt{\haslb{\Delta, \bhyp{x}{A}, \bhyp{y}{B}}{t}{\ms{L}}}
+      \\ &= \alpha ; \dnt{\issubst{(\gamma, x \mapsto x, y \mapsto y)}
+        {(\Gamma, \bhyp{x}{A}, \bhyp{y}{B})}{(\Delta, \bhyp{x}{A}, \bhyp{y}{B})}}
+          ; \dnt{\haslb{\Delta, \bhyp{x}{A}, \bhyp{y}{B}}{t}{\ms{L}}}
+      \\ &= \dnt{\haslb{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}
+                        {[\gamma, x \mapsto x, y \mapsto y]t}{\ms{L}}}
+          = \dnt{\haslb{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{[\gamma]t}{\ms{L}}}
+      \end{aligned}
+    \end{equation}
+    since $x, y$ can be taken to be free variables. Hence,
+    \begin{equation}
+      \begin{aligned}
+        & \dnt{\issubst{\gamma}{\Gamma}{\Delta}} 
+        ; \dnt{\haslb{\Delta}{\letexpr{(x, y)}{a}{t}}{\ms{L}}} \\
+        &= \dnt{\issubst{\gamma}{\Gamma}{\Delta}}
+        ; \Delta_{\dnt{\Delta}} 
+        ; \dnt{\Delta} \otimes \dnt{\hasty{\Delta}{\epsilon}{a}{A \otimes B}}
+        ; \alpha ; \dnt{\haslb{\Delta, \bhyp{x}{A}, \bhyp{y}{B}}{t}{\ms{L}}} \\
+        &= \Delta_{\dnt{\Gamma}} 
+        ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{[\gamma]a}{A \otimes B}}
+        ; \dnt{\issubst{\gamma}{\Gamma}{\Delta}} \otimes (\dnt{A} \otimes \dnt{B}) ; \alpha
+        ; \dnt{\haslb{\Delta, \bhyp{x}{A}, \bhyp{y}{B}}{t}{\ms{L}}} \\
+        &= \Delta_{\dnt{\Gamma}}
+        ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{[\gamma]a}{A \otimes B}}
+        ; \dnt{\haslb{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{[\gamma]t}{\ms{L}}} \\
+        &= \dnt{\haslb{\Gamma}{[\gamma](\letexpr{(x, y)}{a}{t})}{\ms{L}}}
+      \end{aligned}
+    \end{equation}
+    \item If $r = \casestmt{a}{x}{s}{y}{t}$, then we have that, by induction
+    \begin{equation}
+      \begin{aligned}
+      & \dnt{\issubst{\gamma}{\Gamma}{\Delta}} \otimes \dnt{A} 
+      ; \dnt{\haslb{\Delta, \bhyp{x}{A}}{s}{\ms{L}}}
+      \\ &= \dnt{\issubst{(\gamma, x \mapsto x)}{(\Gamma, \bhyp{x}{A})}{(\Delta, \bhyp{x}{A})}}
+      ; \dnt{\haslb{\Delta, \bhyp{x}{A}}{s}{\ms{L}}}
+      \\ &= \dnt{\haslb{\Gamma, \bhyp{x}{A}}{[\gamma, x \mapsto x]s}{\ms{L}}}
+          = \dnt{\haslb{\Gamma, \bhyp{x}{A}}{[\gamma]s}{\ms{L}}}
+      \end{aligned}
+    \end{equation}
+    and
+    \begin{equation}
+      \begin{aligned}
+      & \dnt{\issubst{\gamma}{\Gamma}{\Delta}} \otimes \dnt{B} 
+      ; \dnt{\haslb{\Delta, \bhyp{y}{B}}{t}{\ms{L}}}
+      \\ &= \dnt{\issubst{(\gamma, y \mapsto y)}{(\Gamma, \bhyp{y}{B})}{(\Delta, \bhyp{y}{B})}}
+      ; \dnt{\haslb{\Delta, \bhyp{y}{B}}{t}{\ms{L}}}
+      \\ &= \dnt{\haslb{\Gamma, \bhyp{y}{B}}{[\gamma, y \mapsto y]t}{\ms{L}}}
+          = \dnt{\haslb{\Gamma, \bhyp{y}{B}}{[\gamma]t}{\ms{L}}}
+      \end{aligned}
+    \end{equation}
+    since $x, y$ can be taken to be free variables. Hence,
+    \begin{equation}
+      \begin{aligned}
+        & \dnt{\issubst{\gamma}{\Gamma}{\Delta}}
+        ; \Delta_{\dnt{\Delta}} 
+        ; \dnt{\Delta} \otimes \dnt{\hasty{\Delta}{\epsilon}{a}{A + B}}
+        ; \delta^{-1}_{\dnt{\Delta}} 
+        ; [
+          \dnt{\haslb{\Delta, \bhyp{x}{A}}{s}{\ms{L}}}, 
+          \dnt{\haslb{\Delta, \bhyp{y}{B}}{t}{\ms{L}}}
+        ] 
+        \\ &
+        = \Delta_{\dnt{\Gamma}}
+        ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{[\gamma]a}{A + B}}
+        ; \delta^{-1}_{\dnt{\Gamma}}
+        ;  \\ & \qquad
+        [
+          \dnt{\issubst{\gamma}{\Gamma}{\Delta}} \otimes \dnt{A} 
+            ; \dnt{\haslb{\Delta, \bhyp{x}{A}}{s}{\ms{L}}}, 
+          \dnt{\issubst{\gamma}{\Gamma}{\Delta}} \otimes \dnt{B} 
+            ; \dnt{\haslb{\Delta, \bhyp{y}{B}}{t}{\ms{L}}}
+        ] 
+        \\ &
+        = \Delta_{\dnt{\Gamma}}
+        ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{[\gamma]a}{A + B}}
+        ; \delta^{-1}_{\dnt{\Gamma}} 
+        ; [
+          \dnt{\haslb{\Gamma, \bhyp{x}{A}}{[\gamma]s}{\ms{L}}}, 
+          \dnt{\haslb{\Gamma, \bhyp{y}{B}}{[\gamma]t}{\ms{L}}}
+        ]
+        \\ &
+        = \dnt{\haslb{\Gamma}{[\gamma](\casestmt{a}{x}{s}{y}{t})}{\ms{L}}}
+      \end{aligned}
+    \end{equation}
+    as desired.
+    \item If $r = \where{s}{(\wbranch{\ell_i}{x_i}{t_i},)_i}$, then 
+    \todo{this}
   \end{itemize}
   Substitution for substitutions and label substitutions then follow by a trivial induction.
 \end{proof}
