@@ -3947,6 +3947,11 @@ down ``imperatively" as follows:
       \\ & \quad \dnt{\Gamma} \otimes \alpha^+_{\dnt{L} + \Sigma_i \dnt{A_i}} 
       ; \delta^{-1} )^\dagger ; \pi_r ]
   \end{align*} 
+  \begin{equation*}
+    \text{where} \quad \boxed{\iota_{\ms{L}, \ell} : \dnt{A} \to_\bot \dnt{\ms{L}}} \qquad
+    \iota_{(\ms{L}, \ell(A)), \ell} = \iota_r \qquad
+    \iota_{(\ms{L}, \kappa(B)), x} = \iota_l ; \iota_{\ms{L}, \ell}
+  \end{equation*}
   \caption{Denotational semantics for \isotopessa{} regions}
   \Description{Denotational semantics for isotope-SSA regions}
   \label{fig:ssa-reg-sem}
@@ -5425,8 +5430,6 @@ semantics.
   \end{itemize}
 \end{proof}
 
-\TODO{squaring}
-
 \soundnesssubst*
 
 \label{proof:soundness-subst}
@@ -5830,6 +5833,19 @@ semantics.
   substitutions.
 \end{proof}
 
+\begin{lemma}[Label Substitution Injection]
+  For $\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}$ and $\ms{L}(\ell) = A$, we have
+  \begin{equation}
+    \dnt{\Gamma} \otimes \iota_{\ms{L}, \ell} ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}}
+    = \dnt{\haslb{\Gamma, x : A}{[\gamma](\brb{\ell}{x})}{\ms{K}}}
+  \end{equation}
+  \label{lem:lsubst-inj}
+\end{lemma}
+
+\begin{proof}
+  \todo{this}
+\end{proof}
+
 \soundnesslsubst*
 
 \label{proof:soundness-lsubst}
@@ -5839,9 +5855,22 @@ semantics.
   for regions as follows: assuming $\haslb{\Gamma}{r}{\ms{L}}$, we proceed by induction on $r$
   as follows:
   \begin{itemize}
-    \item If $r = \brb{\ell}{a}$, then \todo{this}
+    \item If $r = \brb{\ell}{a}$, then we have that
+    \begin{equation}
+      \begin{aligned}
+        \dnt{\haslb{\Gamma}{[\sigma](\brb{\ell}{a})}{\ms{K}}}
+        & = \dnt{\haslb{\Gamma}{[a/x][\sigma](\brb{\ell}{x})}{\ms{K}}} \\
+        & = \Delta_{\dnt{\Gamma}} \otimes \dnt{\hasty{\Gamma}{\bot}{a}{A}}
+          ; \dnt{\haslb{\Gamma, \bhyp{x}{A}}{[\sigma](\brb{\ell}{x})}{\ms{K}}} \\
+        & = \Delta_{\dnt{\Gamma}} \otimes (\dnt{\hasty{\Gamma}{\bot}{a}{A}} ; \iota_{\ms{L}, \ell})
+          ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}} \\
+        & = \Delta_{\dnt{\Gamma}} \otimes \dnt{\haslb{\Gamma}{\brb{\ell}{a}}{\ms{L}}}
+          ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}}
+      \end{aligned}
+    \end{equation}
+    as desired.
     \item If $r = (\letstmt{x}{a}{t})$, then \todo{this}
-    \item If $r = (\letstmt{(x, y)}{a}{t})$, then \todo{this, or analogous}
+    \item If $r = (\letstmt{(x, y)}{a}{t})$, then \todo{this}
     \item If $r = \casestmt{a}{x}{s}{y}{t}$, then \todo{this}
     \item If $r = \where{s}{(\wbranch{\ell_i}{x_i}{t_i},)_i}$, then \todo{this}
   \end{itemize}
