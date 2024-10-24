@@ -25,6 +25,7 @@
 \usepackage{enumitem}
 \usepackage{string-diagrams}
 \usepackage{cancel}
+\usepackage{thmtools}
 \usetikzlibrary{calc}
 
 \definecolor{codegreen}{rgb}{0,0.6,0}
@@ -117,7 +118,7 @@
 \newcommand{\lbeq}[4]{#1 \vdash #2 \teqv #3 \rhd {#4}}
 \newcommand{\tmseq}[4]{\issubst{#1 \teqv #2}{#3}{#4}}
 \newcommand{\lbseq}[5]{\lbsubst{#1 \teqv #2}{#3}{#4}{#5}}
-\newcommand{\brle}[1]{{\scriptsize\textsf{#1}}}
+\newcommand{\brle}[1]{{\textsf{#1}}}
 
 \newcommand{\toanf}[1]{\ms{ANF}(#1)}
 \newcommand{\letanf}[3]{\ms{ANF}_{\ms{let}}(#1, #2, #3)}
@@ -145,6 +146,9 @@
 
 % Branding
 \newcommand{\isotopessa}{\(\lambda_{\ms{SSA}}\)}
+
+% Formalization pointers
+\newcommand{\formalizedas}[1]{Formalized as \texttt{#1}}
 
 %% Rights management information.  This information is sent to you
 %% when you complete the rights form.  These commands have SAMPLE
@@ -4012,12 +4016,13 @@ $\issubst{\gamma}{\Gamma}{\Delta}$ is interpreted as a morphism from $\dnt{\Gamm
 $\dnt{\Delta}$ with effect $\leq \ms{eff}(\Delta)$, as in Figure~\ref{fig:ssa-subst-sem}. A
 substitution is \emph{pure} if its effect is $\bot$, which in particular is the case if
 $\ms{eff}(\Delta) = \bot$. We can now state the soundness of variable substitution as follows:
-\begin{theorem}[Soundness (Substitution)]
-  Given $\dnt{\issubst{\gamma}{\Gamma}{\Delta}} : \dnt{\Gamma} \to_\bot \dnt{\Delta}$ (in
-  particular, this is always the case when $\ms{eff}(\Delta) = \bot$), we have that
+\begin{theorem}[name=Soundness (Substitution), restate=soundnesssubst]
+  Given $\dnt{\issubst{\gamma}{\Gamma}{\Delta}} : \dnt{\Gamma} \to \dnt{\Delta}$ where
+  $\ms{eff}(\Delta) = \bot$, we have that
   \begin{enumerate}[label=(\alph*)]
     \item $\dnt{\hasty{\Gamma}{\epsilon}{[\gamma]a}{A}} 
       = \dnt{\issubst{\gamma}{\Gamma}{\Delta}};\dnt{\hasty{\Delta}{\epsilon}{a}{A}}$
+      \label{itm:tm-subst-sound}
     \item $\dnt{\haslb{\Gamma}{[\gamma]r}{\ms{L}}}
       = \dnt{\issubst{\gamma}{\Gamma}{\Delta}};\dnt{\haslb{\Delta}{r}{\ms{L}}}$
     \item $\dnt{\issubst{[\gamma]\rho}{\Delta}{\Xi}}
@@ -4027,6 +4032,9 @@ $\ms{eff}(\Delta) = \bot$. We can now state the soundness of variable substituti
   \end{enumerate}
   \label{thm:subst-sound}
 \end{theorem}
+\begin{proof}
+  See Appendix~\ref{proof:soundness-subst}
+\end{proof}
 In particular, this implies that, when $\gamma$ is pure, the semantics of substitution composition
 $[\gamma]\rho$is just composition of the denotations of $\gamma, \rho$; note in general that this is
 \emph{not} true in general if only the $\rho$ is pure, as can trivially be seen from the example
@@ -4073,7 +4081,7 @@ we interpret label substitutions $\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}$ as m
 a copy of the context $\dnt{\Gamma}$ and an element of the coproduct $\dnt{\ms{L}}$ to an element
 of the coproduct $\dnt{\ms{K}}$, with an arbitrary effect. Label substitution is then sound in
 general, as stated in the following theorem:
-\begin{theorem}[Soundness (Label Substitution)]
+\begin{theorem}[name=Soundness (Label Substitution), restate=soundnesslsubst]
   Given $\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}$, we have
   \begin{enumerate}[label=(\alph*)]
     \item $\dnt{\haslb{\Gamma}{[\sigma]r}{\ms{K}}}
@@ -4086,6 +4094,9 @@ general, as stated in the following theorem:
       ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}}$
   \end{enumerate}
 \end{theorem}
+\begin{proof}
+  See Appendix~\ref{proof:soundness-lsubst}
+\end{proof}
 
 \subsection{Equational Theory}
 
@@ -4094,7 +4105,7 @@ general, as stated in the following theorem:
 Using the metatheory in the previous section, our goal is now to prove the equational theory given
 in Section~\ref{sec:equations} sound with respect to any valid \isotopessa{} model. Stated more
 precisely, we have the following:
-\begin{theorem}[Soundness (Equational Theory)]
+\begin{theorem}[name=Soundness (Equational Theory), restate=soundnesseqn]
   We have that
   \begin{enumerate}[label=(\alph*)]
     \item $\tmeq{\Gamma}{\epsilon}{a}{a'}{A} \implies 
@@ -4112,6 +4123,9 @@ precisely, we have the following:
       \label{itm:eqn-sound-lsubst}
   \end{enumerate}
 \end{theorem}
+\begin{proof}
+  See Appendix~\ref{proof:soundness-eqn}
+\end{proof}
 
 % The rest of this section will consist of a sketch of some of the more difficult components of this
 % proof, in the hope that this will also illuminate the equational theory somewhat. As
@@ -4471,7 +4485,7 @@ $$
 $$
 which can be done by a relatively straightforward induction, implying, since $[\cdot]$ is injective
 w.r.t. our equational theory for pure contexts, the following theorem:
-\begin{theorem}[Completeness (Expressions)]
+\begin{theorem}[name=Completeness (Expressions), label=completenessexpr]
   We have that, for all pure $\ms{eff}(\Gamma) = \bot$,
   $$
     \tmeq{\Gamma}{\epsilon}{e}{e'}{A} 
@@ -4580,7 +4594,7 @@ by a relatively straightforward induction. A much more tedious induction is requ
 \end{equation*}
 since the case for \ms{where}-statements is particularly complex. However, after this point, we're
 essentially done, and can state our completeness theorem as follows:
-\begin{theorem}[Completeness (Regions)]
+\begin{theorem}[name=Completeness (Regions), label=completenessregions]
   We have that, for all pure $\ms{eff}(\Gamma) = \bot$,
   $$
     \lbeq{\Gamma}{r}{r'}{\ms{L}} 
@@ -5595,15 +5609,232 @@ semantics.
 
 \section{Proofs}
 
-\TODO{soundness of substitution}
+\begin{lemma}[Substitution Projection]
+  For $\issubst{\gamma}{\Gamma}{\Delta}$, $\ms{eff}(\Delta) = \bot$ and $\Delta(x) = A$, we have
+  \begin{equation}
+    \dnt{\issubst{\gamma}{\Gamma}{\Delta}};\pi_{\Delta, x} 
+    = \dnt{\hasty{\Gamma}{\epsilon}{[\gamma]x}{A}}
+  \end{equation}
+  \label{lem:subst-proj}
+\end{lemma}
+\begin{proof}
+  We proceed by induction on $\Delta$:
+  \begin{itemize}
+    \item If $\Delta = \cdot$, then $\Delta(x) = A$ is a contradiction.
+    \item If $\Delta = \Delta', x : A$, then $\gamma = \gamma', x \mapsto [\gamma]x$, so we have 
+    \begin{equation}
+      \dnt{\issubst{\gamma}{\Gamma}{\Delta}};\pi_{\Delta, x} =
+      \Delta_{\dnt{\Gamma}}
+      ; \dnt{\issubst{\gamma'}{\Gamma}{\Delta'}} \otimes \dnt{\hasty{\Gamma}{\bot}{[\gamma]x}{A}}
+      ; \pi_r
+      = \dnt{\hasty{\Gamma}{\epsilon}{[\gamma]x}{A}}
+    \end{equation}
+    as desired.
+    \item If $\Delta = \Delta', y : B$ (with $y \neq x$), then $\gamma = \gamma', y \mapsto
+    [\gamma]y$, so by induction we have
+    \begin{equation}
+      \begin{aligned}
+      \dnt{\issubst{\gamma}{\Gamma}{\Delta}};\pi_{\Delta, x} &=
+      \Delta_{\dnt{\Gamma}}
+      ; \dnt{\issubst{\gamma'}{\Gamma}{\Delta'}} \otimes \dnt{\hasty{\Gamma}{\bot}{[\gamma]y}{B}}
+      ; \pi_l ; \pi_{\Delta', x} \\
+      &= \dnt{\issubst{\gamma'}{\Gamma}{\Delta'}} ; \pi_{\Delta', x}
+      = \dnt{\hasty{\Gamma}{\epsilon}{[\gamma]x}{A}}
+      \end{aligned}
+    \end{equation}
+  \end{itemize}
+\end{proof}
 
-\TODO{soundness of label-substitution}
+\soundnesssubst*
 
-\TODO{diagrams for soundness of equational theory for terms?}
+\label{proof:soundness-subst}
 
-\TODO{soundness of equational theory for regions}
+\begin{proof}
+  Fix $\issubst{\gamma}{\Gamma}{\Delta}$ with $\ms{eff}(\Delta) = \bot$. We will begin by showing
+  the soundness of substitution for expressions \ref{itm:tm-subst-sound}: we proceed by induction
+  on the derivation $\hasty{\Delta}{\epsilon}{e}{E}$:
+  \begin{itemize}
+    \item If $e = x$ is a variable, then by Lemma~\ref{lem:subst-proj}, we have
+    \begin{equation}
+      \dnt{\issubst{\gamma}{\Gamma}{\Delta}} ; \dnt{\hasty{\Delta}{\epsilon}{x}{A}} 
+      = \dnt{\issubst{\gamma}{\Gamma}{\Delta}} ; \pi_{\Delta, x}
+      = \dnt{\hasty{\Gamma}{\epsilon}{[\gamma]x}{A}}
+    \end{equation}
+    as desired.
+    \item If $e = f\;a$ is an operation, then
+    \TODO{this}
+    The cases for left injections, right injections, and \ms{abort} are analogous
+    \item If $e = \letexpr{x}{a}{b}$ is a unary \ms{let}-binding, then \todo{this}
+    \item If $e = (a, b)$ is a pair, then by induction we have that
+    \begin{equation}
+      \begin{aligned}
+      &\dnt{\issubst{\gamma}{\Gamma}{\Delta}} ; \dnt{\hasty{\Delta}{\epsilon}{(a, b)}{A \times B}} 
+      \\
+      &= \dnt{\issubst{\gamma}{\Gamma}{\Delta}} 
+        ; \Delta_{\dnt{\Delta}} 
+        ; \dnt{\hasty{\Delta}{\epsilon}{a}{A}} \ltimes \dnt{\hasty{\Delta}{\epsilon}{b}{B}}
+      \\
+      &= \Delta_{\dnt{\Gamma}} ; 
+        (\dnt{\issubst{\gamma}{\Gamma}{\Delta}} \otimes \dnt{\hasty{\Delta}{\epsilon}{a}{A}})
+        \ltimes 
+        (\dnt{\issubst{\gamma}{\Gamma}{\Delta}} \otimes \dnt{\hasty{\Delta}{\epsilon}{b}{B}})
+      \\
+      &= \Delta_{\dnt{\Gamma}} ; 
+        \dnt{\hasty{\Gamma}{\epsilon}{[\gamma]a}{A}} 
+        \ltimes \dnt{\hasty{\Gamma}{\epsilon}{[\gamma]b}{B}}
+      = \dnt{\hasty{\Gamma}{\epsilon}{[\gamma](a, b)}{A \times B}}
+      \end{aligned}
+    \end{equation}
+    \item If $e = \letexpr{(x, y)}{a}{b}$ is a binary \ms{let}-binding, then \todo{this}
+    \item If $e = \caseexpr{a}{x}{b}{y}{c}$ is a \ms{case}-expression, then \todo{this}
+    \item If $e = ()$ is the null expression, since $\dnt{\issubst{\gamma}{\Gamma}{\Delta}}$ is
+    pure, the desired result holds trivially since $\mb{1}$ is the terminal object in the category
+    of pure morphisms.
+  \end{itemize}
+\end{proof}
+
+\soundnesslsubst*
+
+\label{proof:soundness-lsubst}
+
+\begin{proof}
+  \todo{this}
+\end{proof}
+
+\soundnesseqn*
+
+\label{proof:soundness-eqn}
+
+\begin{proof}
+  We begin our proof by showing soundness of the equational theory for expressions, i.e.
+  \ref{itm:eqn-sound-expr}, by rule induction.
+  \begin{itemize}
+    \item \emph{Congruence}: these follow trivially by induction
+    \item \brle{initial}, \brle{terminal}: both of these follow trivially from the universal
+    property of the initial/terminal object, respectively.
+    \item \brle{let$_1$-$\beta$}: this follows from the soundness of substitution; in particular, we
+    have that
+    \begin{align*}
+      \dnt{\hasty{\Gamma}{\epsilon}{[b/x]a}{B}}
+      &= \dnt{\issubst{\upg{(x \mapsto b)}}{\Gamma}{\Gamma, \bhyp{x}{A}}}
+        ; \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{a}{B}}
+      \quad \text{(by Thm. \ref{thm:subst-sound})} \\
+      &= \Delta_{\dnt{\Gamma}} 
+        ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{a}{A}} 
+        ; \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{b}{B}} \\
+      &= \dnt{\hasty{\Gamma}{\epsilon}{\letexpr{x}{a}{b}}{B}}
+    \end{align*}
+    \item \brle{let$_1$-case}: follows from the properties of the coproduct; in particular, we have
+    that
+    \begin{align*}
+      & \dnt{\hasty{\Gamma}{\epsilon}{\caseexpr{e}{x}{\letexpr{z}{a}{d}}{y}{\letexpr{z}{b}{d}}}{D}}
+      \\ &= \Delta ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A + B}} ; \delta^{-1} ; [
+      \\ & \qquad \Delta
+            ; \dnt{\Gamma, \bhyp{x}{A}} \otimes \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{a}{C}}
+            ; \dnt{\hasty{\Gamma, \bhyp{x}{A}, \bhyp{z}{C}}{\epsilon}{d}{D}}
+            ,
+      \\  & \qquad \Delta
+            ; \dnt{\Gamma, \bhyp{y}{B}} \otimes \dnt{\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{b}{C}}
+            ; \dnt{\hasty{\Gamma, \bhyp{y}{B}, \bhyp{z}{C}}{\epsilon}{d}{D}}
+        ]
+      \\ &= \Delta ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A + B}} ; \delta^{-1} ; [
+      \\ & \qquad \Delta \otimes \dnt{A} ; \alpha
+            ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{a}{C}}
+            ; \dnt{\hasty{\Gamma, \bhyp{z}{C}}{\epsilon}{d}{D}}
+            ,
+      \\  & \qquad \Delta \otimes \dnt{B} ; \alpha
+            ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{b}{C}}
+            ; \dnt{\hasty{\Gamma, \bhyp{z}{C}}{\epsilon}{d}{D}}
+        ]
+      \\ &= \Delta ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A + B}} ; \delta^{-1} ; [
+      \\ & \qquad \Delta \otimes \dnt{A} ; \alpha
+            ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{a}{C}}
+            ,
+      \\  & \qquad \Delta \otimes \dnt{B} ; \alpha
+            ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{b}{C}}
+        ] ; \dnt{\hasty{\Gamma, \bhyp{z}{C}}{\epsilon}{d}{D}}
+      \\ &= \Delta ; \Delta \otimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A + B}} ; \delta^{-1} ; 
+      \\ & \qquad [
+            \alpha ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{a}{C}},
+            \alpha ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{b}{C}}
+        ] ; \dnt{\hasty{\Gamma, \bhyp{z}{C}}{\epsilon}{d}{D}}
+      \\ &= \Delta ; \Delta \otimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A + B}}  
+                   ; \alpha ; \dnt{\Gamma} \otimes (\delta^{-1} ; [
+                        \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{a}{C}},
+                        \dnt{\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{b}{C}}
+                    ]) ;
+      \\ & \qquad \dnt{\hasty{\Gamma, \bhyp{z}{C}}{\epsilon}{d}{D}}
+      \\ &= \Delta ; \dnt{\Gamma} \otimes (
+                  \Delta ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A + B}} ;
+                  \delta^{-1} ; [
+                        \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{a}{C}},
+                        \dnt{\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{b}{C}}
+                    ]) ;
+      \\ & \qquad \dnt{\hasty{\Gamma, \bhyp{z}{C}}{\epsilon}{d}{D}}
+      \\ &= \dnt{\hasty{\Gamma}{\epsilon}{\letexpr{z}{(\caseexpr{e}{x}{a}{y}{b})}{d}}{D}}
+    \end{align*}
+    \item \brle{let$_2$-$\eta$}: follows from the properties of the product; in particular,
+    we have that
+    \begin{align*}
+      &\dnt{\hasty{\Gamma}{\epsilon}{\letexpr{(x, y)}{e}{(x, y)}}{A \otimes B}} \\
+      &= \Delta ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
+                ; \Delta ; 
+                \dnt{\hasty{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{\bot}{x}{A}} \otimes
+                \dnt{\hasty{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{\bot}{y}{B}} \\
+      &= \Delta ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
+                ; \Delta ; (\pi_l ; \pi_r) \otimes \pi_r
+       = \dnt{\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
+    \end{align*}
+    \item \brle{case-inl}: follows from the properties of the coproduct and inverse distributor; in
+    particular, we have that
+    \begin{align*}
+      & \dnt{\hasty{\Gamma}{\epsilon}{\caseexpr{\linl{a}}{x}{c}{y}{d}}{C}}
+      \\ &= \Delta 
+      ; \dnt{\Gamma} \otimes (\dnt{\hasty{\Gamma}{\epsilon}{a}{A}} ; \iota_l)
+      ; \delta^{-1} ; [
+        \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{c}{C}}, 
+        \dnt{\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{d}{C}}
+      ]
+      \\ &= \Delta 
+      ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{a}{A}}
+      ; \iota_l ; [
+        \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{c}{C}}, 
+        \dnt{\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{d}{C}}
+      ]
+      \\ &= \Delta 
+      ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{a}{A}}
+      ; \iota_l ; \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{c}{C}}
+      \\ &= \dnt{\hasty{\Gamma}{\epsilon}{\letexpr{x}{a}{c}}{C}}
+    \end{align*}
+    We can validate \brle{case-inr} analogously
+    \item \brle{case-$\eta$}: follows from the properties of the coproduct and distributor; in
+    particular, we have
+    \begin{align*}
+      & \dnt{\hasty{\Gamma}{\epsilon}{\caseexpr{e}{x}{\linl{x}}{y}{\linr{y}}}{A + B}} \\
+      &= \Delta ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A + B}} ; \delta^{-1} ; [
+        \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{x}{A}};\iota_l,
+        \dnt{\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{y}{B};\iota_r}
+      ] \\
+      &= \Delta ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A + B}} 
+                ; \delta^{-1} ; (\pi_r + \pi_r)
+      = \dnt{\hasty{\Gamma}{\epsilon}{e}{A + B}} 
+    \end{align*}
+  \end{itemize}
+  All the other rules can be derived trivially from string diagrammatic reasoning: once all the
+  definitions are unfolded, both sides of rule are obviously the same diagram. These diagrams are
+  given in Figure~\ref{fig:expr-diagrams}
+\end{proof}
+
+\begin{figure}
+  \TODO{this}
+  \caption{String diagrams for the equational theory of expressions}
+  \Description{}
+  \label{fig:expr-diagrams}
+\end{figure}
 
 \TODO{formalization pointers?}
+
+\TODO{three-address lore? named lore?}
 
 \end{document}
 \endinput
