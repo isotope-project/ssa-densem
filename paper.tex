@@ -3935,18 +3935,18 @@ down ``imperatively" as follows:
       &=  
       \Delta_{\dnt{\Gamma}}
       ; \dnt{\Gamma} \otimes (\dnt{\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}} 
-      ; \alpha^+_{\dnt{L} + \Sigma_i \dnt{A_i}} ; \delta^{-1} ; 
-      \\ &\quad [\pi_r, 
+      ; \alpha^+_{\dnt{L} + \Sigma_i \dnt{A_i}}) ; \delta^{-1} ; 
+      \\ & \quad [\pi_r, 
         (\delta^{-1}_{\Sigma} ;
           [ 
             \Delta_{\dnt{\Gamma}} \otimes \dnt{A_i} ; \alpha ;
       \\ & \qquad
             \dnt{\Gamma} \otimes 
             \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
-          ]_i ; \alpha^+_{\dnt{L} + \Sigma_i A_i} ; \delta^{-1}
-        )^\dagger ; \pi_r
-      \\ & \quad ]
-  \end{align*}
+          ]_i ; 
+      \\ & \quad \dnt{\Gamma} \otimes \alpha^+_{\dnt{L} + \Sigma_i \dnt{A_i}} 
+      ; \delta^{-1} )^\dagger ; \pi_r ]
+  \end{align*} 
   \caption{Denotational semantics for \isotopessa{} regions}
   \Description{Denotational semantics for isotope-SSA regions}
   \label{fig:ssa-reg-sem}
@@ -5737,10 +5737,97 @@ semantics.
       \end{aligned}
     \end{equation}
     as desired.
-    \item If $r = \where{s}{(\wbranch{\ell_i}{x_i}{t_i},)_i}$, then 
-    \todo{this}
+    \item If $r = \where{s}{(\wbranch{\ell_i}{x_i}{t_i},)_i}$, then we have by induction that,
+    for all $i$,
+    \begin{equation}
+      \begin{aligned}
+      & \dnt{\issubst{\gamma}{\Gamma}{\Delta}} \otimes \dnt{A_i} 
+      ; \dnt{\haslb{\Delta, \bhyp{x_i}{A_i}}{t_i}{\ms{L}}}
+      \\ &= \dnt{\issubst{(\gamma, x_i \mapsto x_i)}  
+                  {(\Gamma, \bhyp{x_i}{A_i})}{(\Delta, \bhyp{x_i}{A_i})}}
+      ; \dnt{\haslb{\Delta, \bhyp{x_i}{A_i}}{t_i}{\ms{L}}}
+      \\ &= \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{[\gamma, x_i \mapsto x_i]t_i}{\ms{L}}}
+          = \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{[\gamma]t_i}{\ms{L}}}
+      \end{aligned}
+    \end{equation}
+    and therefore that
+    \begin{equation}
+      \begin{aligned}
+        & \dnt{\issubst{\gamma}{\Gamma}{\Delta}} \otimes \Sigma_i\dnt{A_i} ; \delta^{-1}_{\Sigma} ;
+        \\ & \qquad
+          [ 
+            \Delta_{\dnt{\Delta}} \otimes \dnt{A_i} ; \alpha ;
+            \dnt{\Delta} \otimes 
+            \dnt{\haslb{\Delta, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+          ]_i ; \dnt{\Delta} \otimes \alpha^+ ; \delta^{-1} \\
+        &= \delta^{-1}_{\Sigma} ; [ 
+          \Delta_{\dnt{\Gamma}} \otimes \dnt{A_i} ; \alpha ;
+          \dnt{\Gamma} \otimes 
+          \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{[\gamma]t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+        ]_i ; \dnt{\issubst{\gamma}{\Gamma}{\Delta}} \otimes \alpha^+  ; \delta^{-1} \\
+        &= \delta^{-1}_{\Sigma} ; [ 
+          \Delta_{\dnt{\Gamma}} \otimes \dnt{A_i} ; \alpha ;
+          \dnt{\Gamma} \otimes 
+          \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{[\gamma]t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+        ]_i ; 
+        \\ & \qquad \dnt{\Gamma} \otimes \alpha^+ ; \delta^{-1} ; 
+        \dnt{\issubst{\gamma}{\Gamma}{\Delta}} \otimes \dnt{\ms{L}} +
+        \dnt{\issubst{\gamma}{\Gamma}{\Delta}} \otimes \Sigma_i\dnt{A_i}
+      \end{aligned}
+    \end{equation}
+    By uniformity, it follows that
+    \begin{equation}
+      \begin{aligned}
+          & \dnt{\issubst{\gamma}{\Gamma}{\Delta}} ; \Delta_{\dnt{\Delta}}
+          ; \dnt{\Delta} \otimes (\dnt{\haslb{\Delta}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}} 
+          ; \alpha^+_{\dnt{L} + \Sigma_i \dnt{A_i}}) ; \delta^{-1} ; 
+          \\ & \quad [\pi_r, 
+            (\delta^{-1}_{\Sigma} ;
+              [ 
+                \Delta_{\dnt{\Delta}} \otimes \dnt{A_i} ; \alpha ;
+                \dnt{\Delta} \otimes 
+                \dnt{\haslb{\Delta, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+              ]_i ; \dnt{\Delta} \otimes \alpha^+ ; \delta^{-1})^\dagger ; \pi_r ] \\ 
+          & = \Delta_{\dnt{\Gamma}}
+          ; \dnt{\Gamma} \otimes \dnt{\haslb{\Gamma}{[\gamma]r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
+          ; \alpha^+_{\dnt{L} + \Sigma_i \dnt{A_i}}) ; \delta^{-1} ; [
+          \\ & \qquad \dnt{\issubst{\gamma}{\Gamma}{\Delta}} \otimes \dnt{\ms{L}} ; \pi_r, 
+          \\ & \qquad \dnt{\issubst{\gamma}{\Gamma}{\Delta}} \otimes \Sigma_i\dnt{A_i} ;
+          \\ & \qquad\quad
+          (\delta^{-1}_{\Sigma} ;
+            [ 
+              \Delta_{\dnt{\Delta}} \otimes \dnt{A_i} ; \alpha ;
+              \dnt{\Delta} \otimes 
+              \dnt{\haslb{\Delta, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+            ]_i ; \dnt{\Delta} \otimes \alpha^+ ; \delta^{-1})^\dagger ; \pi_r ] \\
+          & = \Delta_{\dnt{\Gamma}}
+          ; \dnt{\Gamma} \otimes \dnt{\haslb{\Gamma}{[\gamma]r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
+          ; \alpha^+_{\dnt{L} + \Sigma_i \dnt{A_i}}) ; \delta^{-1} ; [ \pi_r,
+          \\ & \qquad
+          (\delta^{-1}_{\Sigma} ;
+            [ 
+              \Delta_{\dnt{\Gamma}} \otimes \dnt{A_i} ; \alpha ;
+              \dnt{\Gamma} \otimes 
+              \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{[\gamma]t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+            ]_i ; \dnt{\Gamma} \otimes \alpha^+ ; \delta^{-1})^\dagger ; 
+          \\ & \qquad \dnt{\issubst{\gamma}{\Gamma}{\Delta}} \otimes \dnt{\ms{L}} ; \pi_r ] \\
+          & = \Delta_{\dnt{\Gamma}}
+          ; \dnt{\Gamma} \otimes \dnt{\haslb{\Gamma}{[\gamma]r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
+          ; \alpha^+_{\dnt{L} + \Sigma_i \dnt{A_i}}) ; \delta^{-1} ; [ \pi_r,
+          \\ & \qquad
+          (\delta^{-1}_{\Sigma} ;
+            [ 
+              \Delta_{\dnt{\Gamma}} \otimes \dnt{A_i} ; \alpha ;
+              \dnt{\Gamma} \otimes 
+              \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{[\gamma]t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+            ]_i ; \dnt{\Gamma} \otimes \alpha^+ ; \delta^{-1})^\dagger ; \pi_r ] \\
+          & = \dnt{\haslb{\Gamma}{[\gamma](\where{s}{(\wbranch{\ell_i}{x_i}{t_i},)_i})}{\ms{L}}}
+      \end{aligned}
+    \end{equation}
+    as desired.
   \end{itemize}
-  Substitution for substitutions and label substitutions then follow by a trivial induction.
+  Composition of substitutions then follows by a trivial induction, as does substitution for label
+  substitutions.
 \end{proof}
 
 \soundnesslsubst*
