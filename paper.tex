@@ -3934,24 +3934,27 @@ down ``imperatively" as follows:
     \dnt{\haslb{\Gamma}{\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}}
       &=  
       \Delta_{\dnt{\Gamma}}
-      ; \dnt{\Gamma} \otimes (\dnt{\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}} 
-      ; \alpha^+_{\dnt{L} + \Sigma_i \dnt{A_i}}) ; \delta^{-1} ; 
-      \\ & \quad [\pi_r, 
-        (\delta^{-1}_{\Sigma} ;
-          [ 
-            \Delta_{\dnt{\Gamma}} \otimes \dnt{A_i} ; \alpha ;
-      \\ & \qquad
-            \dnt{\Gamma} \otimes 
-            \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
-          ]_i ; 
-      \\ & \quad \dnt{\Gamma} \otimes \alpha^+_{\dnt{L} + \Sigma_i \dnt{A_i}} 
-      ; \delta^{-1} )^\dagger ; \pi_r ]
+      ; \dnt{\Gamma} \otimes \ms{entry}(r) ; \delta^{-1} ; [\pi_r, 
+      \\ & \qquad 
+        (\Delta_{\dnt{\Gamma}} \otimes \Sigma_i\dnt{A_i} ; \alpha 
+        ; \dnt{\Gamma} \otimes \ms{loop}((\wbranch{\ell_i}{x_i}{t_i},)_i) ; \delta^{-1})^\dagger 
+        ; \pi_r ]
   \end{align*} 
-  \begin{equation*}
-    \text{where} \quad \boxed{\iota_{\ms{L}, \ell} : \dnt{A} \to_\bot \dnt{\ms{L}}} \qquad
+  \begin{align*}
+    \text{where} \qquad 
+    & \boxed{\iota_{\ms{L}, \ell} : \dnt{A} \to_\bot \dnt{\ms{L}}} \qquad
     \iota_{(\ms{L}, \ell(A)), \ell} = \iota_r \qquad
-    \iota_{(\ms{L}, \kappa(B)), x} = \iota_l ; \iota_{\ms{L}, \ell}
-  \end{equation*}
+    \iota_{(\ms{L}, \kappa(B)), x} = \iota_l ; \iota_{\ms{L}, \ell} \\
+    & \boxed{\ms{entry}(r) : \dnt{\Gamma} \to \dnt{L} + \Sigma_i\dnt{A_i}} \\
+    & \ms{entry}(r) = \dnt{\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}} 
+    ; \alpha^+_{\dnt{\ms{L}} + \Sigma_i \dnt{A_i}} \\
+    & \boxed{\ms{loop}((\wbranch{\ell_i}{x_i}{t_i},)_i) 
+      : \dnt{\Gamma} \otimes \Sigma_i\dnt{A_i} \to \dnt{\ms{L}} + \Sigma_i\dnt{A_i}}
+    \\
+    & \ms{loop}(r) = \delta^{-1}_{\Sigma} 
+      ; [ \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}, ]_i
+      ; \alpha^+_{\dnt{\ms{L}} + \Sigma_i \dnt{A_i}}  
+  \end{align*}
   \caption{Denotational semantics for \isotopessa{} regions}
   \Description{Denotational semantics for isotope-SSA regions}
   \label{fig:ssa-reg-sem}
@@ -5742,6 +5745,7 @@ semantics.
     as desired.
     \item If $r = \where{s}{(\wbranch{\ell_i}{x_i}{t_i},)_i}$, then we have by induction that,
     for all $i$,
+    \todo{convert to use new formulation, or nah?}
     \begin{equation}
       \begin{aligned}
       & \dnt{\issubst{\gamma}{\Gamma}{\Delta}} \otimes \dnt{A_i} 
@@ -5846,6 +5850,21 @@ semantics.
   \todo{this}
 \end{proof}
 
+\begin{lemma}[Label Substitution Extension]
+  For $\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}$, we have
+  \begin{equation}
+    \dnt{\lbsubst{\Gamma}{\upg{\sigma}}{\ms{L}, \ms{R}}{\ms{K}, \ms{R}}}
+    = \dnt{\Gamma} \otimes \alpha^+_{\dnt{L} + \dnt{R}} ; \delta^{-1} ; [
+      \pi_r ; \iota_r, \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}} ; \iota_l
+    ] ; \alpha^+_{\dnt{\ms{L}, \ms{R}}}
+  \end{equation}
+\end{lemma}
+
+\begin{proof}
+  \todo{this}
+\end{proof}
+
+
 \soundnesslsubst*
 
 \label{proof:soundness-lsubst}
@@ -5869,10 +5888,36 @@ semantics.
       \end{aligned}
     \end{equation}
     as desired.
-    \item If $r = (\letstmt{x}{a}{t})$, then \todo{this}
-    \item If $r = (\letstmt{(x, y)}{a}{t})$, then \todo{this}
-    \item If $r = \casestmt{a}{x}{s}{y}{t}$, then \todo{this}
-    \item If $r = \where{s}{(\wbranch{\ell_i}{x_i}{t_i},)_i}$, then \todo{this}
+    \item If $r = (\letstmt{x}{a}{t})$, then we have that
+    \begin{equation}
+      \begin{aligned}
+        & \dnt{\haslb{\Gamma}{[\sigma](\letstmt{x}{a}{t})}{\ms{K}}} 
+        = \dnt{\haslb{\Gamma}{\letstmt{x}{a}{[\sigma]t}}{\ms{K}}} \\
+        & = \Delta_{\dnt{\Gamma}} ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{a}{A}}
+          ; \dnt{\haslb{\Gamma, \bhyp{x}{A}}{[\sigma]t}{\ms{K}}} \\
+        & = \Delta_{\dnt{\Gamma}} ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{a}{A}}
+          ; \Delta_{\dnt{\Gamma}} 
+          ; \dnt{\Gamma} \otimes \dnt{\haslb{\Gamma, \bhyp{x}{A}}{t}{\ms{L}}}
+          ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}} \\
+        & = \Delta_{\dnt{\Gamma}}
+          ; \dnt{\Gamma} \otimes (\Delta_{\dnt{\Gamma}}
+            ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{a}{A}}
+            ; \dnt{\haslb{\Gamma, \bhyp{x}{A}}{t}{\ms{L}}})
+          ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}} \\
+        & = \Delta_{\dnt{\Gamma}} 
+          ; \dnt{\Gamma} \otimes \dnt{\haslb{\Gamma}{\letstmt{x}{a}{t}}{\ms{L}}}
+          ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}} \\
+      \end{aligned}
+    \end{equation}
+    as desired.
+    \item If $r = (\letstmt{(x, y)}{a}{t})$, then we have that \todo{this}
+    \item If $r = \casestmt{a}{x}{s}{y}{t}$, then we have that \todo{this}
+    \item If $r = \where{s}{(\wbranch{\ell_i}{x_i}{t_i},)_i}$, then we have that
+    \begin{equation}
+      \dnt{\haslb{\Gamma}{[\sigma](\where{s}{(\wbranch{\ell_i}{x_i}{t_i},)_i})}{\ms{K}}}
+      = ...
+    \end{equation}
+    \todo{this}
   \end{itemize}
   Composition of label substitutions then follows by a trivial induction.
 \end{proof}
