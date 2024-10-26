@@ -376,16 +376,16 @@ variable's value may be set by multiple definitions throughout the program's exe
 our ability to reason about programs, we introduce the \emph{static single assignment} restriction,
 originally proposed by \citet{alpern-ssa-original-88}, which states that every variable must be
 defined at exactly one point in the program. We can intuitively represent this as every variable
-being given by an immutable \ms{let}-binding. One immediate advantage of SSA is that it makes
-dominance-based scoping. In particular, given a variable $x$, which we can now associate to its
-unique definition $D_x$, $x$ is in scope at a point $P$ if and only if $D_x$ strictly dominates $P$.
+being given by an immutable \ms{let}-binding. In particular, given a variable $x$, which we can now
+associate to its unique definition $D_x$, $x$ is in scope at a point $P$ if and only if $D_x$
+strictly dominates $P$.
 
 One might attempt to convert programs to SSA form by numbering each definition of a variable,
 effectively changing references to $x$ to references to $x_t$, i.e. ``$x$ at time $t$.'' For
 example, we could rewrite
 \begin{multline}
   \letexpr{x}{3y + 5}{\letexpr{x}{3x + 2}{\letexpr{x}{3x + 1}{\ms{ret}\;x}}}
-  \\ \equiv \letexpr{x_0}{3y + 5}{\letexpr{x_1}{3x_0 + 2}{\letexpr{x_2}{3x_1 + 1}{\ms{ret}\;x_2}}}
+  \\ \teqv \letexpr{x_0}{3y + 5}{\letexpr{x_1}{3x_0 + 2}{\letexpr{x_2}{3x_1 + 1}{\ms{ret}\;x_2}}}
 \end{multline}
 This transformation enables algebraic reasoning about expressions involving each $x_t$. However,
 since we can only define a variable once in SSA form, expressing programs with loops and branches
