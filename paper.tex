@@ -139,7 +139,7 @@
 \newcommand{\lmor}[1]{\ms{let}(#1)}
 \newcommand{\entrymor}[1]{\ms{esem}(#1)}
 \newcommand{\loopmor}[1]{\ms{lsem}(#1)}
-\newcommand{\readmor}[1]{\ms{rcase}(#1)}
+\newcommand{\rcase}[1]{\ms{rcase}(#1)}
 \newcommand{\rfix}[1]{\ms{rfix}(#1)}
 \newcommand{\substpure}[1]{#1\;\ms{pure}}
 
@@ -3368,13 +3368,13 @@ Given a distributive Freyd category equipped with a (strong) Elgot structure, we
 consider the fixpoint of a morphism $f: R \otimes A \to B + A$, where our ``context'' $R$ does not
 change between iterations. To do this, we first need to build up a morphism
 \begin{equation}
-  \readmor{f} := \lmor{f} ; \pi_l \otimes (B + A) ; \delta^{-1} 
+  \rcase{f} := \lmor{f} ; \pi_l \otimes (B + A) ; \delta^{-1} 
     : R \otimes A \to R \otimes B + R \otimes A
 \end{equation}
 which computes $f$ and then distributes a copy of the read-only state $R$ to each branch of the
 result. We may then define the fixpoint
 \begin{equation}
-  \rfix{f} := (\readmor{f})^\dagger ; \pi_r : R \otimes A \to B
+  \rfix{f} := (\rcase{f})^\dagger ; \pi_r : R \otimes A \to B
 \end{equation}
 \TODO{check etc.}
 We may adapt some of the Elgot equations to $\rfix{\cdot}$ as follows:
@@ -3385,8 +3385,8 @@ We may adapt some of the Elgot equations to $\rfix{\cdot}$ as follows:
   \end{equation}
   \item \emph{Dinaturality}: given $f : R \otimes A \to B + A'$, $g : R \otimes A' \to A$, we have
     \begin{equation}
-      \rfix{\readmor{f} ; [\pi_r, g]}
-      = \readmor{f} ; [\pi_r, \rfix{\readmor{g} ; f}]
+      \rfix{\rcase{f} ; [\pi_r, g]}
+      = \rcase{f} ; [\pi_r, \rfix{\rcase{g} ; f}]
     \end{equation}
 \end{itemize}
 
@@ -5479,7 +5479,9 @@ semantics.
 
 \section{Proofs}
 
-\TODO{add text here?}
+\TODO{organize this into subsections or somesuch}
+
+\TODO{write text?}
 
 \begin{lemma}[Substitution Projection]
   For $\issubst{\gamma}{\Gamma}{\Delta}$, $\ms{eff}(\Delta) = \bot$ and $\Delta(x) = A$, we have
@@ -5949,6 +5951,26 @@ semantics.
   \todo{this}
 \end{proof}
 
+\begin{lemma}
+  The following facts hold:
+  \begin{enumerate}[label=(\alph*)]
+    \item For all $f: A \to B \otimes C$, $g : (A \otimes B) \otimes C \to D$, we have
+    \begin{equation}
+      \lmor{f} ; \alpha ; \lmor{g} ; (\pi_l ; \pi_l) \otimes D =
+      \lmor{\lmor{f} ; \alpha ; g}
+    \end{equation}
+    \item For all $f: A \to B + C$, $g : A \otimes B \to D$, $h : A \otimes C \to D$, we
+    have
+    \begin{equation}
+      \lmor{f} ; \delta^{-1} ; [\lmor{g} ; \pi_l \otimes D, \lmor{h} ; \pi_l \otimes D]
+      = \lmor{\lmor{f} ; \delta^{-1} ; [g, h]}
+    \end{equation}
+  \end{enumerate}
+\end{lemma}
+
+\begin{proof}
+  \TODO{this}
+\end{proof}
 
 \soundnesslsubst*
 
@@ -6001,8 +6023,60 @@ semantics.
       \end{aligned}
     \end{equation}
     as desired.
-    \item If $r = (\letstmt{(x, y)}{a}{t})$, then we have that \todo{this}
-    \item If $r = \casestmt{a}{x}{s}{y}{t}$, then we have that \todo{this}
+    \item If $r = (\letstmt{(x, y)}{a}{t})$, then we have by induction that
+    \begin{equation}
+      \begin{aligned}
+        & \dnt{\haslb{\Gamma}{[\sigma](\letstmt{(x, y)}{a}{t})}{\ms{K}}} 
+          = \dnt{\haslb{\Gamma}{\letstmt{(x, y)}{a}{[\sigma]t}}{\ms{K}}} \\
+        & = \lmor{\dnt{\hasty{\Gamma}{\epsilon}{a}{A \otimes B}}} ; \alpha
+          ; \dnt{\haslb{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{[\sigma]t}{\ms{K}}} \\
+        & = \lmor{\dnt{\hasty{\Gamma}{\epsilon}{a}{A \otimes B}}} ; \alpha
+          ; \lmor{\dnt{\haslb{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{t}{\ms{L}}}}
+          ; \dnt{\lbsubst{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{\sigma}{\ms{L}}{\ms{K}}} \\
+          & = \lmor{\dnt{\hasty{\Gamma}{\epsilon}{a}{A \otimes B}}} ; \alpha
+            ; \lmor{\dnt{\haslb{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{t}{\ms{L}}}}
+            ; (\pi_l ; \pi_l) \otimes \dnt{\ms{L}}
+            ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}} \\
+        & = \lmor{\lmor{\dnt{\hasty{\Gamma}{\epsilon}{a}{A \otimes B}}} ; \alpha 
+            ; \dnt{\haslb{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{t}{\ms{L}}}}
+          ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}} \\
+        & = \lmor{\dnt{\haslb{\Gamma}{\letstmt{(x, y)}{a}{t}}{\ms{L}}}}
+          ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}}
+      \end{aligned}
+    \end{equation}
+    as desired, since 
+    \item If $r = \casestmt{a}{x}{s}{y}{t}$, then we have by induction that
+    \begin{equation}
+      \begin{aligned}
+        & \dnt{\haslb{\Gamma}{[\sigma](\casestmt{a}{x}{s}{y}{t})}{\ms{K}}} 
+          = \dnt{\haslb{\Gamma}{\casestmt{a}{x}{[\sigma]s}{y}{[\sigma]t}}{\ms{K}}} \\
+        & = \lmor{\dnt{\hasty{\Gamma}{\epsilon}{a}{A + B}}} ; \delta^{-1}
+          ; [\dnt{\haslb{\Gamma, \bhyp{x}{A}}{[\sigma]s}{\ms{K}}}, 
+              \dnt{\haslb{\Gamma, \bhyp{y}{B}}{[\sigma]t}{\ms{K}}}] \\
+        & = \lmor{\dnt{\hasty{\Gamma}{\epsilon}{a}{A + B}}} ; \delta^{-1} ; [
+        \\ & \qquad 
+            \lmor{\dnt{\haslb{\Gamma, \bhyp{x}{A}}{s}{\ms{L}}}} 
+              ; \dnt{\lbsubst{\Gamma, \bhyp{x}{A}}{\sigma}{\ms{L}}{\ms{K}}},
+        \\ & \qquad
+            \lmor{\dnt{\haslb{\Gamma, \bhyp{y}{B}}{t}{\ms{L}}}}
+              ; \dnt{\lbsubst{\Gamma, \bhyp{y}{B}}{\sigma}{\ms{L}}{\ms{K}}}
+          ] \\
+        & = \lmor{\dnt{\hasty{\Gamma}{\epsilon}{a}{A + B}}} ; \delta^{-1} ;
+        \\ & \qquad [
+              \lmor{\dnt{\haslb{\Gamma, \bhyp{x}{A}}{s}{\ms{L}}}} ; \pi_l \otimes \dnt{\ms{L}}, 
+              \lmor{\dnt{\haslb{\Gamma, \bhyp{y}{B}}{t}{\ms{L}}}} ; \pi_l \otimes \dnt{\ms{L}}] 
+          ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}} \\
+        & = \lmor{
+            \lmor{\dnt{\hasty{\Gamma}{\epsilon}{a}{A + B}}} 
+            ; \delta^{-1} 
+            ; [\dnt{\haslb{\Gamma, \bhyp{x}{A}}{s}{\ms{L}}}, 
+              \dnt{\haslb{\Gamma, \bhyp{y}{B}}{t}{\ms{L}}}]}
+          ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}} \\
+        & = \lmor{\dnt{\haslb{\Gamma}{\casestmt{a}{x}{s}{y}{t}}{\ms{L}}}}
+          ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}}
+      \end{aligned}
+    \end{equation}
+    as desired.
     \item If $r = \where{s}{(\wbranch{\ell_i}{x_i}{t_i},)_i}$, then we have that
     \begin{equation}
       \dnt{\haslb{\Gamma}{[\sigma](\where{s}{(\wbranch{\ell_i}{x_i}{t_i},)_i})}{\ms{K}}}
