@@ -141,6 +141,7 @@
 \newcommand{\loopmor}[1]{\ms{lsem}(#1)}
 \newcommand{\readmor}[1]{\ms{rcase}(#1)}
 \newcommand{\rfix}[1]{\ms{rfix}(#1)}
+\newcommand{\substpure}[1]{#1\;\ms{pure}}
 
 % Composition
 \newcommand{\invar}{\square}
@@ -3354,10 +3355,18 @@ define a \emph{(strong) Elgot structure} as follows:
   In particular, we say a monad is Elgot if its Kliesli category has an Elgot structure. Similarly,
   we say a \emph{strong} monad is strong Elgot if its Kliesli category has a strong Elgot structure.
 \end{definition}
-
-Given a distributive Freyd category equipped with an Elgot structure, we will often want to consider
-the fixpoint of a morphism $f: R \otimes A \to B + A$, where our ``context'' $R$ does not change
-between iterations. To do this, we first need to build up a morphism
+One useful property we can derive from the axioms of an Elgot category is \emph{dinaturality}:
+given $f: A \to B + A'$ and $g : A' \to A$, we have that
+\begin{equation}
+  (f ; B + g)^\dagger = f ; [\ms{id}_B, (g ; f)^\dagger]
+\end{equation}
+and, therefore, that
+\begin{equation}
+  g;(f ; B + g)^\dagger = (g ; f)^\dagger
+\end{equation}
+Given a distributive Freyd category equipped with a (strong) Elgot structure, we will often want to
+consider the fixpoint of a morphism $f: R \otimes A \to B + A$, where our ``context'' $R$ does not
+change between iterations. To do this, we first need to build up a morphism
 \begin{equation}
   \readmor{f} := \lmor{f} ; \pi_l \otimes (B + A) ; \delta^{-1} 
     : R \otimes A \to R \otimes B + R \otimes A
@@ -3367,6 +3376,19 @@ result. We may then define the fixpoint
 \begin{equation}
   \rfix{f} := (\readmor{f})^\dagger ; \pi_r : R \otimes A \to B
 \end{equation}
+\TODO{check etc.}
+We may adapt some of the Elgot equations to $\rfix{\cdot}$ as follows:
+\begin{itemize}
+  \item \emph{Fixpoint}: given $f : R \otimes A \to B + A$,
+  \begin{equation}
+    \rfix{f} = \lmor{f} ; \pi_l \otimes (B + A) ; \delta^{-1} ; [ \pi_r, \rfix{f} ]
+  \end{equation}
+  \item \emph{Dinaturality}: given $f : R \otimes A \to B + A'$, $g : R \otimes A' \to A$, we have
+    \begin{equation}
+      \rfix{\readmor{f} ; [\pi_r, g]}
+      = \readmor{f} ; [\pi_r, \rfix{\readmor{g} ; f}]
+    \end{equation}
+\end{itemize}
 
 \subsection{String Diagrams}
 
@@ -4050,12 +4072,21 @@ as follows
 \end{equation}
 We can now give a denotational semantics to substitutions in which a substitution
 $\issubst{\gamma}{\Gamma}{\Delta}$ is interpreted as a morphism from $\dnt{\Gamma}$ to
-$\dnt{\Delta}$ with effect $\leq \ms{eff}(\Delta)$, as in Figure~\ref{fig:ssa-subst-sem}. A
-substitution is \emph{pure} if its effect is $\bot$, which in particular is the case if
-$\ms{eff}(\Delta) = \bot$. We can now state the soundness of variable substitution as follows:
+$\dnt{\Delta}$ with effect $\leq \ms{eff}(\Delta)$, as in Figure~\ref{fig:ssa-subst-sem}. Such a
+substitution is \emph{pure} if the effect of each of its components is $\bot$, i.e., we have
+\begin{equation}
+  \substpure{\gamma} \iff \forall x, \dnt{\hasty{\Gamma}{\epsilon}{\gamma\;x}{\Delta\;x}} 
+    : \dnt{\Gamma} \to_\bot \dnt{\Delta\;x}
+\end{equation}
+In particular, we have that
+\begin{enumerate}
+  \item $\ms{eff}(\Delta) = \bot \implies \substpure{\gamma}$
+  \item $\substpure{\gamma} \implies \substpure{\upg{\gamma}}$; in particular, the identity
+  substitution is pure.
+\end{enumerate}
+We can now state the soundness of variable substitution as follows:
 \begin{theorem}[name=Soundness (Substitution), restate=soundnesssubst]
-  Given $\dnt{\issubst{\gamma}{\Gamma}{\Delta}} : \dnt{\Gamma} \to \dnt{\Delta}$ where
-  $\ms{eff}(\Delta) = \bot$, we have that
+  Given $\dnt{\issubst{\gamma}{\Gamma}{\Delta}} : \dnt{\Gamma} \to \dnt{\Delta}$ pure, we have that
   \begin{enumerate}[label=(\alph*)]
     \item $\dnt{\hasty{\Gamma}{\epsilon}{[\gamma]a}{A}} 
       = \dnt{\issubst{\gamma}{\Gamma}{\Delta}};\dnt{\hasty{\Delta}{\epsilon}{a}{A}}$
@@ -4079,7 +4110,35 @@ $[\gamma]\rho$is just composition of the denotations of $\gamma, \rho$; note in 
 rewriting (Theorem~\ref{thm:rewriting}) for pure substitutions from soundness of substitution, but
 not vice versa; however, rewriting also covers \emph{impure} substitutions; this is similar to the
 distinction between \emph{uniformity} (which only holds for pure operations) and \emph{dinaturality}
-(which holds in general, but has a more restricted form).
+(which holds in general, but has a more restricted form). We can derive the following important
+corollary:
+\begin{corollary}[Soundness (Single Substitution)]
+  Given $\hasty{\Gamma}{\bot}{a}{A}$, we have
+  \begin{enumerate}
+    \item Given $\hasty{\Gamma, \bhyp{x}{A}}{\bot}{b}{B}$,
+    \begin{equation}
+      \dnt{\hasty{\Gamma}{\epsilon}{[a/x]b}{B}}
+      = \lmor{\dnt{\hasty{\Gamma}{\bot}{a}{A}}} 
+        ; \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{b}{B}}
+      = \dnt{\hasty{\Gamma}{\epsilon}{\letexpr{x}{a}{b}}{B}}
+    \end{equation}
+    \item Given $\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}$, we have
+    \begin{equation}
+      \dnt{\haslb{\Gamma}{[a/x]r}{\ms{L}}}
+      = \lmor{\dnt{\hasty{\Gamma}{\bot}{a}{A}}}
+        ; \dnt{\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
+      = \dnt{\haslb{\Gamma}{\letstmt{x}{a}{r}}{\ms{L}}}
+    \end{equation}
+  \end{enumerate}
+\end{corollary}
+\begin{proof}
+  Follows immediately from the fact that 
+  \begin{equation}
+    \dnt{\issubst{\upg{x \mapsto a}}{\Gamma}{\Gamma, \bhyp{x}{A}}} 
+    = \Delta_{\dnt{\Gamma}} ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\bot}{a}{A}}
+    = \lmor{\dnt{\hasty{\Gamma}{\bot}{a}{A}}}
+  \end{equation}
+\end{proof}
 
 \begin{figure}
   \begin{equation*}
@@ -4091,7 +4150,7 @@ distinction between \emph{uniformity} (which only holds for pure operations) and
     \qquad
     \dnt{\issubst{\gamma, x \mapsto e}{\Gamma}{\Delta, \thyp{x}{A}{\epsilon}}}
     = \dmor{\dnt{\Gamma}};\dnt{\issubst{\gamma}{\Gamma}{\Delta}} 
-      \otimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A}}
+      \ltimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A}}
   \end{gather*}
   \begin{equation*}
     \boxed{\dnt{\lbsubst{\Gamma}{\kappa}{\ms{L}}{\ms{K}}} 
@@ -4122,9 +4181,8 @@ general, as stated in the following theorem:
   Given $\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}$, we have
   \begin{enumerate}[label=(\alph*)]
     \item $\dnt{\haslb{\Gamma}{[\sigma]r}{\ms{K}}}
-      = \dmor{\dnt{\Gamma}}
-      ;\dnt{\Gamma} \otimes \dnt{\haslb{\Gamma}{r}{\ms{L}}}
-      ;\dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}}$
+      = \lmor{\dnt{\haslb{\Gamma}{r}{\ms{L}}}}
+      ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}}$
     \item $\dnt{\lbsubst{\Gamma}{[\sigma]\sigma'}{\ms{M}}{\ms{K}}}
       = \dmor{\dnt{\Gamma}} \otimes \dnt{\ms{L}} ; \alpha
       ; \dnt{\Gamma} \otimes \dnt{\lbsubst{\Gamma}{\sigma'}{\ms{M}}{\ms{L}}}
@@ -5901,38 +5959,44 @@ semantics.
   for regions as follows: assuming $\haslb{\Gamma}{r}{\ms{L}}$, we proceed by induction on $r$
   as follows:
   \begin{itemize}
-    \item If $r = \brb{\ell}{a}$, then we have that
+    \item If $r = \brb{\ell}{a}$, then by Lemma~\ref{lem:lsubst-inj} we have that
     \begin{equation}
       \begin{aligned}
         \dnt{\haslb{\Gamma}{[\sigma](\brb{\ell}{a})}{\ms{K}}}
         & = \dnt{\haslb{\Gamma}{[a/x][\sigma](\brb{\ell}{x})}{\ms{K}}} \\
-        & = \Delta_{\dnt{\Gamma}} \otimes \dnt{\hasty{\Gamma}{\bot}{a}{A}}
+        & = \lmor{\dnt{\hasty{\Gamma}{\bot}{a}{A}}}
           ; \dnt{\haslb{\Gamma, \bhyp{x}{A}}{[\sigma](\brb{\ell}{x})}{\ms{K}}} \\
-        & = \Delta_{\dnt{\Gamma}} \otimes (\dnt{\hasty{\Gamma}{\bot}{a}{A}} ; \iota_{\ms{L}, \ell})
+        & = \lmor{\dnt{\hasty{\Gamma}{\bot}{a}{A}}}
+          ; \dnt{\Gamma} \otimes \iota_{\ms{L}, \ell} 
+          ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}}
+          \\
+        & = \lmor{\dnt{\hasty{\Gamma}{\bot}{a}{A}} ; \iota_{\ms{L}, \ell}}
           ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}} \\
-        & = \Delta_{\dnt{\Gamma}} \otimes \dnt{\haslb{\Gamma}{\brb{\ell}{a}}{\ms{L}}}
+        & = \lmor{\dnt{\haslb{\Gamma}{\brb{\ell}{a}}{\ms{L}}}}
           ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}}
       \end{aligned}
     \end{equation}
     as desired.
-    \item If $r = (\letstmt{x}{a}{t})$, then we have that
+    \item If $r = (\letstmt{x}{a}{t})$, then we have by induction that
     \begin{equation}
       \begin{aligned}
         & \dnt{\haslb{\Gamma}{[\sigma](\letstmt{x}{a}{t})}{\ms{K}}} 
-        = \dnt{\haslb{\Gamma}{\letstmt{x}{a}{[\sigma]t}}{\ms{K}}} \\
-        & = \Delta_{\dnt{\Gamma}} ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{a}{A}}
+          = \dnt{\haslb{\Gamma}{\letstmt{x}{a}{[\sigma]t}}{\ms{K}}} \\
+        & = \lmor{\dnt{\hasty{\Gamma}{\epsilon}{a}{A}}}
           ; \dnt{\haslb{\Gamma, \bhyp{x}{A}}{[\sigma]t}{\ms{K}}} \\
-        & = \Delta_{\dnt{\Gamma}} ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{a}{A}}
-          ; \Delta_{\dnt{\Gamma}} 
-          ; \dnt{\Gamma} \otimes \dnt{\haslb{\Gamma, \bhyp{x}{A}}{t}{\ms{L}}}
+        & = \lmor{\dnt{\hasty{\Gamma}{\epsilon}{a}{A}}}
+          ; \lmor{\dnt{\haslb{\Gamma, \bhyp{x}{A}}{t}{\ms{L}}}}
+          ; \dnt{\lbsubst{\Gamma, \bhyp{x}{A}}{\sigma}{\ms{L}}{\ms{K}}} \\
+        & = \lmor{\dnt{\hasty{\Gamma}{\epsilon}{a}{A}}}
+          ; \lmor{\dnt{\haslb{\Gamma, \bhyp{x}{A}}{t}{\ms{L}}}}
+          ; \pi_l \otimes \dnt{\ms{L}} 
           ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}} \\
-        & = \Delta_{\dnt{\Gamma}}
-          ; \dnt{\Gamma} \otimes (\Delta_{\dnt{\Gamma}}
-            ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{a}{A}}
-            ; \dnt{\haslb{\Gamma, \bhyp{x}{A}}{t}{\ms{L}}})
+        & = \lmor{
+            \lmor{\dnt{\hasty{\Gamma}{\epsilon}{a}{A}}}
+            ; \dnt{\haslb{\Gamma, \bhyp{x}{A}}{t}{\ms{L}}}
+          }
           ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}} \\
-        & = \Delta_{\dnt{\Gamma}} 
-          ; \dnt{\Gamma} \otimes \dnt{\haslb{\Gamma}{\letstmt{x}{a}{t}}{\ms{L}}}
+        & = \lmor{\dnt{\haslb{\Gamma}{\letstmt{x}{a}{t}}{\ms{L}}}}
           ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}} \\
       \end{aligned}
     \end{equation}
