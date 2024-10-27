@@ -3350,7 +3350,7 @@ define a \emph{(strong) Elgot structure} as follows:
   \end{itemize}
   If $\mc{C}$ is distributive, we say it has a \emph{strong Elgot structure} if
   $
-  \forall f: A \to B + A, (f \otimes C ; \delta^{-1})^\dagger = f^\dagger \otimes C
+  \forall f: A \to B + A, (C \otimes f ; \delta^{-1})^\dagger = C \otimes f^\dagger
   $
   In particular, we say a monad is Elgot if its Kliesli category has an Elgot structure. Similarly,
   we say a \emph{strong} monad is strong Elgot if its Kliesli category has a strong Elgot structure.
@@ -3381,14 +3381,44 @@ We may adapt some of the Elgot equations to $\rfix{\cdot}$ as follows:
 \begin{itemize}
   \item \emph{Fixpoint}: given $f : R \otimes A \to B + A$,
   \begin{equation}
-    \rfix{f} = \lmor{f} ; \pi_l \otimes (B + A) ; \delta^{-1} ; [ \pi_r, \rfix{f} ]
+    \rfix{f} = \rcase{f} ; [ \pi_r, \rfix{f} ]
   \end{equation}
+  \item \emph{Naturality}: given $f : R \otimes A \to B + A$, $g : B \to C$, we have
+  \TODO{this...}
   \item \emph{Dinaturality}: given $f : R \otimes A \to B + A'$, $g : R \otimes A' \to A$, we have
     \begin{equation}
       \rfix{\rcase{f} ; [\pi_r, g]}
       = \rcase{f} ; [\pi_r, \rfix{\rcase{g} ; f}]
     \end{equation}
 \end{itemize}
+One particularly useful property we may derive is that
+\begin{equation}
+  \begin{aligned}
+  \lmor{\rfix{f}} ; \pi_l \otimes B 
+    &= \dmor{} ; \pi_l \otimes (R \otimes A) ; R \otimes ((\rcase{f})^\dagger ; \pi_r) \\
+    &= \dmor{} ; \pi_l \otimes (R \otimes A) 
+      ; (R \otimes \rcase{f} ; \delta^{-1} ; R \otimes \pi_r + R \otimes B)^\dagger \\
+    &= (\rcase{f})^\dagger
+  \end{aligned}
+\end{equation}
+by uniformity, since
+\begin{equation}
+  \begin{aligned}
+    & \dmor{} 
+      ; \pi_l \otimes (R \otimes A) 
+      ; R \otimes \rcase{f} 
+      ; \delta^{-1} 
+      ; R \otimes \pi_r + R \otimes B \\
+    & = \dmor{} 
+    ; \pi_l \otimes (R \otimes A) 
+    ; R \otimes (\lmor{f} ; \pi_l \otimes (B + A) ; \delta^{-1}) 
+    ; \delta^{-1} 
+    ; R \otimes \pi_r + R \otimes B \\
+    &= \text{\todo{this}}
+  \end{aligned}
+\end{equation}
+
+\TODO{think about pulling down to appendix...}
 
 \subsection{String Diagrams}
 
@@ -5941,9 +5971,10 @@ semantics.
   For $\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}$, we have
   \begin{equation}
     \dnt{\lbsubst{\Gamma}{\upg{\sigma}}{\ms{L}, \ms{R}}{\ms{K}, \ms{R}}}
-    = \dnt{\Gamma} \otimes \alpha^+_{\dnt{L} + \dnt{R}} ; \delta^{-1} ; [
-      \pi_r ; \iota_r, \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}} ; \iota_l
-    ] ; \alpha^+_{\dnt{\ms{L}, \ms{R}}}
+    = \dnt{\Gamma} \otimes \alpha^+_{\dnt{\ms{L}} + \dnt{\ms{R}}} 
+      ; \delta^{-1} 
+      ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}} + \pi_r
+      ; \alpha^+_{\dnt{\ms{L}, \ms{R}}}
   \end{equation}
 \end{lemma}
 
@@ -5965,6 +5996,11 @@ semantics.
       \lmor{f} ; \delta^{-1} ; [\lmor{g} ; \pi_l \otimes D, \lmor{h} ; \pi_l \otimes D]
       = \lmor{\lmor{f} ; \delta^{-1} ; [g, h]}
     \end{equation}
+    \item For all $f_i : R \otimes A_i \to B$, we have
+    \begin{equation}
+      \delta_{\Sigma}^{-1} ; [\lmor{f_i} ; \pi_l \otimes B,]_i
+      = \lmor{\delta_{\Sigma}^{-1} ; [f_i]_i} ; \pi_l \otimes B
+    \end{equation}
   \end{enumerate}
 \end{lemma}
 
@@ -5977,9 +6013,9 @@ semantics.
 \label{proof:soundness-lsubst}
 
 \begin{proof}
-  Fix $\lbsubst{\sigma}{\ms{L}}{\ms{K}}$. We begin by proving the soundness of label substitution
-  for regions as follows: assuming $\haslb{\Gamma}{r}{\ms{L}}$, we proceed by induction on $r$
-  as follows:
+  Fix $\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}$. We begin by proving the soundness of label
+  substitution for regions as follows: assuming $\haslb{\Gamma}{r}{\ms{L}}$, we proceed by induction
+  on $r$ as follows:
   \begin{itemize}
     \item If $r = \brb{\ell}{a}$, then by Lemma~\ref{lem:lsubst-inj} we have that
     \begin{equation}
@@ -6077,12 +6113,181 @@ semantics.
       \end{aligned}
     \end{equation}
     as desired.
-    \item If $r = \where{s}{(\wbranch{\ell_i}{x_i}{t_i},)_i}$, then we have that
+    \item If $r = \where{s}{(\wbranch{\ell_i}{x_i}{t_i},)_i}$, then we have by induction,
+    taking $\ms{R} = (\ell_i(A_i),)_i$,
     \begin{equation}
-      \dnt{\haslb{\Gamma}{[\sigma](\where{s}{(\wbranch{\ell_i}{x_i}{t_i},)_i})}{\ms{K}}}
-      = ...
+      \begin{aligned}
+        & \entrymor{[\upg{\sigma}]s} 
+          = \dnt{\haslb{\Gamma}{[\upg{\sigma}]s}{\ms{K}, \ms{R}}}
+          ; \alpha^+_{\dnt{\ms{L}} + \Sigma_i \dnt{A_i}} \\
+        & = \lmor{\dnt{\haslb{\Gamma}{s}{\ms{L}, \ms{R}}}}
+          ; \dnt{\lbsubst{\Gamma}{\upg{\sigma}}{\ms{L}, \ms{R}}{\ms{K}, \ms{R}}}
+          ; \alpha^+_{\dnt{\ms{K}} + \Sigma_i \dnt{A_i}} \\
+        & = \lmor{\dnt{\haslb{\Gamma}{s}{\ms{L}, \ms{R}}}}
+          ; \dnt{\Gamma} \otimes \alpha^+_{\dnt{\ms{L}} + \dnt{\ms{R}}} ; \delta^{-1} 
+          ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}} + \pi_r
+          ; \alpha^+_{\dnt{\ms{L}} + \Sigma_i \dnt{A_i}} \\
+        & = \lmor{\dnt{\haslb{\Gamma}{s}{\ms{L}, \ms{R}}}}
+          ; \dnt{\Gamma} \otimes \alpha^+_{\dnt{\ms{L}} + \Sigma_i \dnt{A_i}} ; \delta^{-1} 
+          ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}} + \pi_r\\
+        & = \lmor{\entrymor{s}} 
+          ; \delta^{-1} ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}} + \pi_r
+      \end{aligned}
     \end{equation}
-    \todo{this}
+    and
+    \begin{equation}
+      \begin{aligned}       
+        & \loopmor{(\wbranch{\ell_i}{x_i}{[\upg{\sigma}]t_i},)_i} 
+          = \delta^{-1}_{\Sigma} 
+          ; [ \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{[\upg{\sigma}]t_i}{\ms{K}, \ms{R}}} ]_i
+          ; \alpha^+_{\dnt{\ms{K}} + \Sigma_i \dnt{A_i}} \\
+        & = \delta^{-1}_{\Sigma} 
+        ; [ 
+            \lmor{\dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, \ms{R}}}} 
+            ; \dnt{\lbsubst{\Gamma, \bhyp{x_i}{A_i}}{\upg{\sigma}}{\ms{L}, \ms{R}}{\ms{K}, \ms{R}}}
+          ]_i
+        ; \alpha^+_{\dnt{\ms{K}} + \Sigma_i \dnt{A_i}} \\
+        & = \delta^{-1}_{\Sigma} 
+        ; [ 
+            \lmor{\dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, \ms{R}}}} 
+            ; \pi_l \otimes \dnt{\ms{L}, \ms{R}}
+          ]_i
+        ; \dnt{\lbsubst{\Gamma}{\upg{\sigma}}{\ms{L}, \ms{R}}{\ms{K}, \ms{R}}}
+        ; \alpha^+_{\dnt{\ms{K}} + \Sigma_i \dnt{A_i}} \\
+        & = \delta^{-1}_{\Sigma} 
+        ; [ 
+            \lmor{\dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, \ms{R}}}} 
+            ; \pi_l \otimes \alpha^+_{\dnt{\ms{L}} + \Sigma_j \dnt{A_j}}
+          ]_i
+        ; \delta^{-1}
+        ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}} + \pi_r \\
+        & = \lmor{
+          \delta^{-1}_{\Sigma}
+            ; [\dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, \ms{R}}} 
+                ; \alpha^+_{\dnt{\ms{L}} + \Sigma_j \dnt{A_j}},]_i }
+          ; \pi_l \otimes -
+          ; \delta^{-1} 
+          ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}} + \pi_r \\
+        & = \lmor{
+          \delta^{-1}_{\Sigma}
+            ; [\dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, \ms{R}}},]_i 
+            ; \alpha^+_{\dnt{\ms{L}} + \Sigma_i \dnt{A_i}}
+            } 
+          ; \pi_l \otimes -
+          ; \delta^{-1} 
+          ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}} + \pi_r \\
+        & = \lmor{\loopmor{(\wbranch{\ell_i}{x_i}{t_i},)_i}} 
+          ; \pi_l \otimes -
+          ; \delta^{-1} 
+          ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}} + \pi_r
+      \end{aligned}
+    \end{equation}
+    Letting $L = \loopmor{(\wbranch{\ell_i}{x_i}{t_i},)_i}$ and
+    $S = \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}}$, we have that
+    \begin{equation}
+      \begin{aligned}
+        & \rcase{\loopmor{(\wbranch{\ell_i}{x_i}{[\upg{\sigma}]t_i},)_i}} \\
+        & = \lmor{
+            \lmor{L} 
+            ; \pi_l \otimes (\dnt{\ms{L}} + \Sigma_i\dnt{A_i})
+            ; \delta^{-1} ; S + \pi_r}
+          ; \pi_l \otimes (\dnt{\ms{K}} + \Sigma_i\dnt{A_i}) ; \delta^{-1}
+          \\
+        & = \lmor{\lmor{L}} 
+          ; (\dnt{\Gamma} \otimes \Sigma_i\dnt{A_i}) 
+            \otimes (\pi_l \otimes (\dnt{\ms{L}} + \Sigma_i\dnt{A_i}) ; \delta^{-1} ; S + \pi_r)
+          ; \pi_l \otimes (\dnt{\ms{K}} + \Sigma_i\dnt{A_i}) ; \delta^{-1} \\
+        & = \lmor{L}
+          ; \dmor{\dnt{\Gamma} \otimes \Sigma_i\dnt{A_i}} \otimes -
+          ; \alpha
+          ; (\dnt{\Gamma} \otimes \Sigma_i\dnt{A_i}) 
+          \otimes (\pi_l \otimes (\dnt{\ms{L}} + \Sigma_i\dnt{A_i}) ; \delta^{-1} ; S + \pi_r)
+          ; \pi_l \otimes - ; \delta^{-1} \\
+        & = \lmor{L}
+          ; (\pi_l ; \dmor{\dnt{\Gamma}}) \otimes (\dnt{\ms{L}} + \Sigma_i\dnt{A_i})
+          ; \alpha
+          ; \dnt{\Gamma}
+          \otimes (\delta^{-1} ; S + \pi_r)
+          ; \delta^{-1} \\
+        & = \lmor{L}
+          ; (\pi_l ; \dmor{\dnt{\Gamma}}) \otimes (\dnt{\ms{L}} + \Sigma_i\dnt{A_i})
+          ; \alpha
+          ; \dnt{\Gamma}
+          \otimes \delta^{-1}
+          ; \delta^{-1} 
+          ; (\dnt{\Gamma} \otimes \dnt{\Gamma}) \otimes S 
+            + (\dnt{\Gamma} \otimes \dnt{\Gamma}) \otimes \pi_r \\
+        & = \lmor{L} ; \pi_l \otimes (\dnt{\ms{L}} + \Sigma_i\dnt{A_i})
+          ; \delta^{-1}
+          ; (\dmor{\dnt{\Gamma}} \otimes \dnt{\ms{L}} ; \alpha ; \dnt{\Gamma} \otimes S) 
+          + (\dmor{\dnt{\Gamma}} \otimes \Sigma_i\dnt{A_i}
+              ; \alpha ; \dnt{\Gamma} \otimes \pi_r) \\
+          & = \rcase{L}
+            ; \dmor{\dnt{\Gamma}} \otimes \dnt{\ms{L}} ; \alpha ; \dnt{\Gamma} \otimes S
+            + \dnt{\Gamma} \otimes \Sigma_i\dnt{A_i}
+      \end{aligned}
+    \end{equation}
+    implying by naturality that
+    \begin{equation}
+      \begin{aligned}
+        \rfix{\loopmor{(\wbranch{\ell_i}{x_i}{[\upg{\sigma}]t_i},)_i}}
+        & = (\rcase{L}
+        ; \dmor{\dnt{\Gamma}} \otimes \dnt{\ms{L}} ; \alpha ; \dnt{\Gamma} \otimes S
+            + \dnt{\Gamma} \otimes \Sigma_i\dnt{A_i})^\dagger ; \pi_r \\
+        & = (\rcase{L})^\dagger 
+          ; \dmor{\dnt{\Gamma}} \otimes \dnt{\ms{L}} ; \alpha ; \dnt{\Gamma} \otimes S ; \pi_r \\
+        & = (\rcase{L})^\dagger ; S
+      \end{aligned}
+    \end{equation}
+    Hence, we have that
+    \begin{equation}
+      \begin{aligned}
+        & \dnt{\haslb{\Gamma}{[\sigma](\where{s}{(\wbranch{\ell_i}{x_i}{t_i},)_i})}{\ms{K}}}
+          = \dnt{\haslb{\Gamma}
+                  {\where{[\upg{\sigma}]s}
+                  {(\wbranch{\ell_i}{x_i}{[\upg{\sigma}]t_i},)_i}}{\ms{K}}} \\
+        & = \lmor{\entrymor{[\upg{\sigma}]s}} ; \delta^{-1} 
+          ; [\pi_r , \rfix{\loopmor{(\wbranch{\ell_i}{x_i}{[\upg{\sigma}]t_i},)_i}}] \\
+        & = \lmor{\lmor{\entrymor{s}} ; \delta^{-1} ; S + \pi_r}
+          ; \delta^{-1}
+          ; [\pi_r, (\rcase{L})^\dagger ; S] \\
+        & = \lmor{\lmor{\entrymor{s}}} ; \dnt{\Gamma} \otimes (\delta^{-1} ; S + \pi_r)
+          ; \delta^{-1}
+          ; [\pi_r, (\rcase{L})^\dagger ; S] \\
+        & = \lmor{\entrymor{s}} ; \dmor{\Gamma} \otimes (\dnt{\ms{L}} + \Sigma_i\dnt{A_i}) ; \alpha 
+          ; \dnt{\Gamma} \otimes \delta^{-1}
+          ; \delta^{-1}
+          ; [\dnt{\Gamma} \otimes S ; \pi_r, \dnt{\Gamma} \otimes \pi_r ; (\rcase{L})^\dagger ; S] 
+          \\
+        & = \lmor{\entrymor{s}} ; \dmor{\Gamma} \otimes (\dnt{\ms{L}} + \Sigma_i\dnt{A_i}) ; \alpha 
+          ; \dnt{\Gamma} \otimes \delta^{-1}
+          ; \delta^{-1}
+          ; [\pi_r, \dnt{\Gamma} \otimes \pi_r ; (\rcase{L})^\dagger]
+          ; S \\
+        & = \lmor{\entrymor{s}} ; \delta^{-1} ; [
+            \Delta_{\dnt{\Gamma}} \otimes \dnt{\ms{L}} ; \alpha ; \pi_r, 
+            \Delta_{\dnt{\Gamma}} \otimes \Sigma_i\dnt{A_i}  
+              ; \alpha ; \dnt{\Gamma} \otimes \pi_r ; (\rcase{L})^\dagger]
+          ; S \\
+        & = \lmor{\entrymor{s}} ; \delta^{-1} ; [
+            \ms{id}_{\dnt{\Gamma} \otimes \dnt{\ms{L}}}, 
+            \Delta_{\dnt{\Gamma}} \otimes \Sigma_i\dnt{A_i}  
+              ; \alpha ; (\dnt{\Gamma} \otimes (\rcase{L})^\dagger) ; \pi_r)]
+          ; S \\
+        & = \text{\todo{why?}} \\ 
+        & = \lmor{\lmor{\entrymor{s}} ; \delta^{-1} ; [
+            \ms{id}_{\dnt{\Gamma} \otimes \dnt{\ms{L}}}, 
+            (\rcase{L})^\dagger] ; \pi_r}
+          ; S \\
+        & = \lmor{\lmor{\entrymor{s}} ; \delta^{-1} ; [
+            \pi_r, 
+            \rfix{L}] }
+          ; S \\
+        & = \lmor{\dnt{\haslb{\Gamma}{\where{s}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}}}
+          ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}}
+      \end{aligned}
+    \end{equation}
+    as desired.
   \end{itemize}
   Composition of label substitutions then follows by a trivial induction.
 \end{proof}
