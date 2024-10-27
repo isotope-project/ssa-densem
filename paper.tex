@@ -136,6 +136,11 @@
 \newcommand{\ednt}[1]{\left\llbracket{#1}\right\rrbracket}
 \newcommand{\tmor}[1]{{!}_{#1}}
 \newcommand{\dmor}[1]{{\Delta}_{#1}}
+\newcommand{\lmor}[1]{\ms{let}(#1)}
+\newcommand{\entrymor}[1]{\ms{esem}(#1)}
+\newcommand{\loopmor}[1]{\ms{lsem}(#1)}
+\newcommand{\readmor}[1]{\ms{rcase}(#1)}
+\newcommand{\rfix}[1]{\ms{rfix}(#1)}
 
 % Composition
 \newcommand{\invar}{\square}
@@ -225,6 +230,8 @@
 % \received[accepted]{5 June 2009}
 
 \maketitle
+
+\TODO{formalization pointers for theorems}
 
 \section{Introduction}
 
@@ -3274,6 +3281,18 @@ category}, and is defined as follows:
   \otimes B ; \rho$, $\langle f, g \rangle = \dmor{A} ; f \otimes g$, and $\dmor{A} = \langle
   \ms{id}_A, \ms{id}_A \rangle$
 \end{definition}
+For convenience, given $f : A \to B$ in a Freyd category, we will define the notation
+\begin{equation}
+  \lmor{f} := \dmor{A} ; A \otimes f : A \to A \otimes B
+\end{equation}
+Note that this is pure if and only if $f$ is. This has the following useful properties:
+\begin{itemize}
+  \item $\lmor{f} ; \pi_r = f$ and, for $f$ pure, $\lmor{f} ; \pi_l = \ms{id}$
+  \item $\lmor{f;g} = \lmor{f} ; A \otimes g$ and $\lmor{\ms{id}_A} = \dmor{A}$
+  \item $\lmor{\lmor{f}} = \lmor{f} ; \dmor{A} \otimes B ; \alpha_{A, A, B}$, and, therefore, given
+  $g: A \otimes B \to C$, we have $\lmor{\lmor{f};g} = \lmor{f} ; \lmor{g} ; \pi_l \otimes C$
+\end{itemize}
+
 We now have everything we need to model effectful first-order expressions. For reasoning about
 substitution, we will also demand that the denotation of ``\emph{pure}" expressions
 $\hasty{\Gamma}{\bot}{a}{A}$ lies in $\mc{C}_\bot(\dnt{\Gamma}, \dnt{A})$; in general, we will write
@@ -3289,9 +3308,13 @@ $$
   \dnt{\cdot} = \mb{0} \qquad \dnt{\ms{L}, \lhyp{\ell}{A}} = \dnt{\ms{L}} + \dnt{A}
 $$
 Regions can now be interpreted as morphisms in $\mc{C}$ from $\dnt{\Gamma}$ to $\dnt{\ms{L}}$, as
-desired. However, it turns out that our coproducts must be \emph{distributive} to allow us to use
-variables in scope before the branch. In particular, we define a \emph{distributive} premonoidal
-category as follows:
+desired. Just like for products, we will write ``$\alpha^+$'' for the (unique) morphism between
+objects $A$ and $B$, when it exists, satisfying the requirements of
+Theorem~\ref{thm:monoidal-coherence} where coproducts are taken as the monoidal structure; we will
+sometimes also write $\alpha^+_B$ for clarity.
+
+It turns out that our coproducts must be \emph{distributive} to allow us to use variables in scope
+before a branch. In particular, we define a \emph{distributive} premonoidal category as follows:
 \begin{definition}[Distributive category]
   A premonoidal category $\mc{C}$ with all coproducts is \emph{distributive} if, for all $A, B, C$,
   the obvious morphism
@@ -3299,16 +3322,15 @@ category as follows:
   \delta_{A, B, C} 
     = [(A + \iota_l), (A + \iota_r)] : (A \otimes B) + (A \otimes C) \to A \otimes (B + C)
   $$
-  has an inverse $\delta^{-1}$. In a distributive category, for any finite coproduct $\Sigma_iB_i$,
-  we will write $\delta_{\Sigma} : \Sigma_i (A \otimes B_i) \to A \otimes \Sigma_i B_i$ and
-  $\delta_{\Sigma}^{-1} : A \otimes \Sigma_i B_i \to \Sigma_i (A \otimes B_i)$ to denote the obvious
-  morphisms
+  has an inverse $\delta^{-1}$. For any finite coproduct $\Sigma_iB_i$, we will write
+  $\delta_{\Sigma} : \Sigma_i (A \otimes B_i) \to A \otimes \Sigma_i B_i$ and $\delta_{\Sigma}^{-1}
+  : A \otimes \Sigma_i B_i \to \Sigma_i (A \otimes B_i)$ to denote the obvious morphisms
 \end{definition}
-We note in particular that every CCC with coproducts is distributive.
-The last piece of the puzzle, allowing us to model loops in regions, is the existence of an
-\emph{Elgot structure}. We would also like our Elgot structure to be \emph{strong}; that is,
-compatible with the distributor, so that we can soundly shuttle access variables in scope in the
-loop body. Formally, we define a \emph{(strong) Elgot structure} as follows:
+We note in particular that every cartesian closed category with coproducts is distributive. The last
+piece of the puzzle, allowing us to model loops in regions, is the existence of an \emph{Elgot
+structure}. We would also like our Elgot structure to be \emph{strong}; that is, compatible with the
+distributor, so that we can soundly shuttle access variables in scope in the loop body. Formally, we
+define a \emph{(strong) Elgot structure} as follows:
 \begin{definition}[(Strong) Elgot structure]
   A category $\mc{C}$ with all coproducts is said to have an \emph{Elgot structure} if we can define
   an operator $(-)^\dagger$ taking every morphism $f : A \to B + A$ to a morphism $f^\dagger : A \to
@@ -3332,6 +3354,19 @@ loop body. Formally, we define a \emph{(strong) Elgot structure} as follows:
   In particular, we say a monad is Elgot if its Kliesli category has an Elgot structure. Similarly,
   we say a \emph{strong} monad is strong Elgot if its Kliesli category has a strong Elgot structure.
 \end{definition}
+
+Given a distributive Freyd category equipped with an Elgot structure, we will often want to consider
+the fixpoint of a morphism $f: R \otimes A \to B + A$, where our ``context'' $R$ does not change
+between iterations. To do this, we first need to build up a morphism
+\begin{equation}
+  \readmor{f} := \lmor{f} ; \pi_l \otimes (B + A) ; \delta^{-1} 
+    : R \otimes A \to R \otimes B + R \otimes A
+\end{equation}
+which computes $f$ and then distributes a copy of the read-only state $R$ to each branch of the
+result. We may then define the fixpoint
+\begin{equation}
+  \rfix{f} := (\readmor{f})^\dagger ; \pi_r : R \otimes A \to B
+\end{equation}
 
 \subsection{String Diagrams}
 
@@ -3818,10 +3853,8 @@ are quite standard; in particular:
     \dnt{\hasty{\Gamma}{\epsilon}{f\;a}{B}} 
       &= \dnt{f} \circ \dnt{\hasty{\Gamma}{\epsilon}{a}{A}} \\
     \dnt{\hasty{\Gamma}{\epsilon}{\letexpr{x}{a}{b}}{B}}
-      &= \Delta_{\dnt{\Gamma}}
-      ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{a}{A}} ;
-      \\&\qquad
-      \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{b}{B}}
+      &= \lmor{\dnt{\hasty{\Gamma}{\epsilon}{a}{A}}} 
+      ; \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{b}{B}}
       \\
     \dnt{\hasty{\Gamma}{\epsilon}{(a, b)}{A \otimes B}} 
       &= \Delta_{\dnt{\Gamma}}
@@ -3830,10 +3863,8 @@ are quite standard; in particular:
       % ; \dnt{A} \otimes \dnt{\hasty{\Gamma}{\epsilon}{b}{B}}
       \\
     \dnt{\hasty{\Gamma}{\epsilon}{\letexpr{(x, y)}{e}{c}}{C}}
-      &= \Delta_{\dnt{\Gamma}}
-      ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A \otimes B}} ; \alpha;
-      \\&\qquad
-      \dnt{\hasty{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{\epsilon}{c}{C}}
+      &= \lmor{\dnt{\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}} ; \alpha
+      ; \dnt{\hasty{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{\epsilon}{c}{C}}
       \\
     \dnt{\hasty{\Gamma}{\epsilon}{()}{\mb{1}}} &= 1_{\dnt{\Gamma}} \\
     \dnt{\hasty{\Gamma}{\epsilon}{\linl{a}}{A + B}}
@@ -3841,8 +3872,7 @@ are quite standard; in particular:
     \dnt{\hasty{\Gamma}{\epsilon}{\linr{b}}{A + B}}
       &= \dnt{\hasty{\Gamma}{\epsilon}{b}{B}} ; \iota_r \\
     \dnt{\hasty{\Gamma}{\epsilon}{\caseexpr{e}{x}{a}{y}{b}}{C}}
-      &= \Delta_{\dnt{\Gamma}} 
-        ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A + B}}
+      &= \lmor{\dnt{\hasty{\Gamma}{\epsilon}{e}{A + B}}}
         ; \delta^{-1}_{\dnt{\Gamma}} ; \\& \qquad
         [
           \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{a}{C}}, 
@@ -3873,6 +3903,7 @@ in contrst to \emph{expressions}, which purely encode data, with no particular i
 to use it afterwards. Our interpretation of \ms{let}-statements and \ms{case}-statements, given in
 Figure~\ref{fig:ssa-reg-sem}, is exactly the same as that of the corresponding expressions.
 
+\TODO{rework to go over factored form}
 Finally, we come to the interpretation of \ms{where}-blocks, which is where Elgot structure comes
 in. Since the semantics for \ms{where} blocks has a lot of moving parts, it makes sense to break it
 down ``imperatively" as follows:
@@ -3914,44 +3945,39 @@ down ``imperatively" as follows:
       &= \dnt{\hasty{\Gamma}{\bot}{a}{A}} ; \iota_{\ms{L}, \ell}
       \\
     \dnt{\haslb{\Gamma}{\letstmt{x}{a}{r}}{\ms{L}}}
-      &= \Delta_{\dnt{\Gamma}}
-      ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{a}{A}}
+      &= \lmor{\dnt{\hasty{\Gamma}{\epsilon}{a}{A}}}
       ; \dnt{\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}} 
       \\
     \dnt{\haslb{\Gamma}{\letstmt{(x, y)}{e}{r}}{\ms{L}}}
-      &= \Delta_{\dnt{\Gamma}}
-      ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
+      &= \lmor{\dnt{\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}} ; \alpha
       ; \dnt{\haslb{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{r}{\ms{L}}} 
       \\ 
     \dnt{\haslb{\Gamma}{\casestmt{e}{x}{r}{y}{s}}{\ms{L}}}
-      &= \Delta_{\dnt{\Gamma}}
-      ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A + B}}
+      &= \lmor{\dnt{\hasty{\Gamma}{\epsilon}{e}{A + B}}}
       ; \delta^{-1} ;
       \\&\quad\;
-      \dnt{\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
-      + \dnt{\haslb{\Gamma, \bhyp{y}{B}}{s}{\ms{L}}}
+      [
+        \dnt{\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}},
+        \dnt{\haslb{\Gamma, \bhyp{y}{B}}{s}{\ms{L}}}
+      ]
       \\
     \dnt{\haslb{\Gamma}{\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}}
-      &=  
-      \Delta_{\dnt{\Gamma}}
-      ; \dnt{\Gamma} \otimes \ms{entry}(r) ; \delta^{-1} ; [\pi_r, 
-      \\ & \qquad 
-        (\Delta_{\dnt{\Gamma}} \otimes \Sigma_i\dnt{A_i} ; \alpha 
-        ; \dnt{\Gamma} \otimes \ms{loop}((\wbranch{\ell_i}{x_i}{t_i},)_i) ; \delta^{-1})^\dagger 
-        ; \pi_r ]
+      &= \lmor{\entrymor{r}} 
+      ; \delta^{-1} 
+      ; [\pi_r, \rfix{\loopmor{(\wbranch{\ell_i}{x_i}{t_i},)_i}} ]
   \end{align*} 
   \begin{align*}
     \text{where} \qquad 
-    & \boxed{\iota_{\ms{L}, \ell} : \dnt{A} \to_\bot \dnt{\ms{L}}} \qquad
+    & \boxed{\iota_{\ms{L}, \ell} : \dnt{A} \to_\bot \dnt{\ms{L}}} \qquad \qquad \qquad
     \iota_{(\ms{L}, \ell(A)), \ell} = \iota_r \qquad
     \iota_{(\ms{L}, \kappa(B)), x} = \iota_l ; \iota_{\ms{L}, \ell} \\
-    & \boxed{\ms{entry}(r) : \dnt{\Gamma} \to \dnt{L} + \Sigma_i\dnt{A_i}} \\
-    & \ms{entry}(r) = \dnt{\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}} 
+    & \boxed{\entrymor{r} : \dnt{\Gamma} \to \dnt{L} + \Sigma_i\dnt{A_i}} \\
+    & \entrymor{r} = \dnt{\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}} 
     ; \alpha^+_{\dnt{\ms{L}} + \Sigma_i \dnt{A_i}} \\
-    & \boxed{\ms{loop}((\wbranch{\ell_i}{x_i}{t_i},)_i) 
+    & \boxed{\loopmor{\wbranch{\ell_i}{x_i}{t_i},)_i} 
       : \dnt{\Gamma} \otimes \Sigma_i\dnt{A_i} \to \dnt{\ms{L}} + \Sigma_i\dnt{A_i}}
     \\
-    & \ms{loop}(r) = \delta^{-1}_{\Sigma} 
+    & \loopmor{\wbranch{\ell_i}{x_i}{t_i},)_i} = \delta^{-1}_{\Sigma} 
       ; [ \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}, ]_i
       ; \alpha^+_{\dnt{\ms{L}} + \Sigma_i \dnt{A_i}}  
   \end{align*}
@@ -5437,6 +5463,7 @@ semantics.
 
 \label{proof:soundness-subst}
 
+\TODO{rework to go over factored form}
 \begin{proof}
   Fix $\issubst{\gamma}{\Gamma}{\Delta}$ with $\ms{eff}(\Delta) = \bot$. We will begin by showing
   the soundness of substitution for expressions \ref{itm:tm-subst-sound}: we proceed by induction
