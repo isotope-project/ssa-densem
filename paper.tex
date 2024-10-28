@@ -6272,34 +6272,59 @@ semantics.
         & = \lmor{\lmor{\entrymor{s}}} ; \dnt{\Gamma} \otimes (\delta^{-1} ; S + \pi_r)
           ; \delta^{-1}
           ; [\pi_r, (\rcase{L})^\dagger ; S] \\
-        & = \lmor{\entrymor{s}} ; \dmor{\Gamma} \otimes (\dnt{\ms{L}} + \Sigma_i\dnt{A_i}) ; \alpha 
-          ; \dnt{\Gamma} \otimes \delta^{-1}
+        & = \lmor{\lmor{\entrymor{s}}} ; \dnt{\Gamma} \otimes \delta^{-1}
           ; \delta^{-1}
-          ; [\dnt{\Gamma} \otimes S ; \pi_r, \dnt{\Gamma} \otimes \pi_r ; (\rcase{L})^\dagger ; S] 
+          ; [
+              \dnt{\Gamma} \otimes S ; \pi_r, 
+              \dnt{\Gamma} \otimes \pi_r ; (\rcase{L})^\dagger ; S
+            ] \\
+          & = \lmor{\lmor{\entrymor{s}}} 
+            ; \dnt{\Gamma} \otimes \delta^{-1} ; \delta^{-1}
+            ; [\pi_r, \dnt{\Gamma} \otimes \pi_r ; (\rcase{L})^\dagger]
+            ; S \\
+        & = \lmor{\entrymor{s}} 
+          ; \dmor{\dnt{\Gamma}} \otimes (\dnt{\ms{L}} + \Sigma_i\dnt{A_i}) ; \alpha 
+          ; \dnt{\Gamma} \otimes \delta^{-1} ; \delta^{-1}
+          ; [\pi_r, \dnt{\Gamma} \otimes \pi_r ; (\rcase{L})^\dagger] ; S 
           \\
-        & = \lmor{\entrymor{s}} ; \dmor{\Gamma} \otimes (\dnt{\ms{L}} + \Sigma_i\dnt{A_i}) ; \alpha 
-          ; \dnt{\Gamma} \otimes \delta^{-1}
-          ; \delta^{-1}
-          ; [\pi_r, \dnt{\Gamma} \otimes \pi_r ; (\rcase{L})^\dagger]
+        & = \lmor{\entrymor{s}} ; \delta^{-1} ; [
+              \Delta_{\dnt{\Gamma}} \otimes \dnt{\ms{L}} ; \alpha ; \pi_r, 
+              \Delta_{\dnt{\Gamma}} \otimes \Sigma_i\dnt{A_i}  
+                ; \alpha ; \dnt{\Gamma} \otimes \pi_r ; (\rcase{L})^\dagger
+            ]
           ; S \\
         & = \lmor{\entrymor{s}} ; \delta^{-1} ; [
-            \Delta_{\dnt{\Gamma}} \otimes \dnt{\ms{L}} ; \alpha ; \pi_r, 
-            \Delta_{\dnt{\Gamma}} \otimes \Sigma_i\dnt{A_i}  
-              ; \alpha ; \dnt{\Gamma} \otimes \pi_r ; (\rcase{L})^\dagger]
+              \Delta_{\dnt{\Gamma}} \otimes \dnt{\ms{L}} ; \alpha ; \dnt{\Gamma} \otimes \pi_r, 
+              (\rcase{L})^\dagger
+            ]
           ; S \\
         & = \lmor{\entrymor{s}} ; \delta^{-1} ; [
-            \ms{id}_{\dnt{\Gamma} \otimes \dnt{\ms{L}}}, 
-            \Delta_{\dnt{\Gamma}} \otimes \Sigma_i\dnt{A_i}  
-              ; \alpha ; (\dnt{\Gamma} \otimes (\rcase{L})^\dagger) ; \pi_r)]
+              \Delta_{\dnt{\Gamma}} \otimes \dnt{\ms{L}} ; \alpha ; \dnt{\Gamma} \otimes \pi_r, 
+              \lmor{\rfix{L}} ; \pi_l \otimes (\dnt{\ms{L}} + \Sigma_i\dnt{A_i})
+            ]
           ; S \\
-        & = \text{\todo{why?}} \\ 
-        & = \lmor{\lmor{\entrymor{s}} ; \delta^{-1} ; [
-            \ms{id}_{\dnt{\Gamma} \otimes \dnt{\ms{L}}}, 
-            (\rcase{L})^\dagger] ; \pi_r}
+        & = \lmor{\entrymor{s}} ; \delta^{-1} ; [
+              \Delta_{\dnt{\Gamma}} \otimes \dnt{\ms{L}} ; \alpha ; \dnt{\Gamma} \otimes \pi_r, 
+              \Delta_{\dnt{\Gamma}} \otimes \Sigma_i\dnt{A_i} ; \alpha 
+                ; \dnt{\Gamma} \otimes \rfix{L}
+            ]
           ; S \\
-        & = \lmor{\lmor{\entrymor{s}} ; \delta^{-1} ; [
-            \pi_r, 
-            \rfix{L}] }
+        & = \lmor{\entrymor{s}} 
+          ; \Delta_{\dnt{\Gamma}} \otimes (\dnt{\ms{L}} + \Sigma_i\dnt{A_i}) ; \alpha
+          ; \dnt{\Gamma} \otimes \delta^{-1} ; \delta^{-1}
+          ; [
+              \dnt{\Gamma} \otimes \pi_r, 
+              \dnt{\Gamma} \otimes \rfix{L}
+            ]
+          ; S \\
+        & = \lmor{\entrymor{s}} 
+          ; \Delta_{\dnt{\Gamma}} \otimes (\dnt{\ms{L}} + \Sigma_i\dnt{A_i}) ; \alpha
+          ; \dnt{\Gamma} \otimes (\delta^{-1} ; [\pi_r, \rfix{L}])
+          ; S \\
+        & = \lmor{\lmor{\entrymor{s}}}
+          ; \dnt{\Gamma} \otimes (\delta^{-1} ; [\pi_r, \rfix{L}])
+          ; S \\
+        & = \lmor{\lmor{\entrymor{s}} ; \delta^{-1} ; [\pi_r, \rfix{L}] }
           ; S \\
         & = \lmor{\dnt{\haslb{\Gamma}{\where{s}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}}}
           ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}}
