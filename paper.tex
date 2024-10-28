@@ -5601,17 +5601,29 @@ We can define
 Since $\pi_r ; \cdot$ is a functor into the co-Kleisli category, to check we indeed have a Freyd
 category, it suffices to show that:
 \begin{itemize}
-  \item $\alpha^R_{A, B, C}$ is natural: \todo{this}
+  \item $\alpha^R_{A, B, C}$ is natural: we have that, given 
+  $f: R \otimes A \to A'$, $g : R \otimes B \to B'$, $h : R \otimes C \to C'$
+  \begin{align}
+    \rseq{}{(f \otimes_R B) \otimes_R C}{\alpha_{A', B, C}} 
+      &= \rseq{}{\alpha_{A, B, C}}{f \otimes_R (B \otimes C)} \label{eqn:env-a-nat-1} \\
+    \rseq{}{(A \otimes_R g) \otimes C}{\alpha_{A, B', C}}
+      &= \rseq{}{\alpha_{A, B, C}}{A \otimes_R (g \otimes_R C)} \label{eqn:env-a-nat-2} \\
+    \rseq{}{(A \otimes B) \otimes_R h}{\alpha_{A, B, C'}}
+      &= \rseq{}{\alpha_{A, B, C}}{A \otimes_R (B \otimes_R h)} \label{eqn:env-a-nat-3} \\
+  \end{align}
+  since, for each equation, both sides are equal to the same string diagram in
+  Figure~\ref{fig:env-a-nat-1}, \ref{fig:env-a-nat-2}, and \ref{fig:env-a-nat-3}
+  respectively.
   \item $\lambda^R_{A}$ is natural: \todo{this}
   \item $\rho^R_{A}$ is natural: \todo{this}
   \item $\sigma^R_{A, B}$ is natural: \todo{this}
-  \item Pure morphisms are central: given $f : R \otimes A \to B$ and $g : R \otimes A' \to B'$
+  \item Pure morphisms are central: given $f : R \otimes A \to A'$ and $g : R \otimes B \to B'$
   pure, we have that
   \begin{equation}
     \begin{aligned}
-    \rseq{}{f \otimes_R A'}{B \otimes_R g}
-    & = \Delta_R ; \alpha ; R \otimes (\alpha^{-1} ; f \otimes A' ; \sigma) 
-      ; \alpha^{-1} ; g \otimes B ; \sigma \\
+    \rseq{}{f \otimes_R B}{A' \otimes_R g}
+    & = \Delta_R ; \alpha ; R \otimes (\alpha^{-1} ; f \otimes B ; \sigma) 
+      ; \alpha^{-1} ; g \otimes A' ; \sigma \\
     & = \Delta_R ; \alpha ; R \otimes (R \otimes \sigma ; \alpha^{-1} ; g \otimes A ; \sigma) 
     ; \alpha^{-1} ; f \otimes B' \\
     & = \rseq{}{A \otimes_R g}{f \otimes_R B'}
@@ -5646,14 +5658,101 @@ R \otimes A \to C$, we may define the coproduct and injections
 \TODO{show $\rfix{f}$ gives $\envcop{R}{f}{g}$ an Elgot structure}
 
 \begin{figure}
+  \begin{subfigure}{0.3\textwidth}
+    \begin{tikzpicture}
+      \node[] (E) at (0, 0) {};
+      \node[] (R) at (0.5, 0) {$R$};
+      \node[] (A) at (1, 0) {$A$};
+      \node[] (B) at (1.5, 0) {$B$};
+      \node[] (C) at (2, 0) {$C$};
+      \node[box=3/0/2/0] (f) at (0.75, -1.75) {\quad f \quad};
+      \node[] (E') at (0.5, -3.5) {};
+      \node[] (A') at (1.5, -3.5) {$A'$};
+      \node[] (B') at (2, -3.5) {$B$};
+      \node[] (C') at (2.5, -3.5) {$C$};
+      \wires{
+        R = { south = f.north.2 },
+        A = { south = f.north.3 },
+        B = { south = B'.north },
+        C = { south = C'.north },
+        f = { south.2 = A'.north },
+      }{}
+      \wires[red]{
+        E = { south = f.north.1 },
+        f = { south.1 = E'.north }
+      }{}
+    \end{tikzpicture}
+    \caption{Equation~\ref{eqn:env-a-nat-1}}
+    \label{fig:env-a-nat-1}
+  \end{subfigure}%
+  \begin{subfigure}{0.3\textwidth}
+    \begin{tikzpicture}
+      \node[] (E) at (0.5, 0) {};
+      \node[] (R) at (1, 0) {$R$};
+      \node[] (A) at (1.5, 0) {$A$};
+      \node[] (B) at (2, 0) {$B$};
+      \node[] (C) at (2.5, 0) {$C$};
+      \node[box=3/0/2/0] (g) at (2, -2) {\quad g \quad};
+      \node[] (E') at (0.5, -3.5) {};
+      \node[] (A') at (1, -3.5) {$A$};
+      \node[] (B') at (2, -3.5) {$B'$};
+      \node[] (C') at (3, -3.5) {$C$};
+      \wires{
+        R = { south = g.north.2 },
+        A = { south = A'.north },
+        B = { south = g.north.3 },
+        C = { south = C'.north },
+        g = { south.2 = B'.north },
+      }{}
+      \wires[red]{
+        E = { south = g.north.1 },
+        g = { south.1 = E'.north }
+      }{}
+    \end{tikzpicture}
+    \caption{Equation~\ref{eqn:env-a-nat-2}}
+    \label{fig:env-a-nat-2}
+  \end{subfigure}%
+  \begin{subfigure}{0.3\textwidth}
+    \begin{tikzpicture}
+      \node[] (E) at (0.25, 0) {};
+      \node[] (R) at (1, 0) {$R$};
+      \node[] (A) at (1.5, 0) {$A$};
+      \node[] (B) at (2, 0) {$B$};
+      \node[] (C) at (2.5, 0) {$C$};
+      \node[box=3/0/2/0] (h) at (2.5, -2) {\quad h \quad};
+      \node[] (E') at (0.5, -3.5) {};
+      \node[] (A') at (1, -3.5) {$A$};
+      \node[] (B') at (1.5, -3.5) {$B$};
+      \node[] (C') at (2, -3.5) {$C'$};
+      \wires{
+        R = { south = h.north.2 },
+        A = { south = A'.north },
+        B = { south = B'.north },
+        C = { south = h.north.3 },
+        h = { south.2 = C'.north },
+      }{}
+      \wires[red]{
+        E = { south = h.north.1 },
+        h = { south.1 = E'.north }
+      }{}
+    \end{tikzpicture}
+    \caption{Equation~\ref{eqn:env-a-nat-3}}
+    \label{fig:env-a-nat-3}
+  \end{subfigure}
+  \caption{Naturality of the associator in the co-Kleisli category of the environment comonad}
+  \Description{}
+  \label{fig:env-a-nat}
+\end{figure}
+
+\begin{figure}
   \begin{tikzpicture}
     \node[] (R) at (-0.5, 0) {$R$};
     \node[dot] (dR) at (0, -1) {};
     \node[] (A) at (1, 0) {$A$};
-    \node[] (A') at (2, 0) {$A'$};
+    \node[] (B) at (2, 0) {$B$};
     \node[box=2/0/1/0] (f) at (1, -1.75) {\quad f \quad};
     \node[box=2/0/1/0] (g) at (2, -3) {\quad g \quad};
-    \node[] (B) at (0, -4) {$B$};
+    \node[] (A') at (0, -4) {$A'$};
     \node[] (B') at (2, -4) {$B'$};
     \coordinate[] (cont) at (0.5, -2.5) {};
     \wires{
@@ -5661,13 +5760,13 @@ R \otimes A \to C$, we may define the coproduct and injections
       dR = { east = f.north.1, west = cont.west },
       cont = { east = g.north.1 },
       A  = { south = f.north.2 },
-      A' = { south = g.north.2 },
-      f  = { south = B },
+      B = { south = g.north.2 },
+      f  = { south = A' },
       g  = { south = B' },
     }{}
   \end{tikzpicture}
   \caption{Centrality of pure morphisms in the environment comonad's co-Kleisli category}
-  \Description{Justification for sliding in co-Kleisli category as a string diagram}
+  \Description{}
   \label{fig:env-slide}
 \end{figure}
 
