@@ -1979,6 +1979,16 @@ equivalent to
         {
           \haslb{\Gamma}{r}{\ms{L}, \ell(A)}
         }
+        % {
+        %   \prfStackPremises
+        %   {
+        %     \hasty{\Gamma, \bhyp{x}{A}}{\bot}{e}{A}
+        %   }{
+        %     \haslb{\Gamma, \bhyp{x}{A}}{s}{\ms{L}, \kappa(B)}
+        %   }{
+        %     \haslb{\Gamma, \bhyp{x}{A}}{t}{\ms{L}, \ell(A)}
+        %   }
+        % }
         {
           \lbeq{\Gamma, \bhyp{x}{A}}
             {\letexpr{y}{e}{s}}
@@ -4098,6 +4108,28 @@ can then be used to derive the following weakening lemmas:
       $
   \end{enumerate}
 \end{lemma}
+
+\TODO{immediate consequences of (label) weakening}
+
+\TODO{text}
+
+\begin{equation}
+  \dnt{\haslb{\Gamma}{\where{r}{\wbranch{\ell}{x}{s}}}{\ms{L}}}
+  = \lmor{\dnt{\haslb{\Gamma}{r}{\ms{L}, \ell(A)}}}
+  ; \delta^{-1}
+  ; [\pi_r, \rfix{\dnt{\haslb{\Gamma, \bhyp{x}{A}}{s}{\ms{L}, \ell(A)}}}]
+\end{equation}
+
+\TODO{in particular, if $\haslb{\Gamma, \bhyp{x}{A}}{s}{\ms{L}}$}
+
+\begin{equation}
+  \dnt{\haslb{\Gamma}{\where{r}{\wbranch{\ell}{x}{s}}}{\ms{L}}}
+  = \lmor{\dnt{\haslb{\Gamma}{r}{\ms{L}, \ell(A)}}}
+  ; \delta^{-1}
+  ; [\pi_r, \dnt{\haslb{\Gamma, \bhyp{x}{A}}{s}{\ms{L}}}]
+\end{equation}
+
+\TODO{segue}
 
 Our first proper semantic theorem is that \emph{rewriting} is sound: if two (potentially impure!)
 substitutions have pointwise equal semantics, then substituting by either yields a result with
@@ -6815,10 +6847,50 @@ R \otimes A \to C$, we may define the coproduct and injections
     \item[] \brle{cfg-$\beta_2$}: \todo{this}
     \item[] \brle{cfg-$\eta$}: \todo{this}
     \item[] \brle{codiag}: \todo{this}
-    \item[] \brle{uni}: \todo{this}
-    \item[] \brle{dinat}: we have by label substitution that, where $\ms{R} = (\ell_i(A_i),)_i$ and
-    $\ms{R}' = (\kappa_j(B_j),)_j$, $S = \dnt{\lbsubst{\Gamma}{\sigma}{\ms{R}}{\ms{R}'}}$, and
-    $S' = \dnt{\Gamma} \otimes \alpha^+_{\dnt{R}} ; S ; \alpha^+_{\Sigma_j\dnt{B_j}}$,
+    \item[] \brle{uni}: 
+    Define $E = \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\bot}{e}{B}}$, 
+           $S = \dnt{\haslb{\Gamma, \bhyp{y}{B}}{s}{\ms{L}, \kappa(B)}}$,
+           $T = \dnt{\haslb{\Gamma, \bhyp{x}{A}}{s}{\ms{L}, \ell(A)}}$, and
+           $R = \dnt{\haslb{\Gamma}{r}{\ms{L}, \ell(A)}}$.
+    We have by induction that
+    \begin{equation}
+      \begin{aligned}
+        \dnt{\haslb{\Gamma, \bhyp{x}{A}}{\letstmt{y}{e}{s}}{\ms{L}, \kappa(B)}}
+        &= \rlmor{E} ; S = \\
+        \dnt{\haslb{\Gamma, \bhyp{x}{A}}
+          {\where{t}{\wbranch{\ell}{x}{\brb{\kappa}{e}}}}{\ms{L}, \kappa(B)}}
+        &= \rcase{T} ; \dnt{\ms{L}} + E  
+      \end{aligned}
+    \end{equation}
+    It follows in particular that
+    \begin{equation}
+      \rlmor{E} ; \rfix{S} = \rfix{T}
+    \end{equation}
+    and hence that
+    \begin{equation}
+      \begin{aligned}
+        & \dnt{
+          \haslb{\Gamma}
+          {\where{(\where{r}{\wbranch{\ell}{x}{\brb{\kappa}{e}}})}{\wbranch{\kappa}{y}{s}}}
+          {\ms{L}}} \\
+        & = \lmor{\lmor{R} ; \delta^{-1} ; \pi_r + E}
+          ; \delta^{-1} ; [\pi_r, \rfix{S}] \\
+        & = \lmor{R} ; \delta^{-1} 
+          ; (\dnt{\Gamma} \otimes \dnt{\ms{L}}) + \rlmor{E} 
+          ; [\pi_r, \rfix{S}]
+          = \lmor{R} ; \delta^{-1}
+          ; [\pi_r, \rlmor{E} ; \rfix{S}] \\
+        & = \lmor{R} ; \delta^{-1}
+          ; [\pi_r, \rfix{T}]
+          = \dnt{\haslb{\Gamma}{\where{r}{\wbranch{\ell}{x}{t}}}{\ms{L}}} \\
+      \end{aligned}
+    \end{equation}
+    as desired.
+    
+    \item[] \brle{dinat}: 
+    Define $\ms{R} = (\ell_i(A_i),)_i$, $\ms{R}' = (\kappa_j(B_j),)_j$, $S =
+    \dnt{\lbsubst{\Gamma}{\sigma}{\ms{R}}{\ms{R}'}}$, and $S' = \dnt{\Gamma} \otimes
+    \alpha^+_{\dnt{R}} ; S ; \alpha^+_{\Sigma_j\dnt{B_j}}$. We have that
     \begin{equation}
       \begin{aligned}
         & \entrymor{[\upg{\sigma}]r}
@@ -6832,7 +6904,7 @@ R \otimes A \to C$, we may define the coproduct and injections
         & = \lmor{\entrymor{r}} ; \delta^{-1} ; \pi_r + S' \\
       \end{aligned}
     \end{equation}
-    and, writing $L = \loopmor{(\wbranch{\ell_i}{x_i}{t_i},)_i}$
+    and, writing $L = \loopmor{(\wbranch{\ell_i}{x_i}{t_i},)_i}$,
     \begin{equation}
       \begin{aligned}
         & \lmor{(\wbranch{\kappa_i}{x_i}{[\upg{\sigma}]t_i},)_i}
@@ -6846,35 +6918,23 @@ R \otimes A \to C$, we may define the coproduct and injections
           ]_i
           ; \alpha^+_{\dnt{\ms{L}} + \Sigma_j \dnt{B_j}} \\
         & = \delta^{-1}_\Sigma
-          ; [ \lmor{\dnt{\haslb{\Gamma, \bhyp{x_i}{B_i}}{t_i}{\ms{L}, \ms{R}}}} 
-            ; \pi_l \otimes \dnt{\ms{L}, \ms{R}},
+          ; [ \rlmor{\dnt{\haslb{\Gamma, \bhyp{x_i}{B_i}}{t_i}{\ms{L}, \ms{R}}}},
           ]_i
           ; \dnt{\lbsubst{\Gamma}{\upg{\sigma}}{\ms{L}, \ms{R}}{\ms{L}, \ms{R}'}}
           ; \alpha^+_{\dnt{\ms{L}} + \Sigma_j \dnt{B_j}} \\
-        & = \delta^{-1}_\Sigma
-          ; [ \lmor{\dnt{\haslb{\Gamma, \bhyp{x_i}{B_i}}{t_i}{\ms{L}, \ms{R}}}} 
-            ; \pi_l \otimes \dnt{\ms{L}, \ms{R}},
-          ]_i
+        & = \rlmor{\delta^{-1}_\Sigma
+          ; [ \dnt{\haslb{\Gamma, \bhyp{x_i}{B_i}}{t_i}{\ms{L}, \ms{R}}}
+          ]_i}
           ; \dnt{\Gamma} \otimes \alpha^+_{\dnt{\ms{L}} + \dnt{\ms{R}}}
           ; \delta^{-1}
           ; \pi_r + (
             S ; \alpha^+_{\Sigma_j\dnt{B_j}}
           )
            \\
-        & = \lmor{
-            \delta^{-1}_\Sigma
-            ; [ \dnt{\haslb{\Gamma, \bhyp{x_i}{B_i}}{t_i}{\ms{L}, \ms{R}}},]_i}
-          ; \pi_l \otimes \alpha^+_{\dnt{\ms{L}} + \dnt{\ms{R}}}
-          ; \delta^{-1}
-          ; \pi_r + (
-            S ; \alpha^+_{\Sigma_j\dnt{B_j}}
-          )
-          \\
-        & = \lmor{
+        & = \rlmor{
             \delta^{-1}_\Sigma
             ; [ \dnt{\haslb{\Gamma, \bhyp{x_i}{B_i}}{t_i}{\ms{L}, \ms{R}}},]_i
             ; \alpha^+_{\dnt{\ms{L}} + \Sigma_j\dnt{B_j}}}
-          ; \pi_l \otimes (\dnt{\ms{L}} + \Sigma_j\dnt{B_j})
           ; \delta^{-1} ; \pi_r + S'
           \\
         & = \rcase{L} ; \pi_r + S'
