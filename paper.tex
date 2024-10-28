@@ -5614,9 +5614,36 @@ category, it suffices to show that:
   since, for each equation, both sides are equal to the same string diagram in
   Figure~\ref{fig:env-a-nat-1}, \ref{fig:env-a-nat-2}, and \ref{fig:env-a-nat-3}
   respectively.
-  \item $\lambda^R_{A}$ is natural: \todo{this}
-  \item $\rho^R_{A}$ is natural: \todo{this}
-  \item $\sigma^R_{A, B}$ is natural: \todo{this}
+  \item $\lambda^R_{A}$ is natural: we have that, for $f : R \otimes A \to A'$,
+  \begin{equation}
+    \begin{aligned}
+    \rseq{}{f \otimes_R \mb{1}}{\lambda^R_{A'}}
+    &= \dmor{R} ; \alpha ; R \otimes (\alpha^{-1} ; f \otimes \mb{1}) ; \pi_r ; \pi_l \\
+    &= R \otimes \pi_l ; f \\
+    &= \dmor{R} ; \alpha ; R \otimes (\pi_r ; \pi_l) ; f
+    &= \rseq{}{\lambda^R_{A}}{f}
+    \end{aligned}
+  \end{equation}
+  In general, we note that, for all $g : R \otimes A \to A' \otimes \mb{1}$, 
+  $\rseq{}{g}{\lambda^R} = g ; \pi_l$.
+  \item $\rho^R_{A}$ is natural:
+  \begin{equation}
+    \begin{aligned}
+    \rseq{}{\mb{1} \otimes_R f}{\rho^R_{A'}}
+    & = \dmor{R} ; \alpha 
+      ; R \otimes (\alpha^{-1} ; R \otimes \sigma ; \alpha^{-1} ; f \otimes \mb{1} ; \sigma) 
+      ; \pi_r ; \pi_r \\
+    & = R \otimes \pi_r ; f \\
+    & = \dmor{R} ; \alpha ; R \otimes (\pi_r ; \pi_r) ; f
+    & = \rseq{}{\rho^R_{A}}{f}
+    \end{aligned}
+  \end{equation}
+  In general, we note that, for all $g : R \otimes A \to \mb{1} \otimes A'$, 
+  $\rseq{}{g}{\rho^R} = g ; \pi_r$.
+  \item $\sigma^R_{A, B}$ is natural: given $f : R \otimes A \to A'$,
+  \TODO{equation}
+  \TODO{diagram}
+  \TODO{other case is analogous}
   \item Pure morphisms are central: given $f : R \otimes A \to A'$ and $g : R \otimes B \to B'$
   pure, we have that
   \begin{equation}
@@ -5629,34 +5656,22 @@ category, it suffices to show that:
     & = \rseq{}{A \otimes_R g}{f \otimes_R B'}
     \end{aligned}
   \end{equation}
-  since both sides correspond to the diagram in Figure~\ref{fig:env-slide}. We will write this
-  morphism as $f \otimes_R g$.
+  since both sides correspond to the diagram in Figure~\ref{fig:env-slide}. We will write this as $f
+  \otimes_R g$.
   \item $!^R_A$ is terminal for pure morphisms: yes, since $!^R_A$ is just $!_{R \otimes A}$ which
-  is the terminal morphism in $\mc{C}$
+  is terminal in $\mc{C}$
   \item $\Delta^R_A$ duplicates pure morphisms: we have
   \begin{equation}
     \begin{aligned}
     \rseq{}{f}{\Delta^R_B} 
-      = \Delta_R ; \alpha ; R \otimes f ; \pi_r ; \Delta_B
-      = f ; \Delta_B = \Delta_{R \otimes A} ; f \otimes f 
-      = \Delta_R ; \alpha ; R \otimes (\pi_r ; \Delta_A) ; 
+      & = \dmor{R} ; \alpha ; R \otimes f ; \pi_r ; \dmor{A'} \\
+      & = f ; \dmor{A'} = \dmor{R \otimes A} ; f \otimes f \\
+      & = \dmor{R} ; \alpha ; R \otimes (\alpha^{-1} ; f \otimes A') 
+        ; R \otimes \sigma ; \alpha^{-1} ; f \otimes A' ; \sigma
+      & = \rseq{}{\Delta^R_A}{f \otimes_R f}
     \end{aligned}
   \end{equation}
-\end{itemize}
-Now, assume $\mc{C}$ is distributive. We wish to show that $A + B$ is a coproduct in
-$\envcom{\mc{C}}{R}$, and furthermore that $\envcom{\mc{C}}{R}$ is distributive; note that even the
-former may not be the case without distributivity! To do so, given $f : R \otimes A \to B$ and $g :
-R \otimes A \to C$, we may define the coproduct and injections
-\begin{equation}
-  \envcop{R}{f}{g} := \delta^{-1} ; [f, g] : R \otimes A \to B + C \qquad
-  \envinl{R} := \pi_r ; \iota_r : R \otimes A \to A + B \qquad
-  \envinr{R} := \pi_r ; \iota_r : R \otimes B \to A + B
-\end{equation}
-\TODO{show this is actually a coproduct}
-\TODO{show this is distributive}
-\TODO{segue to some more $\lmor{f}$ and $\rcase{f}$ equations}
-\TODO{show $\rfix{f}$ gives $\envcop{R}{f}{g}$ an Elgot structure}
-
+\end{itemize} %
 \begin{figure}
   \begin{subfigure}{0.3\textwidth}
     \begin{tikzpicture}
@@ -5742,8 +5757,7 @@ R \otimes A \to C$, we may define the coproduct and injections
   \caption{Naturality of the associator in the co-Kleisli category of the environment comonad}
   \Description{}
   \label{fig:env-a-nat}
-\end{figure}
-
+\end{figure} %
 \begin{figure}
   \begin{tikzpicture}
     \node[] (R) at (-0.5, 0) {$R$};
@@ -5768,13 +5782,89 @@ R \otimes A \to C$, we may define the coproduct and injections
   \caption{Centrality of pure morphisms in the environment comonad's co-Kleisli category}
   \Description{}
   \label{fig:env-slide}
-\end{figure}
+\end{figure} %
+Now, assume $\mc{C}$ is distributive. We wish to show that $A + B$ is a coproduct in
+$\envcom{\mc{C}}{R}$, and furthermore that $\envcom{\mc{C}}{R}$ is distributive; note that even the
+former may not be the case without distributivity! To do so, given $f : R \otimes A \to B$ and $g :
+R \otimes A \to C$, we may define the coproduct and injections
+\begin{equation}
+  \envcop{R}{f}{g} := \delta^{-1} ; [f, g] : R \otimes A \to B + C \qquad
+  \envinl{R} := \pi_r ; \iota_r : R \otimes A \to A + B \qquad
+  \envinr{R} := \pi_r ; \iota_r : R \otimes B \to A + B
+\end{equation}
+\TODO{show this is actually a coproduct}
+\TODO{show this is distributive}
+\TODO{segue to some more $\lmor{f}$ and $\rcase{f}$ equations}
+\TODO{show $\rfix{f}$ gives $\envcop{R}{f}{g}$ an Elgot structure}
+\TODO{pull down $\rfix{f}$ lore here?}
+\TODO{this is useful because of \ms{where}-lore}
 
 \section{Proofs}
 
 \TODO{organize this into subsections or somesuch}
 
 \TODO{write text?}
+
+\TODO{pull lemma into previous section, somehow?}
+
+\begin{lemma}
+  The following facts hold:
+  \begin{enumerate}[label=(\alph*)]
+    \item For all $f: A \to B \otimes C$, $g : (A \otimes B) \otimes C \to D$, we have
+    \begin{equation}
+      \lmor{f} ; \alpha ; \lmor{g} ; (\pi_l ; \pi_l) \otimes D =
+      \lmor{\lmor{f} ; \alpha ; g}
+    \end{equation}
+    \item For all $f: A \to B + C$, $g : A \otimes B \to D$, $h : A \otimes C \to D$, we
+    have
+    \begin{equation}
+      \lmor{f} ; \delta^{-1} ; [\lmor{g} ; \pi_l \otimes D, \lmor{h} ; \pi_l \otimes D]
+      = \lmor{\lmor{f} ; \delta^{-1} ; [g, h]}
+    \end{equation}
+    \item For all $f_i : R \otimes A_i \to B$, we have
+    \begin{equation}
+      \delta_{\Sigma}^{-1} ; [\lmor{f_i} ; \pi_l \otimes B,]_i
+      = \lmor{\delta_{\Sigma}^{-1} ; [f_i]_i} ; \pi_l \otimes B
+    \end{equation}
+    \item For all $f : A \to B + C$, $g : A \otimes B \to B'$, $h : A \otimes C \to C'$, we have
+    \begin{equation}
+      \begin{aligned}
+      \lmor{\lmor{f} ; \delta^{-1} ; g + h}
+      &= \lmor{f} ; \delta^{-1} 
+        ; [\lmor{g} ; \pi_l \otimes \iota_l, \lmor{h} ; \pi_l \otimes \iota_r] \\
+      &= \lmor{f} ; \delta^{-1} 
+        ; (\lmor{g} ; \pi_l \otimes B') + (\lmor{h} ; \pi_l \otimes C')
+        ; \delta
+      \end{aligned}
+    \end{equation}
+    In particular, we have
+    \begin{equation}
+      \begin{aligned}
+      \lmor{\lmor{f} ; \delta^{-1} ; \pi_r + h}
+      &= \lmor{f} ; \delta^{-1} 
+        ; [A \otimes \iota_l, \lmor{h} ; \pi_l \otimes \iota_r] \\
+      &= \lmor{f} ; \delta^{-1} 
+        ; (A \otimes B) + (\lmor{h} ; \pi_l \otimes C')
+        ; \delta
+      \end{aligned}
+    \end{equation}
+    and
+    \begin{equation}
+      \begin{aligned}
+      \lmor{\lmor{f} ; \delta^{-1} ; g + \pi_r}
+      &= \lmor{f} ; \delta^{-1} 
+        ; [\lmor{g} ; \pi_l \otimes \iota_l, A \otimes \iota_r] \\
+      &= \lmor{f} ; \delta^{-1} 
+        ; (\lmor{g} ; \pi_l \otimes B') + (A \otimes C)
+        ; \delta
+      \end{aligned}
+    \end{equation}
+  \end{enumerate}
+\end{lemma}
+
+\begin{proof}
+  \todo{this}
+\end{proof}
 
 \begin{lemma}[Substitution Projection]
   For $\issubst{\gamma}{\Gamma}{\Delta}$, $\ms{eff}(\Delta) = \bot$ and $\Delta(x) = A$, we have
@@ -6246,65 +6336,6 @@ R \otimes A \to C$, we may define the coproduct and injections
       ; \pi_r + \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}}
       ; \alpha^+_{\dnt{\ms{R}, \ms{K}}}
   \end{equation}
-\end{lemma}
-
-\begin{proof}
-  \todo{this}
-\end{proof}
-
-\begin{lemma}
-  The following facts hold:
-  \begin{enumerate}[label=(\alph*)]
-    \item For all $f: A \to B \otimes C$, $g : (A \otimes B) \otimes C \to D$, we have
-    \begin{equation}
-      \lmor{f} ; \alpha ; \lmor{g} ; (\pi_l ; \pi_l) \otimes D =
-      \lmor{\lmor{f} ; \alpha ; g}
-    \end{equation}
-    \item For all $f: A \to B + C$, $g : A \otimes B \to D$, $h : A \otimes C \to D$, we
-    have
-    \begin{equation}
-      \lmor{f} ; \delta^{-1} ; [\lmor{g} ; \pi_l \otimes D, \lmor{h} ; \pi_l \otimes D]
-      = \lmor{\lmor{f} ; \delta^{-1} ; [g, h]}
-    \end{equation}
-    \item For all $f_i : R \otimes A_i \to B$, we have
-    \begin{equation}
-      \delta_{\Sigma}^{-1} ; [\lmor{f_i} ; \pi_l \otimes B,]_i
-      = \lmor{\delta_{\Sigma}^{-1} ; [f_i]_i} ; \pi_l \otimes B
-    \end{equation}
-    \item For all $f : A \to B + C$, $g : A \otimes B \to B'$, $h : A \otimes C \to C'$, we have
-    \begin{equation}
-      \begin{aligned}
-      \lmor{\lmor{f} ; \delta^{-1} ; g + h}
-      &= \lmor{f} ; \delta^{-1} 
-        ; [\lmor{g} ; \pi_l \otimes \iota_l, \lmor{h} ; \pi_l \otimes \iota_r] \\
-      &= \lmor{f} ; \delta^{-1} 
-        ; (\lmor{g} ; \pi_l \otimes B') + (\lmor{h} ; \pi_l \otimes C')
-        ; \delta
-      \end{aligned}
-    \end{equation}
-    In particular, we have
-    \begin{equation}
-      \begin{aligned}
-      \lmor{\lmor{f} ; \delta^{-1} ; \pi_r + h}
-      &= \lmor{f} ; \delta^{-1} 
-        ; [A \otimes \iota_l, \lmor{h} ; \pi_l \otimes \iota_r] \\
-      &= \lmor{f} ; \delta^{-1} 
-        ; (A \otimes B) + (\lmor{h} ; \pi_l \otimes C')
-        ; \delta
-      \end{aligned}
-    \end{equation}
-    and
-    \begin{equation}
-      \begin{aligned}
-      \lmor{\lmor{f} ; \delta^{-1} ; g + \pi_r}
-      &= \lmor{f} ; \delta^{-1} 
-        ; [\lmor{g} ; \pi_l \otimes \iota_l, A \otimes \iota_r] \\
-      &= \lmor{f} ; \delta^{-1} 
-        ; (\lmor{g} ; \pi_l \otimes B') + (A \otimes C)
-        ; \delta
-      \end{aligned}
-    \end{equation}
-  \end{enumerate}
 \end{lemma}
 
 \begin{proof}
@@ -6807,7 +6838,7 @@ R \otimes A \to C$, we may define the coproduct and injections
           \\
       \end{aligned}
     \end{equation}
-    Writing , we therefore have
+    We therefore have
     \begin{equation}
       \begin{aligned}
         & \dnt{\haslb{\Gamma}
