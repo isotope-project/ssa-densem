@@ -3395,30 +3395,48 @@ One particularly useful property we may derive is that
 \begin{equation}
   \begin{aligned}
   \lmor{\rfix{f}} ; \pi_l \otimes B 
-    &= \dmor{} ; \pi_l \otimes (R \otimes A) ; R \otimes ((\rcase{f})^\dagger ; \pi_r) \\
-    &= \dmor{} ; \pi_l \otimes (R \otimes A) 
-      ; (R \otimes \rcase{f} ; \delta^{-1} ; R \otimes \pi_r + R \otimes B)^\dagger \\
+    &= \dmor{R \otimes A} ; (R \otimes A) \otimes \rfix{f} ; \pi_l \otimes B \\
+    &= \dmor{R} \otimes A ; \alpha ; R \otimes \rfix{f} \\
+    &= \dmor{R} \otimes A ; \alpha ; R \otimes ((\rcase{f})^\dagger ; \pi_r) \\
+    &= \dmor{R} \otimes A ; \alpha
+      ; (R \otimes \rcase{f} ; \delta^{-1} ; R \otimes \pi_r + R \otimes (R \otimes A))^\dagger \\
     &= (\rcase{f})^\dagger
   \end{aligned}
 \end{equation}
 by uniformity, since
 \begin{equation}
   \begin{aligned}
-    & \dmor{} 
-      ; \pi_l \otimes (R \otimes A) 
+    & (\dmor{R} \otimes A ; \alpha)
       ; R \otimes \rcase{f} 
       ; \delta^{-1} 
-      ; R \otimes \pi_r + R \otimes B \\
-    & = \dmor{} 
-    ; \pi_l \otimes (R \otimes A) 
-    ; R \otimes (\lmor{f} ; \pi_l \otimes (B + A) ; \delta^{-1}) 
-    ; \delta^{-1} 
-    ; R \otimes \pi_r + R \otimes B \\
-    &= \text{\todo{this}}
+      ; R \otimes \pi_r + R \otimes (R \otimes A) \\
+    & = \dmor{R} \otimes A ; \alpha
+      ; R \otimes (\lmor{f} ; \pi_l \otimes (B + A) ; \delta^{-1}) 
+      ; \delta^{-1} 
+      ; R \otimes \pi_r + R \otimes (R \otimes A) \\
+    & = \dmor{R} \otimes A ; \alpha
+      ; R \otimes f
+      ; \dmor{R} \otimes (B + A) ; \alpha 
+      ; R \otimes \delta^{-1} ; \delta^{-1}
+      ; R \otimes \pi_r + R \otimes (R \otimes A) \\
+    & = \dmor{R} \otimes A ; \alpha
+      ; R \otimes f
+      ; \delta^{-1}
+      ; (\dmor{R} \otimes A ; \alpha ; R \otimes \pi_r) + (\dmor{R} \otimes A ; \alpha) \\
+    & = \dmor{R \otimes A}
+      ; (R \otimes A) \otimes f
+      ; \pi_l \otimes (B + A)
+      ; \delta^{-1}
+      ; R \otimes A + (\dmor{R} \otimes A ; \alpha) \\
+    &= \rcase{f} ; R \otimes A + (\dmor{R} \otimes A ; \alpha)
   \end{aligned}
 \end{equation}
 
 \TODO{think about pulling down to appendix...}
+
+\TODO{this is \emph{much} clearer as a string diagram}
+
+\TODO{insert proof of ``$\delta$ lemma?''}
 
 \subsection{String Diagrams}
 
