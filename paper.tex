@@ -2009,7 +2009,8 @@ equivalent to
         }{
           \lbeq{\Gamma}
             {\where{([\upg{\sigma}]r)}{(\wbranch{\kappa_i}{x_i}{[\upg{\sigma}]t_i},)_i}}
-            {\where{r}{\wbranch{\ell_i}{x_i}{[(\kappa_j(x_j) \mapsto t_j,)](\sigma_i\;x_i)},)_i}}
+            {\where{r}
+              {(\wbranch{\ell_i}{x_i}{[\upg{(\kappa_j(x_j) \mapsto t_j,)}](\sigma_i\;x_i)},)_i}}
             {\ms{L}}
         }
   \end{gather*}
@@ -5826,6 +5827,11 @@ R \otimes A \to C$, we may define the coproduct and injections
       \delta_{\Sigma}^{-1} ; [\lmor{f_i} ; \pi_l \otimes B,]_i
       = \lmor{\delta_{\Sigma}^{-1} ; [f_i]_i} ; \pi_l \otimes B
     \end{equation}
+    i.e.,
+    \begin{equation}
+      \delta_{\Sigma}^{-1} ; [\rlmor{f_i},]_i
+      = \rlmor{\delta_{\Sigma}^{-1} ; [f_i]_i}
+    \end{equation}
     \item For all $f : A \to B + C$, $g : A \otimes B \to B'$, $h : A \otimes C \to C'$, we have
     \begin{equation}
       \begin{aligned}
@@ -5834,7 +5840,10 @@ R \otimes A \to C$, we may define the coproduct and injections
         ; [\lmor{g} ; \pi_l \otimes \iota_l, \lmor{h} ; \pi_l \otimes \iota_r] \\
       &= \lmor{f} ; \delta^{-1} 
         ; (\lmor{g} ; \pi_l \otimes B') + (\lmor{h} ; \pi_l \otimes C')
-        ; \delta
+        ; \delta \\
+      &= \lmor{f} ; \delta^{-1} 
+      ; \rlmor{g} + \rlmor{h}
+      ; \delta
       \end{aligned}
     \end{equation}
     In particular, we have
@@ -5845,6 +5854,9 @@ R \otimes A \to C$, we may define the coproduct and injections
         ; [A \otimes \iota_l, \lmor{h} ; \pi_l \otimes \iota_r] \\
       &= \lmor{f} ; \delta^{-1} 
         ; (A \otimes B) + (\lmor{h} ; \pi_l \otimes C')
+        ; \delta\\
+      &= \lmor{f} ; \delta^{-1} 
+        ; (A \otimes B) + \rlmor{h}
         ; \delta
       \end{aligned}
     \end{equation}
@@ -5856,6 +5868,9 @@ R \otimes A \to C$, we may define the coproduct and injections
         ; [\lmor{g} ; \pi_l \otimes \iota_l, A \otimes \iota_r] \\
       &= \lmor{f} ; \delta^{-1} 
         ; (\lmor{g} ; \pi_l \otimes B') + (A \otimes C)
+        ; \delta \\
+      &= \lmor{f} ; \delta^{-1} 
+        ; \rlmor{g} + (A \otimes C)
         ; \delta
       \end{aligned}
     \end{equation}
@@ -6342,6 +6357,34 @@ R \otimes A \to C$, we may define the coproduct and injections
   \todo{this}
 \end{proof}
 
+\begin{lemma}
+  For $\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}$, where $\ms{L} = (\ell_i(A_i),)_i$, we have
+  \begin{equation}
+    \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}} 
+    = \dnt{\Gamma} \otimes \alpha_{\Sigma_i\dnt{A_i}} 
+    ; \delta^{-1}_{\Sigma}
+    ; [\dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\sigma_i\;x_i}{\ms{K}}},]_i
+  \end{equation}
+  and therefore
+  \begin{equation}
+    \delta^{-1}_{\Sigma}
+    ; [\dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\sigma_i\;x_i}{\ms{K}}},]_i
+    = \alpha_{\dnt{\ms{L}}}
+    ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}} 
+  \end{equation}
+  In particular, we have that, given $\forall i, \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{K}}$,
+  \begin{equation}
+    \dnt{\lbsubst{\Gamma}{(\wbranch{\ell_i}{x_i}{A_i},)_i)}{\ms{L}}{\ms{K}}}
+    = \dnt{\Gamma} \otimes \alpha_{\Sigma_i\dnt{A_i}} 
+    ; \delta^{-1}_{\Sigma}
+    ; [\dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{K}}},]_i
+  \end{equation}
+\end{lemma}
+
+\begin{proof}
+  \todo{this}
+\end{proof}
+
 \soundnesslsubst*
 
 \label{proof:soundness-lsubst}
@@ -6762,20 +6805,20 @@ R \otimes A \to C$, we may define the coproduct and injections
   All the other rules can be derived trivially from string diagrammatic reasoning: once all the
   definitions are unfolded, both sides of rule are obviously the same diagram. These diagrams are
   given in Figure~\ref{fig:expr-diagrams}.
-
+  %
   We now proceed to tackle the equational theory for regions $r$ in the same manner. In particular,
   we proceed by rule induction as follows:
-  \begin{itemize}
-    \item \brle{let$_1$-$\beta$}, \brle{let$_1$-case}, \brle{case-inl}, \brle{case-inr}: proved
+  \begin{itemize}[leftmargin=*]
+    \item[] \brle{let$_1$-$\beta$}, \brle{let$_1$-case}, \brle{case-inl}, \brle{case-inr}: proved
     analgously to the corresponding rules for expressions
-    \item \brle{cfg-$\beta_1$}: \todo{this}
-    \item \brle{cfg-$\beta_2$}: \todo{this}
-    \item \brle{cfg-$\eta$}: \todo{this}
-    \item \brle{codiag}: \todo{this}
-    \item \brle{uni}: \todo{this}
-    \item \brle{dinat}: we have by label substitution that, where $\ms{R} = (\ell_i(A_i),)_i$ and
+    \item[] \brle{cfg-$\beta_1$}: \todo{this}
+    \item[] \brle{cfg-$\beta_2$}: \todo{this}
+    \item[] \brle{cfg-$\eta$}: \todo{this}
+    \item[] \brle{codiag}: \todo{this}
+    \item[] \brle{uni}: \todo{this}
+    \item[] \brle{dinat}: we have by label substitution that, where $\ms{R} = (\ell_i(A_i),)_i$ and
     $\ms{R}' = (\kappa_j(B_j),)_j$, $S = \dnt{\lbsubst{\Gamma}{\sigma}{\ms{R}}{\ms{R}'}}$, and
-    $S' = \alpha^+_{\dnt{R}} ; S ; \alpha^+_{\Sigma_j\dnt{B_j}}$,
+    $S' = \dnt{\Gamma} \otimes \alpha^+_{\dnt{R}} ; S ; \alpha^+_{\Sigma_j\dnt{B_j}}$,
     \begin{equation}
       \begin{aligned}
         & \entrymor{[\upg{\sigma}]r}
@@ -6789,7 +6832,7 @@ R \otimes A \to C$, we may define the coproduct and injections
         & = \lmor{\entrymor{r}} ; \delta^{-1} ; \pi_r + S' \\
       \end{aligned}
     \end{equation}
-    and
+    and, writing $L = \loopmor{(\wbranch{\ell_i}{x_i}{t_i},)_i}$
     \begin{equation}
       \begin{aligned}
         & \lmor{(\wbranch{\kappa_i}{x_i}{[\upg{\sigma}]t_i},)_i}
@@ -6834,8 +6877,89 @@ R \otimes A \to C$, we may define the coproduct and injections
           ; \pi_l \otimes (\dnt{\ms{L}} + \Sigma_j\dnt{B_j})
           ; \delta^{-1} ; \pi_r + S'
           \\
-        & = \rcase{\loopmor{(\wbranch{\ell_i}{x_i}{t_i},)_i}} ; \pi_r + S'
+        & = \rcase{L} ; \pi_r + S'
           \\
+      \end{aligned}
+    \end{equation}
+    Furthermore, we have that, letting 
+    $G = \dnt{\lbsubst{\Gamma}{(\kappa_j(x_j) \mapsto t_j,)_j}{\ms{R}'}{\ms{L}, \ms{R}}}$,
+    \begin{equation}
+      \begin{aligned}
+        & \dnt{\haslb
+          {\Gamma, \bhyp{x_i}{A_i}}{[\upg{(\kappa_j(x_j) \mapsto t_j,)_j}](\sigma_i\;x_i)}
+          {\ms{L}, \ms{R}}} \\
+        & = \lmor{\dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\sigma_i\;x_i}{\ms{L}, \ms{R}'}}}
+          ; \dnt{\lbsubst{\Gamma, \bhyp{x_i}{A_i}}{\upg{(\kappa_j(x_j) \mapsto t_j,)_j}}
+            {\ms{L}, \ms{R}'}{\ms{L}, \ms{R}}} \\
+        & = \lmor{\dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\sigma_i\;x_i}{\ms{L}, \ms{R}'}}}
+          ; \pi_l \otimes \dnt{\ms{L}, \ms{R'}} 
+          ; \dnt{\lbsubst{\Gamma}{\upg{(\kappa_j(x_j) \mapsto t_j,)_j}}
+            {\ms{L}, \ms{R}'}{\ms{L}, \ms{R}}} \\
+        & = \rlmor{\dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\sigma_i\;x_i}{\ms{L}, \ms{R}'}}}
+        ; \dnt{\Gamma} \otimes \alpha^+_{\dnt{\ms{L}} + \dnt{\ms{R}'}}
+        ; \delta^{-1}
+        ; [\pi_r ; \iota_l ; \alpha^+_{\dnt{\ms{L}, \ms{R}}} , G]
+         \\
+        & = \rlmor{
+          \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\sigma_i\;x_i}{\ms{L}, \ms{R}'}}
+          ; \alpha^+_{\dnt{\ms{L}} + \dnt{\ms{R}'}}
+        } ; \delta^{-1} 
+        ; [\pi_r ; \iota_l ; \alpha^+_{\dnt{\ms{L}, \ms{R}}} , G] \\
+        & = \rcase{
+          \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\sigma_i\;x_i}{\ms{L}, \ms{R}'}}
+          ; \alpha^+_{\dnt{\ms{L}} + \dnt{\ms{R}'}}
+        }
+        ; [\pi_r ; \iota_l ; \alpha^+_{\dnt{\ms{L}, \ms{R}}} , G] \\
+        & = \rcase{
+          \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\sigma_i\;x_i}{\ms{R}'}}
+          ; \iota_r
+        }
+        ; [\pi_r ; \iota_l ; \alpha^+_{\dnt{\ms{L}, \ms{R}}} , G] \\
+        & = \rlmor{
+          \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\sigma_i\;x_i}{\ms{R}'}}
+        } ; G \\
+      \end{aligned}
+    \end{equation}
+    It follows that
+    \begin{equation}
+      \begin{aligned}
+        & \loopmor{(\wbranch{\ell_i}{x_i}{[\upg{(\kappa_j(x_j) \mapsto t_j,)}](\sigma_i\;x_i)},)_i}
+        \\
+        & = \delta^{-1}_\Sigma 
+          ; [ \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}
+                  {[\upg{(\kappa_j(x_j) \mapsto t_j,)_j}](\sigma_i\;x_i)}{\ms{L}, \ms{R}}}, ]_i
+          ; \alpha^+_{\dnt{\ms{L}} + \Sigma_i \dnt{A_i}}   \\
+        & = \delta^{-1}_\Sigma 
+          ; [ \rlmor{
+                \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\sigma_i\;x_i}{\ms{R}'}}
+              } ; G ]_i
+          ; \alpha^+_{\dnt{\ms{L}} + \Sigma_i \dnt{A_i}}   \\
+        & = \delta^{-1}_\Sigma 
+          ; [ \rlmor{
+                \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\sigma_i\;x_i}{\ms{R}'}}
+              } ; G ]_i
+          ; \alpha^+_{\dnt{\ms{L}} + \Sigma_i \dnt{A_i}}   \\
+        & = \delta^{-1}_\Sigma 
+          ; [\rlmor{
+                \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\sigma_i\;x_i}{\ms{R}'}}
+              }]_i ; G ; \alpha^+_{\dnt{\ms{L}} + \Sigma_i \dnt{A_i}}  \\
+        & = \rlmor{\delta^{-1}_\Sigma 
+          ; [
+                \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\sigma_i\;x_i}{\ms{R}'}}
+            ]_i} ; G ; \alpha^+_{\dnt{\ms{L}} + \Sigma_i \dnt{A_i}}   \\
+        & = \rlmor{\delta^{-1}_\Sigma 
+          ; [
+                \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\sigma_i\;x_i}{\ms{R}'}}
+            ]_i} ; G ; \alpha^+_{\dnt{\ms{L}} + \Sigma_i \dnt{A_i}}   \\
+        & = \rlmor{\dnt{\Gamma} \otimes \alpha_{\dnt{\ms{R}}} ; S} ; G 
+          ; \alpha^+_{\dnt{\ms{L}} + \Sigma_i \dnt{A_i}} \\
+        & = \rlmor{S'} ; \dnt{\Gamma} \otimes \alpha_{\dnt{\ms{R'}}} 
+          ; \dnt{\lbsubst{\Gamma}{(\kappa_j(x_j) \mapsto t_j,)_j}{\ms{R}'}{\ms{L}, \ms{R}}}
+          ; \alpha^+_{\dnt{\ms{L}} + \Sigma_i \dnt{A_i}} \\
+        & = \rlmor{S'} ; \delta^{-1}_{\Sigma}
+          ; [\dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{R}'}{\ms{L}, \ms{R}}},]_i
+          ; \alpha^+_{\dnt{\ms{L}} + \Sigma_i \dnt{A_i}} \\
+        & = \rlmor{S'} ; L \\
       \end{aligned}
     \end{equation}
     We therefore have
@@ -6849,94 +6973,37 @@ R \otimes A \to C$, we may define the coproduct and injections
         & = \lmor{\lmor{\entrymor{r}} ; \delta^{-1} ; \pi_r + S'} ; \delta^{-1}
           ; [
               \pi_r,
-              \rfix{\rcase{\loopmor{(\wbranch{\ell_i}{x_i}{t_i},)_i}} ; \pi_r + S'}
+              \rfix{\rcase{L} ; \pi_r + S'}
           ] \\
-        & = \text{\todo{wat}}
+        & = \lmor{\entrymor{r}} ; \delta^{-1} 
+          ; \dnt{\Gamma} \otimes \dnt{\ms{L}} + \rlmor{S}
+          ; [
+            \pi_r,
+            \rfix{\rcase{L} ; \pi_r + S'}
+          ] \\
+        & = \lmor{\entrymor{r}} ; \delta^{-1} 
+        ; [
+          \pi_r,
+          \rlmor{S'}
+          ; \rfix{\rcase{L} ; \pi_r + S'}
+        ] \\
+        & = \lmor{\entrymor{r}} ; \delta^{-1} 
+        ; [
+          \pi_r,
+          \rfix{\rlmor{S'} ; L}
+        ] \\
+        & = \lmor{\entrymor{r}} ; \delta^{-1} 
+        ; [
+          \pi_r,
+          \rfix{
+            \loopmor{(\wbranch{\ell_i}{x_i}
+                    {[\upg{(\kappa_j(x_j) \mapsto t_j,)}](\sigma_i\;x_i)},)_i}}
+        ] \\
+        & = \dnt{\haslb{\Gamma}
+          {\where{r}{[\upg{(\kappa_j(x_j) \mapsto t_j,)}](\sigma_i\;x_i)},)_i}{\ms{L}}}
       \end{aligned}
     \end{equation}
-    \TODO{rest}
-    \TODO{nice co-Kleisli edition?}
-    % \begin{equation}
-    %   \begin{aligned}
-    %   \dnt{\haslb{\Gamma}{[\sigma^\uparrow]r}{\ms{L}, (\lhyp{\kappa_j}{A_j},)_j}} 
-    %     &= D_r ; \dnt{\ms{L}} + S ; \alpha^+ \\
-    %   \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{[\sigma^\uparrow]t_i}{\ms{L}, (\lhyp{\kappa_j}{A_j},)_j}}
-    %     &= D_{t_i} ; \dnt{\ms{L}} + S ; \alpha^+
-    %   % \\ & = \Delta ; 
-    %   % \dnt{\Gamma} \otimes \dnt{\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}} 
-    %   %   \alpha^+ ; \delta^{-1} ; 
-    %   \end{aligned}
-    % \end{equation}
-    % where
-    % \begin{equation}
-    %   \begin{aligned}
-    %     D_r &= \Delta ; 
-    %       \dnt{\Gamma} \otimes (\dnt{\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}} ;
-    %         \alpha^+) ; \delta^{-1} ; \pi_r + \dnt{\Gamma} \otimes \Sigma_i \dnt{A_i} 
-    %         \\
-    %     D_{t_i} &= \Delta ; 
-    %       \dnt{\Gamma} \otimes 
-    %         (\dnt{\haslb{\Gamma, \bhyp{x_i}{B_i}}{t_i}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}} ;
-    %         \alpha^+) ; \delta^{-1} ; \pi_r + \dnt{\Gamma} \otimes \Sigma_i \dnt{A_i} \\
-    %     S &= \dnt{\lbsubst{\Gamma}{\sigma}{(\lhyp{\ell_i}{A_i},)_i}{\lhyp{\kappa_j}{B_j},)_j}}
-    %   \end{aligned}
-    % \end{equation}
-    % Hence, we have that
-    % \begin{equation}
-    %   \begin{aligned}
-    %     & \dnt{\haslb{\Gamma}
-    %     {\where{([\upg{\sigma}]r)}{(\wbranch{\kappa_i}{x_i}{[\upg{\sigma}]t_i},)_i}}
-    %     {\ms{L}}} \\
-    %     &= \Delta ; \dnt{\Gamma} \otimes (D_r ; \dnt{\ms{L}} + S ; \cancel{\alpha^+ ; \alpha^+})
-    %     ; \delta^{-1} ; [\pi_r, (
-    %       \delta^{-1}_\Sigma ; \\ &\qquad [
-    %         \Delta \otimes \dnt{B_i} ; \alpha ; \dnt{\Gamma} \otimes (D_{t_i} ; \dnt{\ms{L}} + S ; 
-    %           \cancel{\alpha^+}) 
-    %       ]_i ; \cancel{\alpha^+} ; \delta^{-1}
-    %     )^{\dagger}; \pi_r] \\
-    %     &= \Delta ; \dnt{\Gamma} \otimes D_r ; \delta^{-1} 
-    %               ; [\pi_r, \dnt{\Gamma} \otimes S ; (\delta^{-1}_{\Sigma}; 
-    %               \\ &\qquad [
-    %         \Delta \otimes \dnt{B_i} ; \alpha ; \dnt{\Gamma} \otimes D_{t_i} ; \delta^{-1} ; 
-    %         \dnt{\Gamma} \otimes \dnt{\ms{L}} + \dnt{\Gamma} \otimes S
-    %       ]_i
-    %     )^{\dagger}; \pi_r] \\
-    %     &= \Delta ; \dnt{\Gamma} \otimes D_r ; \delta^{-1} 
-    %               ; [\pi_r, (\dnt{\Gamma} \otimes S ; \delta^{-1}_{\Sigma}; 
-    %               [
-    %         \Delta \otimes \dnt{B_i} ; \alpha ; \dnt{\Gamma} \otimes D_{t_i} ; \delta^{-1}
-    %       ]_i
-    %     )^{\dagger}; \pi_r] \\
-    %     &= D_r ; [\dnt{\ms{L}}, 
-    %       \Delta \otimes \Sigma_i \dnt{A_i} 
-    %         ; \alpha ; (\dnt{\Gamma} \otimes S ; \delta^{-1}_{\Sigma}; 
-    %               [
-    %         \Delta \otimes \dnt{B_i} ; \alpha ; \dnt{\Gamma} \otimes D_{t_i} ; \delta^{-1}
-    %       ]_i
-    %     )^{\dagger}; \pi_r]
-    %   \end{aligned}
-    % \end{equation}
-    % Therefore, it suffices to show that
-    % \begin{equation}
-    %   \begin{aligned}
-    %     & \Delta \otimes \Sigma_i \dnt{A_i} 
-    %         ; \alpha ; (\dnt{\Gamma} \otimes S ; \delta^{-1}_{\Sigma}; 
-    %               [
-    %         \Delta \otimes \dnt{B_i} ; \alpha ; \dnt{\Gamma} \otimes D_{t_i} ; \delta^{-1}
-    %       ]_i
-    %     )^{\dagger} \\
-    %     &= 
-    %   \end{aligned}
-    % \end{equation}
-    % \TODO{this...}
-    % \begin{equation}
-    %   \begin{aligned}
-    %   \dnt{\Gamma} \otimes D_r ; \delta^{-1} &= \dnt{\Gamma} \otimes (\Delta ; 
-    %     \dnt{\Gamma} \otimes \dnt{\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}} ;
-    %       \alpha^+ ; \delta^{-1} ; \pi_r + \dnt{\Gamma} \otimes \Sigma_i \dnt{A_i}) ; \delta^{-1} \\
-    %       &= ..\dnt{\Gamma} \otimes 
-    %   \end{aligned}
-    % \end{equation}
+    as desired.
   \end{itemize}
   Analogously to expressions, all the other rules can be derived trivially from string diagrammatic
   reasoning: once all the definitions are unfolded, both sides of rule are obviously the same
