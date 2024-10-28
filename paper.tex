@@ -5906,6 +5906,10 @@ R \otimes A \to C$, we may define the coproduct and injections
         ; \delta
       \end{aligned}
     \end{equation}
+    \item For $f : R \otimes A \to B + A$,
+    \begin{equation}
+      \rfix{\pi_l \otimes A ; f} = \pi_l \otimes A ; \rfix{f}
+    \end{equation}
   \end{enumerate}
 \end{lemma}
 
@@ -6846,12 +6850,53 @@ R \otimes A \to C$, we may define the coproduct and injections
     \item[] \brle{cfg-$\beta_1$}: \todo{this}
     \item[] \brle{cfg-$\beta_2$}: \todo{this}
     \item[] \brle{cfg-$\eta$}: \todo{this}
-    \item[] \brle{codiag}: \todo{this}
+    \item[] \brle{codiag}: 
+    Define $R = \dnt{\haslb{\Gamma}{r}{\ms{L}, \ell(A)}}$, and %
+           $S = \dnt{\haslb{\Gamma, \bhyp{y}{A}}{s}{\ms{L}, \ell(A), \kappa(A)}}$ %
+    \TODO{$\dnt{\haslb{\Gamma, \bhyp{y}{A}}{[\ell/\kappa]s}{\ms{L}}} 
+      = \rfix{S ; [\ms{id}, \iota_r]}$}
+    We have that
+    \begin{equation}
+      \begin{aligned}
+      & \dnt{\haslb{\Gamma}
+        {\where{r}{\wbranch{\ell}{x}{\where{\brb{\kappa}{x}}{\wbranch{\kappa}{y}{s}}}}}{\ms{L}}} \\
+      & = \lmor{R} ; \delta^{-1} ; [\ms{id}, 
+        \rfix{\dnt{\haslb{\Gamma, \bhyp{x}{A}}
+          {\where{\brb{\kappa}{x}}{\wbranch{\kappa}{y}{s}}}{\ms{L}, \ell(A)}}}] \\
+      & = \lmor{R} ; \delta^{-1} ; [\ms{id}, 
+        \rfix{\lmor{\pi_r ; \iota_r} ; \delta^{-1} 
+            ; [\pi_r, 
+            \rfix{\dnt{\haslb{\Gamma, \bhyp{x}{A}, \bhyp{y}{A}}{s}{\ms{L}, \ell(A), \kappa(A)}}}]
+          }] \\
+      & = \lmor{R} ; \delta^{-1} ; [\ms{id}, 
+        \rfix{\lmor{\pi_r ; \iota_r} ; \delta^{-1} 
+            ; [\pi_l \otimes A ; \pi_r, 
+            \rfix{\pi_l \otimes \dnt{A} ; S}]
+          }] \\
+      & = \lmor{R} ; \delta^{-1} ; [\ms{id}, 
+        \rfix{\lmor{\pi_r ; \iota_r} ; \pi_l \otimes \dnt{A} ; \delta^{-1} ; [\pi_r, \rfix{S}]
+          }] \\
+      & = \lmor{R} ; \delta^{-1} ; [\ms{id}, 
+          \rfix{\rseq{}{\envinr{\dnt{\Gamma}}}{\envcop{\dnt{\Gamma}}{\pi_r}{\rfix{S}}}}] \\
+      & = \lmor{R} ; \delta^{-1} ; [\ms{id}, \rfix{\rfix{S}}]
+        = \lmor{R} ; \delta^{-1} ; 
+          [\ms{id}, \rfix{\rseq{}{S}{\envcop{\dnt{\Gamma}}{\pi_r}{\envinr{\dnt{\Gamma}}}}}] \\
+      & = \lmor{R} ; \delta^{-1} ; 
+          [\ms{id}, \rfix{\lmor{S} ; \delta^{-1} ; [\pi_r, \pi_r ; \iota_r]}]
+        = \lmor{R} ; \delta^{-1} ; 
+          [\ms{id}, \rfix{S ; [\ms{id}, \iota_r]}] \\
+      & = \lmor{R} ; \delta^{-1} ; 
+      [\ms{id}, \rfix{\dnt{\haslb{\Gamma, \bhyp{y}{A}}{[\ell/\kappa]s}{\ms{L}}}}]
+        = \dnt{\haslb{\Gamma}{\where{r}{\wbranch{\ell}{y}{[\ell/\kappa]s}}}{\ms{L}}}
+      \end{aligned}
+    \end{equation}
+    as desired.
+
     \item[] \brle{uni}: 
-    Define $E = \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\bot}{e}{B}}$, 
-           $S = \dnt{\haslb{\Gamma, \bhyp{y}{B}}{s}{\ms{L}, \kappa(B)}}$,
-           $T = \dnt{\haslb{\Gamma, \bhyp{x}{A}}{s}{\ms{L}, \ell(A)}}$, and
-           $R = \dnt{\haslb{\Gamma}{r}{\ms{L}, \ell(A)}}$.
+    Define $R = \dnt{\haslb{\Gamma}{r}{\ms{L}, \ell(A)}}$, %
+           $E = \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\bot}{e}{B}}$, %
+           $S = \dnt{\haslb{\Gamma, \bhyp{y}{B}}{s}{\ms{L}, \kappa(B)}}$, and %
+           $T = \dnt{\haslb{\Gamma, \bhyp{x}{A}}{s}{\ms{L}, \ell(A)}}$. %
     We have by induction that
     \begin{equation}
       \begin{aligned}
@@ -6888,9 +6933,11 @@ R \otimes A \to C$, we may define the coproduct and injections
     as desired.
     
     \item[] \brle{dinat}: 
-    Define $\ms{R} = (\ell_i(A_i),)_i$, $\ms{R}' = (\kappa_j(B_j),)_j$, $S =
-    \dnt{\lbsubst{\Gamma}{\sigma}{\ms{R}}{\ms{R}'}}$, and $S' = \dnt{\Gamma} \otimes
-    \alpha^+_{\dnt{R}} ; S ; \alpha^+_{\Sigma_j\dnt{B_j}}$. We have that
+    Define 
+      $\ms{R} = (\ell_i(A_i),)_i$, $\ms{R}' = (\kappa_j(B_j),)_j$, %
+      $S = \dnt{\lbsubst{\Gamma}{\sigma}{\ms{R}}{\ms{R}'}}$, and %
+      $S' = \dnt{\Gamma} \otimes \alpha^+_{\dnt{R}} ; S ; \alpha^+_{\Sigma_j\dnt{B_j}}$. %
+    We have that
     \begin{equation}
       \begin{aligned}
         & \entrymor{[\upg{\sigma}]r}
