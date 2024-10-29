@@ -130,6 +130,8 @@
 \newcommand{\adddom}[2]{\ms{bb}(#1, #2)}
 \newcommand{\toreg}[1]{\ms{reg}(#1)}
 \newcommand{\todnf}[1]{\ms{dom}(#1)}
+\newcommand{\towhile}[2]{\ms{WH}_{#1}(#2)}
+\newcommand{\topwhile}[2]{\ms{PW}_{#1}(#2)}
 
 % Denotational semantics
 \newcommand{\dnt}[1]{\llbracket{#1}\rrbracket}
@@ -2905,58 +2907,52 @@ Note that loops only support having a single exit point; to support multiple exi
 sequencing something after the loop. We can now define the inductive predicate
 $\shaslb{\Gamma}{r}{\ms{L}}$, which says that $r$ is a structured region with input variables
 $\Gamma$ and output labels $\ms{L}$, as in Figure~\ref{fig:structured-regions}; note that
-$\shaslb{\Gamma}{r}{\ms{L}} \implies \haslb{\Gamma}{r}{\ms{L}}$. We can now state the
-B\"ohm-Jacopini theorem for SSA as follows:
-\begin{theorem}[B\"ohm-Jacopini for SSA]
-  There exists a function $\ms{S}_{\ms{L}}$ such that, for all $\haslb{\Gamma}{r}{\ms{L}}$,
-  \begin{equation}
-    \haslb{\Gamma}{r}{\ms{L}} \qquad \implies \qquad 
-      \shaslb{\Gamma}{\ms{S}(r)}{\ms{L}}, \quad \lbeq{\Gamma}{r}{\ms{S}(r)}{\ms{L}}
-  \end{equation}
-\end{theorem}
-\begin{proof}
-  We begin by defining a function $\ms{SP}$ on regions $\haslb{\Gamma}{r}{\ms{L}}$ as follows:
-  \begin{align*}
-    \ms{SP}(\ms{br}\;\ell\;a) &= \ms{pack}^+(\ms{L})_\ell(a) \\
-    \ms{SP}(\letstmt{x}{a}{r}) &= \letstmt{x}{a}{\ms{SP}(r)} \\
-    \ms{SP}(\letstmt{(x, y)}{a}{r}) &= \letstmt{(x, y)}{a}{\ms{SP}(r)} \\
-    \ms{SP}(\casestmt{e}{x}{r}{y}{s}) &= \casestmt{e}{x}{\ms{SP}(r)}{y}{\ms{SP}(s)} \\
-    \ms{SP}(\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}) &=
-      \ms{seq}(\ms{SP}(r), \caseexpr{\ms{ua}\;\invar}{x}{\brb{\outlb}{x}\\ & \qquad}{y}
+$\shaslb{\Gamma}{r}{\ms{L}} \implies \haslb{\Gamma}{r}{\ms{L}}$. 
+%
+It now remains to give an algorithm to convert a region $r$ targeting label-context $\ms{L}$ into an
+equivalent structured region $\towhile{\ms{L}}{r}$. In particular, we define
+\begin{equation}
+  \towhile{\ms{L}}{r} = [\ms{unpack}^+_\outlb(\ms{L})]\topwhile{L}{r}
+\end{equation}
+where we define
+\begin{equation}
+  \begin{aligned}
+    \topwhile{\ms{L}}{\ms{br}\;\ell\;a} &= \ms{pack}^+(\ms{L})_\ell(a) \\
+    \topwhile{\ms{L}}{\letstmt{x}{a}{r}} &= \letstmt{x}{a}{\topwhile{\ms{L}}{r}} \\
+    \topwhile{\ms{L}}{\letstmt{(x, y)}{a}{r}} &= \letstmt{(x, y)}{a}{\topwhile{\ms{L}}{r}} \\
+    \topwhile{\ms{L}}{\casestmt{e}{x}{r}{y}{s}} 
+      &= \casestmt{e}{x}{\topwhile{\ms{L}}{r}}{y}{\topwhile{\ms{L}}{s}} \\
+    \topwhile{\ms{L}}{\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}} 
+      &=
+      \ms{seq}(\topwhile{\ms{L}}{r}, \caseexpr{\ms{ua}\;\invar}{x}{\brb{\outlb}{x}\\ & \qquad}{y}
         {\ms{loop}(y, 
         \ms{case}_{\ms{L}}\;\invar\;
-          \{\ell_i(x_i) : \ms{seq}(\ms{SP}(t_i), \brb{\outlb}{\ms{ua}\;\invar)}\})})
-  \end{align*}
-  where we have $\hasty{\Gamma}{\bot}{\ms{ua}_{\ms{L}}\;e}{[L] + [R]}$ for
-  $\hasty{\Gamma}{\bot}{e}{[L, R]}$ given by
-  \begin{equation}
-    \ms{ua}_{\ms{L}, \cdot}\;e = e \qquad
-    \ms{ua}_{\ms{L}, (\ms{R}, \ell(A))}\;e 
-      = \caseexpr{e}{x}{
-          \caseexpr{\ms{ua}_{\ms{L}, \ms{R}}\;x}{z}{\iota_l\;z}{w}{\iota_r\;\iota_l\;w}}
-          {y}{\iota_r\;(\iota_r\;y)}
-  \end{equation}
-  We may show by induction that:
-  \begin{equation}
-    \shaslb{\Gamma}{\ms{SP}(r)}{\outlb([\ms{L}])} \qquad
-    \lbeq{\Gamma}{[r]}{\ms{SP}(r)}{\outlb([\ms{L}])}
-  \end{equation}
-  Furthermore, it is easy to show that
-  \begin{equation}
-    \prftree[r]{\rle{s-unpack$^+$}}
-      {\hasty{\Gamma}{\epsilon}{e}{[L]}}
-      {\shaslb{\Gamma}{\ms{unpack}^+(\ms{L})\;e}{L}}
-  \end{equation}
-  It follows that we can define, for $\haslb{\Gamma}{r}{\ms{L}}$
-  \begin{equation}
-    \haslb{\Gamma}{\ms{S}_{\ms{L}}(r) 
-      := \ms{seq}(\ms{SP}(r), \ms{unpack}^+(\ms{L})\;\invar)
-      \teqv [\ms{unpack}^+_\outlb(\ms{L})][r]
-      \teqv r
-      }{\ms{L}}
-  \end{equation}
-  which we can easily verify satisfies the desired properties.
+          \{\ell_i(x_i) : \ms{seq}(\topwhile{\ms{L}}{t_i}, \brb{\outlb}{\ms{ua}\;\invar)}\})})
+  \end{aligned}
+\end{equation}
+\begin{equation}
+  \ms{ua}_{\ms{L}, \cdot}\;e = e \qquad
+  \ms{ua}_{\ms{L}, (\ms{R}, \ell(A))}\;e 
+    = \caseexpr{e}{x}{
+        \caseexpr{\ms{ua}_{\ms{L}, \ms{R}}\;x}{z}{\iota_l\;z}{w}{\iota_r\;\iota_l\;w}}
+        {y}{\iota_r\;(\iota_r\;y)}
+\end{equation}
+We note that, given $\hasty{\Gamma}{\bot}{e}{[L, R]}$, we have that
+$\hasty{\Gamma}{\bot}{\ms{ua}_{\ms{L}}\;e}{[L] + [R]}$. The B\"ohm-Jacopini theorem for SSA can then
+be written:
+\begin{theorem}[name=B\"ohm-Jacopini for SSA, restate=bohmjacopini]
+  For all $\haslb{\Gamma}{r}{\ms{L}}$, $\shaslb{\Gamma}{\towhile{\ms{L}{r}}}{\ms{L}}$ is structured,
+  and $\lbeq{\Gamma}{r}{\towhile{\ms{L}}{r}}{\ms{L}}$. In particular, we have that
+  $\shaslb{\Gamma}{\topwhile{\ms{L}}{r}}{\outlb([\ms{L}])}$ is structured, and
+  $\lbeq{\Gamma}{[r]}{\ms{SP}(r)}{\outlb([\ms{L}])}$.
+\end{theorem}
+\begin{proof}
+  See Appendix~\ref{proof:bohm-jacopini}
 \end{proof}
+
+\TODO{``folk B\"ohm-Jacopini'' as a usage for variable packing?}
+
+\TODO{perhaps pull whole section down to appendix?}
 
 \begin{figure}
   \begin{gather*}
@@ -5875,7 +5871,13 @@ R \otimes A \to C$, we may define the coproduct and injections
 
 \subsection{B\"ohm-Jacopini}
 
-\TODO{this}
+\bohmjacopini*
+
+\label{proof:bohm-jacopini}
+
+\begin{proof}
+  \TODO{prove or remove (close analog proved in Lean, but not exactly the same...)}
+\end{proof}
 
 \subsection{Substitution}
 
