@@ -1825,7 +1825,7 @@ to a binding rule in that it allows us to derive many of the expected commutativ
 One particularly important application of the $\eta$-rule for control-flow graphs is in validating
 the rewrite
 \begin{equation}
-  \prftree[r]{case2cfg}
+  \prftree[r]{\rle{case2cfg}}
     {\hasty{\Gamma}{\epsilon}{a}{A + B}}
     {\haslb{\Gamma, \bhyp{x}{A}}{s}{\ms{L}}}
     {\haslb{\Gamma, \bhyp{y}{B}}{t}{\ms{L}}}
@@ -6416,11 +6416,25 @@ R \otimes A \to C$, we may define the coproduct and injections
     ; \delta^{-1}_{\Sigma}
     ; [\dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{K}}},]_i
   \end{equation}
+  \label{lem:lsubst-distrib}
 \end{lemma}
 
 \begin{proof}
   \todo{this}
 \end{proof}
+
+% \begin{lemma}
+%   Given $\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}$, we have
+%   that
+%   \begin{multline}
+%     \dnt{
+%       \lbsubst{\Gamma}
+%         {\cfgsubst{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}{\ms{L}}
+%      } \\ = \dnt{\Gamma} \otimes \alpha_{\dnt{\ms{L}} + \Sigma_i\dnt{A_i}} ; [
+%       \pi_r, \rfix{\loopmor{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
+%      ]
+%   \end{multline}
+% \end{lemma}
 
 \soundnesslsubst*
 
@@ -6903,13 +6917,82 @@ R \otimes A \to C$, we may define the coproduct and injections
           } ; \delta^{-1} ; [\pi_r, \rfix{L}] \\
         & = \lmor{P ; \iota_{\ms{L}, \kappa}} 
           ; \dnt{\Gamma} \otimes \iota_l ; \delta^{-1} ; [\pi_r, \rfix{L}] \\
-        & = \lmor{P ; \iota_{\ms{L}, \kappa}} ; \pi_r \\
-          = P ; \iota_{\ms{L}, \kappa} \\
+        & = \lmor{P ; \iota_{\ms{L}, \kappa}} ; \pi_r
+          = P ; \iota_{\ms{L}, \kappa}
           = \dnt{\haslb{\Gamma}{\brb{\kappa}{b}}{\ms{L}}}
       \end{aligned}
     \end{equation}
     as desired.
-    \item[] \brle{cfg-$\eta$}: \todo{this}
+    \item[] \brle{cfg-$\eta$}: 
+    Let $\ms{L} = (\kappa_j(B_j),)_j$, and define %
+      $\ms{R} = (\ell_i(A_i),)_i$ and %
+      $L = \loopmor{(\wbranch{\ell_i}{x_i}{t_i},)_i}$. %
+    Using the \brle{cfg-$\beta_1$} and \brle{cfg-$\beta_2$} cases proved above, we have that
+    \begin{equation}
+      \begin{aligned}
+        & \dnt{
+            \lbsubst{\Gamma}
+              {\cfgsubst{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}, \ms{R}}{\ms{L}}
+          } \\
+        & = \alpha_{\dnt{\ms{L}} + \Sigma_i\dnt{A_i}}
+          ; [ \\ & \qquad
+            \dnt{
+              \lbsubst{\Gamma}
+                {\cfgsubst{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}{\ms{L}}
+            }, \\ & \qquad
+            \dnt{
+              \lbsubst{\Gamma}
+                {\cfgsubst{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{R}}{\ms{L}}
+            }
+          ] \\
+        & = \alpha_{\Sigma_i\dnt{B_i} + \Sigma_i\dnt{A_i}}
+          ; [ \\ & \qquad
+            \delta^{-1}_{\Sigma} 
+            ; [\dnt{\haslb{\Gamma, \bhyp{y_j}{B_j}}
+                {\where{\brb{\kappa_j}{y_j}}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}},]_j, 
+                \\ & \qquad
+            \delta^{-1}_{\Sigma} 
+            ; [\dnt{\haslb{\Gamma, \bhyp{x_j}{A_j}}
+            {\where{\brb{\ell_j}{x_j}}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}},]_j
+          ] \\
+        & = \alpha_{\Sigma_i\dnt{B_i} + \Sigma_i\dnt{A_i}}
+          ; [ \\ & \qquad
+            \delta^{-1}_{\Sigma} 
+            ; [\dnt{\hasty{\Gamma, \bhyp{y_j}{B_j}}{\bot}{y_j}{B_j}} ; \iota_{\ms{L}, \kappa_j},]_j, 
+                \\ & \qquad
+            \delta^{-1}_{\Sigma} 
+            ; [
+              \lmor{\dnt{\hasty{\Gamma, \bhyp{x_j}{A_j}}{\bot}{x_j}{A_j}} ; \iota_j} 
+              ; \rfix{\pi_l \otimes \Sigma_k\dnt{A_k} ; L}
+            ]_j
+          ] \\
+        & = \alpha_{\Sigma_i\dnt{B_i} + \Sigma_i\dnt{A_i}}
+          ; [
+            \delta^{-1}_{\Sigma} ; [\pi_r ; \iota_{\ms{L}, \kappa_j},]_j, 
+            \delta^{-1}_{\Sigma} ; [\lmor{\pi_r ; \iota_j} ; \pi_l \otimes \Sigma_k\dnt{A_k}]_j 
+            ; \rfix{L}
+          ] \\
+        & = \alpha_{\Sigma_i\dnt{B_i} + \Sigma_i\dnt{A_i}}
+          ; [
+            \pi_r ; \alpha_{\ms{L}}, 
+            \rlmor{\delta^{-1}_{\Sigma} ; [\pi_r ; \iota_j]_j}
+            ; \rfix{L}
+          ]
+          = \alpha_{\ms{L} + \Sigma_i\dnt{A_i}}
+          ; [
+            \pi_r, 
+            \rlmor{\pi_r}
+            ; \rfix{L}
+          ] \\
+        & = \alpha_{\ms{L} + \Sigma_i\dnt{A_i}}
+        ; [
+          \pi_r, 
+          \rfix{L}
+        ]
+      \end{aligned}
+    \end{equation}
+    It follows that
+    \TODO{this}
     \item[] \brle{codiag}: 
     Define $R = \dnt{\haslb{\Gamma}{r}{\ms{L}, \ell(A)}}$, and %
            $S = \dnt{\haslb{\Gamma, \bhyp{y}{A}}{s}{\ms{L}, \ell(A), \kappa(A)}}$ %
