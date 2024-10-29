@@ -151,6 +151,7 @@
 \newcommand{\envpil}[1]{\pi_{{#1}l}}
 \newcommand{\envpir}[1]{\pi_{{#1}r}}
 
+\newcommand{\toenv}[2]{\ms{env}_{#1}(#2)}
 \newcommand{\envcop}[3]{[#2, #3]_{#1}}
 \newcommand{\envinr}[1]{\iota_{{#1}r}}
 \newcommand{\envinl}[1]{\iota_{{#1}l}}
@@ -5353,15 +5354,20 @@ We begin by giving an explicit definition:
   \begin{equation}
     \rseq{R}{f}{g} := \dmor{R} ; \alpha ; R \otimes f ; g : R \otimes A \to C
   \end{equation}
+  In particular, we can define an identity on objects functor $\ms{env}_R : \mc{C} \to
+  \envcom{\mc{C}}{R}$ as follows:
+  \begin{equation}
+    \toenv{R}{f} := \pi_r ; f
+  \end{equation}
   Where it is clear from context, we will leave out the environment $R$.
 \end{definition}
 %
-Given $f : R \otimes A \to B$ will introduce the syntax sugar
+Given $f : R \otimes A \to B$, we will introduce the syntax sugar
 \begin{equation}
   \rlmor{f} := \dmor{R} ; \alpha ; R \otimes f : R \otimes A \to R \otimes B
 \end{equation}
-In particular, we have that $\rseq{}{f}{g} = \rlmor{f} ; g$. It is trivial to verify (for example,
-by drawing string diagrams) that
+In particular, we have that $\rseq{}{f}{g} = \rlmor{f} ; g$ and $\rlmor{\toenv{}{f}} := R \otimes
+f$. It is trivial to verify (for example, by drawing string diagrams) that
 \begin{equation}
   \begin{gathered}
   \rlmor{\rlmor{f} ; g} = \rlmor{f} ; \rlmor{g} 
@@ -5382,88 +5388,105 @@ category}, we can define tensor functors
 \end{equation}
 We can define
 \begin{itemize}
-  \item Associators $\alpha^R_{A, B, C} := \pi_r ; \alpha_{A, B, C}$
-  \item Unitors $\lambda^R_A := \pi_r ; \lambda_A$ and $\rho^R_A := \pi_r ; \rho_A$
-  \item Symmetries $\sigma^R_{A, B} := \pi_r ; \sigma_{A, B}$
-  \item Projections $\pi_l^R := \pi_r ; \pi_l$ and $\pi_r^R := \pi_r ; \pi_r$
-  \item Terminal morphisms $!^R_A := \pi_r ; !_A = !_{R \otimes A}$
-  \item Diagonals $\Delta^R_A := \pi_r ; \Delta_A$
+  \item Associators $\alpha^R_{A, B, C} := \toenv{R}{\alpha_{A, B, C}}$
+  \item Unitors $\lambda^R_A := \toenv{R}{\lambda_A}$ and $\rho^R_A := \toenv{R}{\rho_A}$
+  \item Symmetries $\sigma^R_{A, B} := \toenv{R}{\sigma_{A, B}}$
+  \item Projections $\pi_l^R := \toenv{R}{\pi_l}$ and $\pi_r^R := \toenv{R}{\pi_r}$
+  \item Terminal morphisms $!^R_A := \toenv{R}{!_A} = !_{R \otimes A}$
+  \item Diagonals $\Delta^R_A := \toenv{R}{\Delta_A}$
   \item Pure morphisms ${\envcom{\mc{C}}{R}}_\bot(A, B) = \mc{C}_{\bot}(R \otimes A, B)$
 \end{itemize}
-Since $\pi_r ; \cdot$ is a functor into the co-Kleisli category, to check we indeed have a Freyd
-category, it suffices to show that:
-\begin{itemize}
-  \item $\alpha^R_{A, B, C}$ is natural: we have that, given 
-  $f: R \otimes A \to A'$, $g : R \otimes B \to B'$, $h : R \otimes C \to C'$
-  \begin{align}
-    \rseq{}{(f \otimes_R B) \otimes_R C}{\alpha_{A', B, C}} 
-      &= \rseq{}{\alpha_{A, B, C}}{f \otimes_R (B \otimes C)} \label{eqn:env-a-nat-1} \\
-    \rseq{}{(A \otimes_R g) \otimes C}{\alpha_{A, B', C}}
-      &= \rseq{}{\alpha_{A, B, C}}{A \otimes_R (g \otimes_R C)} \label{eqn:env-a-nat-2} \\
-    \rseq{}{(A \otimes B) \otimes_R h}{\alpha_{A, B, C'}}
-      &= \rseq{}{\alpha_{A, B, C}}{A \otimes_R (B \otimes_R h)} \label{eqn:env-a-nat-3} \\
-  \end{align}
-  since, for each equation, both sides are equal to the same string diagram in
-  Figure~\ref{fig:env-a-nat-1}, \ref{fig:env-a-nat-2}, and \ref{fig:env-a-nat-3}
-  respectively.
-  \item $\lambda^R_{A}$ is natural: we have that, for $f : R \otimes A \to A'$,
+\begin{lemma}
+  We can always equip $\envcom{\mc{C}}{R}$ with the structure of a Freyd category as described above
+  ; furthermore, $\toenv{R}{\cdot}$ strictly preserves premonoidal structure.
+\end{lemma}
+\begin{proof}
+  We have that
   \begin{equation}
     \begin{aligned}
-    \rseq{}{f \otimes_R \mb{1}}{\lambda^R_{A'}}
-    &= \dmor{R} ; \alpha ; R \otimes (\alpha^{-1} ; f \otimes \mb{1}) ; \pi_r ; \pi_l \\
-    &= R \otimes \pi_l ; f \\
-    &= \dmor{R} ; \alpha ; R \otimes (\pi_r ; \pi_l) ; f
-    &= \rseq{}{\lambda^R_{A}}{f}
-    \end{aligned}
+    \toenv{R}{f \otimes A} &= \pi_r ; f \otimes A = \alpha^{-1} ; (\pi_r ; f) \otimes A 
+                            = \toenv{R}{f} \otimes_R A \\
+    \toenv{R}{A \otimes f} &= \pi_r ; A \otimes f 
+                            = R \otimes \sigma ; \alpha^{-1} ; (\pi_r ; f) \otimes A ; \sigma
+                            = A \otimes_R \toenv{R}{f}
+    \end{aligned} 
   \end{equation}
-  In general, we note that, for all $g : R \otimes A \to A' \otimes \mb{1}$, 
-  $\rseq{}{g}{\lambda^R} = g ; \pi_l$.
-  \item $\rho^R_{A}$ is natural:
-  \begin{equation}
-    \begin{aligned}
-    \rseq{}{\mb{1} \otimes_R f}{\rho^R_{A'}}
-    & = \dmor{R} ; \alpha 
-      ; R \otimes (\alpha^{-1} ; R \otimes \sigma ; \alpha^{-1} ; f \otimes \mb{1} ; \sigma) 
-      ; \pi_r ; \pi_r \\
-    & = R \otimes \pi_r ; f \\
-    & = \dmor{R} ; \alpha ; R \otimes (\pi_r ; \pi_r) ; f
-    & = \rseq{}{\rho^R_{A}}{f}
-    \end{aligned}
-  \end{equation}
-  In general, we note that, for all $g : R \otimes A \to \mb{1} \otimes A'$, 
-  $\rseq{}{g}{\rho^R} = g ; \pi_r$.
-  \item $\sigma^R_{A, B}$ is natural: given $f : R \otimes A \to A'$,
-  \TODO{equation}
-  \TODO{diagram}
-  \TODO{other case is analogous}
-  \item Pure morphisms are central: given $f : R \otimes A \to A'$ and $g : R \otimes B \to B'$
-  pure, we have that
-  \begin{equation}
-    \begin{aligned}
-    \rseq{}{f \otimes_R B}{A' \otimes_R g}
-    & = \Delta_R ; \alpha ; R \otimes (\alpha^{-1} ; f \otimes B ; \sigma) 
-      ; \alpha^{-1} ; g \otimes A' ; \sigma \\
-    & = \Delta_R ; \alpha ; R \otimes (R \otimes \sigma ; \alpha^{-1} ; g \otimes A ; \sigma) 
-    ; \alpha^{-1} ; f \otimes B' \\
-    & = \rseq{}{A \otimes_R g}{f \otimes_R B'}
-    \end{aligned}
-  \end{equation}
-  since both sides correspond to the diagram in Figure~\ref{fig:env-slide}. We will write this as $f
-  \otimes_R g$.
-  \item $!^R_A$ is terminal for pure morphisms: yes, since $!^R_A$ is just $!_{R \otimes A}$ which
-  is terminal in $\mc{C}$
-  \item $\Delta^R_A$ duplicates pure morphisms: we have
-  \begin{equation}
-    \begin{aligned}
-    \rseq{}{f}{\Delta^R_B} 
-      & = \dmor{R} ; \alpha ; R \otimes f ; \pi_r ; \dmor{A'} \\
-      & = f ; \dmor{A'} = \dmor{R \otimes A} ; f \otimes f \\
-      & = \dmor{R} ; \alpha ; R \otimes (\alpha^{-1} ; f \otimes A') 
-        ; R \otimes \sigma ; \alpha^{-1} ; f \otimes A' ; \sigma
-      & = \rseq{}{\Delta^R_A}{f \otimes_R f}
-    \end{aligned}
-  \end{equation}
-\end{itemize} %
+  and hence that $\ms{env}_R$ preserves products. Since $\ms{env}_R$ is a functor, to check we
+  indeed have a Freyd category, it suffices to show that:
+  \begin{itemize}
+    \item $\alpha^R_{A, B, C}$ is natural: we have that, given 
+    $f: R \otimes A \to A'$, $g : R \otimes B \to B'$, $h : R \otimes C \to C'$
+    \begin{align}
+      \rseq{}{(f \otimes_R B) \otimes_R C}{\alpha_{A', B, C}} 
+        &= \rseq{}{\alpha_{A, B, C}}{f \otimes_R (B \otimes C)} \label{eqn:env-a-nat-1} \\
+      \rseq{}{(A \otimes_R g) \otimes C}{\alpha_{A, B', C}}
+        &= \rseq{}{\alpha_{A, B, C}}{A \otimes_R (g \otimes_R C)} \label{eqn:env-a-nat-2} \\
+      \rseq{}{(A \otimes B) \otimes_R h}{\alpha_{A, B, C'}}
+        &= \rseq{}{\alpha_{A, B, C}}{A \otimes_R (B \otimes_R h)} \label{eqn:env-a-nat-3} \\
+    \end{align}
+    since, for each equation, both sides are equal to the same string diagram in
+    Figure~\ref{fig:env-a-nat-1}, \ref{fig:env-a-nat-2}, and \ref{fig:env-a-nat-3}
+    respectively.
+    \item $\lambda^R_{A}$ is natural: we have that, for $f : R \otimes A \to A'$,
+    \begin{equation}
+      \begin{aligned}
+      \rseq{}{f \otimes_R \mb{1}}{\lambda^R_{A'}}
+      &= \dmor{R} ; \alpha ; R \otimes (\alpha^{-1} ; f \otimes \mb{1}) ; \pi_r ; \pi_l \\
+      &= R \otimes \pi_l ; f \\
+      &= \dmor{R} ; \alpha ; R \otimes (\pi_r ; \pi_l) ; f
+      &= \rseq{}{\lambda^R_{A}}{f}
+      \end{aligned}
+    \end{equation}
+    In general, we note that, for all $g : R \otimes A \to A' \otimes \mb{1}$, 
+    $\rseq{}{g}{\lambda^R} = g ; \pi_l$.
+    \item $\rho^R_{A}$ is natural:
+    \begin{equation}
+      \begin{aligned}
+      \rseq{}{\mb{1} \otimes_R f}{\rho^R_{A'}}
+      & = \dmor{R} ; \alpha 
+        ; R \otimes (\alpha^{-1} ; R \otimes \sigma ; \alpha^{-1} ; f \otimes \mb{1} ; \sigma) 
+        ; \pi_r ; \pi_r \\
+      & = R \otimes \pi_r ; f \\
+      & = \dmor{R} ; \alpha ; R \otimes (\pi_r ; \pi_r) ; f
+      & = \rseq{}{\rho^R_{A}}{f}
+      \end{aligned}
+    \end{equation}
+    In general, we note that, for all $g : R \otimes A \to \mb{1} \otimes A'$, 
+    $\rseq{}{g}{\rho^R} = g ; \pi_r$.
+    \item $\sigma^R_{A, B}$ is natural: given $f : R \otimes A \to A'$,
+    \TODO{equation}
+    \TODO{diagram}
+    \TODO{other case is analogous}
+    \item Pure morphisms are central: given $f : R \otimes A \to A'$ and $g : R \otimes B \to B'$
+    pure, we have that
+    \begin{equation}
+      \begin{aligned}
+      \rseq{}{f \otimes_R B}{A' \otimes_R g}
+      & = \Delta_R ; \alpha ; R \otimes (\alpha^{-1} ; f \otimes B ; \sigma) 
+        ; \alpha^{-1} ; g \otimes A' ; \sigma \\
+      & = \Delta_R ; \alpha ; R \otimes (R \otimes \sigma ; \alpha^{-1} ; g \otimes A ; \sigma) 
+      ; \alpha^{-1} ; f \otimes B' \\
+      & = \rseq{}{A \otimes_R g}{f \otimes_R B'}
+      \end{aligned}
+    \end{equation}
+    since both sides correspond to the diagram in Figure~\ref{fig:env-slide}. We will write this as $f
+    \otimes_R g$.
+    \item $!^R_A$ is terminal for pure morphisms: yes, since $!^R_A$ is just $!_{R \otimes A}$ which
+    is terminal in $\mc{C}$
+    \item $\Delta^R_A$ duplicates pure morphisms: we have
+    \begin{equation}
+      \begin{aligned}
+      \rseq{}{f}{\Delta^R_B} 
+        & = \dmor{R} ; \alpha ; R \otimes f ; \pi_r ; \dmor{A'} \\
+        & = f ; \dmor{A'} = \dmor{R \otimes A} ; f \otimes f \\
+        & = \dmor{R} ; \alpha ; R \otimes (\alpha^{-1} ; f \otimes A') 
+          ; R \otimes \sigma ; \alpha^{-1} ; f \otimes A' ; \sigma
+        & = \rseq{}{\Delta^R_A}{f \otimes_R f}
+      \end{aligned}
+    \end{equation}
+  \end{itemize}
+\end{proof}
+
 \begin{figure}
   \begin{subfigure}{0.3\textwidth}
     \begin{tikzpicture}
@@ -5570,6 +5593,25 @@ category, it suffices to show that:
       f  = { south = A' },
       g  = { south = B' },
     }{}
+
+    \node[] (eq) at (3, -2) {$=$};
+
+    \node[] (R2) at (3.5, 0) {$R$};
+    \node[dot] (dR2) at (4, -1) {};
+    \node[] (A2) at (5, 0) {$A$};
+    \node[] (B2) at (6, 0) {$B$};
+    \node[box=2/0/1/0] (f2) at (4.5, -2.5) {\quad f \quad};
+    \node[box=2/0/1/0] (g2) at (6, -1.75) {\quad g \quad};
+    \node[] (A2') at (4, -4) {$A'$};
+    \node[] (B2') at (5, -4) {$B'$};
+    \wires{
+      R2 = { south = dR2.north },
+      dR2 = { west = f2.north.1, east = g2.north.1 },
+      A2  = { south = f2.north.2 },
+      B2 = { south = g2.north.2 },
+      f2  = { south = A2' },
+      g2  = { south = B2' },
+    }{}
   \end{tikzpicture}
   \caption{Centrality of pure morphisms in the environment comonad's co-Kleisli category}
   \Description{}
@@ -5647,8 +5689,6 @@ by uniformity, since
     &= \rcase{f} ; R \otimes A + (\dmor{R} \otimes A ; \alpha)
   \end{aligned}
 \end{equation}
-
-\TODO{think about pulling down to appendix...}
 
 \TODO{this is \emph{much} clearer as a string diagram}
 
@@ -5882,10 +5922,6 @@ by uniformity, since
 \end{proof}
 
 \subsection{Substitution}
-
-\TODO{organize this into subsections or somesuch}
-
-\TODO{write text?}
 
 \TODO{pull lemma into previous section, somehow?}
 
