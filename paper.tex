@@ -3218,67 +3218,7 @@ result. We may then define the fixpoint
 \begin{equation}
   \rfix{f} := (\rcase{f})^\dagger ; \pi_r : R \otimes A \to B
 \end{equation}
-\TODO{check etc.}
-We may adapt some of the Elgot equations to $\rfix{\cdot}$ as follows:
-\begin{itemize}
-  \item \emph{Fixpoint}: given $f : R \otimes A \to B + A$,
-  \begin{equation}
-    \rfix{f} = \rcase{f} ; [ \pi_r, \rfix{f} ]
-  \end{equation}
-  \item \emph{Naturality}: given $f : R \otimes A \to B + A$, $g : B \to C$, we have
-  \TODO{this...}
-  \item \emph{Dinaturality}: given $f : R \otimes A \to B + A'$, $g : R \otimes A' \to A$, we have
-    \begin{equation}
-      \rfix{\rcase{f} ; \pi_r + g}
-      = \rcase{f} ; [\pi_r, \rfix{\lmor{g} ; \pi_l \otimes A ; f}]
-    \end{equation}
-\end{itemize}
-One particularly useful property we may derive is that
-\begin{equation}
-  \begin{aligned}
-  \lmor{\rfix{f}} ; \pi_l \otimes B 
-    &= \dmor{R \otimes A} ; (R \otimes A) \otimes \rfix{f} ; \pi_l \otimes B \\
-    &= \dmor{R} \otimes A ; \alpha ; R \otimes \rfix{f} \\
-    &= \dmor{R} \otimes A ; \alpha ; R \otimes ((\rcase{f})^\dagger ; \pi_r) \\
-    &= \dmor{R} \otimes A ; \alpha
-      ; (R \otimes \rcase{f} ; \delta^{-1} ; R \otimes \pi_r + R \otimes (R \otimes A))^\dagger \\
-    &= (\rcase{f})^\dagger
-  \end{aligned}
-\end{equation}
-by uniformity, since
-\begin{equation}
-  \begin{aligned}
-    & (\dmor{R} \otimes A ; \alpha)
-      ; R \otimes \rcase{f} 
-      ; \delta^{-1} 
-      ; R \otimes \pi_r + R \otimes (R \otimes A) \\
-    & = \dmor{R} \otimes A ; \alpha
-      ; R \otimes (\lmor{f} ; \pi_l \otimes (B + A) ; \delta^{-1}) 
-      ; \delta^{-1} 
-      ; R \otimes \pi_r + R \otimes (R \otimes A) \\
-    & = \dmor{R} \otimes A ; \alpha
-      ; R \otimes f
-      ; \dmor{R} \otimes (B + A) ; \alpha 
-      ; R \otimes \delta^{-1} ; \delta^{-1}
-      ; R \otimes \pi_r + R \otimes (R \otimes A) \\
-    & = \dmor{R} \otimes A ; \alpha
-      ; R \otimes f
-      ; \delta^{-1}
-      ; (\dmor{R} \otimes A ; \alpha ; R \otimes \pi_r) + (\dmor{R} \otimes A ; \alpha) \\
-    & = \dmor{R \otimes A}
-      ; (R \otimes A) \otimes f
-      ; \pi_l \otimes (B + A)
-      ; \delta^{-1}
-      ; R \otimes A + (\dmor{R} \otimes A ; \alpha) \\
-    &= \rcase{f} ; R \otimes A + (\dmor{R} \otimes A ; \alpha)
-  \end{aligned}
-\end{equation}
-
-\TODO{think about pulling down to appendix...}
-
-\TODO{this is \emph{much} clearer as a string diagram}
-
-\TODO{insert proof of ``$\delta$ lemma?''}
+We consider some more properties of $\rcase{f}$ and $\rfix{f}$ in Appendix~\ref{apx:environment}.
 
 \subsection{String Diagrams}
 
@@ -5390,9 +5330,9 @@ semantics.
 
 \appendix
 
-
-
 \section{The Environment Comonad}
+
+\label{apx:environment}
 
 If $\mc{C}$ is a Freyd category, then given an object $R \in |\mc{C}|$, the functor $R \otimes
 \cdot$ is a comonad with counit $\pi_r : R \otimes A \to A$ and comultiplication $\dmor{R} \otimes A
@@ -5651,6 +5591,69 @@ R \otimes A \to C$, we may define the coproduct and injections
 \TODO{show $\rfix{f}$ gives $\envcop{R}{f}{g}$ an Elgot structure}
 \TODO{pull down $\rfix{f}$ lore here?}
 \TODO{this is useful because of \ms{where}-lore}
+
+\TODO{process this into narrative}
+
+We may adapt some of the Elgot equations to $\rfix{\cdot}$ as follows:
+\begin{itemize}
+  \item \emph{Fixpoint}: given $f : R \otimes A \to B + A$,
+  \begin{equation}
+    \rfix{f} = \rcase{f} ; [ \pi_r, \rfix{f} ]
+  \end{equation}
+  \item \emph{Naturality}: given $f : R \otimes A \to B + A$, $g : B \to C$, we have
+  \TODO{this...}
+  \item \emph{Dinaturality}: given $f : R \otimes A \to B + A'$, $g : R \otimes A' \to A$, we have
+    \begin{equation}
+      \rfix{\rcase{f} ; \pi_r + g}
+      = \rcase{f} ; [\pi_r, \rfix{\lmor{g} ; \pi_l \otimes A ; f}]
+    \end{equation}
+\end{itemize}
+One particularly useful property we may derive is that
+\begin{equation}
+  \begin{aligned}
+  \lmor{\rfix{f}} ; \pi_l \otimes B 
+    &= \dmor{R \otimes A} ; (R \otimes A) \otimes \rfix{f} ; \pi_l \otimes B \\
+    &= \dmor{R} \otimes A ; \alpha ; R \otimes \rfix{f} \\
+    &= \dmor{R} \otimes A ; \alpha ; R \otimes ((\rcase{f})^\dagger ; \pi_r) \\
+    &= \dmor{R} \otimes A ; \alpha
+      ; (R \otimes \rcase{f} ; \delta^{-1} ; R \otimes \pi_r + R \otimes (R \otimes A))^\dagger \\
+    &= (\rcase{f})^\dagger
+  \end{aligned}
+\end{equation}
+by uniformity, since
+\begin{equation}
+  \begin{aligned}
+    & (\dmor{R} \otimes A ; \alpha)
+      ; R \otimes \rcase{f} 
+      ; \delta^{-1} 
+      ; R \otimes \pi_r + R \otimes (R \otimes A) \\
+    & = \dmor{R} \otimes A ; \alpha
+      ; R \otimes (\lmor{f} ; \pi_l \otimes (B + A) ; \delta^{-1}) 
+      ; \delta^{-1} 
+      ; R \otimes \pi_r + R \otimes (R \otimes A) \\
+    & = \dmor{R} \otimes A ; \alpha
+      ; R \otimes f
+      ; \dmor{R} \otimes (B + A) ; \alpha 
+      ; R \otimes \delta^{-1} ; \delta^{-1}
+      ; R \otimes \pi_r + R \otimes (R \otimes A) \\
+    & = \dmor{R} \otimes A ; \alpha
+      ; R \otimes f
+      ; \delta^{-1}
+      ; (\dmor{R} \otimes A ; \alpha ; R \otimes \pi_r) + (\dmor{R} \otimes A ; \alpha) \\
+    & = \dmor{R \otimes A}
+      ; (R \otimes A) \otimes f
+      ; \pi_l \otimes (B + A)
+      ; \delta^{-1}
+      ; R \otimes A + (\dmor{R} \otimes A ; \alpha) \\
+    &= \rcase{f} ; R \otimes A + (\dmor{R} \otimes A ; \alpha)
+  \end{aligned}
+\end{equation}
+
+\TODO{think about pulling down to appendix...}
+
+\TODO{this is \emph{much} clearer as a string diagram}
+
+\TODO{insert proof of ``$\delta$ lemma?''}
 
 \section{Proofs}
 
@@ -7335,9 +7338,22 @@ R \otimes A \to C$, we may define the coproduct and injections
   \label{fig:reg-diagrams}
 \end{figure}
 
+\begin{lemma}[\ms{where}-fusion]
+  \TODO{this}
+\end{lemma}
+\begin{proof}
+  \TODO{this}
+\end{proof}
+
+\TODO{other equations?}
+
 \subsection{Completeness}
 
-\TODO{completeness explanations}
+\TODO{seq is valid}
+
+\TODO{fixpoint is valid}
+
+\TODO{completeness formalization explanation}
 
 \end{document}
 \endinput
