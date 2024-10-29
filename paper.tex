@@ -5991,12 +5991,13 @@ by uniformity, since
     [\gamma]y$, so by induction we have
     \begin{equation}
       \begin{aligned}
-      \dnt{\issubst{\gamma}{\Gamma}{\Delta}};\pi_{\Delta, x} &=
-      \Delta_{\dnt{\Gamma}}
-      ; \dnt{\issubst{\gamma'}{\Gamma}{\Delta'}} \otimes \dnt{\hasty{\Gamma}{\bot}{[\gamma]y}{B}}
-      ; \pi_l ; \pi_{\Delta', x} \\
-      &= \dnt{\issubst{\gamma'}{\Gamma}{\Delta'}} ; \pi_{\Delta', x}
-      = \dnt{\hasty{\Gamma}{\epsilon}{[\gamma]x}{A}}
+      \dnt{\issubst{\gamma}{\Gamma}{\Delta}};\pi_{\Delta, x} 
+      & = \Delta_{\dnt{\Gamma}}
+       ; \dnt{\issubst{\gamma'}{\Gamma}{\Delta'}} \otimes \dnt{\hasty{\Gamma}{\bot}{[\gamma]y}{B}}
+       ; \pi_l ; \pi_{\Delta', x} \\
+      & = \dnt{\issubst{\gamma'}{\Gamma}{\Delta'}} ; \pi_{\Delta', x}
+        = \dnt{\hasty{\Gamma}{\epsilon}{[\gamma']x}{A}}
+        = \dnt{\hasty{\Gamma}{\epsilon}{[\gamma]x}{A}}
       \end{aligned}
     \end{equation}
   \end{itemize}
@@ -6399,7 +6400,40 @@ by uniformity, since
 \end{lemma}
 
 \begin{proof}
-  \todo{this}
+  We proceed by induction on $\ms{L}$:
+  \begin{itemize}[leftmargin=*]
+    \item If $\ms{L} = \cdot$, then $\ms{L}(\ell) = A$ is a contradiction
+    \item If $\ms{L} = \ms{L}', \ell(A)$, then 
+    $\sigma = \sigma', \ell(x) \mapsto [\sigma](\brb{\ell}{x})$, so we have
+    \begin{equation}
+      \begin{aligned}
+      & \dnt{\Gamma} \otimes \iota_{\ms{L}, \ell} 
+        ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}, \ell(A)}{\ms{K}}} \\
+      & = \dnt{\Gamma} \otimes \iota_r ; \delta^{-1} ; [
+          \dnt{\lbsubst{\Gamma}{\sigma'}{\ms{L}}{\ms{K}}},
+          \dnt{\haslb{\Gamma, \bhyp{x}{A}}{[\sigma](\brb{\ell}{x})}{\ms{K}}}
+        ] \\
+      & = \dnt{\haslb{\Gamma, \bhyp{x}{A}}{[\sigma](\brb{\ell}{x})}{\ms{K}}}
+      \end{aligned}
+    \end{equation}
+    \item If $\ms{L} = \ms{L}', \kappa(A)$, then 
+    $\sigma = \sigma', \kappa(x) \mapsto [\sigma](\brb{\kappa}{x})$, so by
+    induction we have
+    \begin{equation}
+      \begin{aligned}
+      & \dnt{\Gamma} \otimes \iota_{\ms{L}, \ell} 
+        ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}, \ell(A)}{\ms{K}}} \\
+      & = \dnt{\Gamma} \otimes (\iota_{\ms{L}', \ell} ; \iota_l) ; \delta^{-1} ; [
+          \dnt{\lbsubst{\Gamma}{\sigma'}{\ms{L}}{\ms{K}}},
+          \dnt{\haslb{\Gamma, \bhyp{x}{B}}{[\sigma](\brb{\kappa}{x})}{\ms{K}}}
+        ] \\
+      & = \dnt{\Gamma} \otimes \iota_{\ms{L}', \ell} 
+        ; \dnt{\lbsubst{\Gamma}{\sigma'}{\ms{L}}{\ms{K}}} \\
+      & = \dnt{\haslb{\Gamma, \bhyp{x}{A}}{[\sigma'](\brb{\ell}{x})}{\ms{K}}} \\
+      & = \dnt{\haslb{\Gamma, \bhyp{x}{A}}{[\sigma](\brb{\ell}{x})}{\ms{K}}}
+      \end{aligned}
+    \end{equation}
+  \end{itemize}
 \end{proof}
 
 \begin{lemma}[Label Substitution Extension]
