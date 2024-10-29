@@ -6934,7 +6934,7 @@ R \otimes A \to C$, we may define the coproduct and injections
             \lbsubst{\Gamma}
               {\cfgsubst{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}, \ms{R}}{\ms{L}}
           } \\
-        & = \alpha_{\dnt{\ms{L}} + \Sigma_i\dnt{A_i}}
+        & = \dnt{\Gamma} \otimes \alpha_{\dnt{\ms{L}} + \Sigma_i\dnt{A_i}} ; \delta^{-1}
           ; [ \\ & \qquad
             \dnt{
               \lbsubst{\Gamma}
@@ -6945,7 +6945,7 @@ R \otimes A \to C$, we may define the coproduct and injections
                 {\cfgsubst{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{R}}{\ms{L}}
             }
           ] \\
-        & = \alpha_{\Sigma_i\dnt{B_i} + \Sigma_i\dnt{A_i}}
+        & = \dnt{\Gamma} \otimes \alpha_{\Sigma_i\dnt{B_i} + \Sigma_i\dnt{A_i}}; \delta^{-1}
           ; [ \\ & \qquad
             \delta^{-1}_{\Sigma} 
             ; [\dnt{\haslb{\Gamma, \bhyp{y_j}{B_j}}
@@ -6955,7 +6955,7 @@ R \otimes A \to C$, we may define the coproduct and injections
             ; [\dnt{\haslb{\Gamma, \bhyp{x_j}{A_j}}
             {\where{\brb{\ell_j}{x_j}}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}},]_j
           ] \\
-        & = \alpha_{\Sigma_i\dnt{B_i} + \Sigma_i\dnt{A_i}}
+        & = \dnt{\Gamma} \otimes \alpha_{\Sigma_i\dnt{B_i} + \Sigma_i\dnt{A_i}}; \delta^{-1}
           ; [ \\ & \qquad
             \delta^{-1}_{\Sigma} 
             ; [\dnt{\hasty{\Gamma, \bhyp{y_j}{B_j}}{\bot}{y_j}{B_j}} ; \iota_{\ms{L}, \kappa_j},]_j, 
@@ -6966,33 +6966,44 @@ R \otimes A \to C$, we may define the coproduct and injections
               ; \rfix{\pi_l \otimes \Sigma_k\dnt{A_k} ; L}
             ]_j
           ] \\
-        & = \alpha_{\Sigma_i\dnt{B_i} + \Sigma_i\dnt{A_i}}
+        & = \dnt{\Gamma} \otimes \alpha_{\Sigma_i\dnt{B_i} + \Sigma_i\dnt{A_i}}; \delta^{-1}
           ; [
             \delta^{-1}_{\Sigma} ; [\pi_r ; \iota_{\ms{L}, \kappa_j},]_j, 
             \delta^{-1}_{\Sigma} ; [\lmor{\pi_r ; \iota_j} ; \pi_l \otimes \Sigma_k\dnt{A_k}]_j 
             ; \rfix{L}
           ] \\
-        & = \alpha_{\Sigma_i\dnt{B_i} + \Sigma_i\dnt{A_i}}
+        & = \dnt{\Gamma} \otimes \alpha_{\Sigma_i\dnt{B_i} + \Sigma_i\dnt{A_i}}; \delta^{-1}
           ; [
             \pi_r ; \alpha_{\ms{L}}, 
             \rlmor{\delta^{-1}_{\Sigma} ; [\pi_r ; \iota_j]_j}
             ; \rfix{L}
-          ]
-          = \alpha_{\ms{L} + \Sigma_i\dnt{A_i}}
+          ] \\
+        & = \dnt{\Gamma} \otimes \alpha_{\ms{L} + \Sigma_i\dnt{A_i}}; \delta^{-1}
           ; [
             \pi_r, 
-            \rlmor{\pi_r}
-            ; \rfix{L}
+            \rlmor{\pi_r} ; \rfix{L}
           ] \\
-        & = \alpha_{\ms{L} + \Sigma_i\dnt{A_i}}
-        ; [
-          \pi_r, 
-          \rfix{L}
-        ]
+        & = \dnt{\Gamma} \otimes \alpha_{\ms{L} + \Sigma_i\dnt{A_i}}; \delta^{-1} 
+          ; [\pi_r, \rfix{L}]
       \end{aligned}
     \end{equation}
-    It follows that
-    \TODO{this}
+    It follows by label-substitution that that
+    \begin{equation}
+      \begin{aligned}
+        & \dnt{\haslb{\Gamma}{[\cfgsubst{(\wbranch{\ell_i}{x_i}{t_i},)_i}]r}{\ms{L}}}  \\
+        & = \lmor{\dnt{\haslb{\Gamma}{r}{\ms{L}, \ms{R}}}}
+          ; \dnt{
+            \lbsubst{\Gamma}
+              {\cfgsubst{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}, \ms{R}}{\ms{L}}
+          } \\
+        & = \lmor{\dnt{\haslb{\Gamma}{r}{\ms{L}, \ms{R}}}}
+          ; \dnt{\Gamma} \otimes \alpha_{\ms{L} + \Sigma_i\dnt{A_i}}; \delta^{-1} 
+          ; [\pi_r, \rfix{L}] \\
+        & = \entrymor{r}; \delta^{-1} ; [\pi_r, \rfix{L}] \\
+        & \dnt{\haslb{\Gamma}{\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}}
+      \end{aligned}
+    \end{equation}
+    as desired.
     \item[] \brle{codiag}: 
     Define $R = \dnt{\haslb{\Gamma}{r}{\ms{L}, \ell(A)}}$, and %
            $S = \dnt{\haslb{\Gamma, \bhyp{y}{A}}{s}{\ms{L}, \ell(A), \kappa(A)}}$ %
