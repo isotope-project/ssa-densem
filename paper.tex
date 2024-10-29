@@ -1899,9 +1899,9 @@ i.e., in imperative pseudocode,
   x = r; y = e; \ms{loop}\;\{ y = s \}  & \teqv x = r; \ms{loop}\;\{ x = t \} \\ 
   \intertext{
     where $s$ and $t$ may branch out of the loop. The reason why we require $e$ to be \emph{pure} is
-    that impure expressions do not necessarily commute with infinite loops, even if they commute with
-    any finite number of iterations of the loop. For example, if $\ms{hi}$ is some effectful opperation
-    (say, printing ``hello''), it is quite obvious that,
+    that impure expressions do not necessarily commute with infinite loops, even if they commute 
+    with any finite number of iterations of the loop. For example, if $\ms{hi}$ is some effectful 
+    operation (say, printing ``hello''), it is quite obvious that,
   }
   \ms{hi} ; x = x + 1 ; \ms{if}\;x = y\;\{\ms{ret}\;y\}
   & \teqv 
@@ -2308,7 +2308,7 @@ in Section~\ref{ssec:completeness}.
   \label{fig:ssa-subst-equiv}
 \end{figure}
 
-\subsection{Normalization to SSA}
+\subsection{Strict SSA}
 
 \label{ssec:ssa-normal}
 
@@ -2341,13 +2341,13 @@ regions.
 
 \subsubsection{From \isotopessa{} to A-Normal Form}
 
-Our first step is to extend the work of \citet{chakravarty-functional-ssa-2003}, by
-providing an algorithm for converting between \isotopessa{} and ANF in an equivalence
-preserving way. We begin by defining a typing judgement $\ahasty{\Gamma}{\epsilon}{a}{A}$ for \emph{atomic
-expressions} in Figure~\ref{fig:ssa-ops}. An atomic expression is either a single variable, a
-function application, an injection, a pair of variables, or the unit expression. We specifically
-forbid \ms{case}-expressions and \ms{let}-bindings at this level; they are required to appear only
-at the region level. It is obvious that $\ahasty{\Gamma}{\epsilon}{a}{A} \implies
+Our first step is to extend the work of \citet{chakravarty-functional-ssa-2003}, by providing an
+algorithm for converting between \isotopessa{} and ANF in an equivalence preserving way. We begin by
+defining a typing judgement $\ahasty{\Gamma}{\epsilon}{a}{A}$ for \emph{atomic expressions} in
+Figure~\ref{fig:ssa-ops}. An atomic expression is either a single variable, a function application,
+an injection, a pair of variables, or the unit expression. We specifically forbid
+\ms{case}-expressions and \ms{let}-bindings at this level; they are required to appear only at the
+region level. It is obvious that $\ahasty{\Gamma}{\epsilon}{a}{A} \implies
 \hasty{\Gamma}{\epsilon}{a}{A}$. 
 
 We now present typing rules for ANF regions in Figure~\ref{fig:ssa-anf}. These rules mirror those
@@ -2383,7 +2383,7 @@ where we define $\letanf{x}{a}{r}$ by induction on expressions $a$ as follows
   \end{aligned}
 \end{equation}
 We state the correctness of these functions in the following lemma:
-\begin{lemma}[A-normalization]
+\begin{lemma}[name=A-normalization, restate=anfconversion]
   For all $\haslb{\Gamma}{r}{\ms{L}}$, we have that that $\ahaslb{\Gamma}{\ms{ANF}(r)}{\ms{L}}$ and
   $\lbeq{\Gamma}{r}{\ms{ANF}(r)}{\ms{L}}$. Furthermore, given $\hasty{\Gamma}{\epsilon}{a}{A}$, we
   have that
@@ -2395,56 +2395,7 @@ We state the correctness of these functions in the following lemma:
   \end{itemize}
 \end{lemma}
 \begin{proof}
-  We may show that $\ms{ANF}(r)$ is always in ANF and that $\ms{ANF}_{\ms{let}}(x, a, r)$ is in ANF
-  if $r$ is by a straightforward induction. To prove the rest of the lemma, we begin proving the
-  correctness of $\ms{ANF}_{\ms{let}}(x, a, r)$ by induction on expressions $a$:
-  \begin{itemize}
-    \item If $\ahasty{\Gamma}{\epsilon}{a}{A}$ is atomic, we are done; otherwise
-    \item If $a = f\;e$, then, since $e$ is a subterm of $a$, by induction, we have
-    \begin{equation}
-      \letstmt{x}{a}{r} 
-      \teqv \letstmt{y}{e}{\letstmt{x}{f\;y}{r}}
-      \teqv \letanf{y}{e}{\letstmt{x}{f\;y}{r}}
-      = \letanf{x}{a}{r}
-    \end{equation}
-    as desired.
-    \item The cases for pairs, injections, and aborts containing expressions are analogous
-    \item If $a = \caseexpr{e}{y}{b}{z}{c}$, then we may rewrite
-    \begin{equation}
-      \letstmt{x}{a}{r} 
-      \teqv \letstmt{w}{e}{\casestmt{w}{y}{\letexpr{b}{x}{r}}{z}{\letexpr{c}{x}{r}}}
-    \end{equation}
-    Since $r$ is in ANF, by induction (since $b, c$ are subterms of $a$), this is equivalent to
-    \begin{equation}
-      \letstmt{w}{e}
-        {\casestmt{w}{y}{\letanf{b}{x}{r}}{z}{\letanf{c}{x}{r}}}
-    \end{equation}
-    which is equal to $\letanf{x}{a}{r}$, as desired.
-    \item The cases for unary and binary $\ms{let}$ are analogous to the above
-  \end{itemize}
-  We may now prove the correctness of $\toanf{r}$ by a straightforward induction on $r$:
-  \begin{itemize}
-    \item If $r = \brb{\ell}{a}$, by $\beta$-reduction, we have that
-    \begin{equation}
-      r \teqv \letexpr{x}{a}{\brb{\ell}{x}} \teqv \letanf{x}{a}{\brb{\ell}{x}} = \toanf{r}
-    \end{equation}
-    \item If $r = \letstmt{x}{a}{r'}$, then by induction we have that
-    \begin{equation}
-      r \teqv \letstmt{x}{a}{\toanf{r'}} \teqv \letanf{x}{a}{\toanf{r'}} = \toanf{r}
-    \end{equation}
-    as desired.
-    \item If $r = \letstmt{(x, y)}{a}{r'}$, then by induction we have that
-    \begin{equation}
-      \begin{aligned}
-        r & \teqv \letstmt{z}{a}{\letstmt{(x, y)}{z}{r'}} \\
-          & \teqv \letstmt{z}{a}{\letstmt{(x, y)}{z}{\ms{ANF}(r')}} \\
-          & \teqv \letanf{z}{a}{\letstmt{(x, y)}{z}{\ms{ANF}(r')}}
-            \teqv \toanf{r}
-      \end{aligned}
-    \end{equation}
-    The proof for \ms{case}-statements is analogous
-    \item The case for control-flow graphs follows trivially by induction
-  \end{itemize}
+  See Appendix~\ref{proof:anf-conversion}
 \end{proof}
 
 \begin{figure}
@@ -2604,7 +2555,7 @@ to a strict SSA as follows:
   \end{aligned}
 \end{equation}
 We may state its correctness as follows:
-\begin{lemma}[SSA conversion]
+\begin{lemma}[name=SSA conversion, restate=ssaconversion]
   If $\haslb{\Gamma}{r}{\ms{L}}$, then $\bhaslb{\Gamma}{\tossa{r}}{\ms{L}}$ and
   $\lbeq{\Gamma}{r}{\tossa{r}}{\ms{L}}$. In particular, given $\ahaslb{\Gamma}{r}{\ms{L},
   (\ell_i(A_i),)_i}$ and $\forall i, \bhaslb{\Gamma}{t_i}{\ms{L}, (\ell_i(A_i),)_i}$, we have that
@@ -2613,48 +2564,7 @@ We may state its correctness as follows:
   {\ssawhere{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}$
 \end{lemma}
 \begin{proof}
-  Given that $\ssawhere{r}{G} \teqv \where{r}{G}$ for $r$ in ANF, it is trivial to see
-  that
-  \begin{equation}
-    \tossa{r} := \ssawhere{\toanf{r}}{\cdot} \teqv (\where{\toanf{r}}{\cdot}) \teqv \toanf{r} 
-      \teqv r
-  \end{equation}
-  We hence only need to prove the second part of the lemma. We proceed by induction on ANF regions
-  $r$ as follows:
-  \begin{itemize}
-    \item If $r$ is a terminator, this holds trivially by reflexivity
-    \item If $r = \letstmt{x}{a}{r'}$, then by induction, we have that
-    \begin{equation}
-      \ssawhere{r}{G} 
-        := \letstmt{x}{a}{\ssawhere{r'}{G}} 
-        \teqv \letstmt{x}{a}{\where{r'}{G}} 
-        \teqv \where{\letstmt{x}{a}{r'}}{G}
-        \teqv \where{r}{G}
-    \end{equation}
-    as desired. The case for binary \ms{let}-statements is analogous.
-    \item If $r = \casestmt{a}{x}{s}{y}{t}$, then by induction, we have that
-    \begin{equation}
-      \begin{aligned}
-      \ssawhere{r}{G} 
-        &:= \where{(\casestmt{a}{x}{\brb{\ell_l}{x}}{y}
-        {\brb{\ell_r}{y}})}{G, \wbranch{\ell_l}{x}{\tossa{s}}, \wbranch{\ell_r}{y}{\tossa{t}}} \\
-        &:= \where{(\casestmt{a}{x}{\brb{\ell_l}{x}}{y}
-        {\brb{\ell_r}{y}})}{G, \wbranch{\ell_l}{x}{s}, \wbranch{\ell_r}{y}{t}} \\
-        &\teqv \where{(\where{(\casestmt{a}{x}{\brb{\ell_l}{x}}{y}
-        {\brb{\ell_r}{y}})}{\wbranch{\ell_l}{x}{s}, \wbranch{\ell_r}{y}{t}})}{G} \\
-        &\teqv \where{\casestmt{a}{x}{s}{y}{t}}{G} \teqv \where{r}{G}
-      \end{aligned}
-    \end{equation}
-    \item If $r = \where{r'}{\wbranch{\ell_i}{x_i}{t_i},)_i}$, then by induction, we have that
-    \begin{equation}
-      \begin{aligned}
-        \ssawhere{r}{G} 
-          &:= \ssawhere{r'}{G, (\wbranch{\ell_i}{x_i}{\tossa{t_i}},)_i} \\
-          &\teqv \where{r'}{G, (\wbranch{\ell_i}{x_i}{t_i},)_i} \\
-          &\teqv \where{(\where{r'}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{G} \teqv \where{r}{G} \\
-      \end{aligned}
-    \end{equation}
-  \end{itemize}
+  See Appendix~\ref{proof:ssa-conversion}
 \end{proof}
 
 \begin{figure}
@@ -2727,109 +2637,20 @@ which erases to a permutation of $G$, i.e., $\tocfg{\toreg{G}} \simeq G$, as des
 our argument, it hence suffices to show that, given strict regions $\shaslb{\Gamma}{r}{\ms{L}}$,
 $\shaslb{\Gamma}{r'}{\ms{L}}$, such that $\tocfg{r} \simeq \tocfg{r'}$, we have that
 $\lbeq{\Gamma}{r}{r'}{\ms{L}}$. We break this down into two lemmas:
-\begin{lemma}[Permutation Invariance]
+\begin{lemma}[name=Permutation Invariance, restate=cfgperminvar]
   If $G \simeq G'$ and $\shaslb{\Gamma}{\toreg{G}}{\ms{L}}$, then 
     $\shaslb{\Gamma}{\toreg{G'}}{\ms{L}}$ and $\lbeq{\Gamma}{\toreg{G}}{\toreg{G'}}{\ms{L}}$
 \end{lemma}
 \begin{proof}
-  We proceed by induction on the size of $G$. If $G$ consists only of an entry block, there is only
-  one permutation, so we are done. Otherwise, assume $G = \beta, (\wbranch{\ell_i}{x_i}{t_i},)_i$.
-  Furthermore, let:
-  \begin{itemize}
-    \item $\wbranch{\ell_i}{x_i}{\beta_i}$ be the children of $\beta$ in $G$ in order
-    \item $G_i = (\wbranch{\kappa_{i, j}}{y_{i, j}}{t_{i, j}},)_j$ be the CFG composed of the
-    descendants of $\beta_i$ in $G$, with $\beta_i$ as entry block, in order
-    \item $\wbranch{\ell_i'}{x_i'}{\beta_i'}$ be the children of $\beta$ in $G'$ in order
-    \item $G_i'$ be the CFG composed of the descendants of $\beta_i'$ in $G'$, with $\beta_i'$ as
-    entry block, in order
-  \end{itemize}
-  By assumption, there exists some permutation $\sigma$ such that $G' = \beta,
-  (\wbranch{\ell_{\sigma_i}}{x_{\sigma_i}}{t_{\sigma_i}},)_i$. It follows that, since the dominance
-  relation on labels is permutation-invariant, there exists some permutation $\rho$ such that
-  $\wbranch{\ell_i'}{x_i'}{\beta_i'} = \wbranch{\ell_{\rho_i}}{x_{\rho_i}}{\beta_{\rho_i}}$, as well
-  as permutations $\tau_i$ such that $G_i' = (\wbranch{\ell_{\rho_i, \tau_{ij}}}{x_{\rho_i,
-  \tau_{ij}}}{t_{\rho_i, \tau_{ij}}},)_j$, implying in particular that $G_i' \simeq G_{\rho_i}$. By
-  induction, we hence have that, for all $i$, $\toreg{G_i'} \teqv \toreg{G_{\rho_i}}$, and hence
-  that
-  \begin{equation}
-    \begin{aligned}
-    \toreg{G'} &:= \adddom{\beta}{(\wbranch{\ell_{\rho_i}}{x_{\rho_i}}{\toreg{G_i'}},)_i} \\
-    &\teqv \adddom{\beta}{(\wbranch{\ell_{\rho_i}}{x_{\rho_i}}{\toreg{G_{\rho_i}}},)_i} \\
-    &\teqv \adddom{\beta}{(\wbranch{\ell_i}{x_i}{\toreg{G_i}},)_i} \teqv \toreg{G}
-    \end{aligned}
-  \end{equation}
+  See Appendix~\ref{proof:cfg-perm-invar}
 \end{proof}
-\begin{lemma}[CFG Conversion]
+\begin{lemma}[name=CFG Conversion, restate=cfgconversion]
   If $\shaslb{\Gamma}{r}{\ms{L}}$, then $\lbeq{\Gamma}{r}{\toreg{\tocfg{r}}}{\ms{L}}$.
 \end{lemma}
 \begin{proof}
-  We will proceed by induction on the length of $G = \tocfg{r}$. If $G$ consists of only an entry
-  block $\beta$, then we trivially have that $r = \toreg{\tocfg{r}}$, and so we are done. Otherwise,
-  assume $r = \adddom{\beta}{(\wbranch{\ell_i}{x_i}{t_i},)_i}$. Clearly, $\tocfg{r}$ will have entry
-  block $\beta$; moreover, since every block in $\tocfg{r}$ other than those of the form
-  $\toentry{t_i}$ can only be reached from within the region $t_i$ (due to lexical scoping of
-  labels), we have $\beta_i = \toentry{t_{\rho_i}}$ for some injection $\rho$, where $\beta_i$ are
-  the children of $\beta$ in the dominance tree of $G$. In particular, we can write
-  $\{\wbranch{\ell_i}{x_i}{\toentry{t_i}},\}_i$ as the disjoint union of:
-  \begin{itemize}
-    \item The immediate children of $\beta$, $\wbranch{\kappa_i}{y_i}{\beta_i}$, where 
-      $\kappa_i = \ell_{\rho_i}$, $y_i = x_{\rho_i}$, and $\beta_i = \toentry{t_{\rho_i}}$
-    \item The nodes dominated by each $\beta_i$ but not immediately dominated by $\beta$; we will
-    write the collection of such nodes for each $i$ as $\wbranch{\kappa_{i, j}}{y_{i, j}}{\beta_{i,
-    j}}$, where $\kappa_{i, j} = \ell_{\rho_{i, j}}$, $y_{i, j} = x_{\rho_{i, j}}$, and $\beta_{i,
-    j} = \toentry{t_{\rho_{i, j}}}$.
-  \end{itemize}
-  As in the algorithm to compute $\toreg{\cdot}$, let $G_i$ denote the control-flow graph with 
-  entry block $\beta_i$ consisting of all blocks dominated by $\beta_i$. We may write
-  \begin{equation}
-    G \simeq \beta, (\wbranch{\kappa_i}{y_i}{G_i},)_i \qquad
-    \forall i, G_i = \beta_i, (\wbranch{\kappa_{i, j}}{y_{i, j}}{\beta_{i, j}},)_j, R_i
-  \end{equation}
-  where $R_i$ is the ``remainder'' of the control-flow graph $G_i$. Note the equations for $G_i$ are
-  actually equalities, rather than being equivalence up to permutation $\simeq$, since the
-  $\beta_{i, j}$, appear in $G$ before any other elements, being immediate children of $\beta$. It
-  follows that
-  \begin{equation}
-    \toreg{\tocfg{r}}
-    = \toreg{\tocfg{\adddom{\beta}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}}
-    = \adddom{\beta}{(\wbranch{\kappa_i}{y_i}{\toreg{G_i}},)_i}
-  \end{equation}
-  Now, define the strict regions
-  \begin{equation}
-    r_i = \adddom{\beta_i}{
-      ((\wbranch{\kappa_{i, j}}{y_{i, j}}{t_{\rho_{i, j}}},)_j, \todom{t_i})
-    }
-  \end{equation}
-  It is easy to show that $\tocfg{r_i} \simeq G_i$, since every basic block dominated by $\beta_i$
-  must be dominated via either some $t_{\rho_{i, j}}$ or some child of $t_i$. Since by induction
-  $\toreg{\tocfg{r_i}} \teqv r_i$, and by the previous lemma $\toreg{\tocfg_r_i} \teqv \toreg{G_i}$,
-  it follows that
-  \begin{equation}
-    \toreg{\tocfg{r}}
-    \teqv \adddom{\beta}{(\wbranch{\kappa_i}{y_i}{r_i},)_i}
-  \end{equation}
-  Define
-  \begin{equation}
-    T_i = (\wbranch{\kappa_j}{y_j}{r_j},)_{j < i}, 
-      (\wbranch{\kappa_j}{y_j}{t_j}, 
-      (\wbranch{\kappa_{j, k}}{y_{j, k}}{t_{\rho_{j, k}}},)_k,)_{j \geq i}
-  \end{equation}
-  Using Equation~\ref{eqn:pull-where}, we may show that, for all $i$, $\adddom{\beta}{T_{i + 1}}
-  \teqv \adddom{\beta}{T_i}$, since
-  \begin{itemize}
-    \item For all $j$, $t_{\rho_{i, j}}$ cannot use variables defined in $\beta_i$, or $r$ would not
-    typecheck
-    \item For all $j$, if $r_k$ or $t_{\rho_{k, j'}}$ calls $\kappa_{i, j}$, then $k = i$, or
-    $\beta_{i, j}$ would not be dominated by $\beta_i$
-    \item Similarly, $\beta$ cannot call $\kappa_{i, j}$ or $\beta_{i, j}$ would be a direct
-    descendant of $\beta$
-  \end{itemize}
-  We hence have by induction that
-  \begin{equation}
-    \toreg{\tocfg{r}} \teqv \adddom{\beta}{T_N} \teqv \adddom{\beta}{T_0} \teqv r
-  \end{equation}
-  as desired, since $T_0$ is a permutation of $(\wbranch{\ell_i}{x_i}{t_i},)_i$.
+  See Appendix~\ref{proof:cfg-conversion}
 \end{proof}
+
 We may now conclude that, given $\shaslb{\Gamma}{r}{\ms{L}}$ and $\shaslb{\Gamma}{r'}{\ms{L}}$, if
 $\tocfg{r} \simeq \tocfg{r'}$, we have that $\lbeq{\Gamma}{r}{r'}{\ms{L}}$, since in particular
 \begin{equation}
@@ -5573,6 +5394,8 @@ semantics.
 
 \appendix
 
+
+
 \section{The Environment Comonad}
 
 If $\mc{C}$ is a Freyd category, then given an object $R \in |\mc{C}|$, the functor $R \otimes
@@ -5834,6 +5657,227 @@ R \otimes A \to C$, we may define the coproduct and injections
 \TODO{this is useful because of \ms{where}-lore}
 
 \section{Proofs}
+
+
+\subsection{Strict SSA}
+
+\anfconversion*
+
+\label{proof:anf-conversion}
+
+\ssaconversion*
+
+\begin{proof}
+  We may show that $\ms{ANF}(r)$ is always in ANF and that $\ms{ANF}_{\ms{let}}(x, a, r)$ is in ANF
+  if $r$ is by a straightforward induction. To prove the rest of the lemma, we begin proving the
+  correctness of $\ms{ANF}_{\ms{let}}(x, a, r)$ by induction on expressions $a$:
+  \begin{itemize}
+    \item If $\ahasty{\Gamma}{\epsilon}{a}{A}$ is atomic, we are done; otherwise
+    \item If $a = f\;e$, then, since $e$ is a subterm of $a$, by induction, we have
+    \begin{equation}
+      \letstmt{x}{a}{r} 
+      \teqv \letstmt{y}{e}{\letstmt{x}{f\;y}{r}}
+      \teqv \letanf{y}{e}{\letstmt{x}{f\;y}{r}}
+      = \letanf{x}{a}{r}
+    \end{equation}
+    as desired.
+    \item The cases for pairs, injections, and aborts containing expressions are analogous
+    \item If $a = \caseexpr{e}{y}{b}{z}{c}$, then we may rewrite
+    \begin{equation}
+      \letstmt{x}{a}{r} 
+      \teqv \letstmt{w}{e}{\casestmt{w}{y}{\letexpr{b}{x}{r}}{z}{\letexpr{c}{x}{r}}}
+    \end{equation}
+    Since $r$ is in ANF, by induction (since $b, c$ are subterms of $a$), this is equivalent to
+    \begin{equation}
+      \letstmt{w}{e}
+        {\casestmt{w}{y}{\letanf{b}{x}{r}}{z}{\letanf{c}{x}{r}}}
+    \end{equation}
+    which is equal to $\letanf{x}{a}{r}$, as desired.
+    \item The cases for unary and binary $\ms{let}$ are analogous to the above
+  \end{itemize}
+  We may now prove the correctness of $\toanf{r}$ by a straightforward induction on $r$:
+  \begin{itemize}
+    \item If $r = \brb{\ell}{a}$, by $\beta$-reduction, we have that
+    \begin{equation}
+      r \teqv \letexpr{x}{a}{\brb{\ell}{x}} \teqv \letanf{x}{a}{\brb{\ell}{x}} = \toanf{r}
+    \end{equation}
+    \item If $r = \letstmt{x}{a}{r'}$, then by induction we have that
+    \begin{equation}
+      r \teqv \letstmt{x}{a}{\toanf{r'}} \teqv \letanf{x}{a}{\toanf{r'}} = \toanf{r}
+    \end{equation}
+    as desired.
+    \item If $r = \letstmt{(x, y)}{a}{r'}$, then by induction we have that
+    \begin{equation}
+      \begin{aligned}
+        r & \teqv \letstmt{z}{a}{\letstmt{(x, y)}{z}{r'}} \\
+          & \teqv \letstmt{z}{a}{\letstmt{(x, y)}{z}{\ms{ANF}(r')}} \\
+          & \teqv \letanf{z}{a}{\letstmt{(x, y)}{z}{\ms{ANF}(r')}}
+            \teqv \toanf{r}
+      \end{aligned}
+    \end{equation}
+    The proof for \ms{case}-statements is analogous
+    \item The case for control-flow graphs follows trivially by induction
+  \end{itemize}
+\end{proof}
+
+\label{proof:ssa-conversion}
+
+\begin{proof}
+  Given that $\ssawhere{r}{G} \teqv \where{r}{G}$ for $r$ in ANF, it is trivial to see
+  that
+  \begin{equation}
+    \tossa{r} := \ssawhere{\toanf{r}}{\cdot} \teqv (\where{\toanf{r}}{\cdot}) \teqv \toanf{r} 
+      \teqv r
+  \end{equation}
+  We hence only need to prove the second part of the lemma. We proceed by induction on ANF regions
+  $r$ as follows:
+  \begin{itemize}
+    \item If $r$ is a terminator, this holds trivially by reflexivity
+    \item If $r = \letstmt{x}{a}{r'}$, then by induction, we have that
+    \begin{equation}
+      \ssawhere{r}{G} 
+        := \letstmt{x}{a}{\ssawhere{r'}{G}} 
+        \teqv \letstmt{x}{a}{\where{r'}{G}} 
+        \teqv \where{\letstmt{x}{a}{r'}}{G}
+        \teqv \where{r}{G}
+    \end{equation}
+    as desired. The case for binary \ms{let}-statements is analogous.
+    \item If $r = \casestmt{a}{x}{s}{y}{t}$, then by induction, we have that
+    \begin{equation}
+      \begin{aligned}
+      \ssawhere{r}{G} 
+        &:= \where{(\casestmt{a}{x}{\brb{\ell_l}{x}}{y}
+        {\brb{\ell_r}{y}})}{G, \wbranch{\ell_l}{x}{\tossa{s}}, \wbranch{\ell_r}{y}{\tossa{t}}} \\
+        &:= \where{(\casestmt{a}{x}{\brb{\ell_l}{x}}{y}
+        {\brb{\ell_r}{y}})}{G, \wbranch{\ell_l}{x}{s}, \wbranch{\ell_r}{y}{t}} \\
+        &\teqv \where{(\where{(\casestmt{a}{x}{\brb{\ell_l}{x}}{y}
+        {\brb{\ell_r}{y}})}{\wbranch{\ell_l}{x}{s}, \wbranch{\ell_r}{y}{t}})}{G} \\
+        &\teqv \where{\casestmt{a}{x}{s}{y}{t}}{G} \teqv \where{r}{G}
+      \end{aligned}
+    \end{equation}
+    \item If $r = \where{r'}{\wbranch{\ell_i}{x_i}{t_i},)_i}$, then by induction, we have that
+    \begin{equation}
+      \begin{aligned}
+        \ssawhere{r}{G} 
+          &:= \ssawhere{r'}{G, (\wbranch{\ell_i}{x_i}{\tossa{t_i}},)_i} \\
+          &\teqv \where{r'}{G, (\wbranch{\ell_i}{x_i}{t_i},)_i} \\
+          &\teqv \where{(\where{r'}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{G} \teqv \where{r}{G} \\
+      \end{aligned}
+    \end{equation}
+  \end{itemize}
+\end{proof}
+
+\cfgperminvar*
+
+\label{proof:cfg-perm-invar}
+
+\begin{proof}
+  We proceed by induction on the size of $G$. If $G$ consists only of an entry block, there is only
+  one permutation, so we are done. Otherwise, assume $G = \beta, (\wbranch{\ell_i}{x_i}{t_i},)_i$.
+  Furthermore, let:
+  \begin{itemize}
+    \item $\wbranch{\ell_i}{x_i}{\beta_i}$ be the children of $\beta$ in $G$ in order
+    \item $G_i = (\wbranch{\kappa_{i, j}}{y_{i, j}}{t_{i, j}},)_j$ be the CFG composed of the
+    descendants of $\beta_i$ in $G$, with $\beta_i$ as entry block, in order
+    \item $\wbranch{\ell_i'}{x_i'}{\beta_i'}$ be the children of $\beta$ in $G'$ in order
+    \item $G_i'$ be the CFG composed of the descendants of $\beta_i'$ in $G'$, with $\beta_i'$ as
+    entry block, in order
+  \end{itemize}
+  By assumption, there exists some permutation $\sigma$ such that $G' = \beta,
+  (\wbranch{\ell_{\sigma_i}}{x_{\sigma_i}}{t_{\sigma_i}},)_i$. It follows that, since the dominance
+  relation on labels is permutation-invariant, there exists some permutation $\rho$ such that
+  $\wbranch{\ell_i'}{x_i'}{\beta_i'} = \wbranch{\ell_{\rho_i}}{x_{\rho_i}}{\beta_{\rho_i}}$, as well
+  as permutations $\tau_i$ such that $G_i' = (\wbranch{\ell_{\rho_i, \tau_{ij}}}{x_{\rho_i,
+  \tau_{ij}}}{t_{\rho_i, \tau_{ij}}},)_j$, implying in particular that $G_i' \simeq G_{\rho_i}$. By
+  induction, we hence have that, for all $i$, $\toreg{G_i'} \teqv \toreg{G_{\rho_i}}$, and hence
+  that
+  \begin{equation}
+    \begin{aligned}
+    \toreg{G'} &:= \adddom{\beta}{(\wbranch{\ell_{\rho_i}}{x_{\rho_i}}{\toreg{G_i'}},)_i} \\
+    &\teqv \adddom{\beta}{(\wbranch{\ell_{\rho_i}}{x_{\rho_i}}{\toreg{G_{\rho_i}}},)_i} \\
+    &\teqv \adddom{\beta}{(\wbranch{\ell_i}{x_i}{\toreg{G_i}},)_i} \teqv \toreg{G}
+    \end{aligned}
+  \end{equation}
+\end{proof}
+
+\cfgconversion*
+
+\label{proof:cfg-conversion}
+
+\begin{proof}
+  We will proceed by induction on the length of $G = \tocfg{r}$. If $G$ consists of only an entry
+  block $\beta$, then we trivially have that $r = \toreg{\tocfg{r}}$, and so we are done. Otherwise,
+  assume $r = \adddom{\beta}{(\wbranch{\ell_i}{x_i}{t_i},)_i}$. Clearly, $\tocfg{r}$ will have entry
+  block $\beta$; moreover, since every block in $\tocfg{r}$ other than those of the form
+  $\toentry{t_i}$ can only be reached from within the region $t_i$ (due to lexical scoping of
+  labels), we have $\beta_i = \toentry{t_{\rho_i}}$ for some injection $\rho$, where $\beta_i$ are
+  the children of $\beta$ in the dominance tree of $G$. In particular, we can write
+  $\{\wbranch{\ell_i}{x_i}{\toentry{t_i}},\}_i$ as the disjoint union of:
+  \begin{itemize}
+    \item The immediate children of $\beta$, $\wbranch{\kappa_i}{y_i}{\beta_i}$, where 
+      $\kappa_i = \ell_{\rho_i}$, $y_i = x_{\rho_i}$, and $\beta_i = \toentry{t_{\rho_i}}$
+    \item The nodes dominated by each $\beta_i$ but not immediately dominated by $\beta$; we will
+    write the collection of such nodes for each $i$ as $\wbranch{\kappa_{i, j}}{y_{i, j}}{\beta_{i,
+    j}}$, where $\kappa_{i, j} = \ell_{\rho_{i, j}}$, $y_{i, j} = x_{\rho_{i, j}}$, and $\beta_{i,
+    j} = \toentry{t_{\rho_{i, j}}}$.
+  \end{itemize}
+  As in the algorithm to compute $\toreg{\cdot}$, let $G_i$ denote the control-flow graph with 
+  entry block $\beta_i$ consisting of all blocks dominated by $\beta_i$. We may write
+  \begin{equation}
+    G \simeq \beta, (\wbranch{\kappa_i}{y_i}{G_i},)_i \qquad
+    \forall i, G_i = \beta_i, (\wbranch{\kappa_{i, j}}{y_{i, j}}{\beta_{i, j}},)_j, R_i
+  \end{equation}
+  where $R_i$ is the ``remainder'' of the control-flow graph $G_i$. Note the equations for $G_i$ are
+  actually equalities, rather than being equivalence up to permutation $\simeq$, since the
+  $\beta_{i, j}$, appear in $G$ before any other elements, being immediate children of $\beta$. It
+  follows that
+  \begin{equation}
+    \toreg{\tocfg{r}}
+    = \toreg{\tocfg{\adddom{\beta}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}}
+    = \adddom{\beta}{(\wbranch{\kappa_i}{y_i}{\toreg{G_i}},)_i}
+  \end{equation}
+  Now, define the strict regions
+  \begin{equation}
+    r_i = \adddom{\beta_i}{
+      ((\wbranch{\kappa_{i, j}}{y_{i, j}}{t_{\rho_{i, j}}},)_j, \todom{t_i})
+    }
+  \end{equation}
+  It is easy to show that $\tocfg{r_i} \simeq G_i$, since every basic block dominated by $\beta_i$
+  must be dominated via either some $t_{\rho_{i, j}}$ or some child of $t_i$. Since by induction
+  $\toreg{\tocfg{r_i}} \teqv r_i$, and by the previous lemma $\toreg{\tocfg_r_i} \teqv \toreg{G_i}$,
+  it follows that
+  \begin{equation}
+    \toreg{\tocfg{r}}
+    \teqv \adddom{\beta}{(\wbranch{\kappa_i}{y_i}{r_i},)_i}
+  \end{equation}
+  Define
+  \begin{equation}
+    T_i = (\wbranch{\kappa_j}{y_j}{r_j},)_{j < i}, 
+      (\wbranch{\kappa_j}{y_j}{t_j}, 
+      (\wbranch{\kappa_{j, k}}{y_{j, k}}{t_{\rho_{j, k}}},)_k,)_{j \geq i}
+  \end{equation}
+  Using Equation~\ref{eqn:pull-where}, we may show that, for all $i$, $\adddom{\beta}{T_{i + 1}}
+  \teqv \adddom{\beta}{T_i}$, since
+  \begin{itemize}
+    \item For all $j$, $t_{\rho_{i, j}}$ cannot use variables defined in $\beta_i$, or $r$ would not
+    typecheck
+    \item For all $j$, if $r_k$ or $t_{\rho_{k, j'}}$ calls $\kappa_{i, j}$, then $k = i$, or
+    $\beta_{i, j}$ would not be dominated by $\beta_i$
+    \item Similarly, $\beta$ cannot call $\kappa_{i, j}$ or $\beta_{i, j}$ would be a direct
+    descendant of $\beta$
+  \end{itemize}
+  We hence have by induction that
+  \begin{equation}
+    \toreg{\tocfg{r}} \teqv \adddom{\beta}{T_N} \teqv \adddom{\beta}{T_0} \teqv r
+  \end{equation}
+  as desired, since $T_0$ is a permutation of $(\wbranch{\ell_i}{x_i}{t_i},)_i$.
+\end{proof}
+
+\subsection{B\"ohm-Jacopini}
+
+\TODO{this}
+
+\subsection{Substitution}
 
 \TODO{organize this into subsections or somesuch}
 
@@ -6359,6 +6403,8 @@ R \otimes A \to C$, we may define the coproduct and injections
   substitutions.
 \end{proof}
 
+\subsection{Label Substitution}
+
 \begin{lemma}[Label Substitution Injection]
   For $\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}$ and $\ms{L}(\ell) = A$, we have
   \begin{equation}
@@ -6745,6 +6791,8 @@ R \otimes A \to C$, we may define the coproduct and injections
   Composition of label substitutions then follows by a trivial induction.
 \end{proof}
 
+\subsection{Equational Theory}
+
 \soundnesseqn*
 
 \label{proof:soundness-eqn}
@@ -6860,9 +6908,9 @@ R \otimes A \to C$, we may define the coproduct and injections
   We now proceed to tackle the equational theory for regions $r$ in the same manner. In particular,
   we proceed by rule induction as follows:
   \begin{itemize}[leftmargin=*]
-    \item[] \brle{let$_1$-$\beta$}, \brle{let$_1$-case}, \brle{case-inl}, \brle{case-inr}: proved
+    \item \brle{let$_1$-$\beta$}, \brle{let$_1$-case}, \brle{case-inl}, \brle{case-inr}: proved
     analgously to the corresponding rules for expressions
-    \item[] \brle{cfg-$\beta_1$}: 
+    \item \brle{cfg-$\beta_1$}: 
     Define $P = \dnt{\hasty{\Gamma}{\bot}{a}{A_k}}$, %
            $L = \loopmor{(\wbranch{\ell_i}{x_i}{t_i},)_i}$ and %
            $\ms{R} = (\ell_i(A_i),)_i$. %
@@ -6903,7 +6951,7 @@ R \otimes A \to C$, we may define the coproduct and injections
       \end{aligned}
     \end{equation}
     as desired.
-    \item[] \brle{cfg-$\beta_2$}: 
+    \item \brle{cfg-$\beta_2$}: 
     Define $P = \dnt{\hasty{\Gamma}{\bot}{b}{B}}$,
             $L = \loopmor{(\wbranch{\ell_i}{x_i}{t_i},)_i}$ and %
             $\ms{R} = (\ell_i(A_i),)_i$. %
@@ -6923,7 +6971,7 @@ R \otimes A \to C$, we may define the coproduct and injections
       \end{aligned}
     \end{equation}
     as desired.
-    \item[] \brle{cfg-$\eta$}: 
+    \item \brle{cfg-$\eta$}: 
     Let $\ms{L} = (\kappa_j(B_j),)_j$, and define %
       $\ms{R} = (\ell_i(A_i),)_i$ and %
       $L = \loopmor{(\wbranch{\ell_i}{x_i}{t_i},)_i}$. %
@@ -7004,7 +7052,7 @@ R \otimes A \to C$, we may define the coproduct and injections
       \end{aligned}
     \end{equation}
     as desired.
-    \item[] \brle{codiag}: 
+    \item \brle{codiag}: 
     Define $R = \dnt{\haslb{\Gamma}{r}{\ms{L}, \ell(A)}}$, and %
            $S = \dnt{\haslb{\Gamma, \bhyp{y}{A}}{s}{\ms{L}, \ell(A), \kappa(A)}}$ %
     \TODO{$\dnt{\haslb{\Gamma, \bhyp{y}{A}}{[\ell/\kappa]s}{\ms{L}}} 
@@ -7046,7 +7094,7 @@ R \otimes A \to C$, we may define the coproduct and injections
     \end{equation}
     as desired.
 
-    \item[] \brle{uni}: 
+    \item \brle{uni}: 
     Define $R = \dnt{\haslb{\Gamma}{r}{\ms{L}, \ell(A)}}$, %
            $E = \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\bot}{e}{B}}$, %
            $S = \dnt{\haslb{\Gamma, \bhyp{y}{B}}{s}{\ms{L}, \kappa(B)}}$, and %
@@ -7086,7 +7134,7 @@ R \otimes A \to C$, we may define the coproduct and injections
     \end{equation}
     as desired.
     
-    \item[] \brle{dinat}: 
+    \item \brle{dinat}: 
     We define 
       $\ms{R} = (\ell_i(A_i),)_i$, $\ms{R}' = (\kappa_j(B_j),)_j$, %
       $S = \dnt{\lbsubst{\Gamma}{\sigma}{\ms{R}}{\ms{R}'}}$, and %
@@ -7285,18 +7333,9 @@ R \otimes A \to C$, we may define the coproduct and injections
   \label{fig:reg-diagrams}
 \end{figure}
 
-\TODO{seq lore and ltimes lore...}
+\subsection{Completeness}
 
-\TODO{destringify correctness of equational theory? OR stringify correctness of substitution?}
-
-\TODO{introduce $\delta$-syntax sugar to reduce suffering?}
-
-\TODO{ 
-  formalization pointers? completeness explanation? separate soundness and completeness
-  sections? 
-}
-
-\TODO{three-address lore? named lore?}
+\TODO{completeness explanations}
 
 \end{document}
 \endinput
