@@ -57,11 +57,10 @@
 \newcounter{todos}
 \newcommand{\TODO}[1]{{
   \stepcounter{todos}
-  \begin{center}\large{\textcolor{red}{\emph{TODO \arabic{todos}:} #1}}\end{center}
+  \begin{center}\large{\textcolor{red}{\textbf{TODO \arabic{todos}:} #1}}\end{center}
 }}
-\newcommand{\sorry}{\textcolor{red}{\emph{sorry}}}
 
-\newcommand{\todo}[1]{\stepcounter{todos} \textcolor{red}{TODO \arabic{todos}: #1}}
+\newcommand{\todo}[1]{\stepcounter{todos} \textcolor{red}{\textbf{TODO \arabic{todos}}: #1}}
 
 % Math fonts
 \newcommand{\mc}[1]{\ensuremath{\mathcal{#1}}}
@@ -5977,7 +5976,7 @@ by uniformity, since
 \end{lemma}
 \begin{proof}
   We proceed by induction on $\Delta$:
-  \begin{itemize}
+  \begin{itemize}[leftmargin=*]
     \item If $\Delta = \cdot$, then $\Delta(x) = A$ is a contradiction.
     \item If $\Delta = \Delta', x : A$, then $\gamma = \gamma', x \mapsto [\gamma]x$, so we have 
     \begin{equation}
@@ -6007,12 +6006,11 @@ by uniformity, since
 
 \label{proof:soundness-subst}
 
-\TODO{rework to go over factored form}
 \begin{proof}
   Fix $\issubst{\gamma}{\Gamma}{\Delta}$ with $\ms{eff}(\Delta) = \bot$. We will begin by showing
   the soundness of substitution for expressions \ref{itm:tm-subst-sound}: we proceed by induction
   on the derivation $\hasty{\Delta}{\epsilon}{e}{E}$:
-  \begin{itemize}
+  \begin{itemize}[leftmargin=*]
     \item If $e = x$ is a variable, then by Lemma~\ref{lem:subst-proj}, we have
     \begin{equation}
       \dnt{\issubst{\gamma}{\Gamma}{\Delta}} ; \dnt{\hasty{\Delta}{\epsilon}{x}{A}} 
@@ -6182,7 +6180,7 @@ by uniformity, since
   \end{itemize}
   We may now prove the soundness of substitution for regions as follows: assuming
   $\haslb{\Gamma}{r}{\ms{L}}$, we proceed by induction on $r$ as follows:
-  \begin{itemize}
+  \begin{itemize}[leftmargin=*]
     \item If $r = \brb{\ell}{a}$, then we have that
     \begin{equation}
       \begin{aligned}
@@ -6314,92 +6312,73 @@ by uniformity, since
       \end{aligned}
     \end{equation}
     as desired.
-    \item If $r = \where{s}{(\wbranch{\ell_i}{x_i}{t_i},)_i}$, then we have by induction that,
+    \item Assume $r = \where{s}{(\wbranch{\ell_i}{x_i}{t_i},)_i}$. Define $\ms{R} =
+    (\ell_i(A_i),)_i$ and $S = \dnt{\issubst{\gamma}{\Gamma}{\Delta}}$. We have by induction that,
     for all $i$,
-    \todo{convert to use new formulation, or nah?}
     \begin{equation}
       \begin{aligned}
       & \dnt{\issubst{\gamma}{\Gamma}{\Delta}} \otimes \dnt{A_i} 
-      ; \dnt{\haslb{\Delta, \bhyp{x_i}{A_i}}{t_i}{\ms{L}}}
+      ; \dnt{\haslb{\Delta, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, \ms{R}}}
       \\ &= \dnt{\issubst{(\gamma, x_i \mapsto x_i)}  
                   {(\Gamma, \bhyp{x_i}{A_i})}{(\Delta, \bhyp{x_i}{A_i})}}
-      ; \dnt{\haslb{\Delta, \bhyp{x_i}{A_i}}{t_i}{\ms{L}}}
-      \\ &= \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{[\gamma, x_i \mapsto x_i]t_i}{\ms{L}}}
-          = \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{[\gamma]t_i}{\ms{L}}}
+      ; \dnt{\haslb{\Delta, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, \ms{R}}}
+      \\ &= \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{[\gamma, x_i \mapsto x_i]t_i}{\ms{L}, \ms{R}}}
+          = \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{[\gamma]t_i}{\ms{L}, \ms{R}}}
       \end{aligned}
     \end{equation}
     and therefore that
     \begin{equation}
       \begin{aligned}
-        & \dnt{\issubst{\gamma}{\Gamma}{\Delta}} \otimes \Sigma_i\dnt{A_i} ; \delta^{-1}_{\Sigma} ;
-        \\ & \qquad
-          [ 
-            \Delta_{\dnt{\Delta}} \otimes \dnt{A_i} ; \alpha ;
-            \dnt{\Delta} \otimes 
-            \dnt{\haslb{\Delta, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
-          ]_i ; \dnt{\Delta} \otimes \alpha^+ ; \delta^{-1} \\
-        &= \delta^{-1}_{\Sigma} ; [ 
-          \Delta_{\dnt{\Gamma}} \otimes \dnt{A_i} ; \alpha ;
-          \dnt{\Gamma} \otimes 
-          \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{[\gamma]t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
-        ]_i ; \dnt{\issubst{\gamma}{\Gamma}{\Delta}} \otimes \alpha^+  ; \delta^{-1} \\
-        &= \delta^{-1}_{\Sigma} ; [ 
-          \Delta_{\dnt{\Gamma}} \otimes \dnt{A_i} ; \alpha ;
-          \dnt{\Gamma} \otimes 
-          \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{[\gamma]t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
-        ]_i ; 
-        \\ & \qquad \dnt{\Gamma} \otimes \alpha^+ ; \delta^{-1} ; 
-        \dnt{\issubst{\gamma}{\Gamma}{\Delta}} \otimes \dnt{\ms{L}} +
-        \dnt{\issubst{\gamma}{\Gamma}{\Delta}} \otimes \Sigma_i\dnt{A_i}
+        & S \otimes \Sigma_i\dnt{A_i} 
+        ; \loopmor{(\wbranch{\ell_i}{x_i}{t_i},)_i} \\
+        & = S \otimes \Sigma_i\dnt{A_i} 
+        ; \delta^{-1}_{\Sigma} ; 
+        [ 
+          \dnt{\haslb{\Delta, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, \ms{R}}},
+        ]_i
+        ; \alpha^+_{\dnt{\ms{L}} + \Sigma_i \dnt{A_i}} \\
+        & = \delta^{-1}_{\Sigma} ; 
+        [ 
+          S \otimes \dnt{A_i} ;
+          \dnt{\haslb{\Delta, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, \ms{R}}},
+        ]_i
+        ; \alpha^+_{\dnt{\ms{L}} + \Sigma_i \dnt{A_i}} \\
+        & = \delta^{-1}_{\Sigma} ; 
+        [ 
+          \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{[\gamma]t_i}{\ms{L}, \ms{R}}},
+        ]_i
+        ; \alpha^+_{\dnt{\ms{L}} + \Sigma_i \dnt{A_i}} \\
+        & = \loopmor{(\wbranch{\ell_i}{x_i}{[\gamma]t_i},)_i}
       \end{aligned}
     \end{equation}
-    By uniformity, it follows that
+    It follows that
     \begin{equation}
       \begin{aligned}
-          & \dnt{\issubst{\gamma}{\Gamma}{\Delta}} ; \Delta_{\dnt{\Delta}}
-          ; \dnt{\Delta} \otimes (\dnt{\haslb{\Delta}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}} 
-          ; \alpha^+_{\dnt{L} + \Sigma_i \dnt{A_i}}) ; \delta^{-1} ; 
-          \\ & \quad [\pi_r, 
-            (\delta^{-1}_{\Sigma} ;
-              [ 
-                \Delta_{\dnt{\Delta}} \otimes \dnt{A_i} ; \alpha ;
-                \dnt{\Delta} \otimes 
-                \dnt{\haslb{\Delta, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
-              ]_i ; \dnt{\Delta} \otimes \alpha^+ ; \delta^{-1})^\dagger ; \pi_r ] \\ 
-          & = \Delta_{\dnt{\Gamma}}
-          ; \dnt{\Gamma} \otimes \dnt{\haslb{\Gamma}{[\gamma]r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
-          ; \alpha^+_{\dnt{L} + \Sigma_i \dnt{A_i}}) ; \delta^{-1} ; [
-          \\ & \qquad \dnt{\issubst{\gamma}{\Gamma}{\Delta}} \otimes \dnt{\ms{L}} ; \pi_r, 
-          \\ & \qquad \dnt{\issubst{\gamma}{\Gamma}{\Delta}} \otimes \Sigma_i\dnt{A_i} ;
-          \\ & \qquad\quad
-          (\delta^{-1}_{\Sigma} ;
-            [ 
-              \Delta_{\dnt{\Delta}} \otimes \dnt{A_i} ; \alpha ;
-              \dnt{\Delta} \otimes 
-              \dnt{\haslb{\Delta, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
-            ]_i ; \dnt{\Delta} \otimes \alpha^+ ; \delta^{-1})^\dagger ; \pi_r ] \\
-          & = \Delta_{\dnt{\Gamma}}
-          ; \dnt{\Gamma} \otimes \dnt{\haslb{\Gamma}{[\gamma]r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
-          ; \alpha^+_{\dnt{L} + \Sigma_i \dnt{A_i}}) ; \delta^{-1} ; [ \pi_r,
-          \\ & \qquad
-          (\delta^{-1}_{\Sigma} ;
-            [ 
-              \Delta_{\dnt{\Gamma}} \otimes \dnt{A_i} ; \alpha ;
-              \dnt{\Gamma} \otimes 
-              \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{[\gamma]t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
-            ]_i ; \dnt{\Gamma} \otimes \alpha^+ ; \delta^{-1})^\dagger ; 
-          \\ & \qquad \dnt{\issubst{\gamma}{\Gamma}{\Delta}} \otimes \dnt{\ms{L}} ; \pi_r ] \\
-          & = \Delta_{\dnt{\Gamma}}
-          ; \dnt{\Gamma} \otimes \dnt{\haslb{\Gamma}{[\gamma]r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
-          ; \alpha^+_{\dnt{L} + \Sigma_i \dnt{A_i}}) ; \delta^{-1} ; [ \pi_r,
-          \\ & \qquad
-          (\delta^{-1}_{\Sigma} ;
-            [ 
-              \Delta_{\dnt{\Gamma}} \otimes \dnt{A_i} ; \alpha ;
-              \dnt{\Gamma} \otimes 
-              \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{[\gamma]t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
-            ]_i ; \dnt{\Gamma} \otimes \alpha^+ ; \delta^{-1})^\dagger ; \pi_r ] \\
-          & = \dnt{\haslb{\Gamma}{[\gamma](\where{s}{(\wbranch{\ell_i}{x_i}{t_i},)_i})}{\ms{L}}}
+        & S
+          ; \dnt{\haslb{\Delta}{\where{s}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}} \\
+        & = S
+          ; \lmor{\dnt{\haslb{\Delta}{s}{\ms{L}, \ms{R}}} 
+            ; \alpha^+_{\dnt{\ms{L}} + \Sigma_i \dnt{A_i}}}
+          ; \delta^{-1}
+          ; [\pi_r, \loopmor{(\wbranch{\ell_i}{x_i}{t_i},)_i}] \\
+        & = \lmor{S ; \dnt{\haslb{\Delta}{s}{\ms{L}, \ms{R}}} 
+            ; \alpha^+_{\dnt{\ms{L}} + \Sigma_i \dnt{A_i}}}
+          ; S \otimes (\dnt{\ms{L}} + \Sigma_i \dnt{A_i})
+          ; \delta^{-1}
+          ; [\pi_r, \loopmor{(\wbranch{\ell_i}{x_i}{t_i},)_i}] \\
+        & = \lmor{\dnt{\haslb{\Gamma}{[\gamma]s}{\ms{L}, \ms{R}}} 
+            ; \alpha^+_{\dnt{\ms{L}} + \Sigma_i \dnt{A_i}}}
+          ; \delta^{-1}
+          ; [\pi_r, 
+            S \otimes (\dnt{\ms{L}} + \Sigma_i \dnt{A_i}) 
+            ; \loopmor{(\wbranch{\ell_i}{x_i}{t_i},)_i}] \\
+        & = \lmor{\dnt{\haslb{\Gamma}{[\gamma]s}{\ms{L}, \ms{R}}} 
+            ; \alpha^+_{\dnt{\ms{L}} + \Sigma_i \dnt{A_i}}}
+          ; \delta^{-1}
+          ; [\pi_r, \loopmor{(\wbranch{\ell_i}{x_i}{[\gamma]t_i},)_i}] \\
+        & = \dnt{\haslb{\Gamma}
+          {\where{[\gamma]s}
+          {(\wbranch{\ell_i}{x_i}{[\gamma]t_i},)_i}}{\ms{L}}} \\
       \end{aligned}
     \end{equation}
     as desired.
@@ -6495,7 +6474,7 @@ by uniformity, since
   Fix $\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}$. We begin by proving the soundness of label
   substitution for regions as follows: assuming $\haslb{\Gamma}{r}{\ms{L}}$, we proceed by induction
   on $r$ as follows:
-  \begin{itemize}
+  \begin{itemize}[leftmargin=*]
     \item If $r = \brb{\ell}{a}$, then by Lemma~\ref{lem:lsubst-inj} we have that
     \begin{equation}
       \begin{aligned}
@@ -6798,6 +6777,8 @@ by uniformity, since
 
 \subsection{Equational Theory}
 
+\TODO{separate expressions and regions?}
+
 \soundnesseqn*
 
 \label{proof:soundness-eqn}
@@ -6805,7 +6786,7 @@ by uniformity, since
 \begin{proof}
   We begin our proof by showing soundness of the equational theory for expressions, i.e.
   \ref{itm:eqn-sound-expr}, by rule induction.
-  \begin{itemize}
+  \begin{itemize}[leftmargin=*]
     \item \emph{Congruence}: these follow trivially by induction
     \item \brle{initial}, \brle{terminal}: both of these follow trivially from the universal
     property of the initial/terminal object, respectively.
@@ -7339,10 +7320,10 @@ by uniformity, since
 \end{figure}
 
 \begin{lemma}[\ms{where}-fusion]
-  \TODO{this}
+  \todo{this}
 \end{lemma}
 \begin{proof}
-  \TODO{this}
+  \todo{this}
 \end{proof}
 
 \TODO{other equations?}
