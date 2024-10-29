@@ -6847,7 +6847,46 @@ R \otimes A \to C$, we may define the coproduct and injections
   \begin{itemize}[leftmargin=*]
     \item[] \brle{let$_1$-$\beta$}, \brle{let$_1$-case}, \brle{case-inl}, \brle{case-inr}: proved
     analgously to the corresponding rules for expressions
-    \item[] \brle{cfg-$\beta_1$}: \todo{this}
+    \item[] \brle{cfg-$\beta_1$}: 
+    Define $P = \dnt{\hasty{\Gamma}{\bot}{a}{A_k}}$,
+           $L = \loopmor{(\wbranch{\ell_i}{x_i}{t_i},)_i}$ and %
+           $\ms{R} = (\ell_i(A_i),)_i$. We have that
+    \begin{equation}
+      \begin{aligned}
+        & \dnt{\haslb{\Gamma}{\where{\brb{\ell_k}{a}}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}} \\
+        & = \lmor{
+              P ; \iota_{(\ms{L}, \ms{R}), \ell_k} ;
+              \alpha^+_{\dnt{\ms{L}} + \Sigma_i \dnt{A_i}}
+          } ; \delta^{-1} ; [\pi_r, \rfix{L}] \\
+        & = \lmor{P ; \iota_k} ; \dnt{\Gamma} \otimes \iota_r ; \delta^{-1} ; [\pi_r, \rfix{L}] \\
+        & = \lmor{P ; \iota_k} ; \rfix{L} \\
+        & = \lmor{P ; \iota_k} ; \rcase{L} ; [\pi_r, \rfix{L}] \\
+        & = \lmor{P} ; \rcase{\dnt{\Gamma} \otimes \iota_k ; L} ; [\pi_r, \rfix{L}] \\
+        & = \lmor{P} 
+          ; \rcase{\dnt{\haslb{\Gamma, \bhyp{x_k}{A_k}}{t_k}{\ms{L}, \ms{R}}} 
+                    ; \alpha^+_{\dnt{L} + \Sigma_i\dnt{A_i}}} 
+          ; [\pi_r, \rfix{L}] \\
+        & = \lmor{P} 
+          ; \rlmor{\dnt{\haslb{\Gamma, \bhyp{x_k}{A_k}}{t_k}{\ms{L}, \ms{R}}} 
+                    ; \alpha^+_{\dnt{L} + \Sigma_i\dnt{A_i}}} 
+          ; \delta^{-1}
+          ; [\pi_r, \rfix{L}] \\
+        & = \lmor{\lmor{P}  
+              ; \dnt{\haslb{\Gamma, \bhyp{x_k}{A_k}}{t_k}{\ms{L}, \ms{R}}} 
+              ; \alpha^+_{\dnt{L} + \Sigma_i\dnt{A_i}}}
+          ; \delta^{-1}
+          ; [\pi_r, \rfix{L}] \\
+        & = \lmor{
+            \dnt{\haslb{\Gamma}{\letstmt{x_k}{a}{t_k}}{\ms{L}, \ms{R}}} 
+            ; \alpha^+_{\dnt{L} + \Sigma_i\dnt{A_i}}}
+          ; \delta^{-1}
+          ; [\pi_r, \rfix{L}] \\
+        & = \dnt{
+          \haslb{\Gamma}{\where{\letstmt{x_k}{a}{t_k}}{(\wbranch{\ell_i}{x_i}{A_i},)_i}}{\ms{L}}
+        }
+      \end{aligned}
+    \end{equation}
+    as desired.
     \item[] \brle{cfg-$\beta_2$}: \todo{this}
     \item[] \brle{cfg-$\eta$}: \todo{this}
     \item[] \brle{codiag}: 
