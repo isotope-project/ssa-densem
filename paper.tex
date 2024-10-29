@@ -1948,12 +1948,13 @@ equivalent to
           {\ms{L}}}
       \\
       \prftree[r]{\rle{cfg-$\beta_2$}}
-        {\hasty{\Gamma}{\bot}{a}{A_k}}
+        {\hasty{\Gamma}{\bot}{b}{B}}
         {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+        {\ms{L}\;\kappa = B}
         {\kappa \notin \{(\ell_i,)_i\}}
         {\lbeq{\Gamma}
-          {\where{\brb{\kappa}{a}}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
-          {\brb{\kappa}{a}}
+          {\where{\brb{\kappa}{b}}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
+          {\brb{\kappa}{b}}
           {\ms{L}}}
       \\
         \prftree[r]{\rle{cfg-$\eta$}}
@@ -6848,9 +6849,10 @@ R \otimes A \to C$, we may define the coproduct and injections
     \item[] \brle{let$_1$-$\beta$}, \brle{let$_1$-case}, \brle{case-inl}, \brle{case-inr}: proved
     analgously to the corresponding rules for expressions
     \item[] \brle{cfg-$\beta_1$}: 
-    Define $P = \dnt{\hasty{\Gamma}{\bot}{a}{A_k}}$,
+    Define $P = \dnt{\hasty{\Gamma}{\bot}{a}{A_k}}$, %
            $L = \loopmor{(\wbranch{\ell_i}{x_i}{t_i},)_i}$ and %
-           $\ms{R} = (\ell_i(A_i),)_i$. We have that
+           $\ms{R} = (\ell_i(A_i),)_i$. %
+    We have that
     \begin{equation}
       \begin{aligned}
         & \dnt{\haslb{\Gamma}{\where{\brb{\ell_k}{a}}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}} \\
@@ -6887,7 +6889,26 @@ R \otimes A \to C$, we may define the coproduct and injections
       \end{aligned}
     \end{equation}
     as desired.
-    \item[] \brle{cfg-$\beta_2$}: \todo{this}
+    \item[] \brle{cfg-$\beta_2$}: 
+    Define $P = \dnt{\hasty{\Gamma}{\bot}{b}{B}}$,
+            $L = \loopmor{(\wbranch{\ell_i}{x_i}{t_i},)_i}$ and %
+            $\ms{R} = (\ell_i(A_i),)_i$. %
+    We have that
+    \begin{equation}
+      \begin{aligned}
+        & \dnt{\haslb{\Gamma}{\where{\brb{\kappa}{b}}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}} \\
+        & = \lmor{P 
+            ; \iota_{(\ms{L}, \ms{R}), \kappa} 
+            ; \alpha^+_{\dnt{\ms{L}} + \Sigma_i \dnt{A_i}}
+          } ; \delta^{-1} ; [\pi_r, \rfix{L}] \\
+        & = \lmor{P ; \iota_{\ms{L}, \kappa}} 
+          ; \dnt{\Gamma} \otimes \iota_l ; \delta^{-1} ; [\pi_r, \rfix{L}] \\
+        & = \lmor{P ; \iota_{\ms{L}, \kappa}} ; \pi_r \\
+          = P ; \iota_{\ms{L}, \kappa} \\
+          = \dnt{\haslb{\Gamma}{\brb{\kappa}{b}}{\ms{L}}}
+      \end{aligned}
+    \end{equation}
+    as desired.
     \item[] \brle{cfg-$\eta$}: \todo{this}
     \item[] \brle{codiag}: 
     Define $R = \dnt{\haslb{\Gamma}{r}{\ms{L}, \ell(A)}}$, and %
@@ -6972,7 +6993,7 @@ R \otimes A \to C$, we may define the coproduct and injections
     as desired.
     
     \item[] \brle{dinat}: 
-    Define 
+    We define 
       $\ms{R} = (\ell_i(A_i),)_i$, $\ms{R}' = (\kappa_j(B_j),)_j$, %
       $S = \dnt{\lbsubst{\Gamma}{\sigma}{\ms{R}}{\ms{R}'}}$, and %
       $S' = \dnt{\Gamma} \otimes \alpha^+_{\dnt{R}} ; S ; \alpha^+_{\Sigma_j\dnt{B_j}}$. %
