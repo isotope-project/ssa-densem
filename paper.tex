@@ -5506,7 +5506,38 @@ Note in particular that this allows us to define sums
 Our final task is to show that, if $\mc{C}$ is a strong Elgot category, then so is
 $\envcom{R}{\mc{C}}$, and, in particular, with fixpoint operator $\rfix{f}$. Note that, just like we
 needed distributivity to have coproducts at all, we will need strength to have an Elgot structure.
-We begin by stating some generally useful properties of $\rfix{f}$, for $f : R \otimes A \to B + A$:
+We begin by stating some generally useful properties of $\rcase{f}$ and $\rfix{f}$. In particular,
+we have that: For $f: R \otimes A \to B + C$:
+\begin{itemize}
+  \item Given $h : R \otimes X \to A$, we have
+  \begin{equation}
+    \begin{aligned}
+    \rlmor{h} ; \rcase{f} 
+    & = \dmor{R} \otimes X ; \alpha ; R \otimes h 
+      ; \dmor{R} \otimes A ; \alpha ; R \otimes f ; \delta^{-1} \\
+    & = \dmor{R} \otimes X ; \alpha 
+      ; R \otimes (\dmor{R} \otimes X ; \alpha ; R \otimes h ; f) ; \delta^{-1} \\
+    & = \rcase{\rlmor{h} ; f} & = \rcase{\rseq{}{h}{f}}
+    \end{aligned}
+  \end{equation}
+  \item Given $g : R \otimes B \to X$, $h : R \otimes C \to Y$, we have
+  \begin{equation}
+    \begin{aligned}
+    \rcase{\rseq{}{f}{g +_R h}}
+    & = \rlmor{\rseq{}{f}{g +_R h}} ; \delta^{-1} \\
+    & = \rlmor{f} ; \rlmor{g +_R h} ; \delta^{-1} \\
+    & = \rlmor{f} 
+      ; \dmor{R} \otimes (B + C) ; \alpha ; R \otimes (\delta^{-1} ; g + h) ; \delta^{-1} \\
+    & = \rlmor{f} 
+      ; \dmor{R} \otimes (B + C) ; \alpha ; R \otimes \delta^{-1} ; \delta^{-1} 
+      ; (R \otimes g) + (R \otimes h) \\
+    & = \rlmor{f} ; \delta^{-1} ; \rlmor{g} + \rlmor{h} \\
+    & = \rcase{f} ; \rlmor{g} + \rlmor{h} \\
+    & = \rlmor{f} ; \rlmor{g} +_R \rlmor{h}
+    \end{aligned}
+  \end{equation}
+\end{itemize}
+Similarly, for $f : R \otimes A \to B + A$:
 \begin{itemize}
   \item Given $h : R' \to_\bot R$, $h \otimes A ; \rfix{f} = \rfix{h \otimes A ; f}$: we have that
   \begin{equation}
@@ -5733,7 +5764,24 @@ We may now state our desired result as follows:
       \end{aligned}
     \end{equation}
     to obtain the desired result.
-    \item \emph{Uniformity:} \TODO{this}
+    \item \emph{Uniformity:} 
+    Given $f : R \otimes A \to B + A$, $g : R \otimes X \to B + X$ and $h : R \otimes X \to_\bot A$
+    such that $\rseq{}{h}{f} = \rseq{}{g}{B +_R h}$, we have that
+    \begin{equation}
+      \begin{aligned}
+      \rlmor{h} ; \rcase{f} 
+      & = \rcase{\rseq{}{h}{f}} \\
+      & = \rcase{\rseq{}{g}{B +_R h}} \\ 
+      & = \rcase{g} ; (R \otimes B) + \rlmor{h}        
+      \end{aligned}
+    \end{equation}
+    and hence by uniformity that
+    \begin{equation}
+      \rseq{}{h}{\rfix{f}} 
+      = \rlmor{h} ; (\rcase{f})^\dagger ; \pi_r
+      = (\rcase{g})^\dagger ; \pi_r 
+      = \rfix{g}
+    \end{equation}
   \end{itemize}
 \end{proof}
 
