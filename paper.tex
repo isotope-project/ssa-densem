@@ -3755,37 +3755,37 @@ in contrst to \emph{expressions}, which purely encode data, with no particular i
 to use it afterwards. Our interpretation of \ms{let}-statements and \ms{case}-statements, given in
 Figure~\ref{fig:ssa-reg-sem}, is exactly the same as that of the corresponding expressions.
 
-\TODO{rework to go over factored form}
-Finally, we come to the interpretation of \ms{where}-blocks, which is where Elgot structure comes
-in. Since the semantics for \ms{where} blocks has a lot of moving parts, it makes sense to break it
-down ``imperatively" as follows:
+Finally, we come to the interpretation of \ms{where}-statements, which is where the Elgot structure
+comes in. The semantics of a \ms{where}-block
+$\haslb{\Gamma}{\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}$ can be broken down into two
+major components:
 \begin{itemize}
-  \item First, we split the context using the diagonal morphism $\Delta_{\dnt{\Gamma}}$
-  \item Then, using the right copy of the context, we execute the program
-  $\dnt{\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}$, and reassociate the result using
-  $\alpha^+$ to get to $\dnt{\ms{L}} + \Sigma_i\dnt{A_i}$
-  \item We apply the inverse distributor $\delta^{-1}$ to get to the coproduct $\dnt{\Gamma} \otimes
-  \dnt{\ms{L}} + \dnt{\Gamma} \otimes \Sigma_i \dnt{A_i}$
-  \item In the left ($\dnt{\Gamma} \otimes \dnt{\ms{L}}$) branch, we discard $\dnt{\Gamma}$ and
-  return immediately
-  \item In the right ($\dnt{\Gamma} \otimes \Sigma_i \dnt{A_i}$) branch, we enter a loop
-  (represented by the Elgot iteration operator), in which we:
-  \item Apply the inverse distributor $\delta^{-1}_{\Sigma}$ to get to 
-        $\Sigma_i \dnt{\Gamma} \otimes \dnt{A_i}$
-  \item For each branch $i$ in the sum, we:
+  \item The \emph{terminator} $\entrymor{r} : \dnt{\Gamma} \to \dnt{\ms{L}} + \Sigma_i\dnt{A_i}$,
+  which, given as input the context $\dnt{\Gamma}$, executes $r$ and then re-associates the output.
+  The output type $\dnt{\ms{L}} + \Sigma_i\dnt{A_i}$ expresses that $r$ may either:
   \begin{itemize}
-    \item Split the context using the diagonal morphism $\Delta_{\dnt{\Gamma}}$, leaving the
-    argument alone; then reassociate to get to $\dnt{\Gamma} \otimes (\dnt{\Gamma} \otimes \dnt{A})$
-    \item Use the right component to execute the program $\dnt{\haslb{\Gamma,
-    \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}$, then re-associate the result in the
-    coproduct, reaching $\dnt{\Gamma} \otimes (\dnt{\ms{L}} + \Sigma_i\dnt{A_i})$
-    \item Apply the inverse distributor $\delta^{-1}$ to get to 
-      $\dnt{\Gamma} \otimes \dnt{\ms{L}} + \dnt{\Gamma} \otimes \Sigma_i\dnt{A_i}$
+    \item Via the left injection, return immediately, jumping to an enclosing label in $\ms{L}$
+    \item Via the right injection, jump to the $i^{th}$ basic block $t_i$ in the
+    \ms{where}-statement by returning a value in $\dnt{A_i}$
   \end{itemize}
-  \item In the left ($\dnt{\Gamma} \otimes \dnt{\ms{L}}$) case, we discard $\dnt{\Gamma}$ and break
-  out of the loop
-  \item In the right ($\dnt{\Gamma} \otimes \Sigma_i\dnt{A_i}$) case, we return to the beginning
-  of the loop for another iteration
+  \item The ``\emph{loop}'' $\loopmor{(\wbranch{\ell_i}{x_i}{t_i},)_i} : \dnt{\Gamma} \otimes
+  \Sigma_i\dnt{A_i} \to \dnt{\ms{L}} + \Sigma_i\dnt{A_i}$ which, given as input the context
+  $\dnt{\Gamma}$ and an input $\dnt{A_i}$ for the $i^{th}$ basic block $t_i$, executes $t_i$ and
+  then re-associates the output. The output type $\dnt{\ms{L}} + \Sigma_i\dnt{A_i}$ again expresses
+  that control-flow may either exit the \ms{where}-block (via $\dnt{\ms{L}}$) or jump to some other
+  basic block (via $\Sigma_i\dnt{A_i}$).
+\end{itemize}
+We glue these together in the obvious manner to get the semantics for a where-block:
+\begin{itemize}
+  \item Compute $\lmor{\entrymor{r}}$, which, given as input the context $\dnt{\Gamma}$, compies the
+  context, executes $\entrymor{r}$, and then returns the copied context and the output as
+  $\dnt{\Gamma} \otimes (\dnt{\ms{L}} + \Sigma_i\dnt{A_i})$
+  \item Distribute the context into each branch of the coproduct, yielding 
+  $\dnt{\Gamma} \otimes \dnt{\ms{L}} + \dnt{\Gamma} \otimes \Sigma_i\dnt{A_i}$
+  \item If we are in the left branch, project out the result to yield $\dnt{\ms{L}}$, and return
+  immediately
+  \item Otherwise, compute $\loopmor{(\wbranch{\ell_i}{x_i}{t_i},)_i}$ in a loop, passing in a
+  fresh copy of the context each time. This is implemented with $\ms{rfix}$.
 \end{itemize}
 
 \begin{figure}
