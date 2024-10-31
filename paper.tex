@@ -137,8 +137,8 @@
 \newcommand{\ednt}[1]{\left\llbracket{#1}\right\rrbracket}
 \newcommand{\tmor}[1]{{!}_{#1}}
 \newcommand{\dmor}[1]{{\Delta}_{#1}}
-\newcommand{\entrymor}[1]{\ms{esem}(#1)}
-\newcommand{\loopmor}[1]{\ms{lsem}(#1)}
+\newcommand{\entrymor}[3]{\ms{esem}_{#1, #3}(#2)}
+\newcommand{\loopmor}[3]{\ms{lsem}_{#1, #3}(#2)}
 \newcommand{\substpure}[1]{#1\;\ms{pure}}
 
 % Comonadic lore
@@ -247,6 +247,8 @@
 \maketitle
 
 \TODO{formalization pointers for theorems}
+
+\TODO{make sure upgrade is defined both on the left and the right; \emph{or} do this separately}
 
 \section{Introduction}
 
@@ -3754,7 +3756,8 @@ comes in. The semantics of a \ms{where}-block
 $\haslb{\Gamma}{\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}$ can be broken down into two
 major components:
 \begin{itemize}
-  \item The \emph{terminator} $\entrymor{r} : \dnt{\Gamma} \to \dnt{\ms{L}} + \Sigma_i\dnt{A_i}$,
+  \item The \emph{terminator} 
+  $\entrymor{\Gamma}{r}{\ms{L}} : \dnt{\Gamma} \to \dnt{\ms{L}} + \Sigma_i\dnt{A_i}$,
   which, given as input the context $\dnt{\Gamma}$, executes $r$ and then re-associates the output.
   The output type $\dnt{\ms{L}} + \Sigma_i\dnt{A_i}$ expresses that $r$ may either:
   \begin{itemize}
@@ -3762,24 +3765,24 @@ major components:
     \item Via the right injection, jump to the $i^{th}$ basic block $t_i$ in the
     \ms{where}-statement by returning a value in $\dnt{A_i}$
   \end{itemize}
-  \item The ``\emph{loop}'' $\loopmor{(\wbranch{\ell_i}{x_i}{t_i},)_i} : \dnt{\Gamma} \otimes
-  \Sigma_i\dnt{A_i} \to \dnt{\ms{L}} + \Sigma_i\dnt{A_i}$ which, given as input the context
-  $\dnt{\Gamma}$ and an input $\dnt{A_i}$ for the $i^{th}$ basic block $t_i$, executes $t_i$ and
-  then re-associates the output. The output type $\dnt{\ms{L}} + \Sigma_i\dnt{A_i}$ again expresses
-  that control-flow may either exit the \ms{where}-block (via $\dnt{\ms{L}}$) or jump to some other
-  basic block (via $\Sigma_i\dnt{A_i}$).
+  \item The ``\emph{loop}'' $\loopmor{\Gamma}{(\wbranch{\ell_i}{x_i}{t_i},)_i}{\ms{L}} :
+  \dnt{\Gamma} \otimes \Sigma_i\dnt{A_i} \to \dnt{\ms{L}} + \Sigma_i\dnt{A_i}$ which, given as input
+  the context $\dnt{\Gamma}$ and an input $\dnt{A_i}$ for the $i^{th}$ basic block $t_i$, executes
+  $t_i$ and then re-associates the output. The output type $\dnt{\ms{L}} + \Sigma_i\dnt{A_i}$ again
+  expresses that control-flow may either exit the \ms{where}-block (via $\dnt{\ms{L}}$) or jump to
+  some other basic block (via $\Sigma_i\dnt{A_i}$).
 \end{itemize}
 We glue these together in the obvious manner to get the semantics for a where-block:
 \begin{itemize}
-  \item Compute $\lmor{\entrymor{r}}$, which, given as input the context $\dnt{\Gamma}$, compies the
-  context, executes $\entrymor{r}$, and then returns the copied context and the output as
-  $\dnt{\Gamma} \otimes (\dnt{\ms{L}} + \Sigma_i\dnt{A_i})$
+  \item Compute $\lmor{\entrymor{\Gamma}{r}{\ms{L}}}$, which, given as input the context
+  $\dnt{\Gamma}$, compies the context, executes $\entrymor{r}$, and then returns the copied context
+  and the output as $\dnt{\Gamma} \otimes (\dnt{\ms{L}} + \Sigma_i\dnt{A_i})$
   \item Distribute the context into each branch of the coproduct, yielding 
   $\dnt{\Gamma} \otimes \dnt{\ms{L}} + \dnt{\Gamma} \otimes \Sigma_i\dnt{A_i}$
   \item If we are in the left branch, project out the result to yield $\dnt{\ms{L}}$, and return
   immediately
-  \item Otherwise, compute $\loopmor{(\wbranch{\ell_i}{x_i}{t_i},)_i}$ in a loop, passing in a
-  fresh copy of the context each time. This is implemented with $\ms{rfix}$.
+  \item Otherwise, compute $\loopmor{\Gamma}{(\wbranch{\ell_i}{x_i}{t_i},)_i}{\ms{L}}$ in a loop,
+  passing in a fresh copy of the context each time. This is implemented with $\ms{rfix}$.
 \end{itemize}
 
 \begin{figure}
@@ -3808,22 +3811,22 @@ We glue these together in the obvious manner to get the semantics for a where-bl
       ]
       \\
     \dnt{\haslb{\Gamma}{\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}}
-      &= \lmor{\entrymor{r}} 
+      &= \lmor{\entrymor{\Gamma}{r}{\ms{L}}} 
       ; \delta^{-1} 
-      ; [\pi_r, \rfix{\loopmor{(\wbranch{\ell_i}{x_i}{t_i},)_i}} ]
+      ; [\pi_r, \rfix{\loopmor{\Gamma}{(\wbranch{\ell_i}{x_i}{t_i},)_i}{\ms{L}}} ]
   \end{align*} 
   \begin{align*}
     \text{where} \qquad 
     & \boxed{\iota_{\ms{L}, \ell} : \dnt{A} \to_\bot \dnt{\ms{L}}} \qquad \qquad \qquad
     \iota_{(\ms{L}, \ell(A)), \ell} = \iota_r \qquad
     \iota_{(\ms{L}, \kappa(B)), x} = \iota_l ; \iota_{\ms{L}, \ell} \\
-    & \boxed{\entrymor{r} : \dnt{\Gamma} \to \dnt{L} + \Sigma_i\dnt{A_i}} \\
-    & \entrymor{r} = \dnt{\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}} 
+    & \boxed{\entrymor{\Gamma}{r}{\ms{L}} : \dnt{\Gamma} \to \dnt{L} + \Sigma_i\dnt{A_i}} \\
+    & \entrymor{\Gamma}{r}{\ms{L}} = \dnt{\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}} 
     ; \alpha^+_{\dnt{\ms{L}} + \Sigma_i \dnt{A_i}} \\
-    & \boxed{\loopmor{\wbranch{\ell_i}{x_i}{t_i},)_i} 
+    & \boxed{\loopmor{\Gamma}{\wbranch{\ell_i}{x_i}{t_i},)_i}{\ms{L}} 
       : \dnt{\Gamma} \otimes \Sigma_i\dnt{A_i} \to \dnt{\ms{L}} + \Sigma_i\dnt{A_i}}
     \\
-    & \loopmor{\wbranch{\ell_i}{x_i}{t_i},)_i} = \delta^{-1}_{\Sigma} 
+    & \loopmor{\Gamma}{\wbranch{\ell_i}{x_i}{t_i},)_i}{\ms{L}} = \delta^{-1}_{\Sigma} 
       ; [ \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}, ]_i
       ; \alpha^+_{\dnt{\ms{L}} + \Sigma_i \dnt{A_i}}  
   \end{align*}
@@ -6151,7 +6154,7 @@ We may now state our desired result as follows:
       ; [\dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{[\ms{L}, \ms{R}]}} 
       ; \alpha^+_{(\mb{0} + \dnt{\ms{L}}) + \dnt{\ms{R}}},]_i} \\
       & = \dnt{\Gamma} \otimes \alpha^+_{\Sigma_i\dnt{A_i}} 
-        ; \rfix{\loopmor{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
+        ; \rfix{\loopmor{\Gamma}{(\wbranch{\ell_i}{x_i}{t_i},)_i}{\ms{L}}}
         ; \alpha^+_{\mb{0} + \dnt{\ms{L}}}
       \end{aligned}
     \end{equation}
@@ -6173,14 +6176,14 @@ We may now state our desired result as follows:
       ; [
         \pi_r ; \alpha^+_{\mb{0} + \dnt{\ms{L}}}, 
         \dnt{\Gamma} \otimes \alpha^+_{\Sigma_i\dnt{A_i}} 
-        ; \rfix{\loopmor{(\wbranch{\ell_i}{x_i}{t_i},)_i}} ; 
+        ; \rfix{\loopmor{\Gamma}{(\wbranch{\ell_i}{x_i}{t_i},)_i}{\ms{L}}} ; 
         \alpha^+_{\mb{0} + \dnt{\ms{L}}}
       ] \\
       & = \dnt{\Gamma} \otimes \alpha^+_{\dnt{\ms{L}} + \Sigma_i\dnt{A_i}}
       ; \delta^{-1}
       ; [
         \pi_r,  
-        \rfix{\loopmor{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
+        \rfix{\loopmor{\Gamma}{(\wbranch{\ell_i}{x_i}{t_i},)_i}{\ms{L}}}
       ]
       ; \alpha^+_{\mb{0} + \dnt{\ms{L}}}
       \end{aligned}
@@ -6192,17 +6195,17 @@ We may now state our desired result as follows:
           \topwhile{\ms{L}}{r}, \caseexpr{\ms{ua}\;\invar}{x}{\brb{\outlb}{x}}{y}{L})
         }{\outlb([\ms{L}])}} \\
         & = \lmor{\dnt{\haslb{\Gamma}{\topwhile{\ms{L}}{r}}{\outlb([\ms{L}, \ms{R}])}}}
-          ; \dnt{\Gamma} \otimes \alpha^+_{\dnt{\ms{L, R}}} \\ & \qquad
-          ; \dnt{\haslb 
+          ; \dnt{\Gamma} \otimes \alpha^+_{\dnt{\ms{L, R}}} 
+          ; \\ & \qquad \dnt{\haslb 
           {\Gamma, \bhyp{\invar}{[\ms{L}, \ms{R}]}}
           {\caseexpr{\ms{ua}\;\invar}{x}{\brb{\outlb}{x}}{y}{L}}
           {\outlb([\ms{L}])}} \\
         & = \lmor{\dnt{\haslb{\Gamma}{\topwhile{\ms{L}}{r}}{\outlb([\ms{L}, \ms{R}])}}}
           ; \dnt{\Gamma} \otimes \alpha^+_{\dnt{\ms{L}} + \Sigma_i\dnt{A_i}}
           ; \delta^{-1}
-          ; [
+          ; \\ & \qquad [
             \pi_r,  
-            \rfix{\loopmor{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
+            \rfix{\loopmor{\Gamma}{(\wbranch{\ell_i}{x_i}{t_i},)_i}{\ms{L}}}
           ] ; \alpha^+_{\mb{0} + \dnt{\ms{L}}} \\
         & = \dnt{\haslb{\Gamma}{\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}}
           ; \alpha^+_{\mb{0} + \dnt{\ms{L}}} \\
@@ -6682,7 +6685,7 @@ We may now state our desired result as follows:
     \begin{equation}
       \begin{aligned}
         & S \otimes \Sigma_i\dnt{A_i} 
-        ; \loopmor{(\wbranch{\ell_i}{x_i}{t_i},)_i} \\
+        ; \loopmor{\Delta}{(\wbranch{\ell_i}{x_i}{t_i},)_i}{\ms{L}} \\
         & = S \otimes \Sigma_i\dnt{A_i} 
         ; \delta^{-1}_{\Sigma} ; 
         [ 
@@ -6700,7 +6703,7 @@ We may now state our desired result as follows:
           \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{[\gamma]t_i}{\ms{L}, \ms{R}}},
         ]_i
         ; \alpha^+_{\dnt{\ms{L}} + \Sigma_i \dnt{A_i}} \\
-        & = \loopmor{(\wbranch{\ell_i}{x_i}{[\gamma]t_i},)_i}
+        & = \loopmor{\Gamma}{(\wbranch{\ell_i}{x_i}{[\gamma]t_i},)_i}{\ms{L}}
       \end{aligned}
     \end{equation}
     It follows that
@@ -6712,22 +6715,22 @@ We may now state our desired result as follows:
           ; \lmor{\dnt{\haslb{\Delta}{s}{\ms{L}, \ms{R}}} 
             ; \alpha^+_{\dnt{\ms{L}} + \Sigma_i \dnt{A_i}}}
           ; \delta^{-1}
-          ; [\pi_r, \loopmor{(\wbranch{\ell_i}{x_i}{t_i},)_i}] \\
+          ; [\pi_r, \loopmor{\Delta}{(\wbranch{\ell_i}{x_i}{t_i},)_i}{\ms{L}}] \\
         & = \lmor{S ; \dnt{\haslb{\Delta}{s}{\ms{L}, \ms{R}}} 
             ; \alpha^+_{\dnt{\ms{L}} + \Sigma_i \dnt{A_i}}}
           ; S \otimes (\dnt{\ms{L}} + \Sigma_i \dnt{A_i})
           ; \delta^{-1}
-          ; [\pi_r, \loopmor{(\wbranch{\ell_i}{x_i}{t_i},)_i}] \\
+          ; [\pi_r, \loopmor{\Delta}{(\wbranch{\ell_i}{x_i}{t_i},)_i}{\ms{L}}] \\
         & = \lmor{\dnt{\haslb{\Gamma}{[\gamma]s}{\ms{L}, \ms{R}}} 
             ; \alpha^+_{\dnt{\ms{L}} + \Sigma_i \dnt{A_i}}}
           ; \delta^{-1}
           ; [\pi_r, 
             S \otimes (\dnt{\ms{L}} + \Sigma_i \dnt{A_i}) 
-            ; \loopmor{(\wbranch{\ell_i}{x_i}{t_i},)_i}] \\
+            ; \loopmor{\Delta}{(\wbranch{\ell_i}{x_i}{t_i},)_i}{\ms{L}}] \\
         & = \lmor{\dnt{\haslb{\Gamma}{[\gamma]s}{\ms{L}, \ms{R}}} 
             ; \alpha^+_{\dnt{\ms{L}} + \Sigma_i \dnt{A_i}}}
           ; \delta^{-1}
-          ; [\pi_r, \loopmor{(\wbranch{\ell_i}{x_i}{[\gamma]t_i},)_i}] \\
+          ; [\pi_r, \loopmor{\Gamma}{(\wbranch{\ell_i}{x_i}{[\gamma]t_i},)_i}{\ms{L}}] \\
         & = \dnt{\haslb{\Gamma}
           {\where{[\gamma]s}
           {(\wbranch{\ell_i}{x_i}{[\gamma]t_i},)_i}}{\ms{L}}} \\
@@ -6974,7 +6977,7 @@ We may now state our desired result as follows:
     taking $\ms{R} = (\ell_i(A_i),)_i$,
     \begin{equation}
       \begin{aligned}
-        & \entrymor{[\upg{\sigma}]s} 
+        & \entrymor{\Gamma}{[\upg{\sigma}]s}{\ms{K}} 
           = \dnt{\haslb{\Gamma}{[\upg{\sigma}]s}{\ms{K}, \ms{R}}}
           ; \alpha^+_{\dnt{\ms{L}} + \Sigma_i \dnt{A_i}} \\
         & = \lmor{\dnt{\haslb{\Gamma}{s}{\ms{L}, \ms{R}}}}
@@ -6987,14 +6990,14 @@ We may now state our desired result as follows:
         & = \lmor{\dnt{\haslb{\Gamma}{s}{\ms{L}, \ms{R}}}}
           ; \dnt{\Gamma} \otimes \alpha^+_{\dnt{\ms{L}} + \Sigma_i \dnt{A_i}} ; \delta^{-1} 
           ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}} + \pi_r\\
-        & = \lmor{\entrymor{s}} 
+        & = \lmor{\entrymor{\Gamma}{s}{\ms{L}}} 
           ; \delta^{-1} ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}} + \pi_r
       \end{aligned}
     \end{equation}
     and
     \begin{equation}
       \begin{aligned}       
-        & \loopmor{(\wbranch{\ell_i}{x_i}{[\upg{\sigma}]t_i},)_i} 
+        & \loopmor{\Gamma}{(\wbranch{\ell_i}{x_i}{[\upg{\sigma}]t_i},)_i}{\ms{K}} 
           = \delta^{-1}_{\Sigma} 
           ; [ \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{[\upg{\sigma}]t_i}{\ms{K}, \ms{R}}} ]_i
           ; \alpha^+_{\dnt{\ms{K}} + \Sigma_i \dnt{A_i}} \\
@@ -7033,17 +7036,17 @@ We may now state our desired result as follows:
           ; \pi_l \otimes -
           ; \delta^{-1} 
           ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}} + \pi_r \\
-        & = \lmor{\loopmor{(\wbranch{\ell_i}{x_i}{t_i},)_i}} 
+        & = \lmor{\loopmor{\Gamma}{(\wbranch{\ell_i}{x_i}{t_i},)_i}{\ms{L}}} 
           ; \pi_l \otimes -
           ; \delta^{-1} 
           ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}} + \pi_r
       \end{aligned}
     \end{equation}
-    Letting $L = \loopmor{(\wbranch{\ell_i}{x_i}{t_i},)_i}$ and
+    Letting $L = \loopmor{\Gamma}{(\wbranch{\ell_i}{x_i}{t_i},)_i}{\ms{L}}$ and
     $S = \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}}$, we have that
     \begin{equation}
       \begin{aligned}
-        & \rcase{\loopmor{(\wbranch{\ell_i}{x_i}{[\upg{\sigma}]t_i},)_i}} \\
+        & \rcase{\loopmor{\Gamma}{(\wbranch{\ell_i}{x_i}{[\upg{\sigma}]t_i},)_i}{\ms{K}}} \\
         & = \lmor{
             \lmor{L} 
             ; \pi_l \otimes (\dnt{\ms{L}} + \Sigma_i\dnt{A_i})
@@ -7087,7 +7090,7 @@ We may now state our desired result as follows:
     implying by naturality that
     \begin{equation}
       \begin{aligned}
-        \rfix{\loopmor{(\wbranch{\ell_i}{x_i}{[\upg{\sigma}]t_i},)_i}}
+        \rfix{\loopmor{\Gamma}{(\wbranch{\ell_i}{x_i}{[\upg{\sigma}]t_i},)_i}{\ms{K}}}
         & = (\rcase{L}
         ; \dmor{\dnt{\Gamma}} \otimes \dnt{\ms{L}} ; \alpha ; \dnt{\Gamma} \otimes S
             + \dnt{\Gamma} \otimes \Sigma_i\dnt{A_i})^\dagger ; \pi_r \\
@@ -7103,52 +7106,52 @@ We may now state our desired result as follows:
           = \dnt{\haslb{\Gamma}
                   {\where{[\upg{\sigma}]s}
                   {(\wbranch{\ell_i}{x_i}{[\upg{\sigma}]t_i},)_i}}{\ms{K}}} \\
-        & = \lmor{\entrymor{[\upg{\sigma}]s}} ; \delta^{-1} 
-          ; [\pi_r , \rfix{\loopmor{(\wbranch{\ell_i}{x_i}{[\upg{\sigma}]t_i},)_i}}] \\
-        & = \lmor{\lmor{\entrymor{s}} ; \delta^{-1} ; S + \pi_r}
+        & = \lmor{\entrymor{\Gamma}{[\upg{\sigma}]s}{\ms{K}}} ; \delta^{-1} 
+          ; [\pi_r , \rfix{\loopmor{\Gamma}{(\wbranch{\ell_i}{x_i}{[\upg{\sigma}]t_i},)_i}{\ms{K}}}] \\
+        & = \lmor{\lmor{\entrymor{\Gamma}{s}{\ms{L}}} ; \delta^{-1} ; S + \pi_r}
           ; \delta^{-1}
           ; [\pi_r, (\rcase{L})^\dagger ; S] \\
-        & = \lmor{\lmor{\entrymor{s}}} ; \dnt{\Gamma} \otimes (\delta^{-1} ; S + \pi_r)
+        & = \lmor{\lmor{\entrymor{\Gamma}{s}{\ms{L}}}} ; \dnt{\Gamma} \otimes (\delta^{-1} ; S + \pi_r)
           ; \delta^{-1}
           ; [\pi_r, (\rcase{L})^\dagger ; S] \\
-        & = \lmor{\lmor{\entrymor{s}}} ; \dnt{\Gamma} \otimes \delta^{-1}
+        & = \lmor{\lmor{\entrymor{\Gamma}{s}{\ms{L}}}} ; \dnt{\Gamma} \otimes \delta^{-1}
           ; \delta^{-1}
           ; [
               \dnt{\Gamma} \otimes S ; \pi_r, 
               \dnt{\Gamma} \otimes \pi_r ; (\rcase{L})^\dagger ; S
             ] \\
-          & = \lmor{\lmor{\entrymor{s}}} 
+          & = \lmor{\lmor{\entrymor{\Gamma}{s}{\ms{L}}}} 
             ; \dnt{\Gamma} \otimes \delta^{-1} ; \delta^{-1}
             ; [\pi_r, \dnt{\Gamma} \otimes \pi_r ; (\rcase{L})^\dagger]
             ; S \\
-        & = \lmor{\entrymor{s}} 
+        & = \lmor{\entrymor{\Gamma}{s}{\ms{L}}} 
           ; \dmor{\dnt{\Gamma}} \otimes (\dnt{\ms{L}} + \Sigma_i\dnt{A_i}) ; \alpha 
           ; \dnt{\Gamma} \otimes \delta^{-1} ; \delta^{-1}
           ; [\pi_r, \dnt{\Gamma} \otimes \pi_r ; (\rcase{L})^\dagger] ; S 
           \\
-        & = \lmor{\entrymor{s}} ; \delta^{-1} ; [
+        & = \lmor{\entrymor{\Gamma}{s}{\ms{L}}} ; \delta^{-1} ; [
               \Delta_{\dnt{\Gamma}} \otimes \dnt{\ms{L}} ; \alpha ; \pi_r, 
               \Delta_{\dnt{\Gamma}} \otimes \Sigma_i\dnt{A_i}  
                 ; \alpha ; \dnt{\Gamma} \otimes \pi_r ; (\rcase{L})^\dagger
             ]
           ; S \\
-        & = \lmor{\entrymor{s}} ; \delta^{-1} ; [
+        & = \lmor{\entrymor{\Gamma}{s}{\ms{L}}} ; \delta^{-1} ; [
               \Delta_{\dnt{\Gamma}} \otimes \dnt{\ms{L}} ; \alpha ; \dnt{\Gamma} \otimes \pi_r, 
               (\rcase{L})^\dagger
             ]
           ; S \\
-        & = \lmor{\entrymor{s}} ; \delta^{-1} ; [
+        & = \lmor{\entrymor{\Gamma}{s}{\ms{L}}} ; \delta^{-1} ; [
               \Delta_{\dnt{\Gamma}} \otimes \dnt{\ms{L}} ; \alpha ; \dnt{\Gamma} \otimes \pi_r, 
               \lmor{\rfix{L}} ; \pi_l \otimes (\dnt{\ms{L}} + \Sigma_i\dnt{A_i})
             ]
           ; S \\
-        & = \lmor{\entrymor{s}} ; \delta^{-1} ; [
+        & = \lmor{\entrymor{\Gamma}{s}{\ms{L}}} ; \delta^{-1} ; [
               \Delta_{\dnt{\Gamma}} \otimes \dnt{\ms{L}} ; \alpha ; \dnt{\Gamma} \otimes \pi_r, 
               \Delta_{\dnt{\Gamma}} \otimes \Sigma_i\dnt{A_i} ; \alpha 
                 ; \dnt{\Gamma} \otimes \rfix{L}
             ]
           ; S \\
-        & = \lmor{\entrymor{s}} 
+        & = \lmor{\entrymor{\Gamma}{s}{\ms{L}}} 
           ; \Delta_{\dnt{\Gamma}} \otimes (\dnt{\ms{L}} + \Sigma_i\dnt{A_i}) ; \alpha
           ; \dnt{\Gamma} \otimes \delta^{-1} ; \delta^{-1}
           ; [
@@ -7156,14 +7159,14 @@ We may now state our desired result as follows:
               \dnt{\Gamma} \otimes \rfix{L}
             ]
           ; S \\
-        & = \lmor{\entrymor{s}} 
+        & = \lmor{\entrymor{\Gamma}{s}{\ms{L}}} 
           ; \Delta_{\dnt{\Gamma}} \otimes (\dnt{\ms{L}} + \Sigma_i\dnt{A_i}) ; \alpha
           ; \dnt{\Gamma} \otimes (\delta^{-1} ; [\pi_r, \rfix{L}])
           ; S \\
-        & = \lmor{\lmor{\entrymor{s}}}
+        & = \lmor{\lmor{\entrymor{\Gamma}{s}{\ms{L}}}}
           ; \dnt{\Gamma} \otimes (\delta^{-1} ; [\pi_r, \rfix{L}])
           ; S \\
-        & = \lmor{\lmor{\entrymor{s}} ; \delta^{-1} ; [\pi_r, \rfix{L}] }
+        & = \lmor{\lmor{\entrymor{\Gamma}{s}{\ms{L}}} ; \delta^{-1} ; [\pi_r, \rfix{L}] }
           ; S \\
         & = \lmor{\dnt{\haslb{\Gamma}{\where{s}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}}}
           ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}}
@@ -7297,7 +7300,7 @@ We may now state our desired result as follows:
     analgously to the corresponding rules for expressions
     \item \brle{cfg-$\beta_1$}: 
     Define $P = \dnt{\hasty{\Gamma}{\bot}{a}{A_k}}$, %
-           $L = \loopmor{(\wbranch{\ell_i}{x_i}{t_i},)_i}$ and %
+           $L = \loopmor{\Gamma}{(\wbranch{\ell_i}{x_i}{t_i},)_i}{\ms{L}}$ and %
            $\ms{R} = (\ell_i(A_i),)_i$. %
     We have that
     \begin{equation}
@@ -7338,7 +7341,7 @@ We may now state our desired result as follows:
     as desired.
     \item \brle{cfg-$\beta_2$}: 
     Define $P = \dnt{\hasty{\Gamma}{\bot}{b}{B}}$,
-            $L = \loopmor{(\wbranch{\ell_i}{x_i}{t_i},)_i}$ and %
+            $L = \loopmor{\Gamma}{(\wbranch{\ell_i}{x_i}{t_i},)_i}{\ms{L}}$ and %
             $\ms{R} = (\ell_i(A_i),)_i$. %
     We have that
     \begin{equation}
@@ -7359,7 +7362,7 @@ We may now state our desired result as follows:
     \item \brle{cfg-$\eta$}: 
     Let $\ms{L} = (\kappa_j(B_j),)_j$, and define %
       $\ms{R} = (\ell_i(A_i),)_i$ and %
-      $L = \loopmor{(\wbranch{\ell_i}{x_i}{t_i},)_i}$. %
+      $L = \loopmor{\Gamma}{(\wbranch{\ell_i}{x_i}{t_i},)_i}{\ms{L}}$. %
     Using the \brle{cfg-$\beta_1$} and \brle{cfg-$\beta_2$} cases proved above, we have that
     \begin{equation}
       \begin{aligned}
@@ -7432,7 +7435,7 @@ We may now state our desired result as follows:
         & = \lmor{\dnt{\haslb{\Gamma}{r}{\ms{L}, \ms{R}}}}
           ; \dnt{\Gamma} \otimes \alpha_{\ms{L} + \Sigma_i\dnt{A_i}}; \delta^{-1} 
           ; [\pi_r, \rfix{L}] \\
-        & = \entrymor{r}; \delta^{-1} ; [\pi_r, \rfix{L}] \\
+        & = \entrymor{\Gamma}{r}{\ms{L}}; \delta^{-1} ; [\pi_r, \rfix{L}] \\
         & \dnt{\haslb{\Gamma}{\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}}
       \end{aligned}
     \end{equation}
@@ -7525,7 +7528,7 @@ We may now state our desired result as follows:
     We have that
     \begin{equation}
       \begin{aligned}
-        & \entrymor{[\upg{\sigma}]r}
+        & \entrymor{\Gamma}{[\upg{\sigma}]r}{\ms{L}}
           = \dnt{\haslb{\Gamma}{[\upg{\sigma}]r}{\ms{L}, \ms{R}'}}
           ; \alpha^+_{\dnt{\ms{L}} + \Sigma_j \dnt{B_j}} \\
         & = \lmor{\dnt{\haslb{\Gamma}{r}{\ms{L}, \ms{R}}}}
@@ -7533,10 +7536,10 @@ We may now state our desired result as follows:
           ; \delta^{-1}
           ; \pi_r 
             + (S ; \alpha^+_{\Sigma_j\dnt{B_j}}) \\
-        & = \lmor{\entrymor{r}} ; \delta^{-1} ; \pi_r + S' \\
+        & = \lmor{\entrymor{\Gamma}{r}{\ms{L}}} ; \delta^{-1} ; \pi_r + S' \\
       \end{aligned}
     \end{equation}
-    and, writing $L = \loopmor{(\wbranch{\ell_i}{x_i}{t_i},)_i}$,
+    and, writing $L = \loopmor{\Gamma}{(\wbranch{\ell_i}{x_i}{t_i},)_i}{\ms{L}}$,
     \begin{equation}
       \begin{aligned}
         & \lmor{(\wbranch{\kappa_i}{x_i}{[\upg{\sigma}]t_i},)_i}
@@ -7615,7 +7618,9 @@ We may now state our desired result as follows:
     It follows that
     \begin{equation}
       \begin{aligned}
-        & \loopmor{(\wbranch{\ell_i}{x_i}{[\upg{(\kappa_j(x_j) \mapsto t_j,)}](\sigma_i\;x_i)},)_i}
+        & \loopmor{\Gamma}
+          {(\wbranch{\ell_i}{x_i}{[\upg{(\kappa_j(x_j) \mapsto t_j,)}](\sigma_i\;x_i)},)_i}
+          {\ms{L}}
         \\
         & = \delta^{-1}_\Sigma 
           ; [ \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}
@@ -7660,36 +7665,36 @@ We may now state our desired result as follows:
         & \dnt{\haslb{\Gamma}
           {\where{[\upg{\sigma}]r}{(\wbranch{\kappa_i}{x_i}{[\upg{\sigma}]t_i},)_i}}
           {\ms{L}}} \\
-        & = \lmor{\entrymor{[\upg{\sigma}]r}} ; \delta^{-1} ; [\pi_r,
-          \rfix{\loopmor{(\wbranch{\kappa_i}{x_i}{[\upg{\sigma}]t_i},)_i}}] \\
-        & = \lmor{\lmor{\entrymor{r}} ; \delta^{-1} ; \pi_r + S'} ; \delta^{-1}
+        & = \lmor{\entrymor{\Gamma}{[\upg{\sigma}]r}{\ms{L}}} ; \delta^{-1} ; [\pi_r,
+          \rfix{\loopmor{\Gamma}{(\wbranch{\kappa_i}{x_i}{[\upg{\sigma}]t_i},)_i}{\ms{L}}}] \\
+        & = \lmor{\lmor{\entrymor{\Gamma}{r}{\ms{L}}} ; \delta^{-1} ; \pi_r + S'} ; \delta^{-1}
           ; [
               \pi_r,
               \rfix{\rcase{L} ; \pi_r + S'}
           ] \\
-        & = \lmor{\entrymor{r}} ; \delta^{-1} 
+        & = \lmor{\entrymor{\Gamma}{r}{\ms{L}}} ; \delta^{-1} 
           ; \dnt{\Gamma} \otimes \dnt{\ms{L}} + \rlmor{S}
           ; [
             \pi_r,
             \rfix{\rcase{L} ; \pi_r + S'}
           ] \\
-        & = \lmor{\entrymor{r}} ; \delta^{-1} 
+        & = \lmor{\entrymor{\Gamma}{r}{\ms{L}}} ; \delta^{-1} 
         ; [
           \pi_r,
           \rlmor{S'}
           ; \rfix{\rcase{L} ; \pi_r + S'}
         ] \\
-        & = \lmor{\entrymor{r}} ; \delta^{-1} 
+        & = \lmor{\entrymor{\Gamma}{r}{\ms{L}}} ; \delta^{-1} 
         ; [
           \pi_r,
           \rfix{\rlmor{S'} ; L}
         ] \\
-        & = \lmor{\entrymor{r}} ; \delta^{-1} 
+        & = \lmor{\entrymor{\Gamma}{r}{\ms{L}}} ; \delta^{-1} 
         ; [
           \pi_r,
           \rfix{
-            \loopmor{(\wbranch{\ell_i}{x_i}
-                    {[\upg{(\kappa_j(x_j) \mapsto t_j,)}](\sigma_i\;x_i)},)_i}}
+            \loopmor{\Gamma}{(\wbranch{\ell_i}{x_i}
+                    {[\upg{(\kappa_j(x_j) \mapsto t_j,)}](\sigma_i\;x_i)},)_i}{\ms{L}}}
         ] \\
         & = \dnt{\haslb{\Gamma}
           {\where{r}{[\upg{(\kappa_j(x_j) \mapsto t_j,)}](\sigma_i\;x_i)},)_i}{\ms{L}}}
