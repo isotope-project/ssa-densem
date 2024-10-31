@@ -468,7 +468,6 @@ definition of $x$ goes through $y$, rather than only those paths which also go t
     \caption{Converted to SSA form}
     \label{fig:fact-ssa}
   \end{subfigure}
-  % \todo{add diagram showing correspondence between $\phi$-nodes and mutable bindings?}
   \caption{
     Conversion of three address code for the program in Figure~\ref{fig:fact-program} to SSA 
     form, requring the insertion of $\phi$-nodes for $i$ and $a$ due to control-flow dependent
@@ -545,8 +544,6 @@ Figure~\ref{fig:fact-bba}:
     \caption{Basic-blocks with arguments}
     \label{fig:fact-bba}
   \end{subfigure}
-
-  % \TODO{Add arrows with \texttt{tikzmark}?}
   
   \caption{
     The program in Figure \ref{fig:fact-program} written in standard SSA (using $\phi$ nodes),
@@ -827,7 +824,6 @@ with each step rigorously justified via our denotational semantics
     \caption{Equivalent to Figure \ref{fig:fact-subst-2} by substitution}
     \label{fig:fact-zero}
   \end{subfigure}
-  % \TODO{add arrows via \texttt{tikzmark}}
   \caption{
     Decomposing multi-block rewrites (from \ref{fig:fact-zero} to
     \ref{fig:fact-subst-2}, and therefore to the more optimal program 
@@ -1127,9 +1123,9 @@ We can now state weakening formally as follows:
     \item $\lbsubst{\Delta}{\sigma}{\ms{L}}{\ms{K}} \implies \lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}$
   \end{enumerate}
 \end{lemma}
-% \begin{proof}
-%   By induction. \todo{pointer to formalization?}
-% \end{proof}
+\begin{proof}
+  \todo{pointer to formalization?}
+\end{proof}
 
 If we look at the proof of variable weakening, we might arrive at the alternate statement that all
 the variables in $\Delta$ are also available with the same type in $\Gamma$, i.e., if
@@ -1202,9 +1198,9 @@ is as follows:
     \item $\lbsubst{\sigma}{\Gamma}{\ms{L}}{\ms{K}} \implies \lbsubst{[\gamma]\sigma}{\Delta}{\ms{L}}{\ms{K}}$
   \end{enumerate}
 \end{lemma}
-% \begin{proof}
-%   By induction. \todo{pointer to formalization?}
-% \end{proof}
+\begin{proof}
+  \todo{pointer to formalization?}
+\end{proof}
 Note in particular that this allows us to take the \emph{composition}
 $\issubst{[\gamma']\gamma}{\Gamma'}{\Delta}$ of substitutions $\issubst{\gamma'}{\Gamma'}{\Gamma}$
 and $\issubst{\gamma}{\Gamma}{\Delta}$; the composition associates as expected:
@@ -2234,9 +2230,9 @@ our equivalence relation, as stated in the following lemma:
       \implies \lbseq{\sigma}{\sigma'}{\Gamma}{\ms{L}}{\ms{K}}$
   \end{enumerate}
 \end{lemma}
-% \begin{proof}
-%   By rule induction on $\teqv$. \todo{formalization pointer?}
-% \end{proof}
+\begin{proof}
+  \todo{formalization pointer?}
+\end{proof}
 In particular, note that this lemma uses an equivalence relation on substitutions and
 label-substitutions: this is just the obvious pointwise extension of the equivalence relation on
 terms and regions respectively. We give the rules for this relation in
@@ -2985,18 +2981,11 @@ be written:
   \label{fig:structured-regions}
 \end{figure}
 
-% \TODO{use variable packing for ``folk B\"ohm-Jacopini''}
-
-% \TODO{use folk B\"ohm-Jacopini to argue for arbitrary bracketing theorem (??). Or is it just
-% useful on its own?}
-
 \section{Denotational Semantics}
 
 \label{sec:densem}
 
 \subsection{Freyd Elgot Categories}
-
-% \TODO{rework, expand, and fold in...}
 
 \citet{moggi-91-monad} showed that the Kleisli category of a strong monad over a CCC interprets
 effectful higher-order functional programs. We are faced, however, with two problems. On one hand,
@@ -3566,13 +3555,6 @@ the former will not.
   \Description{A string diagram in a premonoidal category, using a red state wire}
 \end{figure}
 
-% One interesting thing this allows us to do is to \emph{nest} coproduct and premonoidal string
-% diagrams within each other, by replacing the label in the box with a string diagram, as in
-% Figure~\todo{this}. Note that the input wires factor the input (if unlabelled, we should be able to
-% determine their type by context), while the output wires are tensored/added together to form the
-% output. This will make it a lot easier to express morphisms such as the distributor, which uses both
-% the coproduct and premonoidal structure, diagramatically as in Figure~\todo{this}.
-
 \subsection{Semantics}
 
 We now have all the ingredients we need to give a semantics to \isotopessa{} expressions and regions.
@@ -3846,7 +3828,7 @@ projections from a larger product $\dnt{\Gamma}$ to a smaller product $\dnt{\Del
 label-weakenings are modeled as injections from a smaller coproduct $\dnt{\ms{L}}$ to a larger
 coproduct $\dnt{\ms{K}}$; in particular, in both cases, the morphisms are pure.  A simple induction
 can then be used to derive the following weakening lemmas:
-\begin{lemma}[(Label) Weakening]
+\begin{lemma}[name=(Label) Weakening, restate=weakeninglem]
   Given $\Gamma \leq \Gamma'$ and $\ms{L}' \leq \ms{L}$, $\ms{K}' \leq \ms{K}$, we have
   \begin{enumerate}[label=(\alph*)]
     \item $\dnt{\Gamma \leq \Delta} = \dnt{\Gamma \leq \Gamma'};\dnt{\Gamma' \leq \Delta}$
@@ -3866,28 +3848,9 @@ can then be used to derive the following weakening lemmas:
       $
   \end{enumerate}
 \end{lemma}
-
-\TODO{immediate consequences of (label) weakening}
-
-\TODO{text}
-
-\begin{equation}
-  \dnt{\haslb{\Gamma}{\where{r}{\wbranch{\ell}{x}{s}}}{\ms{L}}}
-  = \lmor{\dnt{\haslb{\Gamma}{r}{\ms{L}, \ell(A)}}}
-  ; \delta^{-1}
-  ; [\pi_r, \rfix{\dnt{\haslb{\Gamma, \bhyp{x}{A}}{s}{\ms{L}, \ell(A)}}}]
-\end{equation}
-
-\TODO{in particular, if $\haslb{\Gamma, \bhyp{x}{A}}{s}{\ms{L}}$}
-
-\begin{equation}
-  \dnt{\haslb{\Gamma}{\where{r}{\wbranch{\ell}{x}{s}}}{\ms{L}}}
-  = \lmor{\dnt{\haslb{\Gamma}{r}{\ms{L}, \ell(A)}}}
-  ; \delta^{-1}
-  ; [\pi_r, \dnt{\haslb{\Gamma, \bhyp{x}{A}}{s}{\ms{L}}}]
-\end{equation}
-
-\TODO{segue}
+\begin{proof}
+  See Appendix~\ref{proof:weakening}
+\end{proof}
 
 Our first proper semantic theorem is that \emph{rewriting} is sound: if two (potentially impure!)
 substitutions have pointwise equal semantics, then substituting by either yields a result with
@@ -4898,62 +4861,6 @@ for (unstructured) SSA programs. The semantics of CBPV are widely studied, and h
 variety of potential models for SSA, but the formalization in \cite{garbuzov-structural-cfg-2018}
 does not support any effects other than nontermination.
 
-% \TODO{proposed structure:}
-% \begin{enumerate}
-%   \item Introduction to SSA:
-%   \begin{enumerate}
-%     \item SSA itself
-%     \begin{itemize}
-%       \item Introduced for GVN, CSE, constant prop.
-%       \item Powerful for algebraic reasons
-%       \item Canonical optimization is SCCP
-%     \end{itemize}
-%     \item SSA to CPS \citet{kelsey-95-cps}:
-%     \begin{itemize}
-%       \item $\phi$-functions are weird
-%       \item To understand them better, relate SSA to CPS programs without call/cc and friends
-%       \item Use this to connect functional IRs and imperative IRs
-%     \end{itemize}
-%     \item \citet{appel-ssa}:
-%     \begin{itemize}
-%       \item Notice the subset of CPS in \citet{kelsey-95-cps} is tail-calling functions
-%       \item Notice that dominance-based scoping is nested scoping
-%     \end{itemize}
-%     \item ANF:
-%     \begin{itemize}
-%       \item The subset of programs described in \citet{appel-ssa} corresponds to ANF
-%       \citet{flanagan-93-anf}
-%       \item \citet{chakravarty-functional-ssa-2003} formalizes this correspondence between SSA and
-%       ANF by converting SSA to ANF and defining SCCP on ANF
-%     \end{itemize}
-%     \item Thorin \citet{thorin-12}, rather than trying to make SSA more like CPS, tries to make CPS
-%     more like SSA by introducing dominance based scoping, making it easier to implement some
-%     compiler optimizations, while still having support for closures to be able to effectively
-%     compile languages with them (whereas LLVM must suffer)
-%   \end{enumerate}
-%   \item The conceptual problem so far is SSA $\approx$ functional IRs. Now pivot: to
-%   \emph{transform} and \emph{verify} programs, we need an equational theory and a semantics
-%   to justify it. Two paths:
-%   \begin{itemize}
-%     \item Monadic Intermediate Language \citet{benton-kennedy-99}:
-%     \begin{itemize}
-%       \item Relax ANF to allow more substitution (because of this, should pull up a citation to
-%       intro)
-%       \item Substitution lets us develop an equational theory, which we verify via operational
-%       semantics
-%     \end{itemize}
-%     \item CBPV \citet{garbuzov-structural-cfg-2018}
-%     \begin{itemize}
-%       \item Gives operational semantics for SSA
-%       \item Relates SSA to a subset of CBPV
-%       \item Utilizing normal-form bisimulations from \citet{lassen-bisim}, they derived an
-%       equational theory to justify compiler optimizations.
-%       \item No side effects (except nontermination!)
-%       \item Again, can be viewed as relaxing SSA (to CBPV) to get a nicer equational theory
-%     \end{itemize}
-%   \end{itemize}
-% \end{enumerate}
-
 \subsection{Formalizations of SSA}
 
 \subsubsection{Other SSA type systems}
@@ -5114,68 +5021,6 @@ unrolling is only a refinement rather than an equation. Since event structures s
 axiomatic domain theory~\cite{fiore-phd-94}, it should be possible to modify this semantics into one
 where loop unrolling is an equation, at which point it would be a model of our calculus.
 
-% \TODO{Proposed structure:}
-
-% \begin{enumerate}
-%   \item Machine with interleaving is the primordial soup of concurrency models; cite
-%   \citet{batty-compositional-17} here for why Composition Good (TM)
-%   \item Trace-based semantics a la \citet{brookes-full-abstraction-96} are the \emph{extension}
-%   of a machine with interleaving threads. Note we need to quotient our traces, since we started
-%   with \citet{hennessy-parallel-79}
-%   \item If we actually just have interleaved threads, i.e. SC, we are ``gucci"
-%   \item Elas! Not all concurrency is linearizable! Weak memory is a thing! We must do something!
-%   Two paths:
-%   \begin{enumerate}
-%     \item We can move from traces, which are linearly ordered, to partially ordered structures
-%     representing True Concurrency (TM). Two paths!
-%     \begin{enumerate}
-%       \item We can add additional structure to our traces. Two paths!
-%       \begin{enumerate}
-%         \item Augmented and quotiented traces:
-%         \begin{itemize}
-%           \item Just like we added buffers to pomsets, we can add buffers to traces to get TSO
-%           semantics a la \citet{jagadeesan-brookes-relaxed-12}. This is also nice and monadic! Yay!
-%           \item In general, the extra state is like the machine state. Then we quotient to maintain
-%           ``extensionality.'' Just like SC
-%           \item So, we can consider the machine state of release/acquire, and reach
-%           \citet{release-acquire}
-%         \end{itemize}
-%         \item Game semantics, which is like adding structure to traces:
-%         \begin{itemize}
-%           \item Gives novel categorical ways to reason about Important Stuff like linearizability
-%           \citet{vale-linearizability-24}
-%           \item \citet{abramsky-algol-96} gives an adequate densem for sequential Algol using game
-%           semantics using \citet{hyland-ong-00}-style games previously used to model PCF (sequential
-%           functional programming)
-%           \item Games have \emph{sequentiality}, just like traces, embodied by \emph{alternation} of
-%           moves between the proponent and opponent. This can be viewed as a highly constrained and
-%           deterministic form of interleaving of concurrent actions. Let us discard the Hyland-Ong
-%           rules, and be free of them! Then we get \citet{ghica-08}, which is a concurrent game, just
-%           like described above. Result is very close to \citet{brookes-full-abstraction-96}, but fine
-%           grained rather than coarse-grained.
-%           \item In general, we are trying to make things represent true concurrency, hinting at the
-%           next branch...
-%         \end{itemize}
-%       \end{enumerate}
-%       \item Pomset lore:
-%       \begin{enumerate}
-%         \item \citet{sparky} original works for SC
-%         \item Doing language stuff is hard, \citet{jagadeesan-pwp-20} breaks associativity
-%         \item \citet{leaky-semicolon} fixes it, but no loops yet
-%         \item Adding simple structures to pomsets works for TSO; see \citet{sparky}
-%       \end{enumerate}
-%       \item Event structure lore:
-%       \begin{enumerate}
-%         \item \citet{castellan-16} uses event structures for concurrency w.r.t. a \emph{memory
-%         model}
-%         \item \citet{paviotti-modular-relaxed-dep-20} continues down this path
-%         \item Step-indexing is used, but hopefully doesn't have to be due to axiomatic domain theory
-%         lore \cite{fiore-phd-94}
-%       \end{enumerate}
-%     \end{enumerate}
-%   \end{enumerate}
-% \end{enumerate}
-
 \subsection{Future Work}
 
 \subsubsection{Substructural Types and Effects}
@@ -5269,59 +5114,6 @@ treatment for Freyd categories. Additionally, their language supports functional
 language is purely first-order. We are very interested in exploring the connection between guarded
 labelled-iteration and SSA implied by the similarities between our respective syntaxes and
 semantics.
-
-% \begin{enumerate}  
-%   \item ``Elgot categories / monads were introduced in \citet{elgot-elgot-75} and formalized in
-%   \citet{adamek-elgot-11}. These were generalized to guarded Elgot monads in
-%   \citet{coinductive-resumption-levy-goncharov-19} to support partial non-unique iteration. We could
-%   add support for guardedness to unify \isotopessa{} models and \isotopessa{} expression models,
-%   since the identity monad is the initial guarded Elgot monad, i.e. every category is vacuously
-%   guarded Elgot. Could be useful to reason about SSA for e.g. terminating languages like Lean or
-%   somesuch, or reasoning about productivity.''
-%   \item Guarded effect handlers via guarded Elgot monads 
-%   \begin{itemize}
-%     \item Gives a metalanguage for guarded iteration based on labelled-iteration from
-%     \citet{geron-iteration-16}, fine-grained call-by-value, with semantics in a distributive
-%     category $\mc{C}$ and a strong guarded pre-iterative monad $\mb{T}$ on $\mb{C}$, where
-%     pre-iterative is just fixpoint (versus Elgot)
-%     \item \emph{More general}: guarded pre-iterative rather than (total) Elgot for denotational
-%     semantics
-%     \item \emph{Less general}: require a Kleisli category rather than an arbitrary Freyd category;
-%     but this shouldn't be necessary
-%     \item Called exceptions rather than labels since they match better
-%     \item Prove guardedness; furthermore, they handle functional types using Kleisli exponentials
-%     but also presheaf representability assumption
-%     \item They give a big-step operational semantics and prove soundness and adequacy. Following
-%     \citet{geron-iteration-16}, this is given w.r.t the simplest concrete monad which illustrates
-%     their semantics; in this case outputing $\nats$ to a console via $\ms{T}\;X = X \times \nats^* +
-%     \nats^\omega$ vs $X + 1$ for \citet{geron-iteration-16}. Note this is \emph{not} the trace monad
-%     on $\nats$, since the signature above implies productivity; the trace monad on $\nats$ is
-%     $X \times \nats^* + \nats^{\leq \omega}$ to allow finite (or no) output for a divergent trace.
-%     \item \emph{More general}: they support higher-order stuff via presheaf lore
-%     \item \emph{Less general}: we have completnesss of an equational theory for \emph{all} models.
-%     No operational semantics, though. Also their substitution lemma is only for their concrete
-%     choice of monad. \emph{That said}, it should be relatively easy to generalize to a
-%     semi-arbitrary monad, at least over \mb{Set}.
-%     \item For the guarded iterative future work section:
-%     \begin{itemize}
-%       \item Interested in finding underlying guarded iteration structures for things which resist
-%       traditional treatment, e.g. \citet{nakata-hoare-15}, and in particular \emph{hybrid monads}
-%       \citet{goncharov-hybrid-18}
-%       \item Interested in relations to work on adequacy for algebraic effects, see
-%       \citet{plotkin-adequacy-01}
-%       \item Interested in Levy's call-by-push-value \cite{levy-cbpv-99} as a metalanguage for
-%       guarded \emph{recursion} (vs. iteration)
-%     \end{itemize}
-%   \end{itemize}
-% \end{enumerate}
-
-% \subsubsection{MLIR models}
-
-% \TODO{MLIR future work here?}
-
-% \begin{enumerate}
-%   \item ...
-% \end{enumerate}
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references}
@@ -6073,9 +5865,39 @@ We may now state our desired result as follows:
   \end{enumerate}
 \end{lemma}
 
-% \begin{proof}
-%   \todo{this}
-% \end{proof}
+\begin{proof}
+  \todo{this}
+\end{proof}
+
+\weakeninglem*
+
+\label{proof:weakening}
+
+\begin{proof}
+  \todo{this}
+\end{proof}
+
+\TODO{immediate consequences of (label) weakening}
+
+\TODO{text}
+
+\begin{equation}
+  \dnt{\haslb{\Gamma}{\where{r}{\wbranch{\ell}{x}{s}}}{\ms{L}}}
+  = \lmor{\dnt{\haslb{\Gamma}{r}{\ms{L}, \ell(A)}}}
+  ; \delta^{-1}
+  ; [\pi_r, \rfix{\dnt{\haslb{\Gamma, \bhyp{x}{A}}{s}{\ms{L}, \ell(A)}}}]
+\end{equation}
+
+\TODO{in particular, if $\haslb{\Gamma, \bhyp{x}{A}}{s}{\ms{L}}$}
+
+\begin{equation}
+  \dnt{\haslb{\Gamma}{\where{r}{\wbranch{\ell}{x}{s}}}{\ms{L}}}
+  = \lmor{\dnt{\haslb{\Gamma}{r}{\ms{L}, \ell(A)}}}
+  ; \delta^{-1}
+  ; [\pi_r, \dnt{\haslb{\Gamma, \bhyp{x}{A}}{s}{\ms{L}}}]
+\end{equation}
+
+\TODO{segue}
 
 \begin{lemma}[Substitution Projection]
   For $\issubst{\gamma}{\Gamma}{\Delta}$, $\ms{eff}(\Delta) = \bot$ and $\Delta(x) = A$, we have
@@ -6572,9 +6394,9 @@ We may now state our desired result as follows:
   \label{lem:lsubst-distrib}
 \end{lemma}
 
-% \begin{proof}
-%   \todo{this}
-% \end{proof}
+\begin{proof}
+  \todo{this}
+\end{proof}
 
 \begin{lemma}[Label Substitution Extension]
   Given $\sigma = \sigma_l, \sigma_r$,
@@ -7200,8 +7022,6 @@ We may now state our desired result as follows:
     \item \brle{codiag}: 
     Define $R = \dnt{\haslb{\Gamma}{r}{\ms{L}, \ell(A)}}$, and %
            $S = \dnt{\haslb{\Gamma, \bhyp{y}{A}}{s}{\ms{L}, \ell(A), \kappa(A)}}$ %
-    \TODO{$\dnt{\haslb{\Gamma, \bhyp{y}{A}}{[\ell/\kappa]s}{\ms{L}}} 
-      = \rfix{S ; [\ms{id}, \iota_r]}$}
     We have that
     \begin{equation}
       \begin{aligned}
