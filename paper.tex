@@ -5653,7 +5653,86 @@ We may now state our desired result as follows:
       \end{aligned}
     \end{equation}
     to yield the desired result.
-    \item \emph{Codiagonal:} \TODO{this}
+    \item \emph{Codiagonal:} given $f : R \otimes A \to (B + A) + A$, we have
+    \begin{equation}
+      \begin{aligned}
+        \rfix{\rfix{f}} 
+        & = (\dmor{R} \otimes A ; \alpha \
+            ; R \otimes ((\rcase{f})^\dagger ; \pi_r) ; \delta^{-1})^\dagger 
+          ; \pi_r \\
+        & = (\dmor{R} \otimes A ; \alpha 
+            ; R \otimes (\rcase{f} ; \pi_r + R \otimes A)^\dagger
+            ; \delta^{-1})^\dagger 
+          ; \pi_r \\
+        & = (\dmor{R} \otimes A ; \alpha 
+            ; (R \otimes (\rcase{f} ; \pi_r + R \otimes A) ; \delta^{-1})^\dagger
+            ; \delta^{-1})^\dagger 
+          ; \pi_r \\
+        & = (\dmor{R} \otimes A ; \alpha 
+            ; (
+              R \otimes (\rcase{f} ; \pi_r + R \otimes A) ; \delta^{-1} 
+                ; \delta^{-1} + R \otimes (R \otimes A))^\dagger
+            )^\dagger 
+          ; \pi_r \\
+        & = (\dmor{R} \otimes A ; \alpha 
+            ; (
+              R \otimes (\rcase{f} ; \pi_r + R \otimes A) ; \delta^{-1} 
+                ; \delta^{-1} + R \otimes (R \otimes A))^\dagger
+              ; \pi_r + R \otimes A
+            )^\dagger \\
+        & = (\dmor{R} \otimes A ; \alpha 
+            ; (
+              R \otimes (\rcase{f} ; \pi_r + R \otimes A) ; \delta^{-1} 
+                ; (\delta^{-1} ; (\pi_r + R \otimes A)) + R \otimes (R \otimes A)
+              )^\dagger
+            )^\dagger
+      \end{aligned}
+    \end{equation}
+    On the other hand, we have
+    \begin{equation}
+      \begin{aligned}
+        \rfix{\rseq{}{f}{\envcop{R}{\pi_r}{\envinl{R}}}}
+        & = \rfix{
+          \dmor{R} \otimes A ; \alpha ; R \otimes f ; \delta^{-1} ; [\pi_r, \pi_r ; \iota_l]
+        } \\
+        & = \rfix{f ; [\ms{id}, \iota_l]} \\
+        & = (\dmor{R} \otimes A ; \alpha ; R \otimes (f ; [\ms{id}, \iota_l]) ; \delta^{-1})^\dagger 
+          ; \pi_r \\
+        & = (\dmor{R} \otimes A ; \alpha ; R \otimes f ; \delta^{-1}  
+            ; \delta^{-1} + R \otimes A ; [\ms{id}, \iota_l])^\dagger 
+          ; \pi_r \\
+        & = ((\dmor{R} \otimes A ; \alpha ; R \otimes f ; \delta^{-1}  
+        ; \delta^{-1} + R \otimes A)^\dagger)^\dagger ; \pi_r \\
+        & = ((\dmor{R} \otimes A ; \alpha ; R \otimes f ; \delta^{-1}  
+        ; \delta^{-1} + R \otimes A)^\dagger ; \pi_r + R \otimes A)^\dagger \\
+        & = ((\dmor{R} \otimes A ; \alpha ; R \otimes f ; \delta^{-1}  
+        ; \delta^{-1} + R \otimes A ; (\pi_r + R \otimes A) + R \otimes A)^\dagger)^\dagger \\
+      \end{aligned}
+    \end{equation}
+    By uniformity, it therefore suffices to show that
+    \begin{equation}
+      \begin{aligned}
+        & (\dmor{R} \otimes A ; \alpha )
+          ; (
+            R \otimes (\rcase{f} ; \pi_r + R \otimes A) ; \delta^{-1} 
+              ; (\delta^{-1} ; (\pi_r + R \otimes A)) + R \otimes (R \otimes A)
+          ) \\
+        & = \dmor{R} \otimes A ; \alpha
+          ; R \otimes (\dmor{R} \otimes A ; \alpha ; R \otimes f ; \delta^{-1} 
+            ; \pi_r + R \otimes A) 
+          ; \delta^{-1} ; (\delta^{-1} ; (\pi_r + R \otimes A)) + R \otimes (R \otimes A) \\
+        & = \dmor{R} \otimes A ; \alpha
+          ; R \otimes (\dmor{R} \otimes A ; \alpha ; R \otimes f ; \delta^{-1}) ; \\ & \qquad 
+            \delta^{-1} ; R \otimes \pi_r + R \otimes (R \otimes A) 
+          ; (\delta^{-1} ; (\pi_r + R \otimes A)) + R \otimes (R \otimes A) \\
+        & = \dmor{R} \otimes A ; \alpha
+          ; R \otimes f
+          ; \delta^{-1}
+          ; \delta^{-1} + (R \otimes A)
+          ; (\pi_r + R \otimes A) + (\dmor{R} \otimes A ; \alpha)
+      \end{aligned}
+    \end{equation}
+    to obtain the desired result.
     \item \emph{Uniformity:} \TODO{this}
   \end{itemize}
 \end{proof}
