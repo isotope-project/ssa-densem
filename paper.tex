@@ -2861,22 +2861,22 @@ We similarly have that this is an injection for $\Gamma$ pure, i.e.
 \label{ssec:data-control}
 
 Now that we have given our equational theory, we want to show it is ``good enough'' to reason about
-the properties inherent to all SSA-based languages (versus properties specific to the actual
-SSA-based language targeted, such as that $x \cdot 0$ can be optimized to $0$). In particular, we
+the properties inherent to all SSA-based languages. In particular, we
 wish to show that we have enough power to reason about interconversion between data-flow and
-control-flow, to be able to perform, for example, state-machine optimizations. We will attempt to
-demonstrate this by using some of the machinery from the previous section to state and prove a form
+control-flow. For example, a state machine can be implemented either as a switch on a state value,
+or as a set of mutually-tail-recursive functions (i.e., the state can be encoded in the program
+counter). We demonstrate this by using some of the machinery from the previous section to state and prove a form
 of the B\"ohm-Jacopini theorem \cite{bohm-jacopini} for SSA.
 
 The B\"ohm-Jacopini theorem states that every general control-flow graph program can be rewritten to
-an equivalent program which uses only structured control-flow, that it can be rewritten to be
-composed only of conditional branching, sequencing, and looping. To adapt this result to SSA, we
-need to figure out how we should write these combinators for SSA regions $\haslb{\Gamma}{r}{\ms{L}}$
+an equivalent program which uses only structured control-flow: i.e., it can be rewritten to a program
+using only conditional branching, sequencing, and loops. To adapt this result to SSA, we
+need to express branching, sequencing and loops as SSA regions $\haslb{\Gamma}{r}{\ms{L}}$, 
 so that we can build up an inductive set of structured regions. We will be maximally strict, and
 allow branching to an exit label in $\ms{L}$ only as the terminal statement in a structured program
 (and, in particular, not from within a loop!). It is obvious that we can represent conditional
 branching using \ms{case}-statements, but we need convenient primitives for sequencing and looping.
-Sequencing can be quite trivially expressed using a \ms{where}-block as follows:
+Sequencing can be expressed using a \ms{where}-block as follows:
 \begin{equation}
   \prftree[r]{\rle{seq}}
     {\haslb{\Gamma}{r}{\outlb(A)}}
@@ -2884,13 +2884,17 @@ Sequencing can be quite trivially expressed using a \ms{where}-block as follows:
     {\haslb{\Gamma}{\ms{seq}(r, s) 
       := (\where{[\outlb(x) \mapsto \brb{\ell}{x}]r}{\wbranch{\ell}{\invar}{s}})}{\ms{L}}}
 \end{equation}
-where ``$\invar$" is a distinguished input variable. In fact, we can show that, as we might expect,
+where ``$\invar$" is a distinguished input variable, and ``$\outlb$'' is a distinguished output
+label. Another, equivalent, way of writing sequencing is: 
 \begin{equation}
   \lbeq{\Gamma}{\ms{seq}(r, s)}{[\outlb(\invar) \mapsto s]r}{\ms{L}}
 \end{equation}
-To choose a convenient ``looping'' primitive is a bit more complicated, since, as we do not have
-mutable variables, we need some kind of way to pass the loop state around. It turns out it's easiest
-to base our definition off a value-based variant of a tail-controlled-loop, as follows
+That is, when we exit $r$, we jump to (a copy of) $s$. 
+
+Expressing structured looping is a bit more complicated, since we do not have
+mutable variables and hence cannot directly express while loops. If we recall that loops
+can be expressed as tail-recursive procedures which carry the loop state in the argument,
+then we can define a ``functional do-while loop'' as follows: 
 \begin{equation}
   \prftree[r]{\rle{loop}}
     {\hasty{\Gamma}{\epsilon}{e}{A}}
@@ -2899,12 +2903,14 @@ to base our definition off a value-based variant of a tail-controlled-loop, as f
       := (\where{\brb{\ell}{e}}{\wbranch{\ell}{\invar}
         {\ms{seq}(r, \casestmt{\invar}{x}{\brb{\outlb}{x}}{y}{\brb{\ell}{y}})}})}{\outlb(B)}}
 \end{equation}
-Note that loops only support having a single exit point; to support multiple exits, we require
-sequencing something after the loop. We can now define the inductive predicate
-$\shaslb{\Gamma}{r}{\ms{L}}$, which says that $r$ is a structured region with input variables
-$\Gamma$ and output labels $\ms{L}$, as in Figure~\ref{fig:structured-regions}; note that
-$\shaslb{\Gamma}{r}{\ms{L}} \implies \haslb{\Gamma}{r}{\ms{L}}$. 
 %
+We can now define the inductive predicate
+$\shaslb{\Gamma}{r}{\ms{L}}$, which says that $r$ is a structured
+region with input variables $\Gamma$ and output labels $\ms{L}$, as in
+Figure~\ref{fig:structured-regions}. Note that this defines a subset of the
+well-typed regions: every region $r$ such that
+$\shaslb{\Gamma}{r}{\ms{L}}$ is also well-typed as $\haslb{\Gamma}{r}{\ms{L}}$.
+
 It now remains to give an algorithm to convert a region $r$ targeting label-context $\ms{L}$ into an
 equivalent structured region $\towhile{\ms{L}}{r}$. In particular, we define
 \begin{equation}
@@ -2927,6 +2933,7 @@ where we define
       \\ \qquad \text{where} \qquad \ms{R} = (\ell_i(A_i),)
   \end{aligned}
 \end{equation}
+and
 \begin{equation}
   \ms{ua}_{\ms{L}, \cdot}\;e = e \qquad
   \ms{ua}_{\ms{L}, (\ms{R}, \ell(A))}\;e 
@@ -2934,8 +2941,15 @@ where we define
         \caseexpr{\ms{ua}_{\ms{L}, \ms{R}}\;x}{z}{\iota_l\;z}{w}{\iota_r\;\iota_l\;w}}
         {y}{\iota_r\;(\iota_r\;y)}
 \end{equation}
-We note that, given $\hasty{\Gamma}{\bot}{e}{[L, R]}$, we have that
-$\hasty{\Gamma}{\bot}{\ms{ua}_{\ms{L}}\;e}{[L] + [R]}$. The B\"ohm-Jacopini theorem for SSA can then
+%
+The $\topwhile{\ms{L}}{r}$ function does the actual transformation, and we can see that most of the
+cases are trivial except for the $\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}$ case. In this case, we replace the set of labels bound
+by the $\ms{where}$ clause with a tag and a while loop containing a case statement branching on the
+tag. (This uses the $\ms{ua}$ function, which implements associativity of n-ary coproducts. That is, 
+given $\hasty{\Gamma}{\bot}{e}{[L, R]}$, we have that
+$\hasty{\Gamma}{\bot}{\ms{ua}_{\ms{L}}\;e}{[L] + [R]}$.)
+
+The B\"ohm-Jacopini theorem for SSA can then
 be written:
 \begin{theorem}[name=B\"ohm-Jacopini for SSA, restate=bohmjacopini]
   For all $\haslb{\Gamma}{r}{\ms{L}}$, $\shaslb{\Gamma}{\towhile{\ms{L}{r}}}{\ms{L}}$ is structured,
@@ -2946,10 +2960,6 @@ be written:
 \begin{proof}
   See Appendix~\ref{proof:bohm-jacopini}
 \end{proof}
-
-\TODO{``folk B\"ohm-Jacopini'' as a usage for variable packing?}
-
-\TODO{perhaps pull whole section down to appendix?}
 
 \begin{figure}
   \begin{gather*}
@@ -2988,20 +2998,21 @@ be written:
 
 \subsection{Freyd Elgot Categories}
 
-\citet{moggi-91-monad} showed that the Kleisli category of a strong monad over a CCC interprets
-effectful higher-order functional programs. We are faced, however, with two problems. On one hand,
-SSA has features not necessarily supported by such models. In particular, while distributive
-coproducts are sufficient to model terminating control-flow, SSA models programs with arbitrary,
-unstructured cyclic control-flow. On the other hand, SSA, is only a first-order language. In
-particular, since SSA does not support first-class functions, we have no need for a cartesian
-closure. Similarly, first-class computations, represented by objects of the form
-$\ms{T}(\ms{T}(A))$, are not usually supported by SSA.
+\citet{moggi-91-monad} showed that the Kleisli category of a strong
+monad over a CCC interprets effectful higher-order functional
+programs. There are two mismatches in using this as a semantics for
+SSA. On one hand, SSA has features not necessarily supported by Moggi
+models such as arbitrary, unstructured cyclic control-flow. On the
+other hand Moggi models support features SSA (as a first-order
+language) does not have, such as higher-order functions and
+first-class computation values.
 
 Given that we want to model SSA with some category $\mc{C}$, we hence have to think about what
-structure we need $\mc{C}$ to possess so that it has all our desired features, but no more.
+structure we need $\mc{C}$ to possess so that it has exactly our desired features.
 Obviously, we need a way to take the product of two objects, to be able to model contexts as well as
-pairs. The usual way to do this is via \emph{monoidal categories}. These, however, have too many
-equations: in a monoidal category, computations operating on independent data must always commute
+pairs. The usual way to do this is via \emph{monoidal categories}. However, monoidal categories
+typically have too many
+equations: computations operating on independent data must always commute
 (this is the ``sliding rule''), which is obviously not true for effects such as printing, since
 $$
 \ms{print}(x) ; \ms{print}(y) \neq \ms{print}(y) ; \ms{print}(x)
