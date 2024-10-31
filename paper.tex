@@ -249,8 +249,6 @@
 
 \TODO{formalization pointers for theorems}
 
-\TODO{make sure upgrade is defined both on the left and the right; \emph{or} do this separately}
-
 \section{Introduction}
 
 Static single assignment form, or SSA form, has been the dominant compiler intermediate
@@ -3858,20 +3856,26 @@ can then be used to derive the following weakening lemmas:
   Given $\Gamma \leq \Gamma'$ and $\ms{L}' \leq \ms{L}$, $\ms{K}' \leq \ms{K}$, we have
   \begin{enumerate}[label=(\alph*)]
     \item $\dnt{\Gamma \leq \Delta} = \dnt{\Gamma \leq \Gamma'};\dnt{\Gamma' \leq \Delta}$
+      \label{itm:varwk}
     \item $\dnt{\ms{L}' \leq \ms{K}} = \dnt{\ms{L}' \leq \ms{L}};\dnt{\ms{L} \leq \ms{K}}$
+      \label{itm:lbwk}
     \item $\dnt{\hasty{\Gamma}{\epsilon}{a}{A}} 
       = \dnt{\Gamma \leq \Gamma'};\dnt{\hasty{\Gamma'}{\epsilon}{a}{A}}$
+      \label{itm:expwk}
     \item $\dnt{\haslb{\Gamma}{r}{\ms{L}}}
       = \dnt{\Gamma \leq \Gamma'}
       ; \dnt{\haslb{\Gamma'}{r}{\ms{L}'}}
       ; \dnt{\ms{L}' \leq \ms{L}}$
+      \label{itm:regwk}
     \item $\dnt{\issubst{\gamma}{\Gamma}{\Delta}}
       = \dnt{\Gamma \leq \Gamma'};\dnt{\issubst{\gamma}{\Gamma'}{\Delta}}$
+      \label{itm:substwk}
     \item $\dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}}
       = \dnt{\Gamma \leq \Gamma'} \otimes \dnt{\ms{L}}
       ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}'}}
       ; \dnt{\ms{K}' \leq \ms{K}}
       $
+      \label{itm:lbsubstwk}
   \end{enumerate}
 \end{lemma}
 \begin{proof}
@@ -6306,7 +6310,19 @@ We may now state our desired result as follows:
 \label{proof:weakening}
 
 \begin{proof}
-  \todo{this}
+  We begin by showing \ref{itm:varwk} (i.e., that variable weakenings compose), by the following
+  simple induction:
+  \TODO{this}
+  We can analogously show \ref{itm:lbwk} (i.e., that label weakenings compose), as follows:
+  \TODO{this}
+  We show weakening for expressions $\hasty{\Gamma}{\epsilon}{a}{A}$ \ref{itm:expwk} by induction
+  on the typing derivation:
+  \TODO{this}
+  Similarly, we can show weakening for regions $\haslb{\Gamma}{r}{\ms{L}}$ \ref{itm:lbwk} by
+  induction on the typing derivation as follows:
+  \TODO{this}
+  Weakening for substitutions \ref{itm:substwk} and label substitututions \ref{itm:lbsubstwk}
+  then follow by a trivial induction.
 \end{proof}
 
 \TODO{immediate consequences of (label) weakening}
