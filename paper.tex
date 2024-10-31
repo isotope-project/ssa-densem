@@ -2893,7 +2893,7 @@ mutable variables, we need some kind of way to pass the loop state around. It tu
 to base our definition off a value-based variant of a tail-controlled-loop, as follows
 \begin{equation}
   \prftree[r]{\rle{loop}}
-    {\hasty{\Gamma}{\epsilon}{e}{\outlb(A)}}
+    {\hasty{\Gamma}{\epsilon}{e}{A}}
     {\haslb{\Gamma, \bhyp{\invar}{A}}{r}{\outlb(B + A)}}
     {\haslb{\Gamma}{\ms{loop}(e, r) 
       := (\where{\brb{\ell}{e}}{\wbranch{\ell}{\invar}
@@ -2922,8 +2922,9 @@ where we define
       &=
       \ms{seq}(\topwhile{\ms{L}}{r}, \caseexpr{\ms{ua}\;\invar}{x}{\brb{\outlb}{x}\\ & \qquad}{y}
         {\ms{loop}(y, 
-        \ms{case}_{\ms{L}}\;\invar\;
-          \{\ell_i(x_i) : \ms{seq}(\topwhile{\ms{L}}{t_i}, \brb{\outlb}{\ms{ua}\;\invar)}\})})
+        \ms{case}_{\ms{R}}\;\invar\;
+          \{\ell_i(x_i) : \ms{seq}(\topwhile{\ms{L}}{t_i}, \brb{\outlb}{(\ms{ua}\;\invar)}\})})
+      \\ \qquad \text{where} \qquad \ms{R} = (\ell_i(A_i),)
   \end{aligned}
 \end{equation}
 \begin{equation}
@@ -2940,7 +2941,7 @@ be written:
   For all $\haslb{\Gamma}{r}{\ms{L}}$, $\shaslb{\Gamma}{\towhile{\ms{L}{r}}}{\ms{L}}$ is structured,
   and $\lbeq{\Gamma}{r}{\towhile{\ms{L}}{r}}{\ms{L}}$. In particular, we have that
   $\shaslb{\Gamma}{\topwhile{\ms{L}}{r}}{\outlb([\ms{L}])}$ is structured, and
-  $\lbeq{\Gamma}{[r]}{\ms{SP}(r)}{\outlb([\ms{L}])}$.
+  $\lbeq{\Gamma}{[r]^+}{\topwhile{r}}{\outlb([\ms{L}])}$.
 \end{theorem}
 \begin{proof}
   See Appendix~\ref{proof:bohm-jacopini}
@@ -4179,6 +4180,7 @@ w.r.t. our equational theory for pure contexts, the following theorem:
          = \dnt{\hasty{\Gamma}{\epsilon}{e'}{A}}_{\ms{Th}^\otimes(\cdot)}
   $$
   In particular, this implies that $\ms{Th}(\cdot)$ is the initial \isotopessa{} expression model
+  \label{thm:complete-expr}
 \end{theorem}
 
 \subsection{Regions}
@@ -4288,6 +4290,7 @@ essentially done, and can state our completeness theorem as follows:
         = \dnt{\haslb{\Gamma}{r'}{\ms{L}}}_{\ms{Th}(\cdot, \cdot)} 
   $$
   In particular, this implies that $\ms{Th}(\cdot, \cdot)$ is the initial \isotopessa{} model.
+  \label{thm:complete-reg}
 \end{theorem}
 
 \section{Concrete Models}
@@ -5786,12 +5789,205 @@ We may now state our desired result as follows:
 
 \subsection{B\"ohm-Jacopini}
 
+\begin{lemma}
+  The following facts hold:
+  \begin{itemize}
+    \item Given $\haslb{\Gamma}{r}{\outlb(A)}$ and $\haslb{\Gamma, \bhyp{\invar}{A}}{s}{\ms{L}}$,
+    we have that
+    \begin{equation}
+      \begin{aligned}
+      & \dnt{\haslb{\Gamma}{\ms{seq}(r, s) 
+        := (\where{[\outlb(x) \mapsto \brb{\ell}{x}]r}{\wbranch{\ell}{\invar}{s}})}{\ms{L}}} \\
+      & = \lmor{\dnt{\haslb{\Gamma}{[\outlb(x) \mapsto \brb{\ell}{x}]r}{\ell(A)}}} 
+        ; \dnt{\Gamma} \otimes \alpha^+_A 
+        ; \dnt{\haslb{\Gamma, \bhyp{\invar}{A}}{s}{\ms{L}}} \\
+      & = \lmor{\dnt{\haslb{\Gamma}{r}{\ell(A)}}} 
+        ; \dnt{\Gamma} \otimes \alpha^+_A 
+        ; \dnt{\haslb{\Gamma, \bhyp{\invar}{A}}{s}{\ms{L}}}
+      \end{aligned}
+    \end{equation}
+    \item Given $\hasty{\Gamma}{\epsilon}{e}{A}$, %
+                $\haslb{\Gamma, \bhyp{\invar}{A}}{r}{\outlb(B + A)}$,
+    we have that
+    \begin{equation}
+      \begin{aligned}
+      & \dnt{\haslb{\Gamma}{\ms{loop}(e, r) 
+        := (\where{\brb{\ell}{e}}{\wbranch{\ell}{\invar}
+        {\ms{seq}(r, \casestmt{\invar}{x}{\brb{\outlb}{x}}{y}{\brb{\ell}{y}})}})}{\outlb(B)}} \\
+      & = \lmor{\dnt{\hasty{\Gamma}{\epsilon}{e}{A}}}
+        ; \rfix{\dnt{\haslb{\Gamma, \bhyp{\invar}{A}}{r}{\outlb(B + A)}} ; \alpha^+_{B + A}}
+      \end{aligned}
+    \end{equation}
+    \item Given $\ms{R} = (\ell_i(A_i),)_i$ and $\haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}}$, we
+    have
+    \begin{equation}
+      \begin{aligned}
+        & \dnt{
+          \haslb{\Gamma, \bhyp{c}{[\ms{R}]}}{\ms{case}_{\ms{R}}\;c\; \{\ell_i(x_i) : t_i\}}{\ms{L}}
+          } \\
+        & = \dnt{\Gamma} \otimes \alpha^+_{\Sigma_i\dnt{A_i}} ; \delta^{-1}_{\Sigma}
+          ; [\dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}}},]_i
+      \end{aligned}
+    \end{equation}
+  \end{itemize}
+  \item We have that
+  \begin{equation}
+    \dnt{\hasty{\Gamma, \bhyp{\invar}{\bot}}{[\ms{L}]}{\ms{ua}\;\invar}{[\ms{L}] + [\ms{R}]}}
+    = \pi_r ; \alpha^+_{\dnt{\ms{L}} + \dnt{\ms{R}}}
+  \end{equation}
+  \item We have that
+  \begin{equation}
+    \dnt{\lbsubst{\Gamma}{\ms{pack}_\kappa^+(\ms{L})}{\ms{L}}{\kappa([\ms{L}])}}   
+      = \pi_r ; \alpha^+_{\mb{0} + \dnt{\ms{L}}}
+  \end{equation}
+  and
+  \begin{equation}
+    \dnt{\lbsubst{\Gamma}{\ms{unpack}_\kappa^+(\ms{L})}{\kappa([\ms{L}])}{\ms{L}}}
+      = \pi_r ; \alpha^+_{\dnt{\ms{L}}}
+  \end{equation}
+  In particular, given $\haslb{\Gamma}{r}{\ms{L}}$, we have that
+  \begin{equation}
+    \dnt{\haslb{\Gamma}{[r]^+}{\outlb([\ms{L}])}}
+    = \dnt{\haslb{\Gamma}{r}{\ms{L}}} ; \alpha^+_{\mb{0} + \dnt{\ms{L}}}
+  \end{equation}
+\end{lemma}
+
 \bohmjacopini*
 
 \label{proof:bohm-jacopini}
 
 \begin{proof}
-  \TODO{prove or remove (close analog proved in Lean, but not exactly the same...)}
+  We begin by showing the correctness of $\topwhile{\ms{L}}{r}$ by induction on $r$:
+  \begin{itemize}
+    \item If $r = \brb{\ell}{a}$, we have that 
+    $\topwhile{\ms{L}}{a} = \ms{pack}^+(\ms{L})_\ell(a) = [\brb{\ell}{a}]^+$
+    by definition
+    \item If $r = \letstmt{x}{a}{s}$, we have by induction that
+    $$
+    \topwhile{\ms{L}}{\letstmt{x}{a}{s}} 
+    = \letstmt{x}{a}{\topwhile{\ms{L}}{s}}
+    \teqv \letstmt{x}{a}{[s]^+}
+    = [\letstmt{x}{a}{s}]^+
+    $$
+    \item If $r = \letstmt{(x, y)}{a}{s}$, we have by induction that
+    $$
+    \topwhile{\ms{L}}{\letstmt{(x, y)}{a}{s}} 
+    = \letstmt{(x, y)}{a}{\topwhile{\ms{L}}{s}}
+    \teqv \letstmt{(x, y)}{a}{[s]^+}
+    = [\letstmt{(x, y)}{a}{s}]^+
+    $$
+    \item If $r = \casestmt{a}{x}{s}{y}{t}$, we have by induction that
+    $$
+    \begin{aligned}
+    \topwhile{\ms{L}}{\casestmt{a}{x}{s}{y}{t}}
+    &= \casestmt{a}{x}{\topwhile{\ms{L}}{s}}{y}{\topwhile{\ms{L}}{t}} \\
+    &\teqv \casestmt{a}{x}{[s]^+}{y}{[t]^+} \\
+    &= [\casestmt{a}{x}{s}{y}{t}]^+ \\
+    \end{aligned}
+    $$
+    \item Assume $r = \where{s}{(\wbranch{\ell_i}{t_i}{x_i},)_i}$. %
+    Define $\ms{R} = (\ell_i(A_i),)_i$.
+    By induction, we have that $\forall i, \topwhile{\ms{L}, \ms{R}}{t_i} \teqv [t_i]^+$, and
+    hence by soundness
+    \begin{equation}
+      \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\topwhile{\ms{L}}{t_i}}{\outlb([\ms{L}, \ms{R}])}}
+      = \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{[t_i]^+}{\outlb([\ms{L}, \ms{R}])}}
+    \end{equation}
+    Now, define
+    $$
+    D = \ms{case}_{\ms{L}}\;\invar\;
+    \{\ell_i(x_i) : \ms{seq}(\topwhile{\ms{L}}{t_i}, \brb{\outlb}{(\ms{ua}\;\invar)}\})
+    $$
+    and $L = \ms{loop}(y, D)$. %
+    It follows that
+    \begin{equation}
+      \begin{aligned}
+      & \dnt{\haslb{\Gamma, \invar : [R]}{D}{\outlb([L] + [R])}} \\
+      & = \dnt{\Gamma} \otimes \alpha^+_{\Sigma_i\dnt{A_i}} ; \delta^{-1}_{\Sigma}
+      ; [\dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}} 
+                {\ms{seq}(\topwhile{\ms{L}}{t_i}, \brb{\outlb}{(\ms{ua}\;\invar))}}
+                {\outlb([\ms{L}] + [\ms{R}])}},]_i \\
+      & = \dnt{\Gamma} \otimes \alpha^+_{\Sigma_i\dnt{A_i}} ; \delta^{-1}_{\Sigma}
+      ; [\dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\topwhile{\ms{L}}{t_i}}{\outlb([\ms{L}, \ms{R}])}} 
+      ; \alpha^+_{\mb{0} + (\dnt{\ms{L}} + \dnt{\ms{R}})},]_i \\
+      & = \dnt{\Gamma} \otimes \alpha^+_{\Sigma_i\dnt{A_i}} ; \delta^{-1}_{\Sigma}
+      ; [\dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{[t_i]^+}{\outlb([\ms{L}, \ms{R}])}} 
+      ; \alpha^+_{\mb{0} + (\dnt{\ms{L}} + \dnt{\ms{R}})},]_i\\
+      & = \dnt{\Gamma} \otimes \alpha^+_{\Sigma_i\dnt{A_i}} ; \delta^{-1}_{\Sigma}
+      ; [\dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, \ms{R}}} 
+      ; \alpha^+_{\mb{0} + (\dnt{\ms{L}} + \dnt{\ms{R}})},]_i
+      \end{aligned}
+    \end{equation}
+    and therefore that
+    \begin{equation}
+      \begin{aligned}
+      & \dnt{\haslb{\Gamma, y : [R]}{L}{\outlb([\ms{L}])}} \\
+      & = \lmor{\dnt{\hasty{\Gamma, y : [R]}{\bot}{y}{A}}}
+      ; \rfix{\dnt{\haslb{\Gamma, \invar : [R]}{D}{\outlb([L] + [R])}} 
+      ; \alpha^+_{(\mb{0} + \dnt{\ms{L}}) + \dnt{\ms{R}}}} \\
+      & = \rfix{\dnt{\Gamma} \otimes \alpha^+_{\Sigma_i\dnt{A_i}} ; \delta^{-1}_{\Sigma}
+      ; [\dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{[\ms{L}, \ms{R}]}} 
+      ; \alpha^+_{(\mb{0} + \dnt{\ms{L}}) + \dnt{\ms{R}}},]_i} \\
+      & = \dnt{\Gamma} \otimes \alpha^+_{\Sigma_i\dnt{A_i}} 
+        ; \rfix{\loopmor{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
+        ; \alpha^+_{\mb{0} + \dnt{\ms{L}}}
+      \end{aligned}
+    \end{equation}
+    Hence, we have that
+    \begin{equation}
+      \begin{aligned}
+      & \dnt{\haslb 
+        {\Gamma, \bhyp{\invar}{[\ms{L}, \ms{R}]}}
+        {\caseexpr{\ms{ua}\;\invar}{x}{\brb{\outlb}{x}}{y}{L}}
+        {\outlb([\ms{L}])}} \\
+      & = \dnt{\Gamma} \otimes \alpha^+_{\dnt{\ms{L}} + \dnt{\ms{R}}}
+      ; \delta^{-1}
+      ; [
+        \dnt{\haslb{\Gamma, x : [L]}{\brb{\outlb}{x}}{\outlb([\ms{L}])}},
+        \dnt{\haslb{\Gamma, y : [R]}{L}{\outlb([\ms{L}])}}
+      ] \\
+      & = \dnt{\Gamma} \otimes \alpha^+_{\dnt{\ms{L}} + \dnt{\ms{R}}}
+      ; \delta^{-1}
+      ; [
+        \pi_r ; \alpha^+_{\mb{0} + \dnt{\ms{L}}}, 
+        \dnt{\Gamma} \otimes \alpha^+_{\Sigma_i\dnt{A_i}} 
+        ; \rfix{\loopmor{(\wbranch{\ell_i}{x_i}{t_i},)_i}} ; 
+        \alpha^+_{\mb{0} + \dnt{\ms{L}}}
+      ] \\
+      & = \dnt{\Gamma} \otimes \alpha^+_{\dnt{\ms{L}} + \Sigma_i\dnt{A_i}}
+      ; \delta^{-1}
+      ; [
+        \pi_r,  
+        \rfix{\loopmor{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
+      ]
+      ; \alpha^+_{\mb{0} + \dnt{\ms{L}}}
+      \end{aligned}
+    \end{equation}
+    It hence suffices by completeness (Theorem~\ref{thm:complete-reg}) to show that
+    \begin{equation}
+      \begin{aligned}
+        & \dnt{\haslb{\Gamma}{\ms{seq}(
+          \topwhile{\ms{L}}{r}, \caseexpr{\ms{ua}\;\invar}{x}{\brb{\outlb}{x}}{y}{L})
+        }{\outlb([\ms{L}])}} \\
+        & = \lmor{\dnt{\haslb{\Gamma}{\topwhile{\ms{L}}{r}}{\outlb([\ms{L}, \ms{R}])}}}
+          ; \dnt{\Gamma} \otimes \alpha^+_{\dnt{\ms{L, R}}} \\ & \qquad
+          ; \dnt{\haslb 
+          {\Gamma, \bhyp{\invar}{[\ms{L}, \ms{R}]}}
+          {\caseexpr{\ms{ua}\;\invar}{x}{\brb{\outlb}{x}}{y}{L}}
+          {\outlb([\ms{L}])}} \\
+        & = \lmor{\dnt{\haslb{\Gamma}{\topwhile{\ms{L}}{r}}{\outlb([\ms{L}, \ms{R}])}}}
+          ; \dnt{\Gamma} \otimes \alpha^+_{\dnt{\ms{L}} + \Sigma_i\dnt{A_i}}
+          ; \delta^{-1}
+          ; [
+            \pi_r,  
+            \rfix{\loopmor{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
+          ] ; \alpha^+_{\mb{0} + \dnt{\ms{L}}} \\
+        & = \dnt{\haslb{\Gamma}{\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}}
+          ; \alpha^+_{\mb{0} + \dnt{\ms{L}}} \\
+        & = \dnt{\haslb{\Gamma}{[\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}]^+}{\ms{L}}}
+      \end{aligned}
+    \end{equation}
+  \end{itemize}
 \end{proof}
 
 \subsection{Substitution}
