@@ -88,7 +88,8 @@
 \newcommand{\wbranch}[3]{#1(#2) \lto \{#3\}}
 \newcommand{\cfgsubst}[1]{\ms{cfgs}\;\{#1\}}
 \newcommand{\wseq}[2]{{#1} \mathbin{{;}{;}} {#2}}
-\newcommand{\upg}[1]{{#1}^\uparrow}
+\newcommand{\rupg}[1]{{#1}^\upharpoonright}
+\newcommand{\lupg}[1]{{#1}^\upharpoonleft}
 
 % Judgements
 \newcommand{\cwk}[2]{#1 \mapsto #2}
@@ -1209,19 +1210,25 @@ and $\issubst{\gamma}{\Gamma}{\Delta}$; the composition associates as expected:
 $[[\gamma_1]\gamma_2]\gamma_3 = [\gamma_1]([\gamma_2]\gamma_3)$, and has identity $[\ms{id}]\gamma =
 \gamma$, yielding a category of substitutions with variable contexts $\Gamma$ as objects.
 
-We will define an ``upgrade'' operation $\uparrow_\Xi$ on substitutions
-$\issubst{\gamma}{\Gamma}{\Delta}$ to yield $\issubst{\upg{\gamma}_{\Xi}}{\Gamma, \Xi}{\Delta, \Xi}$
-which appends the identity substitution for each variable in $\Xi$ in the obvious manner:
+We will define a ``left extension'' operation $\lupg{\cdot}_\Xi$ yielding
+$\issubst{\lupg{\gamma}_{\Xi}}{\Xi, \Gamma}{\Xi, \Delta}$ which appends the identity substitution
+for each variable in $\Xi$ in the obvious manner:
 \begin{equation}
-  \upg{\gamma}_{\cdot} = \gamma \qquad 
-  \upg{\gamma}_{\Xi, \thyp{x}{A}{\epsilon}} = \upg{\gamma}_{\Xi}, x \mapsto x
+  \lupg{\gamma}_{\cdot} = \gamma \qquad 
+  \lupg{\gamma}_{\Xi, \thyp{x}{A}{\epsilon}} = x \mapsto x, \lupg{\gamma}_{\Xi}
+\end{equation}
+We may similarly define a ``right extension'' operation $\rupg{\cdot}_\Xi$ yielding
+$\issubst{\rupg{\gamma}_{\Xi}}{\Gamma, \Xi}{\Delta, \Xi}$ as follows:
+\begin{equation}
+  \rupg{\gamma}_{\cdot} = \gamma \qquad 
+  \rupg{\gamma}_{\Xi, \thyp{x}{A}{\epsilon}} = \rupg{\gamma}_{\Xi}, x \mapsto x
 \end{equation}
 We will usually infer $\Xi$ from context; sometimes, for convenience, we may even omit the
-$\uparrow$ operator entirely, due to the fact that for any $\gamma$, we have $[\gamma]a =
-[\upg{\gamma}_\Xi]a$. The identity substitution on $\Gamma$ can therefore be written as
-$\upg{\cdot}_{\Gamma}$. One other particularly important form of substitution is that of
-substituting an expression $a$ for an individual variable $x$, which we will write $[a/x] := \upg{(x
-\mapsto a)}$.
+$\rupg{\cdot}, \lupg{\cdot}$ operators entirely, due to the fact that for any $\gamma$, we have
+$[\gamma]a = [\lupg{\Gamma}_\Xi]a = [\rupg{\gamma}_\Xi]a$. The identity substitution on $\Gamma$ can
+therefore be written as $\rupg{\cdot}_{\Gamma}$. One other particularly important form of
+substitution is that of substituting an expression $a$ for an individual variable $x$, which we will
+write $[a/x] := \lupg{(x \mapsto a)}$.
 
 Finally, just as we can generalize weakening by substituting expressions for variables via
 substitution, we can generalize label weakening by substituting \emph{labels} for
@@ -1241,16 +1248,20 @@ pointwise. This allows us to state \emph{label substitution} as follows:
   \end{enumerate}
 \end{lemma}
 
-We may similarly define extensions $\lbsubst{\Gamma}{\upg{\sigma}_{\ms{K}}}{\ms{L}, \ms{J}}{\ms{K},
-\ms{J}}$ for label substitutions $\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}$ in the obvious manner:
-\begin{equation}
-  \upg{\sigma}_{\cdot} = \sigma \qquad 
-  \upg{\sigma}_{\ms{K}, \ell(A)} = \upg{\sigma}_{\ms{K}}, \ell(x) \mapsto \brb{\ell}{x}
-\end{equation}
-We will often omit the context $\ms{L}$ when it is clear from the context, or even omit the
-$\uparrow$ operator entirely, due to the fact that for any $\sigma$, we have $[\sigma]r =
-[\upg{\sigma}_{\ms{K}}]r$. Similarly to for variable substitutions, the identity label
-substitution on a context $\ms{L}$ is simply given by $\upg{\cdot}_{\ms{L}}$.
+We may similarly define left and right extensions $\lbsubst{\Gamma}{\lupg{\sigma}_{\ms{K}}}{\ms{L},
+\ms{J}}{\ms{K}, \ms{J}}$ and $\lbsubst{\Gamma}{\rupg{\sigma}_{\ms{K}}}{\ms{L}, \ms{J}}{\ms{K},
+\ms{J}}$ and for label substitutions $\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}$ in the obvious
+manner:
+\begin{gather}
+  \rupg{\sigma}_{\cdot} = \sigma \qquad 
+  \rupg{\sigma}_{\ms{K}, \ell(A)} = \rupg{\sigma}_{\ms{K}}, \ell(x) \mapsto \brb{\ell}{x} \\
+  \lupg{\sigma}_{\cdot} = \sigma \qquad
+  \lupg{\sigma}_{\ms{K}, \ell(A)} = \ell(x) \mapsto \brb{\ell}{x}, \lupg{\sigma}_{\ms{K}}
+\end{gather}
+As for variable substitutions, we will often omit $\ms{L}$ when it is clear from the context, or
+even omit the $\rupg{\cdot}$ and $\lupg{\cdot}$ operators entirely, due to the fact that for any
+$\sigma$, we have $[\sigma]r = [\rupg{\sigma}_{\ms{K}}]r = [\lupg{\sigma}_{\ms{K}}]r$. We also
+define the shorthand $[\ell / \kappa] = [\lupg{\kappa(x) \mapsto \brb{\ell}{x}}]$.
 
 \begin{figure}
   \begin{gather*}
@@ -2019,9 +2030,9 @@ equivalent to
           \forall i. \haslb{\Gamma, \bhyp{x_i}{B_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}
         }{
           \lbeq{\Gamma}
-            {\where{([\upg{\sigma}]r)}{(\wbranch{\kappa_i}{x_i}{[\upg{\sigma}]t_i},)_i}}
+            {\where{([\lupg{\sigma}]r)}{(\wbranch{\kappa_i}{x_i}{[\lupg{\sigma}]t_i},)_i}}
             {\where{r}
-              {(\wbranch{\ell_i}{x_i}{[\upg{(\kappa_j(x_j) \mapsto t_j,)}](\sigma_i\;x_i)},)_i}}
+              {(\wbranch{\ell_i}{x_i}{[\lupg{(\kappa_j(x_j) \mapsto t_j,)}](\sigma_i\;x_i)},)_i}}
             {\ms{L}}
         }
   \end{gather*}
@@ -3911,8 +3922,8 @@ substitution is \emph{pure} if the effect of each of its components is $\bot$, i
 In particular, we have that
 \begin{enumerate}
   \item $\ms{eff}(\Delta) = \bot \implies \substpure{\gamma}$
-  \item $\substpure{\gamma} \implies \substpure{\upg{\gamma}}$; in particular, the identity
-  substitution is pure.
+  \item $\substpure{\gamma} \implies \substpure{\lupg{\gamma}}$ and $\substpure{\rupg{\gamma}}$; 
+  in particular, the identity substitution is obviously pure.
 \end{enumerate}
 We can now state the soundness of variable substitution as follows:
 \begin{theorem}[name=Soundness (Substitution), restate=soundnesssubst]
@@ -3965,7 +3976,7 @@ corollary:
 \begin{proof}
   Follows immediately from the fact that 
   \begin{equation}
-    \dnt{\issubst{\upg{x \mapsto a}}{\Gamma}{\Gamma, \bhyp{x}{A}}} 
+    \dnt{\issubst{\lupg{x \mapsto a}}{\Gamma}{\Gamma, \bhyp{x}{A}}} 
     = \Delta_{\dnt{\Gamma}} ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\bot}{a}{A}}
     = \lmor{\dnt{\hasty{\Gamma}{\bot}{a}{A}}}
   \end{equation}
@@ -4207,7 +4218,7 @@ We define the category $\ms{Th}(\Gamma, \ms{L})$ of regions as follows:
     quotiented by $\lbeq{\Gamma, \bhyp{\invar}{A}}{r}{r'}{\ms{L}, \outlb(B)}$
   \item Identity $\haslb{\Gamma, \bhyp{\invar}{A}}{\ms{br}\;\ms{ret}\;\invar}{\ms{L}, \outlb(A)}$
     where $\ms{ret}\;a := \brb{\outlb}{a}$
-  \item Composition $r;r' = [\upg{(\outlb(\invar) \mapsto r')}]r$
+  \item Composition $r;r' = [\lupg{(\outlb(\invar) \mapsto r')}]r$
 \end{itemize}
 In particular, we may view $\ms{ret}$ as an identity-on-objects functor
 $\ms{Th}^\otimes_\bot(\Gamma) \to \ms{Th}(\Gamma, \ms{L})$ with action on morphisms given by given
@@ -6833,18 +6844,18 @@ We may now state our desired result as follows:
   \end{equation}
   In particular, for $\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}$, we have
   \begin{equation}
-    \dnt{\lbsubst{\Gamma}{\upg{\sigma}}{\ms{L}, \ms{R}}{\ms{K}, \ms{R}}}
-    = \dnt{\Gamma} \otimes \alpha^+_{\dnt{\ms{L}} + \dnt{\ms{R}}} 
-      ; \delta^{-1} 
-      ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}} + \pi_r
-      ; \alpha^+_{\dnt{\ms{K}, \ms{R}}}
-  \end{equation}
-  \begin{equation}
-    \dnt{\lbsubst{\Gamma}{\upg{\sigma}}{\ms{R}, \ms{L}}{\ms{R}, \ms{K}}}
+    \dnt{\lbsubst{\Gamma}{\lupg{\sigma}}{\ms{R}, \ms{L}}{\ms{R}, \ms{K}}}
     = \dnt{\Gamma} \otimes \alpha^+_{\dnt{\ms{R}} + \dnt{\ms{L}}} 
       ; \delta^{-1} 
       ; \pi_r + \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}}
       ; \alpha^+_{\dnt{\ms{R}, \ms{K}}}
+  \end{equation}
+  \begin{equation}
+    \dnt{\lbsubst{\Gamma}{\rupg{\sigma}}{\ms{L}, \ms{R}}{\ms{K}, \ms{R}}}
+    = \dnt{\Gamma} \otimes \alpha^+_{\dnt{\ms{L}} + \dnt{\ms{R}}} 
+      ; \delta^{-1} 
+      ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}} + \pi_r
+      ; \alpha^+_{\dnt{\ms{K}, \ms{R}}}
   \end{equation}
   since
   \begin{equation}
@@ -6977,11 +6988,11 @@ We may now state our desired result as follows:
     taking $\ms{R} = (\ell_i(A_i),)_i$,
     \begin{equation}
       \begin{aligned}
-        & \entrymor{\Gamma}{[\upg{\sigma}]s}{\ms{K}} 
-          = \dnt{\haslb{\Gamma}{[\upg{\sigma}]s}{\ms{K}, \ms{R}}}
+        & \entrymor{\Gamma}{[\rupg{\sigma}]s}{\ms{K}} 
+          = \dnt{\haslb{\Gamma}{[\rupg{\sigma}]s}{\ms{K}, \ms{R}}}
           ; \alpha^+_{\dnt{\ms{L}} + \Sigma_i \dnt{A_i}} \\
         & = \lmor{\dnt{\haslb{\Gamma}{s}{\ms{L}, \ms{R}}}}
-          ; \dnt{\lbsubst{\Gamma}{\upg{\sigma}}{\ms{L}, \ms{R}}{\ms{K}, \ms{R}}}
+          ; \dnt{\lbsubst{\Gamma}{\rupg{\sigma}}{\ms{L}, \ms{R}}{\ms{K}, \ms{R}}}
           ; \alpha^+_{\dnt{\ms{K}} + \Sigma_i \dnt{A_i}} \\
         & = \lmor{\dnt{\haslb{\Gamma}{s}{\ms{L}, \ms{R}}}}
           ; \dnt{\Gamma} \otimes \alpha^+_{\dnt{\ms{L}} + \dnt{\ms{R}}} ; \delta^{-1} 
@@ -6997,14 +7008,14 @@ We may now state our desired result as follows:
     and
     \begin{equation}
       \begin{aligned}       
-        & \loopmor{\Gamma}{(\wbranch{\ell_i}{x_i}{[\upg{\sigma}]t_i},)_i}{\ms{K}} 
+        & \loopmor{\Gamma}{(\wbranch{\ell_i}{x_i}{[\rupg{\sigma}]t_i},)_i}{\ms{K}} 
           = \delta^{-1}_{\Sigma} 
-          ; [ \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{[\upg{\sigma}]t_i}{\ms{K}, \ms{R}}} ]_i
+          ; [ \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{[\rupg{\sigma}]t_i}{\ms{K}, \ms{R}}} ]_i
           ; \alpha^+_{\dnt{\ms{K}} + \Sigma_i \dnt{A_i}} \\
         & = \delta^{-1}_{\Sigma} 
         ; [ 
             \lmor{\dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, \ms{R}}}} 
-            ; \dnt{\lbsubst{\Gamma, \bhyp{x_i}{A_i}}{\upg{\sigma}}{\ms{L}, \ms{R}}{\ms{K}, \ms{R}}}
+            ; \dnt{\lbsubst{\Gamma, \bhyp{x_i}{A_i}}{\rupg{\sigma}}{\ms{L}, \ms{R}}{\ms{K}, \ms{R}}}
           ]_i
         ; \alpha^+_{\dnt{\ms{K}} + \Sigma_i \dnt{A_i}} \\
         & = \delta^{-1}_{\Sigma} 
@@ -7012,7 +7023,7 @@ We may now state our desired result as follows:
             \lmor{\dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, \ms{R}}}} 
             ; \pi_l \otimes \dnt{\ms{L}, \ms{R}}
           ]_i
-        ; \dnt{\lbsubst{\Gamma}{\upg{\sigma}}{\ms{L}, \ms{R}}{\ms{K}, \ms{R}}}
+        ; \dnt{\lbsubst{\Gamma}{\rupg{\sigma}}{\ms{L}, \ms{R}}{\ms{K}, \ms{R}}}
         ; \alpha^+_{\dnt{\ms{K}} + \Sigma_i \dnt{A_i}} \\
         & = \delta^{-1}_{\Sigma} 
         ; [ 
@@ -7046,7 +7057,7 @@ We may now state our desired result as follows:
     $S = \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}}$, we have that
     \begin{equation}
       \begin{aligned}
-        & \rcase{\loopmor{\Gamma}{(\wbranch{\ell_i}{x_i}{[\upg{\sigma}]t_i},)_i}{\ms{K}}} \\
+        & \rcase{\loopmor{\Gamma}{(\wbranch{\ell_i}{x_i}{[\rupg{\sigma}]t_i},)_i}{\ms{K}}} \\
         & = \lmor{
             \lmor{L} 
             ; \pi_l \otimes (\dnt{\ms{L}} + \Sigma_i\dnt{A_i})
@@ -7090,7 +7101,7 @@ We may now state our desired result as follows:
     implying by naturality that
     \begin{equation}
       \begin{aligned}
-        \rfix{\loopmor{\Gamma}{(\wbranch{\ell_i}{x_i}{[\upg{\sigma}]t_i},)_i}{\ms{K}}}
+        \rfix{\loopmor{\Gamma}{(\wbranch{\ell_i}{x_i}{[\rupg{\sigma}]t_i},)_i}{\ms{K}}}
         & = (\rcase{L}
         ; \dmor{\dnt{\Gamma}} \otimes \dnt{\ms{L}} ; \alpha ; \dnt{\Gamma} \otimes S
             + \dnt{\Gamma} \otimes \Sigma_i\dnt{A_i})^\dagger ; \pi_r \\
@@ -7104,10 +7115,10 @@ We may now state our desired result as follows:
       \begin{aligned}
         & \dnt{\haslb{\Gamma}{[\sigma](\where{s}{(\wbranch{\ell_i}{x_i}{t_i},)_i})}{\ms{K}}}
           = \dnt{\haslb{\Gamma}
-                  {\where{[\upg{\sigma}]s}
-                  {(\wbranch{\ell_i}{x_i}{[\upg{\sigma}]t_i},)_i}}{\ms{K}}} \\
-        & = \lmor{\entrymor{\Gamma}{[\upg{\sigma}]s}{\ms{K}}} ; \delta^{-1} 
-          ; [\pi_r , \rfix{\loopmor{\Gamma}{(\wbranch{\ell_i}{x_i}{[\upg{\sigma}]t_i},)_i}{\ms{K}}}] \\
+                  {\where{[\rupg{\sigma}]s}
+                  {(\wbranch{\ell_i}{x_i}{[\rupg{\sigma}]t_i},)_i}}{\ms{K}}} \\
+        & = \lmor{\entrymor{\Gamma}{[\rupg{\sigma}]s}{\ms{K}}} ; \delta^{-1} 
+          ; [\pi_r , \rfix{\loopmor{\Gamma}{(\wbranch{\ell_i}{x_i}{[\rupg{\sigma}]t_i},)_i}{\ms{K}}}] \\
         & = \lmor{\lmor{\entrymor{\Gamma}{s}{\ms{L}}} ; \delta^{-1} ; S + \pi_r}
           ; \delta^{-1}
           ; [\pi_r, (\rcase{L})^\dagger ; S] \\
@@ -7528,8 +7539,8 @@ We may now state our desired result as follows:
     We have that
     \begin{equation}
       \begin{aligned}
-        & \entrymor{\Gamma}{[\upg{\sigma}]r}{\ms{L}}
-          = \dnt{\haslb{\Gamma}{[\upg{\sigma}]r}{\ms{L}, \ms{R}'}}
+        & \entrymor{\Gamma}{[\lupg{\sigma}]r}{\ms{L}}
+          = \dnt{\haslb{\Gamma}{[\lupg{\sigma}]r}{\ms{L}, \ms{R}'}}
           ; \alpha^+_{\dnt{\ms{L}} + \Sigma_j \dnt{B_j}} \\
         & = \lmor{\dnt{\haslb{\Gamma}{r}{\ms{L}, \ms{R}}}}
           ; \dnt{\Gamma} \otimes \alpha^+_{\dnt{\ms{L}} + \dnt{\ms{R}}}
@@ -7542,20 +7553,20 @@ We may now state our desired result as follows:
     and, writing $L = \loopmor{\Gamma}{(\wbranch{\ell_i}{x_i}{t_i},)_i}{\ms{L}}$,
     \begin{equation}
       \begin{aligned}
-        & \lmor{(\wbranch{\kappa_i}{x_i}{[\upg{\sigma}]t_i},)_i}
+        & \lmor{(\wbranch{\kappa_i}{x_i}{[\lupg{\sigma}]t_i},)_i}
           = \delta^{-1}_\Sigma
-          ; [ \dnt{\haslb{\Gamma, \bhyp{x_i}{B_i}}{[\upg{\sigma}]t_i}{\ms{L}, \ms{R}'}}, ]_i
+          ; [ \dnt{\haslb{\Gamma, \bhyp{x_i}{B_i}}{[\lupg{\sigma}]t_i}{\ms{L}, \ms{R}'}}, ]_i
           ; \alpha^+_{\dnt{\ms{L}} + \Sigma_j \dnt{B_j}} \\
         & = \delta^{-1}_\Sigma
           ; [ \lmor{\dnt{\haslb{\Gamma, \bhyp{x_i}{B_i}}{t_i}{\ms{L}, \ms{R}}}} 
             ; \dnt{\lbsubst{\Gamma, \bhyp{x_i}{B_i}}
-                    {\upg{\sigma}}{\ms{L}, \ms{R}}{\ms{L}, \ms{R}'}},
+                    {\lupg{\sigma}}{\ms{L}, \ms{R}}{\ms{L}, \ms{R}'}},
           ]_i
           ; \alpha^+_{\dnt{\ms{L}} + \Sigma_j \dnt{B_j}} \\
         & = \delta^{-1}_\Sigma
           ; [ \rlmor{\dnt{\haslb{\Gamma, \bhyp{x_i}{B_i}}{t_i}{\ms{L}, \ms{R}}}},
           ]_i
-          ; \dnt{\lbsubst{\Gamma}{\upg{\sigma}}{\ms{L}, \ms{R}}{\ms{L}, \ms{R}'}}
+          ; \dnt{\lbsubst{\Gamma}{\lupg{\sigma}}{\ms{L}, \ms{R}}{\ms{L}, \ms{R}'}}
           ; \alpha^+_{\dnt{\ms{L}} + \Sigma_j \dnt{B_j}} \\
         & = \rlmor{\delta^{-1}_\Sigma
           ; [ \dnt{\haslb{\Gamma, \bhyp{x_i}{B_i}}{t_i}{\ms{L}, \ms{R}}}
@@ -7581,14 +7592,14 @@ We may now state our desired result as follows:
     \begin{equation}
       \begin{aligned}
         & \dnt{\haslb
-          {\Gamma, \bhyp{x_i}{A_i}}{[\upg{(\kappa_j(x_j) \mapsto t_j,)_j}](\sigma_i\;x_i)}
+          {\Gamma, \bhyp{x_i}{A_i}}{[\lupg{(\kappa_j(x_j) \mapsto t_j,)_j}](\sigma_i\;x_i)}
           {\ms{L}, \ms{R}}} \\
         & = \lmor{\dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\sigma_i\;x_i}{\ms{L}, \ms{R}'}}}
-          ; \dnt{\lbsubst{\Gamma, \bhyp{x_i}{A_i}}{\upg{(\kappa_j(x_j) \mapsto t_j,)_j}}
+          ; \dnt{\lbsubst{\Gamma, \bhyp{x_i}{A_i}}{\lupg{(\kappa_j(x_j) \mapsto t_j,)_j}}
             {\ms{L}, \ms{R}'}{\ms{L}, \ms{R}}} \\
         & = \lmor{\dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\sigma_i\;x_i}{\ms{L}, \ms{R}'}}}
           ; \pi_l \otimes \dnt{\ms{L}, \ms{R'}} 
-          ; \dnt{\lbsubst{\Gamma}{\upg{(\kappa_j(x_j) \mapsto t_j,)_j}}
+          ; \dnt{\lbsubst{\Gamma}{\lupg{(\kappa_j(x_j) \mapsto t_j,)_j}}
             {\ms{L}, \ms{R}'}{\ms{L}, \ms{R}}} \\
         & = \rlmor{\dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\sigma_i\;x_i}{\ms{L}, \ms{R}'}}}
         ; \dnt{\Gamma} \otimes \alpha^+_{\dnt{\ms{L}} + \dnt{\ms{R}'}}
@@ -7619,12 +7630,12 @@ We may now state our desired result as follows:
     \begin{equation}
       \begin{aligned}
         & \loopmor{\Gamma}
-          {(\wbranch{\ell_i}{x_i}{[\upg{(\kappa_j(x_j) \mapsto t_j,)}](\sigma_i\;x_i)},)_i}
+          {(\wbranch{\ell_i}{x_i}{[\lupg{(\kappa_j(x_j) \mapsto t_j,)}](\sigma_i\;x_i)},)_i}
           {\ms{L}}
         \\
         & = \delta^{-1}_\Sigma 
           ; [ \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}
-                  {[\upg{(\kappa_j(x_j) \mapsto t_j,)_j}](\sigma_i\;x_i)}{\ms{L}, \ms{R}}}, ]_i
+                  {[\lupg{(\kappa_j(x_j) \mapsto t_j,)_j}](\sigma_i\;x_i)}{\ms{L}, \ms{R}}}, ]_i
           ; \alpha^+_{\dnt{\ms{L}} + \Sigma_i \dnt{A_i}}   \\
         & = \delta^{-1}_\Sigma 
           ; [ \rlmor{
@@ -7663,10 +7674,10 @@ We may now state our desired result as follows:
     \begin{equation}
       \begin{aligned}
         & \dnt{\haslb{\Gamma}
-          {\where{[\upg{\sigma}]r}{(\wbranch{\kappa_i}{x_i}{[\upg{\sigma}]t_i},)_i}}
+          {\where{[\lupg{\sigma}]r}{(\wbranch{\kappa_i}{x_i}{[\lupg{\sigma}]t_i},)_i}}
           {\ms{L}}} \\
-        & = \lmor{\entrymor{\Gamma}{[\upg{\sigma}]r}{\ms{L}}} ; \delta^{-1} ; [\pi_r,
-          \rfix{\loopmor{\Gamma}{(\wbranch{\kappa_i}{x_i}{[\upg{\sigma}]t_i},)_i}{\ms{L}}}] \\
+        & = \lmor{\entrymor{\Gamma}{[\lupg{\sigma}]r}{\ms{L}}} ; \delta^{-1} ; [\pi_r,
+          \rfix{\loopmor{\Gamma}{(\wbranch{\kappa_i}{x_i}{[\lupg{\sigma}]t_i},)_i}{\ms{L}}}] \\
         & = \lmor{\lmor{\entrymor{\Gamma}{r}{\ms{L}}} ; \delta^{-1} ; \pi_r + S'} ; \delta^{-1}
           ; [
               \pi_r,
@@ -7694,10 +7705,10 @@ We may now state our desired result as follows:
           \pi_r,
           \rfix{
             \loopmor{\Gamma}{(\wbranch{\ell_i}{x_i}
-                    {[\upg{(\kappa_j(x_j) \mapsto t_j,)}](\sigma_i\;x_i)},)_i}{\ms{L}}}
+                    {[\lupg{(\kappa_j(x_j) \mapsto t_j,)}](\sigma_i\;x_i)},)_i}{\ms{L}}}
         ] \\
         & = \dnt{\haslb{\Gamma}
-          {\where{r}{[\upg{(\kappa_j(x_j) \mapsto t_j,)}](\sigma_i\;x_i)},)_i}{\ms{L}}}
+          {\where{r}{[\lupg{(\kappa_j(x_j) \mapsto t_j,)}](\sigma_i\;x_i)},)_i}{\ms{L}}}
       \end{aligned}
     \end{equation}
     as desired.
