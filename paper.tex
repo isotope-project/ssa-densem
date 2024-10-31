@@ -5491,6 +5491,18 @@ former may not be the case without distributivity! We proceed as follows:
                       = \delta^R
   \end{equation}
 \end{proof}
+Note in particular that this allows us to define sums
+\begin{equation}
+  \begin{aligned}
+    f +_R g 
+    & = \envcop{R}{\rseq{}{f}{\envinl{R}}}{\rseq{}{g}{\envinr{R}}} \\
+    & = \delta^{-1} ; [
+      \dmor{R} \otimes (A + B) ; \alpha ; R \otimes f ; \pi_r ; \iota_l,
+      \dmor{R} \otimes (A + B) ; \alpha ; R \otimes g ; \pi_r ; \iota_r
+    ]
+    & = \delta^{-1} ; f + g
+  \end{aligned}
+\end{equation}
 Our final task is to show that, if $\mc{C}$ is a strong Elgot category, then so is
 $\envcom{R}{\mc{C}}$, and, in particular, with fixpoint operator $\rfix{f}$. Note that, just like we
 needed distributivity to have coproducts at all, we will need strength to have an Elgot structure.
@@ -5567,8 +5579,80 @@ We may now state our desired result as follows:
 \begin{proof}
   We check each of the Elgot axioms as follows:
   \begin{itemize}
-    \item \emph{Fixpoint:} \TODO{this}
-    \item \emph{Naturality:} \TODO{this}
+    \item \emph{Fixpoint:} given $f : R \otimes A \to B + A$, we have that
+    \begin{equation}
+      \begin{aligned}
+        \rfix{f} 
+        & = (\rcase{f})^\dagger ; \pi_r = (\rlmor{f} ; \delta^{-1})^\dagger ; \pi_r \\  
+        & = \rlmor{f} ; \delta^{-1} 
+          ; [\ms{id}_{R \otimes B} , (\rlmor{f} ; \delta^{-1})^\dagger] ; \pi_r \\
+        & = \rlmor{f} ; \delta^{-1} ; [\pi_r, (\rcase{f})^\dagger ; \pi_r]
+        & = \rseq{}{f}{\envcop{R}{\pi_r}{\rfix{f}}}
+      \end{aligned}
+    \end{equation}
+    as desired.
+    \item \emph{Naturality:} given $f : R \otimes A \to B + A$, $g: R \otimes B \to C$, we have that
+    \begin{equation}
+      \begin{aligned}
+        \rfix{\rseq{}{f}{g +_R A}} 
+        & = (\rlmor{\dmor{R} \otimes A ; \alpha ; R \otimes f ; \delta^{-1} ; g + \pi_r} 
+            ; \delta^{-1})^\dagger 
+          ; \pi_r \\
+        & = (\rlmor{\dmor{R} \otimes A ; \alpha ; R \otimes f ; \delta^{-1}} 
+          ; \delta^{-1}; R \otimes g + R \otimes \pi_r)^\dagger 
+          ; \pi_r \\
+        & = (\dmor{R} \otimes A
+          ; \alpha
+          ; R \otimes (\dmor{R} \otimes A ; \alpha ; R \otimes f ; \delta^{-1})
+          ; \delta^{-1}; (\pi_r ; g) + R \otimes \pi_r)^\dagger \\
+        & = (\dmor{R} \otimes A
+          ; \alpha 
+          ; R \otimes f ; \delta^{-1}
+          ; (\dmor{R} \otimes B ; \alpha ; \pi_r ; g) 
+          + (\dmor{R} \otimes A ; \alpha ; R \otimes \pi_r))^\dagger \\
+        & = (\dmor{R} \otimes A
+        ; \alpha 
+        ; R \otimes f ; \delta^{-1}
+        ; g 
+        + R \otimes A)^\dagger \\
+        & = (\dmor{R} \otimes A
+        ; \alpha 
+        ; R \otimes f ; \delta^{-1})^\dagger
+        ; g
+        = (\rcase{f})^\dagger ; g
+      \end{aligned}
+    \end{equation}
+    On the other hand, we have that
+    \begin{equation}
+      \begin{aligned}
+        \rseq{}{\rfix{f}}{g} 
+        & = \dmor{R} \otimes A ; \alpha ; R \otimes (\rcase{f} ; \pi_r + R \otimes A)^\dagger ; g \\
+        & = \dmor{R} \otimes A ; \alpha 
+          ; (R \otimes (\rcase{f} ; \pi_r + R \otimes A) ; \delta^{-1})^\dagger ; g \\
+        & = \dmor{R} \otimes A ; \alpha 
+          ; (R \otimes 
+            (\dmor{R} \otimes A ; \alpha ; R \otimes f ; \delta^{-1} ; \pi_r + R \otimes A) 
+            ; \delta^{-1})^\dagger ; g \\
+        & = \dmor{R} \otimes A ; \alpha 
+          ; (R \otimes 
+            (\dmor{R} \otimes A ; \alpha ; R \otimes f ; \delta^{-1}) 
+            ; \delta^{-1} ; R \otimes \pi_r + R \otimes (R \otimes A))^\dagger ; g
+      \end{aligned}
+    \end{equation}
+    By uniformity, it hence suffices to show that
+    \begin{equation}
+      \begin{aligned}
+        & (\dmor{R} \otimes A ; \alpha)
+          ; (R \otimes 
+          (\dmor{R} \otimes A ; \alpha ; R \otimes f ; \delta^{-1}) 
+          ; \delta^{-1} ; R \otimes \pi_r + R \otimes (R \otimes A)) \\
+        & = \dmor{R} \otimes A ; \alpha ; R \otimes f ; \delta^{-1}
+          ; (\dmor{R} \otimes B ; \alpha ; R \otimes \pi_r)
+          + (\dmor{R} \otimes A ; \alpha) \\
+        & = \rcase{f} ; (R \otimes B) + (\dmor{R} \otimes A ; \alpha)
+      \end{aligned}
+    \end{equation}
+    to yield the desired result.
     \item \emph{Codiagonal:} \TODO{this}
     \item \emph{Uniformity:} \TODO{this}
   \end{itemize}
