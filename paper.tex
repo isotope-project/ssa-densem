@@ -6638,9 +6638,99 @@ We may now state our desired result as follows:
         \end{equation}
       \end{itemize}
     \end{itemize}
-    \item \brle{let$_1$-r}: \TODO{this}
-    \item \brle{let$_2$-r}: \TODO{this}
-    \item \brle{case-r}: \TODO{this}
+    \item \brle{let$_1$-r}: we have by induction that
+    \begin{equation}
+      \begin{aligned}
+        & \dnt{\Gamma \leq \Delta} 
+          ; \dnt{\haslb{\Delta}{\letstmt{x}{a}{r}}{\ms{L}}} 
+          ; \dnt{\ms{L} \leq \ms{K}} \\
+        & = \dnt{\Gamma \leq \Delta}
+          ; \lmor{\dnt{\hasty{\Delta}{\epsilon}{a}{A}}}
+          ; \dnt{\haslb{\Delta, \bhyp{x}{A}}{r}{\ms{L}}}
+          ; \dnt{\ms{L} \leq \ms{K}} \\
+        & = \lmor{\dnt{\Gamma \leq \Delta} ; \dnt{\hasty{\Delta}{\epsilon}{a}{A}}}
+          ; \dnt{\Gamma \leq \Delta} \otimes \dnt{A}
+          ; \dnt{\haslb{\Delta, \bhyp{x}{A}}{r}{\ms{L}}}
+          ; \dnt{\ms{L} \leq \ms{K}} \\
+        & = \lmor{\dnt{\hasty{\Gamma}{\epsilon}{a}{A}}}
+          ; \dnt{\Gamma, \bhyp{x}{A} \leq \Delta, \bhyp{x}{A}}
+          ; \dnt{\haslb{\Delta, \bhyp{x}{A}}{r}{\ms{L}}}
+          ; \dnt{\ms{L} \leq \ms{K}} \\
+        & = \lmor{\dnt{\hasty{\Gamma}{\epsilon}{a}{A}}}
+          ; \dnt{\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{K}}} \\
+        & = \dnt{\haslb{\Gamma}{\letstmt{x}{a}{r}}{\ms{K}}}
+      \end{aligned}
+    \end{equation}
+    \item \brle{let$_2$-r}: we have by induction that
+    \begin{equation}
+      \begin{aligned}
+        & \dnt{\Gamma \leq \Delta} 
+          ; \dnt{\haslb{\Delta}{\letstmt{(x, y)}{a}{r}}{\ms{L}}} 
+          ; \dnt{\ms{L} \leq \ms{K}} \\
+        & = \dnt{\Gamma \leq \Delta}
+          ; \lmor{\dnt{\hasty{\Delta}{\epsilon}{a}{A \otimes B}}}
+          ; \alpha
+          ; \dnt{\haslb{\Delta, \bhyp{x}{A}, \bhyp{y}{B}}{r}{\ms{L}}}
+          ; \dnt{\ms{L} \leq \ms{K}} \\
+        & = \lmor{\dnt{\Gamma \leq \Delta} ; \dnt{\hasty{\Delta}{\epsilon}{a}{A \otimes B}}}
+          ; \alpha
+          ; \dnt{\Gamma \leq \Delta} \otimes \dnt{A} \otimes \dnt{B}
+          ; \dnt{\haslb{\Delta, \bhyp{x}{A}, \bhyp{y}{B}}{r}{\ms{L}}}
+          ; \dnt{\ms{L} \leq \ms{K}} \\
+        & = \lmor{\dnt{\hasty{\Gamma}{\epsilon}{a}{A \otimes B}}}
+          ; \alpha
+          ; \dnt{\Gamma, \bhyp{x}{A}, \bhyp{y}{B} \leq \Delta, \bhyp{x}{A}, \bhyp{y}{B}}
+          ; \dnt{\haslb{\Delta, \bhyp{x}{A}, \bhyp{y}{B}}{r}{\ms{L}}}
+          ; \dnt{\ms{L} \leq \ms{K}} \\
+        & = \lmor{\dnt{\hasty{\Gamma}{\epsilon}{a}{A \otimes B}}}
+          ; \alpha
+          ; \dnt{\haslb{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{r}{\ms{K}}}
+      \end{aligned}
+    \end{equation}
+    \item \brle{case-r}: we have by induction that
+    \begin{equation}
+      \begin{aligned}
+        & \dnt{\Gamma \leq \Delta} 
+          ; \dnt{\haslb{\Delta}{\caseexpr{a}{x}{r}{y}{s}}{\ms{L}}}
+          ; \dnt{\ms{L} \leq \ms{K}} \\
+        & = \dnt{\Gamma \leq \Delta}
+          ; \lmor{\dnt{\hasty{\Delta}{\epsilon}{a}{A}}}
+          ; \delta^{-1}
+          ; \\ & \qquad [ 
+             \dnt{\haslb{\Delta, \bhyp{x}{A}}{s}{\ms{L}}}, 
+             \dnt{\haslb{\Delta, \bhyp{y}{B}}{t}{\ms{L}}}
+          ]
+          ; \dnt{\ms{L} \leq \ms{K}} \\
+        & = \lmor{\dnt{\Gamma \leq \Delta} ; \dnt{\hasty{\Delta}{\epsilon}{a}{A}}}
+          ; \delta^{-1}
+          ; [ \\ & \qquad 
+             \dnt{\Gamma \leq \Delta} \otimes \dnt{A}
+               ; \dnt{\haslb{\Delta, \bhyp{x}{A}}{s}{\ms{L}}}
+               ; \dnt{\ms{L} \leq \ms{K}}, \\ & \qquad
+             \dnt{\Gamma \leq \Delta} \otimes \dnt{B}
+               ; \dnt{\haslb{\Delta, \bhyp{y}{B}}{t}{\ms{L}}}
+               ; \dnt{\ms{L} \leq \ms{K}}
+          ] \\
+        & = \lmor{\dnt{\Gamma \leq \Delta} ; \dnt{\hasty{\Delta}{\epsilon}{a}{A}}}
+           ; \delta^{-1}
+           ; [ \\ & \qquad 
+              \dnt{\Gamma, \bhyp{x}{A} \leq \Delta, \bhyp{x}{A}}
+                ; \dnt{\haslb{\Delta, \bhyp{x}{A}}{s}{\ms{L}}}
+                ; \dnt{\ms{L} \leq \ms{K}}, \\ & \qquad
+              \dnt{\Gamma, \bhyp{y}{B} \leq \Delta, \bhyp{y}{B}}
+                ; \dnt{\haslb{\Delta, \bhyp{y}{B}}{t}{\ms{L}}}
+                ; \dnt{\ms{L} \leq \ms{K}}
+           ]
+            \\
+        & = \lmor{\dnt{\hasty{\Gamma}{\epsilon}{a}{A}}}
+          ; \delta^{-1}
+          ; [ 
+            \dnt{\haslb{\Gamma, \bhyp{x}{A}}{s}{\ms{K}}},
+            \dnt{\haslb{\Gamma, \bhyp{y}{B}}{t}{\ms{K}}}
+          ] \\
+        & = \dnt{\haslb{\Gamma}{\caseexpr{a}{x}{s}{y}{t}}{\ms{K}}}
+      \end{aligned}
+    \end{equation}
     \item \brle{cfg}: \TODO{this}
   \end{itemize}
   Weakening for substitutions \ref{itm:substwk} and label substitututions \ref{itm:lbsubstwk}
