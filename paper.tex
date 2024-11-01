@@ -6437,7 +6437,51 @@ We may now state our desired result as follows:
   We can now show weakening for expressions $\hasty{\Gamma}{\epsilon}{a}{A}$ \ref{itm:expwk} by 
   induction on the typing derivation as follows:
   \begin{itemize}
-    \item \brle{var}: \TODO{this}
+    \item \brle{var}: we need to show that
+    \begin{equation}
+      \dnt{\Gamma \leq \Delta} ; \dnt{\hasty{\Delta}{\epsilon}{x}{A}}
+      = \dnt{\Gamma \leq \Delta} ; \pi_{\Delta, x}
+      = \dnt{\hasty{\Gamma}{\epsilon}{x}{A}}
+      = \pi_{\Gamma, x}
+    \end{equation}
+    we proceed by induction on $\Gamma \leq \Delta$:
+    \begin{itemize}
+      \item \brle{wk-nil}: this case yields a contradiction, since if $\Delta = \cdot$ it cannot
+      define $x$.
+      \item \brle{wk-cons}: given $\Gamma = \Gamma', \thyp{y}{B}{\epsilon''}$, $\Delta = \Delta',
+      \thyp{y}{B}{\epsilon'}$,
+      \begin{itemize}
+        \item If $x = y$, then $B = A$, and
+        \begin{equation}
+          \dnt{\Gamma', \thyp{x}{A}{\epsilon''} \leq \Delta', \thyp{x}{A}{\epsilon'}} 
+          ; \pi_{(\Delta, \thyp{x}{A}{\epsilon'}), x}
+          = \dnt{\Gamma' \leq \Delta'} \otimes \dnt{A} ; \pi_r
+          = \pi_r
+          = \pi_{(\Gamma, \thyp{x}{A}{\epsilon''}), x}
+        \end{equation}
+        as desired.
+        \item Otherwise, we have by induction that
+        \begin{equation}
+          \begin{aligned}
+          \dnt{\Gamma', \thyp{y}{B}{\epsilon''} \leq \Delta', \thyp{y}{B}{\epsilon'}}
+          ; \pi_{(\Delta', \thyp{y}{B}{\epsilon'}), x}
+          & = \dnt{\Gamma' \leq \Delta'} \otimes \dnt{B} ; \pi_l ; \pi_{\Delta', x} \\
+          & = \pi_l ; \dnt{\Gamma' \leq \Delta'} ; \pi_{\Delta', x}
+          = \pi_l ; \pi_{\Gamma', x}
+          = \pi_{\Gamma, x}
+          \end{aligned}
+        \end{equation}
+      \end{itemize}
+      \item \brle{wk-skip}: we have $\Gamma = \Gamma', \thyp{y}{B}{\epsilon'}$, and hence
+      \begin{equation}
+        \begin{aligned}
+          \dnt{\Gamma', \thyp{y}{B}{\epsilon'} \leq \Delta} ; \pi_{\Delta, x}
+          = \pi_l ; \dnt{\Gamma' \leq \Delta} ; \pi_{\Delta, x}
+          = \pi_l ; \pi_{\Gamma', x}
+          = \pi_{\Gamma, x}
+        \end{aligned}
+      \end{equation}
+    \end{itemize}
     \item \brle{let$_1$}: \TODO{this}
     \item \brle{unit}: \TODO{this}
     \item \brle{pair}: \TODO{this}
