@@ -6305,49 +6305,49 @@ We may now state our desired result as follows:
 %   \todo{this}
 % \end{proof}
 
-\begin{lemma}
-  The following facts about weakenings hold:
-  \begin{enumerate}[label=(\alph*)]
-    \item $\forall \Gamma, \dnt{\cdot \leq \Gamma} = \ms{id}$, with $\Gamma = \cdot$
-    \item $\forall \Gamma .  \dnt{\Gamma \leq \cdot} = {!}_{\dnt{\Gamma}}$
-    \item $\forall \Gamma, \Delta . 
-    \dnt{\Gamma \leq \Delta, \thyp{x}{A}{\epsilon}} ; \pi_l = \dnt{\Gamma \leq \Delta}$
-  \end{enumerate}
-\end{lemma}
-\begin{proof}
-  \begin{enumerate}[label=(\alph*)]
-    \item Follows trivially by case analysis
-    \item We proceed by induction
-    on the derivation of $\Gamma \leq \cdot$:
-    \begin{itemize}
-      \item \brle{wk-nil}: we have that $\dnt{\cdot \leq \cdot} = \ms{id} = {!}_{\mb{1}}$
-      \item \brle{wk-skip}: we have that 
-      $
-      \dnt{\Gamma, \thyp{x}{A}{\epsilon} \leq \cdot} 
-      = \pi_l ; \dnt{\Gamma \leq \cdot} 
-      = \pi_l ; {!}_{\dnt{\Gamma}}
-      = {!}_{\dnt{\Gamma} \otimes \dnt{a}}
-      $
-    \end{itemize}
-    \item We proceed by induction on the derivation of $\Gamma \leq \Delta, \thyp{x}{A}{\epsilon}$:
-    \begin{itemize}
-      \item \brle{wk-skip}: if $\Gamma = \Gamma' , \thyp{y}{B}{\epsilon'}$, we have by induction 
-      that
-      $$
-      \dnt{\Gamma', \thyp{y}{B}{\epsilon'} \leq \Delta, \thyp{x}{A}{\epsilon}} ; \pi_l =
-      \pi_l ; \dnt{\Gamma' \leq \Delta, \thyp{x}{A}{\epsilon}} ; \pi_l =
-      \pi_l ; \dnt{\Gamma' \leq \Delta} =
-      \dnt{\Gamma', \thyp{y}{B}{\epsilon'} \leq \Delta}
-      $$
-      \item \brle{wk-cons}: we must have $\Gamma = \Gamma', \bhyp{x}{A}{\epsilon'}$, and hence that
-      $$
-      \dnt{\Gamma', \thyp{x}{A}{\epsilon'} \leq \Delta, \thyp{x}{A}{\epsilon}} ; \pi_l =
-      \dnt{A} \otimes \dnt{\Gamma' \leq \Delta} ; \pi_l = \pi_l ; \dnt{\Gamma' \leq \Delta}
-      = \dnt{\Gamma', \thyp{x}{A}{\epsilon'} \leq \Delta}
-      $$
-    \end{itemize}
-  \end{enumerate}
-\end{proof}
+% \begin{lemma}
+%   The following facts about weakenings hold:
+%   \begin{enumerate}[label=(\alph*)]
+%     \item $\forall \Gamma, \dnt{\cdot \leq \Gamma} = \ms{id}$, with $\Gamma = \cdot$
+%     \item $\forall \Gamma .  \dnt{\Gamma \leq \cdot} = {!}_{\dnt{\Gamma}}$
+%     \item $\forall \Gamma, \Delta . 
+%     \dnt{\Gamma \leq \Delta, \thyp{x}{A}{\epsilon}} ; \pi_l = \dnt{\Gamma \leq \Delta}$
+%   \end{enumerate}
+% \end{lemma}
+% \begin{proof}
+%   \begin{enumerate}[label=(\alph*)]
+%     \item Follows trivially by case analysis
+%     \item We proceed by induction
+%     on the derivation of $\Gamma \leq \cdot$:
+%     \begin{itemize}
+%       \item \brle{wk-nil}: we have that $\dnt{\cdot \leq \cdot} = \ms{id} = {!}_{\mb{1}}$
+%       \item \brle{wk-skip}: we have that 
+%       $
+%       \dnt{\Gamma, \thyp{x}{A}{\epsilon} \leq \cdot} 
+%       = \pi_l ; \dnt{\Gamma \leq \cdot} 
+%       = \pi_l ; {!}_{\dnt{\Gamma}}
+%       = {!}_{\dnt{\Gamma} \otimes \dnt{a}}
+%       $
+%     \end{itemize}
+%     \item We proceed by induction on the derivation of $\Gamma \leq \Delta, \thyp{x}{A}{\epsilon}$:
+%     \begin{itemize}
+%       \item \brle{wk-skip}: if $\Gamma = \Gamma' , \thyp{y}{B}{\epsilon'}$, we have by induction 
+%       that
+%       $$
+%       \dnt{\Gamma', \thyp{y}{B}{\epsilon'} \leq \Delta, \thyp{x}{A}{\epsilon}} ; \pi_l =
+%       \pi_l ; \dnt{\Gamma' \leq \Delta, \thyp{x}{A}{\epsilon}} ; \pi_l =
+%       \pi_l ; \dnt{\Gamma' \leq \Delta} =
+%       \dnt{\Gamma', \thyp{y}{B}{\epsilon'} \leq \Delta}
+%       $$
+%       \item \brle{wk-cons}: we must have $\Gamma = \Gamma', \bhyp{x}{A}{\epsilon'}$, and hence that
+%       $$
+%       \dnt{\Gamma', \thyp{x}{A}{\epsilon'} \leq \Delta, \thyp{x}{A}{\epsilon}} ; \pi_l =
+%       \dnt{A} \otimes \dnt{\Gamma' \leq \Delta} ; \pi_l = \pi_l ; \dnt{\Gamma' \leq \Delta}
+%       = \dnt{\Gamma', \thyp{x}{A}{\epsilon'} \leq \Delta}
+%       $$
+%     \end{itemize}
+%   \end{enumerate}
+% \end{proof}
 
 \weakeninglem*
 
@@ -6400,12 +6400,42 @@ We may now state our desired result as follows:
   We can analogously show \ref{itm:lbwk} (i.e., that label weakenings compose) by induction on the
   derivation of $\ms{L} \leq \ms{K}$ as follows:
   \begin{itemize}
-    \item \brle{lwk-nil}: \TODO{this}
-    \item \brle{lwk-skip}: \TODO{this}
-    \item \brle{lwk-cons}: \TODO{this}
+    \item \brle{lwk-nil}: if $\ms{L} = \ms{K} = \cdot$, then $\ms{L}' = \cdot$, so the result
+    follows trivially from the fact that $\dnt{\cdot} = \mb{\ms{L}'}$ is the initial object
+    \item \brle{lwk-skip}: we have $\ms{K} = \ms{K}', \ell(A)$, and therefore
+    \begin{equation}
+      \dnt{\ms{L}' \leq \ms{L}} ; \dnt{\ms{L} \leq \ms{K}', \ell(A)}
+      = \dnt{\ms{L}' \leq \ms{L}} ; \dnt{\ms{L} \leq \ms{K}'} ; \iota_r
+      = \dnt{\ms{L}' \leq \ms{K}'} ; \iota_r
+      = \dnt{\ms{L}' \leq \ms{K}}
+    \end{equation}
+    \item \brle{lwk-cons}: we have $\ms{L} = \ms{R}, \ell(A)$ and $\ms{K} = \ms{K}', \ell(A)$. We
+    proceed by case splitting on $\ms{L} \leq \ms{K}'$:
+    \begin{itemize}
+      \item \brle{lwk-skip}: we have
+      \begin{equation}
+        \begin{aligned}
+        \dnt{\ms{L}' \leq \ms{R}, \ell(A)} ; \dnt{\ms{R}, \ell(A) \leq \ms{K}', \ell(A)}
+        & = \dnt{\ms{L}' \leq \ms{R}} ; \iota_r ; \dnt{\ms{R} \leq \ms{K}'} + \dnt{A} \\
+        & = \dnt{\ms{L}' \leq \ms{R}} ; \dnt{\ms{R} \leq \ms{K}'} ; \iota_r \\
+        & = \dnt{\ms{L}' \leq \ms{K}'} ; \iota_r \\
+        & = \dnt{\ms{L}' \leq \ms{K}', \ell(A)}
+        \end{aligned}
+      \end{equation}
+      \item \brle{lwk-cons}: we have that $\ms{L}' = \ms{R}', \ell(A)$, and therefore
+      \begin{equation}
+        \begin{aligned}
+        \dnt{\ms{R}', \ell(A) \leq \ms{R}, \ell(A)} ; \dnt{\ms{R}, \ell(A) \leq \ms{K}', \ell(A)}
+        & = \dnt{\ms{R}' \leq \ms{R}} + \dnt{A} ; \dnt{\ms{R} \leq \ms{K}'} + \dnt{A} \\
+        & = (\dnt{\ms{R}' \leq \ms{R}} ; \dnt{\ms{R} \leq \ms{K}'}) + \dnt{A} \\
+        & = \dnt{\ms{R}' \leq \ms{K}'} + \dnt{A} \\
+        & = \dnt{\ms{R}', \ell(A) \leq \ms{K}', \ell(A)}
+        \end{aligned}
+      \end{equation}
+    \end{itemize}
   \end{itemize}
   We can now show weakening for expressions $\hasty{\Gamma}{\epsilon}{a}{A}$ \ref{itm:expwk} by 
-  induction on the typing derivation:
+  induction on the typing derivation as follows:
   \begin{itemize}
     \item \brle{var}: \TODO{this}
     \item \brle{let$_1$}: \TODO{this}
