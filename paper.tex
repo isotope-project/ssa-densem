@@ -6434,7 +6434,7 @@ We may now state our desired result as follows:
       \end{equation}
     \end{itemize}
   \end{itemize}
-  We can now show weakening for expressions $\hasty{\Gamma}{\epsilon}{a}{A}$ \ref{itm:expwk} by 
+  We can now show weakening for expressions $\hasty{\Delta}{\epsilon}{a}{A}$ \ref{itm:expwk} by 
   induction on the typing derivation as follows:
   \begin{itemize}
     \item \brle{var}: we need to show that
@@ -6570,12 +6570,74 @@ We may now state our desired result as follows:
            ]
       \end{aligned}
     \end{equation}
-    \item \brle{op}, \brle{inl}, \brle{inr}: \TODO{this}
+    \item \brle{op}: we have
+    \begin{equation}
+      \begin{aligned}
+        \dnt{\Gamma \leq \Delta} ; \dnt{\hasty{\Gamma}{\epsilon}{f\;a}{B}} 
+        & = \dnt{\Gamma \leq \Delta} 
+          ; \dnt{\hasty{\Delta}{\epsilon}{a}{A}} 
+          ; \dnt{\isop{f}{A}{B}{\epsilon}} \\
+        & = \dnt{\hasty{\Gamma}{\epsilon}{a}{A}} 
+          ; \dnt{\isop{f}{A}{B}{\epsilon}} \\
+        & = \dnt{\hasty{\Gamma}{\epsilon}{f\;a}{B}}
+      \end{aligned}
+    \end{equation}
+    \item \brle{inl}, \brle{inr}: analogous to the \brle{op} case
   \end{itemize}
-  Similarly, we can show weakening for regions $\haslb{\Gamma}{r}{\ms{L}}$ \ref{itm:regwk} by
+  Similarly, we can show weakening for regions $\haslb{\Delta}{r}{\ms{L}}$ \ref{itm:regwk} by
   induction on the typing derivation as follows:
   \begin{itemize}
-    \item \brle{br}: \TODO{this}
+    \item \brle{br}: we have that
+    \begin{equation}
+      \begin{aligned}
+      \dnt{\Gamma \leq \Delta}
+        ; \dnt{\haslb{\Delta}{\brb{\ell}{a}}{\ms{L}}}
+        ; \dnt{\ms{L} \leq \ms{K}}
+      & = \dnt{\Gamma \leq \Delta} 
+        ; \dnt{\hasty{\Delta}{\bot}{a}{A}}
+        ; \iota_{\ms{L}, \ell}
+        ; \dnt{\ms{L} \leq \ms{K}} \\
+      & = \dnt{\hasty{\Gamma}{\bot}{a}{A}}
+        ; \iota_{\ms{L}, \ell}
+        ; \dnt{\ms{L} \leq \ms{K}}
+      \end{aligned}
+    \end{equation}
+    It hence suffices to show that 
+    $\iota_{\ms{L}, \ell} ; \dnt{\ms{L} \leq \ms{K}} = \iota_{\ms{K}, \ell}$, which we can do by
+    induction on $\ms{L} \leq \ms{K}$:
+    \begin{itemize}
+      \item \brle{lwk-nil}: this case yields a contradiction, since if $\ms{K} = \cdot$ it cannot
+      define the label $\ell$.
+      \item \brle{lwk-skip}: we have $\ms{K} = \ms{K}', \kappa(B)$, and hence
+      \begin{equation}
+        \iota_{\ms{L}', \ell} ; \dnt{\ms{L} \leq \ms{K}', \kappa(B)}
+        = \iota_{\ms{L}', \ell} ; \dnt{\ms{L} \leq \ms{K}', \kappa(B)} ; \iota_l
+        = \iota_{\ms{K}', \ell} ; \iota_l
+        = \iota_{\ms{K}, \ell}
+      \end{equation}
+      \item \brle{lwk-cons}: we have $\ms{L} = \ms{L}', \kappa(B)$ and $\ms{K} = \ms{K}', \kappa(B)$
+      .
+      \begin{itemize}
+        \item If $\kappa = \ell$, then $B = A$ and
+        \begin{equation}
+          \iota_{(\ms{L}', \ell(A)), \ell} 
+          ; \dnt{\ms{L}, \ell(A) \leq \ms{K}', \ell(A)}
+          = \iota_r ; \dnt{\ms{L}' \leq \ms{K}'} + \dnt{A}
+          = \iota_r
+           = \iota_{\ms{K}, \ell}
+        \end{equation}
+        \item Otherwise, we have by induction that
+        \begin{equation}
+          \begin{aligned}
+          \iota_{(\ms{L}', \kappa(B)), \ell}
+          ; \dnt{\ms{L}, \kappa(B) \leq \ms{K}', \kappa(B)}
+          & = \iota_{\ms{L}', \ell} ; \iota_l ; \dnt{\ms{L}' \leq \ms{K}'} + \dnt{B} \\
+          & = \iota_{\ms{L}', \ell} ; \dnt{\ms{L}' \leq \ms{K}'} ; \iota_l \\
+          & = \iota_{\ms{K}', \ell} ; \iota_l & = \iota_{\ms{K}, \ell}
+          \end{aligned}
+        \end{equation}
+      \end{itemize}
+    \end{itemize}
     \item \brle{let$_1$-r}: \TODO{this}
     \item \brle{let$_2$-r}: \TODO{this}
     \item \brle{case-r}: \TODO{this}
