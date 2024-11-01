@@ -6731,7 +6731,88 @@ We may now state our desired result as follows:
         & = \dnt{\haslb{\Gamma}{\caseexpr{a}{x}{s}{y}{t}}{\ms{K}}}
       \end{aligned}
     \end{equation}
-    \item \brle{cfg}: \TODO{this}
+    \item \brle{cfg}: Let $L = \loopmor{\Delta}{(\wbranch{\ell_i}{x_i}{t_i},)_i}{\ms{L}}$ and
+    $\ms{R} = (\ell_i(A_i),)_i$. We have by induction that
+    \begin{equation}
+      \begin{aligned}
+        & \dnt{\Gamma \leq \Delta} ; L ; \dnt{\ms{L} \leq \ms{K}} + \Sigma_i\dnt{A_i} \\
+        & = \dnt{\Gamma \leq \Delta} 
+          ; \delta^{-1}_{\Sigma}
+          ; [(\dnt{\haslb{\Delta, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, \ms{R}}},)_i]
+          ; \alpha^+_{\dnt{\ms{L}} + \Sigma_i\dnt{A_i}}
+          ; \dnt{\ms{L} \leq \ms{K}} + \Sigma_i\dnt{A_i} \\
+        & = \delta^{-1}_{\Sigma}
+          ; [
+            \dnt{\Gamma \leq \Delta} \otimes \dnt{A_i}
+            ; (\dnt{\haslb{\Delta, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, \ms{R}}}
+            ; \alpha_{\dnt{\ms{L}} + \dnt{\ms{R}}}
+            ; \dnt{\ms{L} \leq \ms{K}} + \dnt{\ms{R}},)_i]
+          ; \alpha^+_{\dnt{\ms{L}} + \Sigma_i\dnt{A_i}} \\
+        & = \delta^{-1}_{\Sigma}
+          ; [
+            (\dnt{\Gamma, \bhyp{x_i}{A_i} \leq \Delta, \bhyp{x_i}{A_i}}
+            ; \dnt{\haslb{\Delta, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, \ms{R}}}
+            ; \dnt{\ms{L}, \ms{R} \leq \ms{K}, \ms{R}},)_i]
+          ; \alpha^+_{\dnt{\ms{L}} + \Sigma_i\dnt{A_i}} \\
+        & = \delta^{-1}_{\Sigma}
+          ; [(\dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{K}, \ms{R}}},)_i]
+          ; \alpha^+_{\dnt{\ms{L}} + \Sigma_i\dnt{A_i}} \\
+        & = \loopmor{\Gamma}{(\wbranch{\ell_i}{x_i}{t_i},)_i}{\ms{K}}
+      \end{aligned}
+    \end{equation}
+    It follows that
+    \begin{equation}
+      \begin{aligned}
+        & \dnt{\Gamma \leq \Delta} 
+          ; \dnt{\haslb{\Delta}{\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}}
+          ; \dnt{\ms{L} \leq \ms{K}} \\
+        & = \dnt{\Gamma \leq \Delta} 
+          ; \lmor{\dnt{\haslb{\Delta}{r}{\ms{L}, \ms{R}}}}  
+          ; \dnt{\Delta} \otimes \alpha^+_{\dnt{L} + \Sigma_i\dnt{A_i}})
+          ; \delta^{-1}
+          ; [\pi_r, \rfix{L}]
+          ; \dnt{\ms{L} \leq \ms{K}} \\
+        & = \lmor{\dnt{\Gamma \leq \Delta} 
+            ; \dnt{\haslb{\Delta}{r}{\ms{L}, \ms{R}}}
+            ; \alpha^+_{\dnt{L} + \Sigma_i\dnt{A_i}}}
+          ; \delta^{-1}
+          ; [\pi_r, \dnt{\Gamma \leq \Delta} ; \rfix{L}]
+          ; \dnt{\ms{L} \leq \ms{K}} \\
+        & = \lmor{\dnt{\haslb{\Gamma}{r}{\ms{L}, \ms{R}}}; \alpha^+_{\dnt{L} + \Sigma_i\dnt{A_i}}}
+          ; [ \pi_r ; \dnt{\ms{L} \leq \ms{K}}, 
+              \rfix{\loopmor{\Gamma}{(\wbranch{\ell_i}{x_i}{t_i},)_i}{\ms{K}}}
+          ]
+          \\
+        & = \lmor{\dnt{\haslb{\Gamma}{r}{\ms{L}, \ms{R}}} 
+            ; \alpha_{\dnt{\ms{L}} + \Sigma_i\dnt{A_i}}
+            ; \dnt{\ms{L} \leq \ms{K}} + \Sigma_i\dnt{A_i}}
+          ; [ \pi_r, 
+              \rfix{\loopmor{\Gamma}{(\wbranch{\ell_i}{x_i}{t_i},)_i}{\ms{K}}}
+          ]
+          \\
+        & = \lmor{\dnt{\haslb{\Gamma}{r}{\ms{L}, \ms{R}}} 
+            ; \alpha_{\dnt{\ms{L}} + \Sigma_i\dnt{A_i}}
+            ; \dnt{\ms{L} \leq \ms{K}} + \Sigma_i\dnt{A_i}}
+          ; [ \pi_r, 
+              \rfix{\loopmor{\Gamma}{(\wbranch{\ell_i}{x_i}{t_i},)_i}{\ms{K}}}
+          ]
+          \\
+        & = \lmor{\dnt{\haslb{\Gamma}{r}{\ms{L}, \ms{R}}}
+            ; \dnt{\ms{L}, \ms{R} \leq \ms{K}, \ms{R}} 
+            ; \alpha_{\dnt{\ms{K}} + \Sigma_i\dnt{A_i}}}
+          ; [ \pi_r, 
+              \rfix{\loopmor{\Gamma}{(\wbranch{\ell_i}{x_i}{t_i},)_i}{\ms{K}}}
+          ]
+          \\
+        & = \lmor{\dnt{\haslb{\Gamma}{r}{\ms{K}, \ms{R}}}
+            ; \alpha_{\dnt{\ms{K}} + \Sigma_i\dnt{A_i}}}
+          ; [ \pi_r, 
+              \rfix{\loopmor{\Gamma}{(\wbranch{\ell_i}{x_i}{t_i},)_i}{\ms{K}}}
+          ]
+          \\
+        & = \dnt{\haslb{\Gamma}{\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{K}}}
+      \end{aligned}
+    \end{equation}
   \end{itemize}
   Weakening for substitutions \ref{itm:substwk} and label substitututions \ref{itm:lbsubstwk}
   then follow by a trivial induction.
