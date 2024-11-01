@@ -2173,6 +2173,7 @@ arbitrary nested \ms{where}-blocks, and hence to justify the rule
         \rhd \ms{L}
       }
     }
+    \label{eqn:where-fusion-1}
 \end{equation}
 Also very convenient is the variant
 \begin{equation}
@@ -2202,10 +2203,11 @@ Also very convenient is the variant
         \rhd \ms{L}
       }
     }
+    \label{eqn:where-fusion-2}
 \end{equation}
 Rather than justify these rules directly, it turns out to be much more convenient to do so using our
 denotational semantics, which, due to our completeness result in Section~\ref{ssec:completeness}, is
-sound.
+sound. A proof can be found in Lemma~\ref{lem:where-fusion} in the appendix.
 
 There are some other basic rules we may want to use which turn out to be
 derivable from our existing set. For example, while re-ordering labels in a \ms{where}-block looks
@@ -5524,8 +5526,8 @@ Note in particular that this allows us to define sums
 Our final task is to show that, if $\mc{C}$ is a strong Elgot category, then so is
 $\envcom{R}{\mc{C}}$, and, in particular, with fixpoint operator $\rfix{f}$. Note that, just like we
 needed distributivity to have coproducts at all, we will need strength to have an Elgot structure.
-We begin by stating some generally useful properties of $\rcase{f}$ and $\rfix{f}$. In particular,
-we have that: For $f: R \otimes A \to B + C$:
+We begin by stating some generally useful properties of $\rcase{f}$ and $\rfix{f}$. In
+particular, we have that: For $f: R \otimes A \to B + C$:
 \begin{itemize}
   \item Given $h : R \otimes X \to A$, we have
   \begin{equation}
@@ -5619,6 +5621,18 @@ Similarly, for $f : R \otimes A \to B + A$:
     \end{aligned}
   \end{equation}
   as desired.
+\end{itemize}
+We also state some generally useful properties of $\rlmor{f}$:
+\begin{itemize}
+  \item For all $f : R \otimes A \to C$, $g : R \otimes B \to C$, 
+  \begin{equation}
+    \begin{aligned}
+        \rlmor{\delta^{-1} ; [f, g]} 
+        & = \dmor{R} \otimes (A + B) ; \alpha ; R \otimes (\delta^{-1} ; [f, g]) \\
+        & = \delta^{-1} ; [\dmor{R} \otimes A ; \alpha ; f, \dmor{R} \otimes B ; \alpha ; g] \\
+        & = \delta^{-1} ; [\rlmor{f}, \rlmor{g}]
+    \end{aligned}
+  \end{equation}
 \end{itemize}
 We may now state our desired result as follows:
 \begin{lemma}
@@ -8243,13 +8257,133 @@ We may now state our desired result as follows:
 \end{figure}
 
 \begin{lemma}[\ms{where}-fusion]
-  \todo{this}
+  The rewrite rules given in Equation~\ref{eqn:where-fusion-1} and Equation~\ref{eqn:where-fusion-2}
+  are sound.
+  \label{lem:where-fusion}
 \end{lemma}
 \begin{proof}
-  \todo{this}
+  We begin with Equation~\ref{eqn:where-fusion-1}. Let %
+  $\ms{R} = (\ell_j(A_j),)_j$, $\ms{K} = (\kappa_k(B_k),)_k$, %
+  $S = (\wbranch{\kappa_i}{y_i}{s_i},)_i$,
+  $T = (\wbranch{\ell_i}{x_i}{t_i},)_j$, and %
+  $D_S = \loopmor{\Gamma}{S}{\ms{L}, \ms{R}}$, %
+  $D_T = \loopmor{\Gamma}{T}{\ms{L}}$,
+  $D_G = \loopmor{\Gamma}{S, T}{\ms{L}}$ %
+  We have that
+  \begin{equation}
+    \begin{aligned}
+      & \dnt{\haslb{\Gamma}{\where{(\where{r}{S})}{T}}{\ms{L}}} \\
+      & = \lmor{
+        \lmor{\entrymor{\Gamma}{r}{(\ms{L}, \ms{R})}} ; \delta^{-1} ;
+        [\pi_r, \rfix{D_S}] ;
+        \alpha^+_{\dnt{\ms{L}} + \Sigma_j\dnt{A_j}}
+      } ; \delta^{-1} ; [\pi_r, \rfix{D_T}] \\
+      & = \lmor{\entrymor{\Gamma}{r}{(\ms{L}, \ms{R})}}
+        ; \rlmor{\delta^{-1} ; [\pi_r, \rfix{D_S}] ; \alpha^+_{\dnt{\ms{L}} + \Sigma_j\dnt{A_j}}}
+        ; \delta^{-1} ; [\pi_r, \rfix{D_T}] \\
+      & = \lmor{\entrymor{\Gamma}{r}{(\ms{L}, \ms{R})}}
+        ; \delta^{-1}
+        ; [
+          \rlmor{\pi_r ; \alpha^+_{\dnt{\ms{L}} + \Sigma_j\dnt{A_j}}},
+          \rlmor{\rfix{D_S} ; \alpha^+_{\dnt{\ms{L}} + \Sigma_j\dnt{A_j}}}
+        ]
+        ; \delta^{-1} ; [\pi_r, \rfix{D_T}] \\
+      & = \lmor{\entrymor{\Gamma}{r}{(\ms{L}, \ms{R})}}
+        ; \envcop{\dnt{\ms{R}}}
+            { \\ & \qquad
+              \rseq{}
+                {\pi_r ; \alpha^+_{\dnt{\ms{L}} + \Sigma_j\dnt{A_j}}}
+                {\envcop{\dnt{\ms{R}}}{\pi_r}{\rfix{D_T}}}
+            }
+            { \\ & \qquad
+              \rseq{}
+                {\rfix{D_S} ; \alpha^+_{\dnt{\ms{L}} + \Sigma_j\dnt{A_j}}}
+                {\envcop{\dnt{\ms{R}}}{\pi_r}{\rfix{D_T}}}
+            } \\
+      & = \lmor{\entrymor{\Gamma}{r}{(\ms{L}, \ms{R})}}
+        ; \envcop{\dnt{\ms{R}}}
+            { \\ & \qquad
+              \rseq{}
+                {\alpha^{R+}_{\dnt{\ms{L}} + \Sigma_j\dnt{A_j}}}
+                {\envcop{\dnt{\ms{R}}}{\pi_r}{\rfix{D_T}}}
+            }
+            { \\ & \qquad
+              \rseq{}
+                {\rfix{D_S} ; \alpha^+_{\dnt{\ms{L}} + \Sigma_j\dnt{A_j}}}
+                {\envcop{\dnt{\ms{R}}}{\pi_r}{\rfix{D_T}}}
+            } \\
+      & = \lmor{\haslb{\Gamma}{r}{\ms{L}, \ms{R}, \ms{K}}}
+        ; \rseq{}
+          {\alpha^{\ms{R}+}_{\dnt{\ms{L}} + (\dnt{R} + \Sigma_j\dnt{A_j})}}{
+            \envcop{\dnt{\ms{R}}}{\pi_r}{ \\ & \qquad
+              \envcop{\dnt{\ms{R}}}{
+                \rfix{D_T}
+              }{
+                \rseq{}
+                  {\rfix{D_S} ; \alpha^+_{\dnt{\ms{L}} + \Sigma_j\dnt{A_j}}}
+                  {\envcop{\dnt{\ms{R}}}{\pi_r}{\rfix{D_T}}}
+              }
+            }
+          } \\
+      & = \lmor{
+          \haslb{\Gamma}{r}{\ms{L}, \ms{R}, \ms{K}} 
+          ; \alpha^{\ms{R}+}_{\dnt{\ms{L}} + (\dnt{R} + \Sigma_j\dnt{A_j})}}
+        ; \delta^{-1}
+        ; \\ & \qquad [\pi_r, 
+            \envcop{\dnt{\ms{R}}}{
+              \rfix{D_T}
+            }{
+              \rseq{}
+                {\rfix{D_S} ; \alpha^+_{\dnt{\ms{L}} + \Sigma_j\dnt{A_j}}}
+                {\envcop{\dnt{\ms{R}}}{\pi_r}{\rfix{D_T}}}
+            }
+        ] \\
+        & = \lmor{\entrymor{\Gamma}{r}{\ms{L}}}
+        ; \delta^{-1}
+        ; [\pi_r, 
+            \envcop{\dnt{\ms{R}}}{
+              \rfix{D_T}
+            }{
+              \rseq{}
+                {\rfix{D_S} ; \alpha^+_{\dnt{\ms{L}} + \Sigma_j\dnt{A_j}}}
+                {\envcop{\dnt{\ms{R}}}{\pi_r}{\rfix{D_T}}}
+            }
+        ] \\
+    \end{aligned}
+  \end{equation}
+  For this to be equal to $\dnt{\haslb{\Gamma}{\where{r}{S, T}}{\ms{L}}}$, it therefore suffices to
+  show that
+  \begin{equation}
+    \begin{aligned}
+      \rfix{D_G} &= \envcop{\dnt{\ms{R}}}{
+        \rfix{D_T}
+      }{
+        \rseq{}
+          {\rfix{D_S} ; \alpha^+_{\dnt{\ms{L}} + \Sigma_j\dnt{A_j}}}
+          {\envcop{\dnt{\ms{R}}}{\pi_r}{\rfix{D_T}}}
+      }
+    \end{aligned}
+  \end{equation}
+  We have by re-association and weakening that
+  \begin{equation}
+    \begin{aligned}
+      D_G 
+      & = \alpha^+_{\dnt{\ms{R}} + \dnt{\ms{K}}} ; [
+        \delta^{-1}_\Sigma ; [
+          \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, \ms{R}, \ms{K}}},
+          ; \alpha^+_{\dnt{\ms{L}} + \Sigma_j\dnt{C_j}}
+        ]_i,
+        D_S
+      ] \\
+      & = \alpha^+_{\dnt{\ms{R}} + \dnt{\ms{K}}} ; [
+        D_T ; \dnt{\ms{L}} 
+          + (\alpha^+_{\ms{R}} ; \dnt{\ms{R} \leq \ms{R, K}} ; \alpha^+_{\Sigma_i\dnt{C_i}}),
+        D_S
+      ]
+    \end{aligned}
+  \end{equation}
+  where $C_{1..k} = A_{1..k}$ and $C_{k+1..n} = B_{1..n-k}$. We have that
 \end{proof}
-
-\TODO{other equations?}
 
 \subsection{Completeness}
 
