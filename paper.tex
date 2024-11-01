@@ -6482,14 +6482,97 @@ We may now state our desired result as follows:
         \end{aligned}
       \end{equation}
     \end{itemize}
-    \item \brle{let$_1$}: \TODO{this}
-    \item \brle{unit}: \TODO{this}
-    \item \brle{pair}: \TODO{this}
-    \item \brle{let$_2$}: \TODO{this}
-    \item \brle{case}: \TODO{this}
+    \item \brle{let$_1$}: we have
+    \begin{equation}
+      \begin{aligned}
+        & \dnt{\Gamma \leq \Delta} ; \dnt{\hasty{\Delta}{\epsilon}{\letexpr{x}{a}{b}}{B}} \\
+        & = \dnt{\Gamma \leq \Delta} 
+          ; \lmor{\dnt{\hasty{\Delta}{\epsilon}{a}{A}}}
+          ; \dnt{\hasty{\Delta, \bhyp{x}{A}}{\epsilon}{b}{B}} \\
+        &= \lmor{\dnt{\Gamma \leq \Delta} ; \dnt{\hasty{\Delta}{\epsilon}{a}{A}}}
+        ; \dnt{\Gamma \leq \Delta} \otimes \dnt{A}
+        ; \dnt{\hasty{\Delta, \bhyp{x}{A}}{\epsilon}{b}{B}} \\
+        &= \lmor{\dnt{\hasty{\Gamma}{\epsilon}{a}{A}}}
+        ; \dnt{\Gamma, \bhyp{x}{A} \leq \Delta, \bhyp{x}{A}}
+        ; \dnt{\hasty{\Delta, \bhyp{x}{A}}{\epsilon}{b}{B}} \\
+        &= \lmor{\dnt{\hasty{\Gamma}{\epsilon}{a}{A}}}
+        ; \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{b}{B}} \\
+        &= \dnt{\hasty{\Gamma}{\epsilon}{\letexpr{x}{a}{b}}{B}}
+      \end{aligned}
+    \end{equation}
+    \item \brle{unit}: follows immediately since weakenings are pure and $\mb{1}$ is the terminal
+    object.
+    \item \brle{pair}: we have
+    \begin{equation}
+      \begin{aligned}
+        & \dnt{\Gamma \leq \Delta} ; \dnt{\hasty{\Delta}{\epsilon}{(a, b)}{A \otimes B}} \\
+        & = \dnt{\Gamma \leq \Delta} 
+          ; \dmor{\Delta}
+          ; \dnt{\hasty{\Delta}{\epsilon}{a}{A}} \otimes \dnt{\hasty{\Delta}{\epsilon}{b}{B}} \\
+        & = \dmor{\Gamma}
+          ; (\dnt{\Gamma \leq \Delta} ; \dnt{\hasty{\Delta}{\epsilon}{a}{A}}) \otimes
+          (\dnt{\Gamma \leq \Delta} ; \dnt{\hasty{\Delta}{\epsilon}{b}{B}}) \\
+        & = \dmor{\Gamma}
+          ; \dnt{\hasty{\Gamma}{\epsilon}{a}{A}} \otimes \dnt{\hasty{\Gamma}{\epsilon}{b}{B}} \\
+        & = \dnt{\hasty{\Gamma}{\epsilon}{(a, b)}{A \otimes B}}
+      \end{aligned}
+    \end{equation}
+    \item \brle{let$_2$}: we have
+    \begin{equation}
+      \begin{aligned}
+        & \dnt{\Gamma \leq \Delta} ; \dnt{\hasty{\Delta}{\epsilon}{\letexpr{(x, y)}{a}{b}}{B}} \\
+        & = \dnt{\Gamma \leq \Delta} 
+          ; \lmor{\dnt{\hasty{\Delta}{\epsilon}{a}{A \otimes B}}}
+          ; \alpha 
+          ; \dnt{\hasty{\Delta, \bhyp{x}{A}, \bhyp{y}{B}}{\epsilon}{b}{B}} \\
+        & = \lmor{\dnt{\Gamma \leq \Delta} ; \dnt{\hasty{\Delta}{\epsilon}{a}{A \otimes B}}}
+          ; \alpha
+          ; \dnt{\Gamma \leq \Delta} \otimes \dnt{A} \otimes \dnt{B}
+          ; \dnt{\hasty{\Delta, \bhyp{x}{A}, \bhyp{y}{B}}{\epsilon}{b}{B}} \\
+        & = \lmor{\dnt{\hasty{\Gamma}{\epsilon}{a}{A \otimes B}}}
+          ; \alpha
+          ; \dnt{\Gamma, \bhyp{x}{A}, \bhyp{y}{B} \leq \Delta, \bhyp{x}{A}, \bhyp{y}{B}}
+          ; \dnt{\hasty{\Delta, \bhyp{x}{A}, \bhyp{y}{B}}{\epsilon}{b}{B}} \\
+        & = \lmor{\dnt{\hasty{\Gamma}{\epsilon}{a}{A \otimes B}}}
+          ; \alpha
+          ; \dnt{\hasty{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{\epsilon}{b}{B}} \\
+        & = \dnt{\hasty{\Gamma}{\epsilon}{\letexpr{(x, y)}{a}{b}}{B}}
+      \end{aligned}
+    \end{equation}
+    \item \brle{case}: we have
+    \begin{equation}
+      \begin{aligned}
+        & \dnt{\Gamma \leq \Delta} ; \dnt{\hasty{\Delta}{\epsilon}{\caseexpr{a}{x}{s}{y}{t}}{B}} \\
+        & = \dnt{\Gamma \leq \Delta} 
+          ; \lmor{\dnt{\hasty{\Delta}{\epsilon}{a}{A}}}
+          ; \delta^{-1}
+          ; [\dnt{\hasty{\Delta, \bhyp{x}{A}}{\epsilon}{s}{B}}, 
+             \dnt{\hasty{\Delta, \bhyp{y}{A}}{\epsilon}{t}{B}}] \\
+        & = \lmor{\dnt{\Gamma \leq \Delta} ; \dnt{\hasty{\Gamma}{\epsilon}{a}{A}}}
+          ; \delta^{-1}
+          ; \\ & \qquad [
+              \dnt{\Gamma \leq \Delta} \otimes \dnt{A} 
+                ; \dnt{\hasty{\Delta, \bhyp{x}{A}}{\epsilon}{s}{C}},
+              \dnt{\Gamma \leq \Delta} \otimes \dnt{B} 
+                ; \dnt{\hasty{\Delta, \bhyp{y}{B}}{\epsilon}{t}{C}}
+             ] \\
+        & = \lmor{\dnt{\hasty{\Delta}{\epsilon}{a}{A}}}
+          ; \\ & \qquad [
+            \dnt{\Gamma, \bhyp{x}{A} \leq \Delta, \bhyp{x}{A}} 
+              ; \dnt{\hasty{\Delta, \bhyp{x}{A}}{\epsilon}{s}{C}},
+            \dnt{\Gamma, \bhyp{y}{B} \leq \Delta, \bhyp{y}{B}}
+              ; \dnt{\hasty{\Delta, \bhyp{y}{B}}{\epsilon}{t}{C}}
+           ] \\
+        & = \lmor{\dnt{\hasty{\Delta}{\epsilon}{a}{A}}}
+          ; [
+            \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{s}{C}},
+            \dnt{\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{t}{C}}
+           ]
+      \end{aligned}
+    \end{equation}
     \item \brle{op}, \brle{inl}, \brle{inr}: \TODO{this}
   \end{itemize}
-  Similarly, we can show weakening for regions $\haslb{\Gamma}{r}{\ms{L}}$ \ref{itm:lbwk} by
+  Similarly, we can show weakening for regions $\haslb{\Gamma}{r}{\ms{L}}$ \ref{itm:regwk} by
   induction on the typing derivation as follows:
   \begin{itemize}
     \item \brle{br}: \TODO{this}
@@ -7056,8 +7139,9 @@ We may now state our desired result as follows:
   \end{equation}
 \end{lemma}
 
-% \begin{proof}
-% \end{proof}
+\begin{proof}
+  \todo{this}
+\end{proof}
 
 % \begin{lemma}
 %   Given $\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}$, we have
