@@ -8390,6 +8390,7 @@ We may now state our desired result as follows:
         {\rseq{}{D_T}{\dnt{\ms{L}} +_R (\iota_l^{\dnt{\Gamma}} ; \alpha^+_{\Sigma_i\dnt{C_i}})}}
         {}}
     \end{aligned}
+    \label{eqn:dg-rhs}
   \end{equation}
   where $C_{1..k} = A_{1..k}$ and $C_{k+1..n} = B_{1..n-k}$. We note in particular that $\dnt{\ms{R}
   \leq \ms{R, K}}$ is up to isomorphism the left injection $\iota_l : \Sigma_i\dnt{A_i} \to
@@ -8400,10 +8401,103 @@ We may now state our desired result as follows:
   desired.
 \end{proof}
 
-\begin{figure}
-  \TODO{this} 
+\begin{figure} 
+  \begin{subfigure}[t]{.45\textwidth}
+    \centering
+    \begin{tikzpicture}
+      \node[] (R) at (0, 0) {$\dnt{\ms{R}}$};
+      \node[] (K) at (1, 0) {$\dnt{\ms{K}}$};
+      \node[dot] (dR) at (0, -0.75) {}; 
+      \node[dot] (dK) at (1, -1.25) {}; 
+      \node[box=1/0/2/0] (DT) at (0, -2.5) {\quad D_T \quad};
+      \node[box=1/0/3/0] (DS) at (2, -2.5) {\quad D_S \quad};
+      \node[dot] (dL) at (0.25, -3.5) {};
+      \node[] (L) at (1, -6) {$\dnt{\ms{L}}$};
+      \node[dot] (dR2) at (1.25, -3.5) {};
+      \coordinate[] (cupS) at (3, -3.5) {};
+      \coordinate[] (capS) at (3, -1) {};
+      \coordinate[] (cupT) at (3, -4) {};
+      \coordinate[] (capT) at (3, -0.5) {};
+      \wires{
+        R = { south = dR.north },
+        K = { south = dK.north },
+        dR = { south = DT.north.1 },
+        dK = { south = DS.north.1 },
+        DT = { south.1 = dL.west, south.2 = dR2.west },
+        DS = { south.1 = dL.east, south.2 = dR2.east, south.3 = cupS.west },
+        dL = { south = L.north },
+        dR2 = { south = cupT.west },
+        cupS = { east = capS.east },
+        capS = { west = dK.east },
+        cupT = { east = capT.east },
+        capT = { west = dR.east },
+      }{}
+    \end{tikzpicture}
+    \caption{$\rfix{D_G}$, with $D_G$ drawn as per the right of Eqn.~\ref{eqn:dg-rhs}}
+    \label{fig:rfix-dg}
+  \end{subfigure}
+  \quad
+  \begin{subfigure}[t]{.45\textwidth}
+    \centering
+    \begin{tikzpicture}
+      \node[] (R) at (0, 0) {$\dnt{\ms{R}}$};
+      \node[] (K) at (1, 0) {$\dnt{\ms{K}}$};
+      \node[dot] (dR) at (0.75, -2.5) {}; 
+      \coordinate[] (cR) at (0.25, -3) {};
+      \node[dot] (dR2) at (0.25, -3.25) {};
+      \node[dot] (dK) at (1.5, -1) {}; 
+      \node[box=1/0/2/0] (DT) at (0.25, -3.75) {\quad D_T \quad};
+      \node[box=1/0/3/0] (DS) at (1.5, -1.5) {\quad D_S \quad};
+      \coordinate[] (cL) at (2, -3.5) {};
+      \node[dot] (dL) at (1, -5.25) {};
+      \node[] (L) at (1, -6) {$\dnt{\ms{L}}$};
+      \coordinate[] (cupS) at (2.25, -2.05) {};
+      \coordinate[] (capS) at (2.25, -0.95) {};
+      \coordinate[] (cupT) at (1, -4.3) {};
+      \coordinate[] (capT) at (1, -3.2) {};
+      \wires{
+        R = { south = dR.west },
+        K = { south = dK.north },
+        dK = { south = DS.north.1 },
+        DS = { south.1 = cL.north, south.2 = dR.east, south.3 = cupS.west },
+        dR = { south = cR.north },
+        cR = { south = dR2.north },
+        dR2 = { south = DT.north.1 },
+        DT = { south.1 = dL.west, south.2 = cupT.west },
+        cL = { south = dL.east },
+        dL = { south = L.north },
+        cupS = { east = capS.east },
+        capS = { west = dK.east },
+        cupT = { east = capT.east },
+        capT = { west = dR2.east },
+      }{} 
+      \coordinate (dt0) at (-0.8, -3) {};
+      \coordinate (dt1) at (1.5, -3) {};
+      \coordinate (dt2) at (1.5, -4.5) {};
+      \coordinate (dt3) at (-0.8, -4.5) {};
+      \draw[red] (dt0) -- (dt1) -- (dt2) -- (dt3) -- (dt0);
+    \end{tikzpicture}
+    \caption{
+      Equivalent to \ref{fig:rfix-dg} by isotopy and associativity of the codiagonal. 
+      We highlight $\rfix{D_T}$, which is used in the next step.
+    }
+    \label{fig:rfix-isotopy}
+  \end{subfigure}
+  \begin{subfigure}[t]{\textwidth}
+    \caption{
+      $\envcop{\dnt{\Gamma}}{
+        \rfix{D_T}
+      }{
+        \rseq{}
+          {\rfix{D_S} ; \alpha^+_{\dnt{\ms{L}} + \Sigma_j\dnt{A_j}}}
+          {\envcop{\dnt{\Gamma}}{\pi_r}{\rfix{D_T}}}
+      }$. \\
+      Equivalent to \ref{fig:rfix-isotopy} by duplication of $\rfix{D_T}$.
+    }
+    \label{fig:rfix-lhs}
+  \end{subfigure}%
   \caption{
-    String diagram validating the soundness of \brle{cfg-fuse$_1$}
+    String diagrams validating the soundness of \brle{cfg-fuse$_1$}
     (Eqn.~\ref{eqn:where-fusion-1}), drawn in the co-Kleisli category induced by $\dnt{\Gamma}$
   } 
   \Description{}
