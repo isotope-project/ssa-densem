@@ -8484,6 +8484,56 @@ We may now state our desired result as follows:
     \label{fig:rfix-isotopy}
   \end{subfigure}
   \begin{subfigure}[t]{\textwidth}
+    \centering
+    \begin{tikzpicture}
+      \node[] (R) at (0, 0) {$\dnt{\ms{R}}$};
+      \node[] (K) at (1, 0) {$\dnt{\ms{K}}$};
+      \node[dot] (dT1) at (0.25, -3.25) {};
+      \node[dot] (dK) at (1.5, -1) {}; 
+      \node[box=1/0/3/0] (DS) at (1.5, -1.5) {\quad D_S \quad};
+      \node[box=1/0/2/0] (DT1) at (0.25, -3.75) {\quad D_T \quad};
+      \node[box=1/0/2/0] (DT2) at (2.5, -3.25) {\quad D_T \quad};
+      \coordinate[] (cL) at (1.5, -3.5) {};
+      \node[dot] (dL1) at (0.5, -4.75) {};
+      \node[dot] (dL2) at (1, -5.25) {};
+      \node[] (L) at (1, -6) {$\dnt{\ms{L}}$};
+      \coordinate[] (cupS) at (2.25, -2.05) {};
+      \coordinate[] (capS) at (2.25, -0.95) {};
+      \coordinate[] (cupT1) at (1, -4.3) {};
+      \coordinate[] (capT1) at (1, -3.2) {};
+      \coordinate[] (cupT2) at (3.2, -3.8) {};
+      \coordinate[] (capT2) at (3.2, -2.7) {};
+      \node[dot] (dT2) at (2.5, -2.75) {};
+      \wires{
+        R = { south = dT1.north },
+        K = { south = dK.north },
+        dK = { south = DS.north.1 },
+        DS = { south.1 = cL.north, south.2 = dT2.north, south.3 = cupS.west },
+        dT1 = { south = DT1.north },
+        DT1 = { south.1 = dL1.west, south.2 = cupT1.west },
+        cL = { south = dL2.east },
+        dL1 = { south = dL2.west },
+        dL2 = { south = L.north },
+        cupS = { east = capS.east },
+        capS = { west = dK.east },
+        cupT1 = { east = capT1.east },
+        capT1 = { west = dR2.east },
+        dT2 = { south = DT2.north },
+        DT2 = { south.1 = dL1.east, south.2 = cupT2.west },
+        cupT2 = { east = capT2.east },
+        capT2 = { west = dT2.east },
+      }{} 
+      \coordinate (dt10) at (-0.8, -3) {};
+      \coordinate (dt11) at (1.5, -3) {};
+      \coordinate (dt12) at (1.5, -4.5) {};
+      \coordinate (dt13) at (-0.8, -4.5) {};
+      \coordinate (dt20) at (1.5, -2.5) {};
+      \coordinate (dt21) at (3.8, -2.5) {};
+      \coordinate (dt22) at (3.8, -4) {};
+      \coordinate (dt23) at (1.5, -4) {};
+      \draw[red] (dt10) -- (dt11) -- (dt12) -- (dt13) -- (dt10);
+      \draw[red] (dt20) -- (dt21) -- (dt22) -- (dt23) -- (dt20);
+    \end{tikzpicture}
     \caption{
       $\envcop{\dnt{\Gamma}}{
         \rfix{D_T}
