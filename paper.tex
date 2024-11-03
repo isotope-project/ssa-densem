@@ -8257,12 +8257,12 @@ We may now state our desired result as follows:
 \end{figure}
 
 \begin{lemma}[\ms{where}-fusion]
-  The rewrite rules given in Equation~\ref{eqn:where-fusion-1} and Equation~\ref{eqn:where-fusion-2}
-  are sound.
+  The rewrite rules \brle{cfg-fuse$_1$} (Eqn.~\ref{eqn:where-fusion-1}) and \brle{cfg-fuse$_2$}
+  (Eqn.~\ref{eqn:where-fusion-2}) are sound.
   \label{lem:where-fusion}
 \end{lemma}
 \begin{proof}
-  We begin with Equation~\ref{eqn:where-fusion-1}. Let %
+  We begin with \brle{cfg-fuse$_1$}. Let %
   $\ms{R} = (\ell_j(A_j),)_j$, $\ms{K} = (\kappa_k(B_k),)_k$, %
   $S = (\wbranch{\kappa_i}{y_i}{s_i},)_i$,
   $T = (\wbranch{\ell_i}{x_i}{t_i},)_j$, and %
@@ -8289,39 +8289,39 @@ We may now state our desired result as follows:
         ]
         ; \delta^{-1} ; [\pi_r, \rfix{D_T}] \\
       & = \lmor{\entrymor{\Gamma}{r}{(\ms{L}, \ms{R})}}
-        ; \envcop{\dnt{\ms{R}}}
+        ; \envcop{\dnt{\Gamma}}
             { \\ & \qquad
               \rseq{}
                 {\pi_r ; \alpha^+_{\dnt{\ms{L}} + \Sigma_j\dnt{A_j}}}
-                {\envcop{\dnt{\ms{R}}}{\pi_r}{\rfix{D_T}}}
+                {\envcop{\dnt{\Gamma}}{\pi_r}{\rfix{D_T}}}
             }
             { \\ & \qquad
               \rseq{}
                 {\rfix{D_S} ; \alpha^+_{\dnt{\ms{L}} + \Sigma_j\dnt{A_j}}}
-                {\envcop{\dnt{\ms{R}}}{\pi_r}{\rfix{D_T}}}
+                {\envcop{\dnt{\Gamma}}{\pi_r}{\rfix{D_T}}}
             } \\
       & = \lmor{\entrymor{\Gamma}{r}{(\ms{L}, \ms{R})}}
-        ; \envcop{\dnt{\ms{R}}}
+        ; \envcop{\dnt{\Gamma}}
             { \\ & \qquad
               \rseq{}
                 {\alpha^{R+}_{\dnt{\ms{L}} + \Sigma_j\dnt{A_j}}}
-                {\envcop{\dnt{\ms{R}}}{\pi_r}{\rfix{D_T}}}
+                {\envcop{\dnt{\Gamma}}{\pi_r}{\rfix{D_T}}}
             }
             { \\ & \qquad
               \rseq{}
                 {\rfix{D_S} ; \alpha^+_{\dnt{\ms{L}} + \Sigma_j\dnt{A_j}}}
-                {\envcop{\dnt{\ms{R}}}{\pi_r}{\rfix{D_T}}}
+                {\envcop{\dnt{\Gamma}}{\pi_r}{\rfix{D_T}}}
             } \\
       & = \lmor{\haslb{\Gamma}{r}{\ms{L}, \ms{R}, \ms{K}}}
         ; \rseq{}
           {\alpha^{\ms{R}+}_{\dnt{\ms{L}} + (\dnt{R} + \Sigma_j\dnt{A_j})}}{
-            \envcop{\dnt{\ms{R}}}{\pi_r}{ \\ & \qquad
-              \envcop{\dnt{\ms{R}}}{
+            \envcop{\dnt{\Gamma}}{\pi_r}{ \\ & \qquad
+              \envcop{\dnt{\Gamma}}{
                 \rfix{D_T}
               }{
                 \rseq{}
                   {\rfix{D_S} ; \alpha^+_{\dnt{\ms{L}} + \Sigma_j\dnt{A_j}}}
-                  {\envcop{\dnt{\ms{R}}}{\pi_r}{\rfix{D_T}}}
+                  {\envcop{\dnt{\Gamma}}{\pi_r}{\rfix{D_T}}}
               }
             }
           } \\
@@ -8330,23 +8330,23 @@ We may now state our desired result as follows:
           ; \alpha^{\ms{R}+}_{\dnt{\ms{L}} + (\dnt{R} + \Sigma_j\dnt{A_j})}}
         ; \delta^{-1}
         ; \\ & \qquad [\pi_r, 
-            \envcop{\dnt{\ms{R}}}{
+            \envcop{\dnt{\Gamma}}{
               \rfix{D_T}
             }{
               \rseq{}
                 {\rfix{D_S} ; \alpha^+_{\dnt{\ms{L}} + \Sigma_j\dnt{A_j}}}
-                {\envcop{\dnt{\ms{R}}}{\pi_r}{\rfix{D_T}}}
+                {\envcop{\dnt{\Gamma}}{\pi_r}{\rfix{D_T}}}
             }
         ] \\
         & = \lmor{\entrymor{\Gamma}{r}{\ms{L}}}
         ; \delta^{-1}
         ; [\pi_r, 
-            \envcop{\dnt{\ms{R}}}{
+            \envcop{\dnt{\Gamma}}{
               \rfix{D_T}
             }{
               \rseq{}
                 {\rfix{D_S} ; \alpha^+_{\dnt{\ms{L}} + \Sigma_j\dnt{A_j}}}
-                {\envcop{\dnt{\ms{R}}}{\pi_r}{\rfix{D_T}}}
+                {\envcop{\dnt{\Gamma}}{\pi_r}{\rfix{D_T}}}
             }
         ] \\
     \end{aligned}
@@ -8355,35 +8355,60 @@ We may now state our desired result as follows:
   show that
   \begin{equation}
     \begin{aligned}
-      \rfix{D_G} &= \envcop{\dnt{\ms{R}}}{
+      \rfix{D_G} &= \envcop{\dnt{\Gamma}}{
         \rfix{D_T}
       }{
         \rseq{}
           {\rfix{D_S} ; \alpha^+_{\dnt{\ms{L}} + \Sigma_j\dnt{A_j}}}
-          {\envcop{\dnt{\ms{R}}}{\pi_r}{\rfix{D_T}}}
+          {\envcop{\dnt{\Gamma}}{\pi_r}{\rfix{D_T}}}
       }
     \end{aligned}
+    \label{eqn:dgdt}
   \end{equation}
-  We have by re-association and weakening that
+  We note that, by re-association and weakening, we have that
   \begin{equation}
     \begin{aligned}
       D_G 
-      & = \alpha^+_{\dnt{\ms{R}} + \dnt{\ms{K}}} ; [
+      & = \dnt{\Gamma} \otimes \alpha^+_{\dnt{\ms{R}} + \dnt{\ms{K}}} ; \delta^{-1} ; [
         \delta^{-1}_\Sigma ; [
-          \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, \ms{R}, \ms{K}}},
-          ; \alpha^+_{\dnt{\ms{L}} + \Sigma_j\dnt{C_j}}
+          \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, \ms{R}, \ms{K}}}
+          ; \alpha^+_{\dnt{\ms{L}} + \Sigma_j\dnt{C_j}},
         ]_i,
         D_S
       ] \\
-      & = \alpha^+_{\dnt{\ms{R}} + \dnt{\ms{K}}} ; [
+      & = \dnt{\Gamma} \otimes \alpha^+_{\dnt{\ms{R}} + \dnt{\ms{K}}} ; \delta^{-1} ; [
         D_T ; \dnt{\ms{L}} 
           + (\alpha^+_{\ms{R}} ; \dnt{\ms{R} \leq \ms{R, K}} ; \alpha^+_{\Sigma_i\dnt{C_i}}),
         D_S
-      ]
+      ] \\
+      & = \dnt{\Gamma} \otimes \alpha^+_{\dnt{\ms{R}} + \dnt{\ms{K}}} ; \delta^{-1} ; [
+        D_T ; \dnt{\ms{L}} 
+          + (\iota_{l, \Sigma_i\dnt{A_i} + \Sigma_i\dnt{B_i}} ; \alpha^+_{\Sigma_i\dnt{C_i}}),
+        D_S
+      ] \\
+      & = \rseq{}{\alpha^{+\dnt{\Gamma}}_{\ms{R} + \ms{K}}}{\envcop{\dnt{\Gamma}}
+        {\rseq{}{D_T}{\dnt{\ms{L}} +_R (\iota_l^{\dnt{\Gamma}} ; \alpha^+_{\Sigma_i\dnt{C_i}})}}
+        {}}
     \end{aligned}
   \end{equation}
-  where $C_{1..k} = A_{1..k}$ and $C_{k+1..n} = B_{1..n-k}$. We have that
+  where $C_{1..k} = A_{1..k}$ and $C_{k+1..n} = B_{1..n-k}$. We note in particular that $\dnt{\ms{R}
+  \leq \ms{R, K}}$ is up to isomorphism the left injection $\iota_l : \Sigma_i\dnt{A_i} \to
+  \Sigma_i\dnt{A_i} + \Sigma_i\dnt{B_i}$. We can now derive Equation~\ref{eqn:dgdt}, and hence the
+  soundness of \brle{cfg-fuse$_1$}, via the string-diagrams in
+  Figure~\ref{fig:string-diagram-fusion}, which are drawn in the co-Kleisli category inducted by
+  $\dnt{\Gamma}$. \brle{cfg-fuse$_2$} then follows by repeated application of \brle{cfg-fuse$_1$}, as
+  desired.
 \end{proof}
+
+\begin{figure}
+  \TODO{this} 
+  \caption{
+    String diagram validating the soundness of \brle{cfg-fuse$_1$}
+    (Eqn.~\ref{eqn:where-fusion-1}), drawn in the co-Kleisli category induced by $\dnt{\Gamma}$
+  } 
+  \Description{}
+  \label{fig:string-diagram-fusion}
+\end{figure}
 
 \subsection{Completeness}
 
