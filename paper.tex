@@ -1468,7 +1468,7 @@ summarized in Figure~\ref{fig:ssa-unary-let-expr}:
       {\hasty{\Gamma, \bhyp{z}{C}}{\epsilon}{d}{D}}
       {\tmeq{\Gamma}{\epsilon}
         {\letexpr{z}{(\letexpr{(x, y)}{e}{c})}{d}}
-        {\letexpr{(x, y)}{e}{\letexpr{z}{c}{d}}}{C}}
+        {\letexpr{(x, y)}{e}{\letexpr{z}{c}{d}}}{D}}
     \\
     \prftree[r]{\rle{let$_1$-inl}}
       {\hasty{\Gamma}{\epsilon}{a}{A}}
@@ -7769,9 +7769,72 @@ We may now state our desired result as follows:
     \end{align*}
     as desired. The cases \brle{let$_1$-inl}, \brle{let$_1$-inr}, and \brle{let$_1$-abort} are
     analogous.
-    \item \brle{let$_1$-let$_1$}: \TODO{this}
-    \item \brle{let$_1$-pair}: \TODO{this}
-    \item \brle{let$_1$-let$_2$}: \TODO{this}
+    \item \brle{let$_1$-let$_1$}: we have that
+    \begin{align*}
+      & \dnt{\hasty{\Gamma}{\epsilon}{\letexpr{y}{(\letexpr{x}{a}{b}}{c})}{C}} \\
+      & = \lmor{\lmor{\dnt{\hasty{\Gamma}{\epsilon}{a}{A}}} 
+        ; \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{b}{B}}}
+        ; \dnt{\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{c}{C}} \\
+      & = \lmor{\dnt{\hasty{\Gamma}{\epsilon}{a}{A}}}
+        ; \lmor{\dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{b}{B}}}
+        ; \pi_l \otimes \dnt{B}
+        ; \dnt{\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{c}{C}} \\
+      & = \lmor{\dnt{\hasty{\Gamma}{\epsilon}{a}{A}}}
+      ; \lmor{\dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{b}{B}}}
+      ; \dnt{\hasty{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{\epsilon}{c}{C}} \\
+      & = \dnt{\hasty{\Gamma}{\epsilon}{\letexpr{x}{a}{\letexpr{y}{b}{c}}}{C}}
+    \end{align*}
+    as desired.
+    \item \brle{let$_1$-pair}: we have that
+    \begin{align*}
+      & \dnt{\hasty{\Gamma}{\epsilon}{\letexpr{x}{a}{\letexpr{y}{b}{\letexpr{z}{(x, y)}{c}}}}{C}} \\
+      & = \lmor{\dnt{\hasty{\Gamma}{\epsilon}{a}{A}}}
+        ; \lmor{\dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{b}{B}}}
+        ; \\ & \qquad 
+        \lmor{\dnt{\hasty{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{\epsilon}{(x, y)}{A \otimes B}}}
+        ; \dnt{\hasty{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}, \bhyp{z}{A \otimes B}}{\epsilon}{c}{C}} \\
+      & = \lmor{\dnt{\hasty{\Gamma}{\epsilon}{a}{A}}}
+        ; \lmor{\pi_l ; \dnt{\hasty{\Gamma}{\epsilon}{b}{B}}}
+        ; \lmor{\alpha ; \pi_r}
+        ; (\pi_l ; \pi_l) \otimes (\dnt{A} \otimes \dnt{B})
+        ; \dnt{\hasty{\Gamma, \bhyp{z}{A \otimes B}}{\epsilon}{c}{C}} \\
+      & = \lmor{\dnt{\hasty{\Gamma}{\epsilon}{a}{A}}}
+        ; \lmor{\lmor{\pi_l ; \dnt{\hasty{\Gamma}{\epsilon}{b}{B}}} ; \alpha ; \pi_r}
+        ; \pi_l \otimes (\dnt{A} \otimes \dnt{B})
+        ; \dnt{\hasty{\Gamma, \bhyp{z}{A \otimes B}}{\epsilon}{c}{C}} \\
+      & = \lmor{
+        \lmor{\dnt{\hasty{\Gamma}{\epsilon}{a}{A}}}
+        ; \lmor{\pi_l ; \dnt{\hasty{\Gamma}{\epsilon}{b}{B}}}
+        ; \alpha ; \pi_r
+        } 
+        ; \dnt{\hasty{\Gamma, \bhyp{z}{A \otimes B}}{\epsilon}{c}{C}} \\
+      & = \lmor{
+          \dmor{\Gamma} 
+          ; \dnt{\hasty{\Gamma}{\epsilon}{a}{A}} \ltimes \dnt{\hasty{\Gamma}{\epsilon}{b}{B}}
+        } 
+        ; \dnt{\hasty{\Gamma, \bhyp{z}{A \otimes B}}{\epsilon}{c}{C}} \\
+      & = \dnt{\hasty{\Gamma}{\epsilon}{\letexpr{z}{(a, b)}{c}}{C}}
+    \end{align*}
+    as desired.
+    \item \brle{let$_1$-let$_2$}: we have that
+    \begin{align*}
+      & \dnt{\hasty{\Gamma}{\epsilon}{\letexpr{z}{(\letexpr{(x, y)}{e}{c})}{d}}{D}} \\
+      & = \lmor{\lmor{\dnt{\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}}
+          ; \alpha
+          ; \dnt{\hasty{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{\epsilon}{c}{C}}}
+        ; \dnt{\hasty{\Gamma, \bhyp{z}{C}}{\epsilon}{d}{D}} \\
+      & = \lmor{\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
+        ; \alpha
+        ; \lmor{\dnt{\hasty{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{\epsilon}{c}{C}}}
+        ; (\pi_l ; \pi_l) \otimes \dnt{\ms{C}}
+        ; \dnt{\hasty{\Gamma, \bhyp{z}{C}}{\epsilon}{d}{D}} \\
+      & = \lmor{\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
+      ; \alpha
+      ; \lmor{\dnt{\hasty{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{\epsilon}{c}{C}}}
+      ; \dnt{\hasty{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}, \bhyp{z}{C}}{\epsilon}{d}{D}} \\
+      & = \dnt{\hasty{\Gamma}{\epsilon}{\letexpr{(x, y)}{e}{\letexpr{z}{c}{d}}}{D}}
+    \end{align*}
+    as desired.
     \item \brle{let$_1$-case}: follows from the properties of the coproduct; in particular, we have
     that
     \begin{align*}
@@ -7821,7 +7884,26 @@ We may now state our desired result as follows:
       \\ & \qquad \dnt{\hasty{\Gamma, \bhyp{z}{C}}{\epsilon}{d}{D}}
       \\ &= \dnt{\hasty{\Gamma}{\epsilon}{\letexpr{z}{(\caseexpr{e}{x}{a}{y}{b})}{d}}{D}}
     \end{align*}
-    \item \brle{let$_2$-bind}: \TODO{this}
+    \item \brle{let$_2$-bind}: we have
+    \begin{align*}
+      & \dnt{\hasty{\Gamma}{\epsilon}{\letexpr{z}{e}{\letexpr{(x, y)}{z}{c}}}{C}} \\
+      & = \lmor{\dnt{\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}}
+        ; \lmor{\dnt{\hasty{\Gamma, \bhyp{z}{A \otimes B}}{\epsilon}{z}{A \otimes B}}}
+        ; \alpha
+        ; \dnt{\hasty{\Gamma, \bhyp{z}{A \otimes B}, \bhyp{x}{A}, \bhyp{y}{B}}{\epsilon}{c}{C}} \\
+      & = \lmor{\dnt{\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}}
+        ; \lmor{\pi_r}
+        ; \pi_l \otimes (\dnt{A} \otimes \dnt{B})
+        ; \alpha
+        ; \dnt{\hasty{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{\epsilon}{c}{C}} \\
+      & = \lmor{\lmor{\dnt{\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}} ; \pi_r}
+        ; \alpha
+        ; \dnt{\hasty{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{\epsilon}{c}{C}} \\
+      & = \lmor{\dnt{\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}}
+        ; \alpha
+        ; \dnt{\hasty{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{\epsilon}{c}{C}} \\
+      & = \dnt{\hasty{\Gamma}{\epsilon}{\letexpr{(x, y)}{e}{c}}{C}}
+    \end{align*}
     \item \brle{let$_2$-$\eta$}: follows from the properties of the product; in particular,
     we have that
     \begin{align*}
@@ -7873,7 +7955,6 @@ We may now state our desired result as follows:
   We now proceed to tackle the equational theory for regions $r$ in the same manner. In particular,
   we proceed by rule induction as follows:
   \begin{itemize}[leftmargin=*]
-    \item ...
     \item \brle{cfg-$\beta_1$}: 
     Define $P = \dnt{\hasty{\Gamma}{\bot}{a}{A_k}}$, %
            $L = \loopmor{\Gamma}{(\wbranch{\ell_i}{x_i}{t_i},)_i}{\ms{L}}$ and %
