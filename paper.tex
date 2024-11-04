@@ -3838,6 +3838,22 @@ We glue these together in the obvious manner to get the semantics for a where-bl
   \item Otherwise, compute $\loopmor{\Gamma}{(\wbranch{\ell_i}{x_i}{t_i},)_i}{\ms{L}}$ in a loop,
   passing in a fresh copy of the context each time. This is implemented with $\ms{rfix}$.
 \end{itemize}
+This simplifies significantly in the case of a \ms{where}-block defining just a single label,
+yielding
+\begin{equation}
+  \dnt{\haslb{\Gamma}{\where{r}{\wbranch{\ell}{x}{s}}}{\ms{L}}}
+  = \lmor{\dnt{\haslb{\Gamma}{r}{\ms{L}, \ell(A)}}}
+  ; \delta^{-1}
+  ; [\pi_r, \rfix{\dnt{\haslb{\Gamma, \bhyp{x}{A}}{s}{\ms{L}, \ell(A)}}}]
+\end{equation}
+In particular, it is a consequence of label weakening (Lemma~\ref{lem:wk}) that, in the case where
+$s$ does not call $\ell$, this simplifies further to
+\begin{equation}
+  \dnt{\haslb{\Gamma}{\where{r}{\wbranch{\ell}{x}{s}}}{\ms{L}}}
+  = \lmor{\dnt{\haslb{\Gamma}{r}{\ms{L}, \ell(A)}}}
+  ; \delta^{-1}
+  ; [\pi_r, \dnt{\haslb{\Gamma, \bhyp{x}{A}}{s}{\ms{L}}}]
+\end{equation}
 
 \begin{figure}
   \begin{equation*}
@@ -3922,6 +3938,7 @@ can then be used to derive the following weakening lemmas:
       $
       \label{itm:lbsubstwk}
   \end{enumerate}
+  \label{lem:wk}
 \end{lemma}
 \begin{proof}
   See Appendix~\ref{proof:weakening}
@@ -5869,13 +5886,6 @@ We may now state our desired result as follows:
   \end{itemize}
 \end{proof}
 
-\TODO{this is useful because of \ms{where}-lore}
-
-\TODO{$\dnt{\haslb{\Gamma, \bhyp{y}{A}}{[\ell/\kappa]s}{\ms{L}}} 
-  = \rfix{S ; [\ms{id}, \iota_r]}$}
-
-\TODO{insert proof of ``$\delta$ lemma?''}
-
 \section{Proofs}
 
 
@@ -6883,28 +6893,6 @@ We may now state our desired result as follows:
   Weakening for substitutions \ref{itm:substwk} and label substitututions \ref{itm:lbsubstwk}
   then follow by a trivial induction.
 \end{proof}
-
-\TODO{immediate consequences of (label) weakening}
-
-\TODO{text}
-
-\begin{equation}
-  \dnt{\haslb{\Gamma}{\where{r}{\wbranch{\ell}{x}{s}}}{\ms{L}}}
-  = \lmor{\dnt{\haslb{\Gamma}{r}{\ms{L}, \ell(A)}}}
-  ; \delta^{-1}
-  ; [\pi_r, \rfix{\dnt{\haslb{\Gamma, \bhyp{x}{A}}{s}{\ms{L}, \ell(A)}}}]
-\end{equation}
-
-\TODO{in particular, if $\haslb{\Gamma, \bhyp{x}{A}}{s}{\ms{L}}$}
-
-\begin{equation}
-  \dnt{\haslb{\Gamma}{\where{r}{\wbranch{\ell}{x}{s}}}{\ms{L}}}
-  = \lmor{\dnt{\haslb{\Gamma}{r}{\ms{L}, \ell(A)}}}
-  ; \delta^{-1}
-  ; [\pi_r, \dnt{\haslb{\Gamma, \bhyp{x}{A}}{s}{\ms{L}}}]
-\end{equation}
-
-\TODO{segue}
 
 \begin{lemma}[Substitution Projection]
   For $\issubst{\gamma}{\Gamma}{\Delta}$, $\ms{eff}(\Delta) = \bot$ and $\Delta(x) = A$, we have
@@ -8173,7 +8161,7 @@ We may now state our desired result as follows:
         = \lmor{R} ; \delta^{-1} ; 
           [\ms{id}, \rfix{S ; [\ms{id}, \iota_r]}] \\
       & = \lmor{R} ; \delta^{-1} ; 
-      [\ms{id}, \rfix{\dnt{\haslb{\Gamma, \bhyp{y}{A}}{[\ell/\kappa]s}{\ms{L}}}}]
+      [\ms{id}, \rfix{\dnt{\haslb{\Gamma, \bhyp{y}{A}}{[\ell/\kappa]s}{\ms{L}, \ell(A)}}}]
         = \dnt{\haslb{\Gamma}{\where{r}{\wbranch{\ell}{y}{[\ell/\kappa]s}}}{\ms{L}}}
       \end{aligned}
     \end{equation}
