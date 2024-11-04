@@ -1428,7 +1428,6 @@ summarized in Figure~\ref{fig:ssa-unary-let-expr}:
 \end{itemize}
 
 \begin{figure}
-  \TODO{forgot \brle{let$_1$-pair}...}
   \begin{gather*}
     \prftree[r]{\rle{let$_1$-$\beta$}}
       {\hasty{\Gamma}{\bot}{a}{A}}
@@ -1443,7 +1442,8 @@ summarized in Figure~\ref{fig:ssa-unary-let-expr}:
       {\isop{f}{A}{B}{\epsilon}}
       {\hasty{\Gamma}{\epsilon}{a}{A}}
       {\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{c}{C}}
-      {\tmeq{\Gamma}{\epsilon}{\letexpr{y}{f\;a}{c}}{\letexpr{x}{a}{\letexpr{f\;x}{y}{c}}}{C}}
+      {\tmeq{\Gamma}{\epsilon}{\letexpr{y}{f\;a}{c}}
+      {\letexpr{x}{a}{\letexpr{y}{f\;x}{c}}}{C}}
     \\
     \prftree[r]{\rle{let$_1$-let$_1$}}
       {\hasty{\Gamma}{\epsilon}{a}{A}}
@@ -1452,6 +1452,15 @@ summarized in Figure~\ref{fig:ssa-unary-let-expr}:
       {\tmeq{\Gamma}{\epsilon}
         {\letexpr{y}{(\letexpr{x}{a}{b})}{c}}
         {\letexpr{x}{a}{\letexpr{y}{b}{c}}}{C}}
+    \\ 
+    \prftree[r]{\rle{let$_1$-pair}}
+      {\hasty{\Gamma}{\epsilon}{a}{A}}
+      {\hasty{\Gamma}{\epsilon}{b}{B}}
+      {\hasty{\Gamma, \bhyp{z}{A \otimes B}}{\epsilon}{c}{C}}
+      {\tmeq{\Gamma}{\epsilon}
+        {\letexpr{z}{(a, b)}{c}}
+        {\letexpr{x}{a}{
+          \letexpr{y}{b}{\letexpr{z}{(x, y)}{c}}}}{C}}
     \\
     \prftree[r]{\rle{let$_1$-let$_2$}}
       {\hasty{\Gamma}{\epsilon}{e}{A \times B}}
@@ -1639,9 +1648,10 @@ analogous to those for unary \ms{let}-expressions:
   to pull out nested subexpressions of the bound value of a \ms{let}-statement into their own
   unary \ms{let}-statement
 \end{itemize}
-Just like for expressions, binary \ms{let}-statements and \ms{case}-statements need only the obvious
+Similarly to expressions, binary \ms{let}-statements and \ms{case}-statements need only the obvious
 $\beta$ rule and binding rule, with all the interactions with other constructors derivable; these
-rules are given in Figure~\ref{fig:ssa-reg-let2-case-expr}.
+rules are given in Figure~\ref{fig:ssa-reg-let2-case-expr}. Note in particular that $\eta$-rules are
+not necessary, as these are derivable from binding and the $\eta$-rules for expressions.
 
 \begin{figure}
   \begin{gather*}
@@ -7728,6 +7738,40 @@ We may now state our desired result as follows:
     \item \brle{initial}, \brle{terminal}: both of these follow trivially from the universal
     property of the initial/terminal object, respectively.
     \item \brle{let$_1$-$\beta$}: this follows directly from Corollary~\ref{corr:single-subst}
+    \item \brle{let$_1$-$\eta$}: we have
+    \begin{align*}
+      & \dnt{\hasty{\Gamma}{\epsilon}{\letexpr{x}{a}{x}}{A}} \\
+      & = \dmor{\dnt{\Gamma}} 
+        ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{a}{A}}
+        ; \dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{x}{A}} \\
+      & = \dmor{\dnt{\Gamma}} 
+      ; \dnt{\Gamma} \otimes \dnt{\hasty{\Gamma}{\epsilon}{a}{A}}
+      ; \pi_r \\
+      &= \dnt{\hasty{\Gamma}{\epsilon}{a}{A}}
+    \end{align*}
+    as desired.
+    \item \brle{let$_1$-op}: we have
+    \begin{align*}
+      & \dnt{\hasty{\Gamma}{\epsilon}{\letexpr{x}{a}{\letexpr{y}{f\;x}{c}}}{C}} \\
+      & = \lmor{\dnt{\hasty{\Gamma}{\epsilon}{a}{A}}}
+        ; \lmor{\dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{f\;x}{B}}}
+        ; \dnt{\hasty{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{\epsilon}{c}{C}} \\
+      & = \lmor{\dnt{\hasty{\Gamma}{\epsilon}{a}{A}}}
+        ; \lmor{\pi_r ; \dnt{f}}
+        ; \pi_l \otimes \dnt{B}
+        ; \dnt{\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{c}{C}} \\
+      & = \lmor{
+            \lmor{\dnt{\hasty{\Gamma}{\epsilon}{a}{A}}} ; \pi_r ; \dnt{f}
+          } ; \dnt{\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{c}{C}} \\
+      & = \lmor{\dnt{\hasty{\Gamma}{\epsilon}{a}{A}} ; \dnt{f}}
+        ; \dnt{\hasty{\Gamma, \bhyp{y}{B}}{\epsilon}{c}{C}} \\
+      & = \dnt{\hasty{\Gamma}{\epsilon}{\letexpr{y}{f\;a}{c}}{C}}
+    \end{align*}
+    as desired. The cases \brle{let$_1$-inl}, \brle{let$_1$-inr}, and \brle{let$_1$-abort} are
+    analogous.
+    \item \brle{let$_1$-let$_1$}: \TODO{this}
+    \item \brle{let$_1$-pair}: \TODO{this}
+    \item \brle{let$_1$-let$_2$}: \TODO{this}
     \item \brle{let$_1$-case}: follows from the properties of the coproduct; in particular, we have
     that
     \begin{align*}
@@ -7777,6 +7821,7 @@ We may now state our desired result as follows:
       \\ & \qquad \dnt{\hasty{\Gamma, \bhyp{z}{C}}{\epsilon}{d}{D}}
       \\ &= \dnt{\hasty{\Gamma}{\epsilon}{\letexpr{z}{(\caseexpr{e}{x}{a}{y}{b})}{d}}{D}}
     \end{align*}
+    \item \brle{let$_2$-bind}: \TODO{this}
     \item \brle{let$_2$-$\eta$}: follows from the properties of the product; in particular,
     we have that
     \begin{align*}
@@ -7824,15 +7869,11 @@ We may now state our desired result as follows:
       = \dnt{\hasty{\Gamma}{\epsilon}{e}{A + B}} 
     \end{align*}
   \end{itemize}
-  All the other rules can be derived trivially from string diagrammatic reasoning: once all the
-  definitions are unfolded, both sides of rule are obviously the same diagram. These diagrams are
-  given in Figure~\ref{fig:expr-diagrams}.
   %
   We now proceed to tackle the equational theory for regions $r$ in the same manner. In particular,
   we proceed by rule induction as follows:
   \begin{itemize}[leftmargin=*]
-    \item \brle{let$_1$-$\beta$}, \brle{let$_1$-case}, \brle{case-inl}, \brle{case-inr}: proved
-    analgously to the corresponding rules for expressions
+    \item ...
     \item \brle{cfg-$\beta_1$}: 
     Define $P = \dnt{\hasty{\Gamma}{\bot}{a}{A_k}}$, %
            $L = \loopmor{\Gamma}{(\wbranch{\ell_i}{x_i}{t_i},)_i}{\ms{L}}$ and %
@@ -8237,24 +8278,8 @@ We may now state our desired result as follows:
     \end{equation}
     as desired.
   \end{itemize}
-  Analogously to expressions, all the other rules can be derived trivially from string diagrammatic
-  reasoning: once all the definitions are unfolded, both sides of rule are obviously the same
-  diagram. Some examples are pictured in Figure~\ref{fig:reg-diagrams}.
+  All other cases are analogous to those for expressions, and so omitted.
 \end{proof}
-
-\begin{figure}
-  \TODO{this}
-  \caption{String diagrams for the equational theory of expressions}
-  \Description{}
-  \label{fig:expr-diagrams}
-\end{figure}
-
-\begin{figure}
-  \TODO{this}
-  \caption{String diagrams for the equational theory of regions}
-  \Description{}
-  \label{fig:reg-diagrams}
-\end{figure}
 
 \begin{lemma}[\ms{where}-fusion]
   The rewrite rules \brle{cfg-fuse$_1$} (Eqn.~\ref{eqn:where-fusion-1}) and \brle{cfg-fuse$_2$}
