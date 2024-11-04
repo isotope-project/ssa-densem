@@ -247,8 +247,6 @@
 
 \maketitle
 
-\TODO{formalization pointers for theorems}
-
 \section{Introduction}
 
 Static single assignment form, or SSA form, has been the dominant compiler intermediate
@@ -1125,7 +1123,13 @@ We can now state weakening formally as follows:
   \end{enumerate}
 \end{lemma}
 \begin{proof}
-  \todo{pointer to formalization?}
+  These are formalized as:
+  \begin{enumerate}[label=(\alph*)]
+    \item \texttt{Term.Wf.wk} in \texttt{Typing/Term/Basic.lean}
+    \item \texttt{Region.Wf.wk} in \texttt{Typing/Region/Basic.lean}
+    \item Follows from \texttt{Term.Subst.Wf.comp} in \texttt{Typing/Term/Subst.lean}
+    \item Follows from \texttt{Region.Subst.Wf.vsubst} in \texttt{Typing/Region/LSubst.lean}
+  \end{enumerate}
 \end{proof}
 
 If we look at the proof of variable weakening, we might arrive at the alternate statement that all
@@ -1200,7 +1204,13 @@ is as follows:
   \end{enumerate}
 \end{lemma}
 \begin{proof}
-  \todo{pointer to formalization?}
+  These are formalized as:
+  \begin{enumerate}[label=(\alph*)]
+    \item \texttt{Term.Wf.subst} in \texttt{Typing/Term/Subst.lean}
+    \item \texttt{Region.Wf.vsubst} in \texttt{Typing/Region/VSubst.lean}
+    \item \texttt{Term.Subst.Wf.comp} in \texttt{Typing/Term/Subst.lean}
+    \item \texttt{Region.Subst.Wf.vsubst} in \texttt{Typing/Region/LSubst.lean}
+  \end{enumerate}
 \end{proof}
 Note in particular that this allows us to take the \emph{composition}
 $\issubst{[\gamma']\gamma}{\Gamma'}{\Delta}$ of substitutions $\issubst{\gamma'}{\Gamma'}{\Gamma}$
@@ -1245,6 +1255,13 @@ pointwise. This allows us to state \emph{label substitution} as follows:
       \implies \lbsubst{\Gamma}{[\sigma]\kappa}{\ms{K}}{\ms{J}}$
   \end{enumerate}
 \end{lemma}
+\begin{proof}
+  These are formalized as:
+  \begin{enumerate}[label=(\alph*)]
+    \item \texttt{Region.Wf.lsubst} in \texttt{Typing/Region/LSubst.lean}
+    \item \texttt{Region.Subst.Wf.comp} in \texttt{Typing/Region/LSubst.lean}
+  \end{enumerate}
+\end{proof}
 
 We may similarly define left and right extensions $\lbsubst{\Gamma}{\lupg{\sigma}_{\ms{K}}}{\ms{L},
 \ms{J}}{\ms{K}, \ms{J}}$ and $\lbsubst{\Gamma}{\rupg{\sigma}_{\ms{K}}}{\ms{L}, \ms{J}}{\ms{K},
@@ -2241,20 +2258,20 @@ We can now begin to investigate the metatheoretic properties of our equational t
 sanity check, we can verify that weakening, label-weakening, and loosening of effects all respect
 our equivalence relation, as stated in the following lemma:
 \begin{lemma}[Weakening (Rewriting)]
-  Given $\Gamma \leq \Delta$, $\epsilon \leq \epsilon'$, we have that
+  Given $\Gamma \leq \Delta$, $\ms{L} \leq \ms{K}$, and $\epsilon \leq \epsilon'$, we have that
   \begin{enumerate}[label=(\alph*)]
     \item $\tmeq{\Delta}{\epsilon}{a}{a'}{A} \implies \tmeq{\Gamma}{\epsilon'}{a}{a'}{A}$
-    \item $\lbeq{\Delta}{r}{r'}{\ms{L}} \implies \lbeq{\Gamma}{r}{r'}{\ms{L}}$
-    \item $\tmseq{\gamma}{\gamma'}{\Delta}{\Xi} 
-      \implies \tmseq{\gamma}{\gamma'}{\Gamma}{\Xi}$ and
-      $\tmseq{\gamma}{\gamma'}{\Xi}{\Gamma}\
-      \implies \tmseq{\sigma}{\sigma'}{\Xi}{\Delta}$
-    \item $\lbseq{\sigma}{\sigma'}{\Delta}{\ms{L}}{\ms{K}}
-      \implies \lbseq{\sigma}{\sigma'}{\Gamma}{\ms{L}}{\ms{K}}$
+    \item $\lbeq{\Delta}{r}{r'}{\ms{L}} \implies \lbeq{\Gamma}{r}{r'}{\ms{L}'}$
   \end{enumerate}
 \end{lemma}
 \begin{proof}
-  \todo{formalization pointer?}
+  These are formalized as:
+  \begin{enumerate}[label=(\alph*)]
+    \item \texttt{Term.InS.wk_congr} and \texttt{Term.InS.wk_eff_congr} in 
+    \texttt{Rewrite/Term/Setoid.lean}
+    \item \texttt{Region.InS.vwk_congr} and \texttt{Region.InS.lwk_congr} in
+    \texttt{Rewrite/Region/Setoid.lean}
+  \end{enumerate}
 \end{proof}
 In particular, note that this lemma uses an equivalence relation on substitutions and
 label-substitutions: this is just the obvious pointwise extension of the equivalence relation on
@@ -2275,6 +2292,15 @@ label-substitution both respect these equivalences, in the following precise sen
       \implies \lbseq{[\gamma]\sigma}{[\gamma']\sigma'}{\Gamma}{\ms{L}}{\ms{K}}$
   \end{enumerate}
 \end{lemma}
+\begin{proof}
+  These are formalized as:
+  \begin{enumerate}[label=(\alph*)]
+    \item \texttt{Term.InS.subst_congr} in \texttt{Rewrite/Term/Setoid.lean}
+    \item \texttt{Region.InS.vsubst_congr} in \texttt{Rewrite/Region/Setoid.lean}
+    \item \texttt{Term.Subst.InS.comp_congr} in \texttt{Rewrite/Term/Setoid.lean}
+    \item \texttt{Region.Subst.InS.vsubst_congr} in \texttt{Rewrite/Region/LSubst.lean}
+  \end{enumerate}
+\end{proof}
 \begin{lemma}[Congruence (Label Substitution)]
   Given $\lbseq{\sigma}{\sigma'}{\Gamma}{\ms{L}}{\ms{K}}$, we have that
   \begin{enumerate}[label=(\alph*)]
@@ -2283,6 +2309,13 @@ label-substitution both respect these equivalences, in the following precise sen
       \implies \lbseq{[\sigma]\kappa}{[\sigma']\kappa'}{\Gamma}{\ms{K}}{\ms{J}}$
   \end{enumerate}
 \end{lemma}
+\begin{proof}
+  These are formalized as:
+  \begin{enumerate}[label=(\alph*)]
+    \item \texttt{Region.InS.lsubst_congr} in \texttt{Rewrite/Region/LSubst.lean}
+    \item \texttt{Region.LSubst.InS.comp_congr} in \texttt{Rewrite/Region/LSubst.lean}
+  \end{enumerate}
+\end{proof}
 This means, in particular, that, substitution and label-substitution are well-defined operators on
 equivalence classes of terms, which will come in handy later as we set out to prove completeness
 in Section~\ref{ssec:completeness}.
@@ -3916,6 +3949,9 @@ semantics, or, more formally:
   \end{enumerate}
   \label{thm:rewriting}
 \end{theorem}
+\begin{proof}
+  By a trivial induction, since our semantics is compositional
+\end{proof}
 
 This result allows us to safely perform peephole rewrites which we can indepedently prove
 semantically valid, including on potentially impure operations. However, for pure substitutions, it
@@ -4213,7 +4249,7 @@ $$
 $$
 which can be done by a relatively straightforward induction, implying, since $[\cdot]$ is injective
 w.r.t. our equational theory for pure contexts, the following theorem:
-\begin{theorem}[name=Completeness (Expressions), label=completenessexpr]
+\begin{theorem}[name=Completeness (Expressions), restate=completenessexpr]
   We have that, for all pure $\ms{eff}(\Gamma) = \bot$,
   $$
     \tmeq{\Gamma}{\epsilon}{e}{e'}{A} 
@@ -4223,6 +4259,9 @@ w.r.t. our equational theory for pure contexts, the following theorem:
   In particular, this implies that $\ms{Th}(\cdot)$ is the initial \isotopessa{} expression model
   \label{thm:complete-expr}
 \end{theorem}
+\begin{proof}
+  See Appendix~\ref{proof:complete-expr}
+\end{proof}
 
 \subsection{Regions}
 
@@ -4323,7 +4362,7 @@ by a relatively straightforward induction. A much more tedious induction is requ
 \end{equation*}
 since the case for \ms{where}-statements is particularly complex. However, after this point, we're
 essentially done, and can state our completeness theorem as follows:
-\begin{theorem}[name=Completeness (Regions), label=completenessregions]
+\begin{theorem}[name=Completeness (Regions), restate=completenessregions]
   We have that, for all pure $\ms{eff}(\Gamma) = \bot$,
   $$
     \lbeq{\Gamma}{r}{r'}{\ms{L}} 
@@ -4333,6 +4372,9 @@ essentially done, and can state our completeness theorem as follows:
   In particular, this implies that $\ms{Th}(\cdot, \cdot)$ is the initial \isotopessa{} model.
   \label{thm:complete-reg}
 \end{theorem}
+\begin{proof}
+  See Appendix~\ref{proof:complete-reg}
+\end{proof}
 
 \section{Concrete Models}
 
@@ -8662,11 +8704,55 @@ We may now state our desired result as follows:
 
 \subsection{Completeness}
 
-\TODO{seq is valid}
+\completenessexpr*
 
-\TODO{fixpoint is valid}
+\label{proof:complete-expr}
 
-\TODO{completeness formalization explanation}
+\begin{proof}
+  We begin by showing $\ms{Th}^\otimes(\Gamma)$ is an \isotopessa{} expression model by validating
+  all the equations for a distributive Freyd category. These are formalized as follows:
+  \begin{itemize}
+    \item $\ms{Th}^\otimes(\Gamma)$ is a category: formalized in
+    \texttt{Rewrite/Term/Compose/Seq.lean}
+    \item $\ms{Th}^\otimes(\Gamma)$ is a Freyd category: formalized in
+    \texttt{Rewrite/Term/Compose/Product.lean}
+    \item $\ms{Th}^\otimes(\Gamma)$ has coproducts: formalized in
+    \texttt{Rewrite/Term/Compose/Sum.lean}
+    \item $\ms{Th}^\otimes(\Gamma)$ is distributive: formalized in
+    \texttt{Rewrite/Term/Compose/Distrib.lean}
+  \end{itemize}
+  We then prove that the packing of each type constructor is equivalent to its denotational
+  semantics in $\ms{Th}^\otimes(\Gamma)$ in \texttt{Rewrite/Term/Compose/Completeness.lean}.
+  Finally, we show that packing and unpacking are mutual inverses for $\Gamma$ pure in
+  \texttt{Term.Eqv.packed_unpacked} and \texttt{Term.Eqv.unpacked_packed} in
+  \texttt{Rewrite/Term/Structural/Product.lean}, completing the proof of initiality.
+\end{proof}
+
+\completenessregions*
+
+\label{proof:complete-reg}
+
+\begin{proof}
+  We begin by showing $\ms{Th}(\Gamma, \ms{L})$ is an \isotopessa{} region model by validating all
+  the equations for a distributive Elgot category. These are formalized as follows:
+  \begin{itemize}
+    \item $\ms{Th}(\Gamma, \ms{L})$ is a category: formalized in
+    \texttt{Rewrite/Region/Compose/Seq.lean}
+    \item $\ms{Th}(\Gamma, \ms{L})$ is a Freyd category: formalized in
+    \texttt{Rewrite/Region/Compose/Product.lean}
+    \item $\ms{Th}(\Gamma, \ms{L})$ has coproducts: formalized in
+    \texttt{Rewrite/Region/Compose/Sum.lean}
+    \item $\ms{Th}(\Gamma, \ms{L})$ is distributive: formalized in
+    \texttt{Rewrite/Region/Compose/Distrib.lean}
+    \item $\ms{Th}(\Gamma, \ms{L})$ is a strong Elgot category: formalized in
+    \texttt{Rewrite/Region/Compose/Elgot.lean}
+  \end{itemize}
+  We then prove that the packing of each type constructor is equivalent to its denotational
+  semantics in $\ms{Th}(\Gamma, \ms{L})$ in \texttt{Rewrite/Region/Compose/Completeness.lean}.
+  Finally, we show that packing and unpacking are mutual inverses for $\Gamma$ pure in
+  \texttt{Region.Eqv.packed_unpacked} and \texttt{Region.Eqv.unpacked_packed} in
+  \texttt{Rewrite/Region/Structural.lean}, completing the proof of initiality.
+\end{proof}
 
 \end{document}
 \endinput
