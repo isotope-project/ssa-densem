@@ -161,6 +161,7 @@
 % Composition
 \newcommand{\invar}{\square}
 \newcommand{\outlb}{\blacksquare}
+\newcommand{\pckd}[1]{\langle #1 \rangle}
 
 % Weak memory
 \newcommand{\bufloc}[1]{\overline{#1}}
@@ -2749,7 +2750,7 @@ proving the B\"ohm-Jacopini theorem in Section~\ref{ssec:data-control} and compl
 Section~\ref{ssec:completeness}. We begin by defining \emph{packing} of variable contexts as
 follows:
 \begin{equation}
-  [\cdot] = \mb{1} \qquad [\Gamma, \thyp{x}{A}{\epsilon}] = [\Gamma] \otimes A
+  \pckd{\cdot} = \mb{1} \qquad \pckd{\Gamma, \thyp{x}{A}{\epsilon}} = \pckd{\Gamma} \otimes A
 \end{equation}
 While in general we destructure pairs using binary \ms{let}-bindings, it will be more convenient
 to start defining operations on records in terms of projections. We begin by defining projections
@@ -2771,7 +2772,7 @@ We may then define projections on records as follows:
 with typing rule
 \begin{equation}
   \prftree[r]{\rle{$\pi_{\ms{rec}}$}}
-    {\hasty{\Gamma}{\epsilon}{e}{[\Delta]}}
+    {\hasty{\Gamma}{\epsilon}{e}{\pckd{\Delta}}}
     {\Delta(x) = A}
     {\hasty{\Gamma}{\epsilon}{\pi_{\Delta, x}\;e}{A}}
 \end{equation}
@@ -2789,8 +2790,8 @@ where we define the \emph{effect} of a context $\Gamma$ as follows
 \end{equation}
 In particular, we say $\Gamma$ is \emph{pure} if $\ms{eff}(\Gamma) = \bot$. We may now define
 packing and unpacking substitutions
-$\issubst{\ms{pack}_y^\otimes(\Gamma)}{\Gamma}{\bhyp{y}{[\Gamma]}}$,
-$\issubst{\ms{unpack}_y^\otimes(\Gamma)}{\bhyp{y}{[\Gamma]}}{\Gamma}$ as follows:
+$\issubst{\ms{pack}_y^\otimes(\Gamma)}{\Gamma}{\bhyp{y}{\pckd{\Gamma}}}$,
+$\issubst{\ms{unpack}_y^\otimes(\Gamma)}{\bhyp{y}{\pckd{\Gamma}}}{\Gamma}$ as follows:
 \begin{equation}
   \ms{pack}_y^\otimes(\Gamma) = y \mapsto \ms{packed}(\Gamma) \qquad
   \ms{unpack}_y^\otimes(\Gamma) = (x \mapsto \pi_{\Gamma, x}\;y)_{x \in \Gamma}
@@ -2808,9 +2809,9 @@ are inverses of each other \emph{for pure contexts}, i.e.
     {\bhyp{y}{\Gamma}}{\bhyp{y}{\Gamma}}
   \end{aligned}
 \end{equation}
-Similarly, we may define a ``packing'' operation $[\cdot]$ on label-contexts as follows:
+Similarly, we may define a ``packing'' operation $\pckd{\cdot}$ on label-contexts as follows:
 \begin{equation}
-  [\cdot] = \mb{0} \qquad [\ms{L}, \ell(A)] = [\ms{L}] + A
+  \pckd{\cdot} = \mb{0} \qquad \pckd{\ms{L}, \ell(A)} = \pckd{\ms{L}} + A
 \end{equation}
 We may then define injections on enums as follows:
 \begin{equation}
@@ -2822,7 +2823,7 @@ with typing rule
   \prftree[r]{\rle{$\iota_{\ms{enum}}$}}
     {\hasty{\Gamma}{\epsilon}{e}{A}}
     {\ms{L}(\ell) = A}
-    {\hasty{\Gamma}{\epsilon}{\iota_{\ms{L}, \ell}\;e}{[L]}}
+    {\hasty{\Gamma}{\epsilon}{\iota_{\ms{L}, \ell}\;e}{\pckd{\ms{L}}}}
 \end{equation}
 Similarly, we can define $n$-ary case-statements on enums as follows:
 \begin{equation}
@@ -2886,7 +2887,7 @@ Finally, fixing a distinguished variable $\invar$, it will be very useful to def
 a ``\emph{variable packing}'' operation on expressions and regions as follows:
 \begin{equation}
   \haslb{\Gamma}{r}{\ms{L}} \implies 
-  \haslb{\invar : [\Gamma]}{[r]^\otimes := [\ms{unpack}_{\invar}^\otimes(\Gamma)]r}{\ms{L}}
+  \haslb{\invar : [\Gamma]}{\pckd{r}^\otimes := [\ms{unpack}_{\invar}^\otimes(\Gamma)]r}{\ms{L}}
 \end{equation}
 In particular, for $\Gamma$ pure, the packing operation $[\cdot]$ is an injection on expressions and
 regions w.r.t. the equational theory, since $\ms{unpack}_{\invar}^\otimes(\Gamma)$ has an inverse.
@@ -2894,22 +2895,24 @@ Similarly, fixing a distinguished label $\outlb$, we may define a ``label packin
 regions as follows:
 \begin{equation}
   \haslb{\Gamma}{r}{\ms{L}} \implies 
-  \haslb{\Gamma}{[r]^+ := [\ms{pack}_{\outlb}^+(\ms{L})]r}{\outlb([\ms{L}])}
+  \haslb{\Gamma}{\pckd{r}^+ := [\ms{pack}_{\outlb}^+(\ms{L})]r}{\outlb([\ms{L}])}
 \end{equation}
 Since the packing substitution has an inverse, it similarly follows that label packing is an
 injection w.r.t. the equational theory, i.e.
 \begin{equation}
-  \lbeq{\Gamma}{r}{r'}{\ms{L}} \iff \lbeq{\Gamma}{[r]^+}{[r']^+}{\ms{L}}
+  \lbeq{\Gamma}{r}{r'}{\ms{L}} \iff \lbeq{\Gamma}{\pckd{r}^+}{\pckd{r'}^+}{\ms{L}}
 \end{equation}
 Finally, we can define a ``packing'' operation on regions to be given by label-packing followed by
 variable-packing, or vice versa (since it turns out the operations commute), as follows:
 \begin{equation}
   \haslb{\Gamma}{r}{\ms{L}} \implies 
-  \haslb{\invar : [\Gamma]}{[r] := [[r]^+]^\otimes = [[r]^\otimes]^+}{\outlb(\ms{L})}
+  \haslb{\invar : [\Gamma]}
+    {\pckd{r} := \pckd{\pckd{r}^+}^\otimes = \pckd{\pckd{r}^\otimes}^+}
+    {\outlb(\ms{L})}
 \end{equation}
 We similarly have that this is an injection for $\Gamma$ pure, i.e.
 \begin{equation}
-  \lbeq{\Gamma}{r}{r'}{\ms{L}} \iff \lbeq{\Gamma}{[r]}{[r']}{\ms{L}}
+  \lbeq{\Gamma}{r}{r'}{\ms{L}} \iff \lbeq{\Gamma}{\pckd{r}}{\pckd{r'}}{\ms{L}}
 \end{equation}
 
 \subsection{B\"ohm-Jacopini for SSA}
@@ -3008,10 +3011,10 @@ $\hasty{\Gamma}{\bot}{\ms{ua}_{\ms{L}}\;e}{[L] + [R]}$.)
 The B\"ohm-Jacopini theorem for SSA can then
 be written:
 \begin{theorem}[name=B\"ohm-Jacopini for SSA, restate=bohmjacopini]
-  For all $\haslb{\Gamma}{r}{\ms{L}}$, $\shaslb{\Gamma}{\towhile{\ms{L}{r}}}{\ms{L}}$ is structured,
+  For all $\haslb{\Gamma}{r}{\ms{L}}$, $\shaslb{\Gamma}{\towhile{\ms{L}}{r}}{\ms{L}}$ is structured,
   and $\lbeq{\Gamma}{r}{\towhile{\ms{L}}{r}}{\ms{L}}$. In particular, we have that
-  $\shaslb{\Gamma}{\topwhile{\ms{L}}{r}}{\outlb([\ms{L}])}$ is structured, and
-  $\lbeq{\Gamma}{[r]^+}{\topwhile{r}}{\outlb([\ms{L}])}$.
+  $\shaslb{\Gamma}{\topwhile{\ms{L}}{r}}{\outlb(\pckd{\ms{L}})}$ is structured, and
+  $\lbeq{\Gamma}{\pckd{r}^+}{\topwhile{r}}{\outlb(\pckd{\ms{L}})}$.
 \end{theorem}
 \begin{proof}
   See Appendix~\ref{proof:bohm-jacopini}
@@ -3665,18 +3668,27 @@ in Figure~\ref{fig:ssa-ty-sem}, we will interpret as tensor products and coprodu
 denotations of their parameters, respectively.
 
 \begin{figure}
-  \TODO{Fix boxes}
+  \begin{equation*}
+    \boxed{\dnt{A} : |\mc{C}|}
+  \end{equation*}
   \begin{align*}
-    \boxed{\dnt{A} : |\mc{C}|} \qquad 
-    & \dnt{\mb{1}} = I \qquad
+     \dnt{\mb{1}} = I \qquad
       \dnt{A \otimes B} = \dnt{A} \otimes \dnt{B} \qquad
       \dnt{\mb{0}} = \mb{0} \qquad
-      \dnt{A + B} = \dnt{A} + \dnt{B} \qquad \\
-    \boxed{\dnt{\Gamma} : |\mc{C}|} \qquad
-    & \dnt{\cdot} = I \qquad
+      \dnt{A + B} = \dnt{A} + \dnt{B} \\
+  \end{align*}
+  \begin{equation*}
+    \boxed{\dnt{\Gamma} : |\mc{C}|}
+  \end{equation*}
+  \begin{align*}
+    \dnt{\cdot} = I \qquad
       \dnt{\Gamma, \thyp{x}{A}{\epsilon}} = \dnt{\Gamma} \otimes \dnt{A} \\
-    \boxed{\dnt{\ms{L}} : |\mc{C}|} \qquad
-    & \dnt{\cdot} = 0 \qquad
+  \end{align*}
+  \begin{equation*}
+    \boxed{\dnt{\ms{L}} : |\mc{C}|}
+  \end{equation*}
+  \begin{align*}
+      \dnt{\cdot} = 0 \qquad
       \dnt{\ms{L}, \lhyp{\ell}{A}} = \dnt{\ms{L}} + \dnt{A} \\
   \end{align*}
   \begin{equation*}
@@ -3686,7 +3698,7 @@ denotations of their parameters, respectively.
     \dnt{\cdot \leq \cdot} = \ms{id}_I \qquad
     \dnt{\Gamma, \thyp{x}{A}{\epsilon} \leq \Delta} = \pi_l;\dnt{\Gamma \leq \Delta} \qquad
     \dnt{\Gamma, \thyp{x}{A}{\epsilon} \leq \Delta, \thyp{x}{A}{\epsilon}}
-    = \dnt{\Gamma \leq \Delta} \otimes \dnt{A} \\ \\
+    = \dnt{\Gamma \leq \Delta} \otimes \dnt{A} \\
   \end{gather*}
   \begin{equation*}
     \boxed{\dnt{\ms{L} \leq \ms{K}} : \dnt{\ms{L}} \to_\bot \dnt{\ms{K}}}
@@ -4095,7 +4107,6 @@ a copy of the context $\dnt{\Gamma}$ and an element of the coproduct $\dnt{\ms{L
 of the coproduct $\dnt{\ms{K}}$, with an arbitrary effect. Label substitution is then sound in
 general, as stated in the following theorem:
 \begin{theorem}[name=Soundness (Label Substitution), restate=soundnesslsubst]
-  \TODO{Add let() for consistency}
   Given $\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}$, we have
   \begin{enumerate}[label=(\alph*)]
     \item $\dnt{\haslb{\Gamma}{[\sigma]r}{\ms{K}}}
@@ -4154,25 +4165,25 @@ Our strategy for doing this is as follows:
   of an \isotopessa{} expression model and \isotopessa{} model, respectively, and hence that
   expressions may be interpreted in the former and both expressions and regions in the latter.
 
-  To do so, we will first need some notation to talk about the
-  behaviour of the equivalence classes of quotients. Suppose $S$ and $T$ are sets of terms. Then
-  we will write $\hasty{\Gamma}{\epsilon}{S}{A}$ to mean that for every $a \in S$, we
-  have $\hasty{\Gamma}{\epsilon}{a}{A}$, and similarly we will write $\tmeq{\Gamma}{\epsilon}{S}{T}{A}$ when for all $a \in S$ and $b \in T$, we have $\tmeq{\Gamma}{\epsilon}{a}{b}{A}$. We generalize in the obvious fashion to regions as well as the case when only one side of an equivalence is a set of terms.
-
-  \TODO{replace $[a]$ notation for packing with $\left\langle a \right\rangle$}
-  
+  To do so, we will first need some notation to talk about the behaviour of the equivalence classes
+  of quotients. Suppose $S$ and $T$ are sets of terms. Then we will write
+  $\hasty{\Gamma}{\epsilon}{S}{A}$ to mean that for every $a \in S$, we have
+  $\hasty{\Gamma}{\epsilon}{a}{A}$, and similarly we will write $\tmeq{\Gamma}{\epsilon}{S}{T}{A}$
+  when for all $a \in S$ and $b \in T$, we have $\tmeq{\Gamma}{\epsilon}{a}{b}{A}$. We generalize in
+  the obvious fashion to regions as well as the case when only one side of an equivalence is a set
+  of terms.
 
   Then, it will turn out that, for a distinguished variable $\invar$ and label $\outlb$,
   \begin{equation}
     \begin{gathered}
-      \hasty{\Gamma, \invar : [\Delta]}{\epsilon}
+      \hasty{\Gamma, \invar : \pckd{\Delta}}{\epsilon}
         {\dnt{\hasty{\Delta}{\epsilon}{a}{A}}_{\ms{Th}^\otimes(\Gamma)}}{A}
         \\
-      \haslb{\Gamma, \invar : [\Delta]}
+      \haslb{\Gamma, \invar : \pckd{\Delta}}
         {\dnt{\hasty{\Delta}{\epsilon}{a}{A}}_{\ms{Th}(\Gamma, \ms{L})}}{\ms{L}, \outlb(A)}
         \\
-      \haslb{\Gamma, \invar : [\Delta]}
-        {\dnt{\haslb{\Delta}{r}{\ms{K}}}_{\ms{Th}(\Gamma, \ms{L})}}{\ms{L}, \outlb([\ms{K}])}
+      \haslb{\Gamma, \invar : \pckd{\Delta}}
+        {\dnt{\haslb{\Delta}{r}{\ms{K}}}_{\ms{Th}(\Gamma, \ms{L})}}{\ms{L}, \outlb(\pckd{\ms{K}})}
     \end{gathered}
   \end{equation}
   where packing of contexts is defined as in Section~\ref{ssec:records-enums}.
@@ -4181,20 +4192,22 @@ Our strategy for doing this is as follows:
   \begin{equation}
     \begin{gathered}
     \tmeq{\Gamma, \invar : [\Delta]}{\epsilon}
-      {\dnt{\hasty{\Delta}{\epsilon}{a}{A}}_{\ms{Th}^\otimes(\Gamma)}}{[a]}{A}
+      {\dnt{\hasty{\Delta}{\epsilon}{a}{A}}_{\ms{Th}^\otimes(\Gamma)}}{\pckd{a}}{A}
     \\
     \lbeq{\Gamma, \invar : [\Delta]}
-      {\dnt{\hasty{\Delta}{\epsilon}{a}{A}}_{\ms{Th}(\Gamma, \ms{L})}}{\ms{ret}\;[a]}{\ms{L}, \outlb(A)}
+      {\dnt{\hasty{\Delta}{\epsilon}{a}{A}}_{\ms{Th}(\Gamma, \ms{L})}}{\ms{ret}\;\pckd{a}}
+      {\ms{L}, \outlb(A)}
     \\
     \lbeq{\Gamma, \invar : [\Delta]}
-      {\dnt{\haslb{\Delta}{r}{\ms{K}}}_{\ms{Th}(\Gamma, \ms{L})}}{[r]}{\ms{L}, \outlb([\ms{K}])}
+      {\dnt{\haslb{\Delta}{r}{\ms{K}}}_{\ms{Th}(\Gamma, \ms{L})}}
+      {\pckd{r}}{\ms{L}, \outlb(\pckd{\ms{K}})}
     \end{gathered}
   \end{equation}
-  where $\ms{ret}\;a := \brb{\outlb}{a}$. Since the packing operator $[\cdot]$ on terms and regions
-  from Section~\ref{ssec:records-enums} is injective for pure contexts $\ms{eff}(\Gamma) = \bot$,
-  and hence in particular for $\Gamma = \cdot$, $\ms{L} = \cdot$, it follows that in this case the
-  category of expressions and the category of regions are the initial distributive \isotopessa{}
-  expression model and \isotopessa{} model respectively.
+  where $\ms{ret}\;a := \brb{\outlb}{a}$. Since the packing operator $\pckd{\cdot}$ on terms and
+  regions from Section~\ref{ssec:records-enums} is injective for pure contexts $\ms{eff}(\Gamma) =
+  \bot$, and hence in particular for $\Gamma = \cdot$, $\ms{L} = \cdot$, it follows that in this
+  case the category of expressions and the category of regions are the initial distributive
+  \isotopessa{} expression model and \isotopessa{} model respectively.
 \end{enumerate}
 
 \subsection{Expressions}
@@ -4251,9 +4264,9 @@ $\hasty{\Gamma, \invar : B}{\epsilon}{b}{C}$ to be simply given by
   \hasty{\Gamma, \invar : A + B}{\epsilon}{[a, b] := \caseexpr{\invar}{\invar}{a}{\invar}{b}}{C}
 \end{equation}
 It is straightforward to verify that this indeed induces a coproduct on
-$\ms{Th}_\epsilon^\otimes(\Gamma)$ and hence on $\ms{Th}^\otimes(\Gamma)$
-All that remains is to show that $\ms{Th}_\epsilon^\otimes(\Gamma)$ is in fact a \emph{distributive}
-Freyd category. To do so, we may define an inverse distributor morphism
+$\ms{Th}_\epsilon^\otimes(\Gamma)$ and hence on $\ms{Th}^\otimes(\Gamma)$ All that remains is to
+show that $\ms{Th}_\epsilon^\otimes(\Gamma)$ is in fact a \emph{distributive} Freyd category. To do
+so, we may define an inverse distributor morphism
 \begin{equation}
   \hasty{\Gamma, \invar : A \otimes (B + C)}
     {\epsilon}
@@ -4266,16 +4279,16 @@ which can easily be shown to be an inverse to the obvious distributor morphism. 
   \dnt{\Delta, \thyp{x}{A}{\epsilon}}_{\ms{Th}^\otimes(\Gamma)} 
     = \dnt{\Delta}_{\ms{Th}^\otimes(\Gamma)} \otimes A
   \qquad \implies \qquad
-  \dnt{\Delta}_{\ms{Th}^\otimes(\Gamma)} = [\Gamma]
+  \dnt{\Delta}_{\ms{Th}^\otimes(\Gamma)} = \pckd{\Gamma}
 \end{equation}
 Therefore, it follows that, as expected, that
 $
-  \hasty{\Gamma, \invar : [\Delta]}{\epsilon}
+  \hasty{\Gamma, \invar : \pckd{\Delta}}{\epsilon}
           {\dnt{\hasty{\Delta}{\epsilon}{a}{A}}_{\ms{Th}^\otimes(\Gamma)}}{A}
 $
 and it remains to show that we in fact have
 $$
-  \tmeq{\Gamma, \invar : [\Delta]}{\epsilon}
+  \tmeq{\Gamma, \invar : \pckd{\Delta}}{\epsilon}
         {\dnt{\hasty{\Delta}{\epsilon}{a}{A}}_{\ms{Th}^\otimes(\Gamma)}}{[a]}{A}
 $$
 which can be done by a relatively straightforward induction, implying, since $[\cdot]$ is injective
@@ -4361,35 +4374,35 @@ an Elgot structure through a somewhat tedious calculation. We may now note that
     \dnt{\Delta, \thyp{x}{A}{\epsilon}}_{\ms{Th}(\Gamma, \ms{L})} 
       &= \dnt{\Delta}_{\ms{Th}(\Gamma, \ms{L})} \otimes A
     &\qquad \implies \qquad
-    \dnt{\Delta}_{\ms{Th}(\Gamma, \ms{L})} &= [\Gamma] \\
+    \dnt{\Delta}_{\ms{Th}(\Gamma, \ms{L})} &= \pckd{\Gamma} \\
     \dnt{\cdot^+}_{\ms{Th}(\Gamma, \ms{L})} &= \mb{0}, &
     \dnt{\ms{K}, \ell(A)}_{\ms{Th}(\Gamma, \ms{L})} 
       &= \dnt{\ms{K}}_{\ms{Th}(\Gamma, \ms{L})} + A
     &\qquad \implies \qquad
-    \dnt{\ms{K}}_{\ms{Th}(\Gamma, \ms{L})} &= [\ms{K}]
+    \dnt{\ms{K}}_{\ms{Th}(\Gamma, \ms{L})} &= \pckd{\ms{K}}
   \end{aligned}
 \end{equation}
 and hence that 
 \begin{equation*}
-  \haslb{\Gamma, \invar : [\Delta]}
+  \haslb{\Gamma, \invar : \pckd{\Delta}}
         {\dnt{\hasty{\Delta}{\epsilon}{a}{A}}_{\ms{Th}(\Gamma, \ms{L})}}{\ms{L}, \outlb(A)}
       \qquad
-  \haslb{\Gamma, \invar : [\Delta]}
-    {\dnt{\haslb{\Delta}{r}{\ms{K}}}_{\ms{Th}(\Gamma, \ms{L})}}{\ms{L}, \outlb([\ms{K}])}
+  \haslb{\Gamma, \invar : \pckd{\Delta}}
+    {\dnt{\haslb{\Delta}{r}{\ms{K}}}_{\ms{Th}(\Gamma, \ms{L})}}{\ms{L}, \outlb(\pckd{\ms{K}})}
 \end{equation*}
 as expected. It is relatively easy to derive that
 \begin{equation*}
-  \lbeq{\Gamma, \invar : [\Delta]}
+  \lbeq{\Gamma, \invar : \pckd{\Delta}}
         {\dnt{\hasty{\Delta}{\epsilon}{a}{A}}_{\ms{Th}(\Gamma, \ms{L})}}
-        {\ms{ret}\;[a]}
+        {\ms{ret}\;\pckd{a}}
         {\ms{L}, \outlb(A)}
 \end{equation*}
 by a relatively straightforward induction. A much more tedious induction is required to prove that
 \begin{equation*}
-  \lbeq{\Gamma, \invar : [\Delta]}
+  \lbeq{\Gamma, \invar : \pckd{\Delta}}
         {\dnt{\haslb{\Delta}{r}{\ms{K}}}_{\ms{Th}(\Gamma, \ms{L})}}
         {[r]}
-        {\ms{L}, \outlb([\ms{K}])}
+        {\ms{L}, \outlb(\pckd{\ms{K}})}
 \end{equation*}
 since the case for \ms{where}-statements is particularly complex. With a little bit more book-keeping (which can be found in the mechanization), we can state the completeness theorem as follows:
 \begin{theorem}[name=Completeness (Regions), restate=completenessregions]
@@ -6152,7 +6165,8 @@ We may now state our desired result as follows:
     \begin{equation}
       \begin{aligned}
         & \dnt{
-          \haslb{\Gamma, \bhyp{c}{[\ms{R}]}}{\ms{case}_{\ms{R}}\;c\; \{\ell_i(x_i) : t_i\}}{\ms{L}}
+          \haslb{\Gamma, \bhyp{c}{\pckd{\ms{R}}}}{\ms{case}_{\ms{R}}\;c\; \{\ell_i(x_i) : t_i\}}
+                {\ms{L}}
           } \\
         & = \dnt{\Gamma} \otimes \alpha^+_{\Sigma_i\dnt{A_i}} ; \delta^{-1}_{\Sigma}
           ; [\dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}}},]_i
@@ -6161,22 +6175,23 @@ We may now state our desired result as follows:
   \end{itemize}
   \item We have that
   \begin{equation}
-    \dnt{\hasty{\Gamma, \bhyp{\invar}{\bot}}{[\ms{L}]}{\ms{ua}\;\invar}{[\ms{L}] + [\ms{R}]}}
+    \dnt{\hasty{\Gamma, \bhyp{\invar}{\bot}}{[\ms{L}]}{\ms{ua}\;\invar}
+      {\pckd{\ms{L}} + \pckd{\ms{R}}}}
     = \pi_r ; \alpha^+_{\dnt{\ms{L}} + \dnt{\ms{R}}}
   \end{equation}
   \item We have that
   \begin{equation}
-    \dnt{\lbsubst{\Gamma}{\ms{pack}_\kappa^+(\ms{L})}{\ms{L}}{\kappa([\ms{L}])}}   
+    \dnt{\lbsubst{\Gamma}{\ms{pack}_\kappa^+(\ms{L})}{\ms{L}}{\kappa(\pckd{\ms{L}})}}   
       = \pi_r ; \alpha^+_{\mb{0} + \dnt{\ms{L}}}
   \end{equation}
   and
   \begin{equation}
-    \dnt{\lbsubst{\Gamma}{\ms{unpack}_\kappa^+(\ms{L})}{\kappa([\ms{L}])}{\ms{L}}}
+    \dnt{\lbsubst{\Gamma}{\ms{unpack}_\kappa^+(\ms{L})}{\kappa(\pckd{\ms{L}})}{\ms{L}}}
       = \pi_r ; \alpha^+_{\dnt{\ms{L}}}
   \end{equation}
   In particular, given $\haslb{\Gamma}{r}{\ms{L}}$, we have that
   \begin{equation}
-    \dnt{\haslb{\Gamma}{[r]^+}{\outlb([\ms{L}])}}
+    \dnt{\haslb{\Gamma}{\pckd{r}^+}{\outlb(\pckd{\ms{L}})}}
     = \dnt{\haslb{\Gamma}{r}{\ms{L}}} ; \alpha^+_{\mb{0} + \dnt{\ms{L}}}
   \end{equation}
 \end{lemma}
@@ -6202,25 +6217,25 @@ We may now state our desired result as follows:
     $$
     \topwhile{\ms{L}}{\letstmt{(x, y)}{a}{s}} 
     = \letstmt{(x, y)}{a}{\topwhile{\ms{L}}{s}}
-    \teqv \letstmt{(x, y)}{a}{[s]^+}
-    = [\letstmt{(x, y)}{a}{s}]^+
+    \teqv \letstmt{(x, y)}{a}{\pckd{s}^+}
+    = \pckd{\letstmt{(x, y)}{a}{s}}^+
     $$
     \item If $r = \casestmt{a}{x}{s}{y}{t}$, we have by induction that
     $$
     \begin{aligned}
     \topwhile{\ms{L}}{\casestmt{a}{x}{s}{y}{t}}
     &= \casestmt{a}{x}{\topwhile{\ms{L}}{s}}{y}{\topwhile{\ms{L}}{t}} \\
-    &\teqv \casestmt{a}{x}{[s]^+}{y}{[t]^+} \\
-    &= [\casestmt{a}{x}{s}{y}{t}]^+ \\
+    &\teqv \casestmt{a}{x}{\pckd{s}^+}{y}{\pckd{t}^+} \\
+    &= \pckd{\casestmt{a}{x}{s}{y}{t}}^+ \\
     \end{aligned}
     $$
     \item Assume $r = \where{s}{(\wbranch{\ell_i}{t_i}{x_i},)_i}$. %
     Define $\ms{R} = (\ell_i(A_i),)_i$.
-    By induction, we have that $\forall i, \topwhile{\ms{L}, \ms{R}}{t_i} \teqv [t_i]^+$, and
+    By induction, we have that $\forall i, \topwhile{\ms{L}, \ms{R}}{t_i} \teqv \pckd{t_i}^+$, and
     hence by soundness
     \begin{equation}
-      \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\topwhile{\ms{L}}{t_i}}{\outlb([\ms{L}, \ms{R}])}}
-      = \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{[t_i]^+}{\outlb([\ms{L}, \ms{R}])}}
+      \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\topwhile{\ms{L}}{t_i}}{\outlb(\pckd{\ms{L}, \ms{R}})}}
+      = \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\pckd{t_i}^+}{\outlb(\pckd{\ms{L}, \ms{R}})}}
     \end{equation}
     Now, define
     $$
@@ -6231,16 +6246,16 @@ We may now state our desired result as follows:
     It follows that
     \begin{equation}
       \begin{aligned}
-      & \dnt{\haslb{\Gamma, \invar : [R]}{D}{\outlb([L] + [R])}} \\
+      & \dnt{\haslb{\Gamma, \invar : [R]}{D}{\outlb(\pckd{L} + \pckd{R})}} \\
       & = \dnt{\Gamma} \otimes \alpha^+_{\Sigma_i\dnt{A_i}} ; \delta^{-1}_{\Sigma}
       ; [\dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}} 
                 {\ms{seq}(\topwhile{\ms{L}}{t_i}, \brb{\outlb}{(\ms{ua}\;\invar))}}
-                {\outlb([\ms{L}] + [\ms{R}])}},]_i \\
+                {\outlb(\pckd{\ms{L}} + \pckd{\ms{R}})}},]_i \\
       & = \dnt{\Gamma} \otimes \alpha^+_{\Sigma_i\dnt{A_i}} ; \delta^{-1}_{\Sigma}
-      ; [\dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\topwhile{\ms{L}}{t_i}}{\outlb([\ms{L}, \ms{R}])}} 
+      ; [\dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\topwhile{\ms{L}}{t_i}}{\outlb(\pckd{\ms{L}, \ms{R}})}} 
       ; \alpha^+_{\mb{0} + (\dnt{\ms{L}} + \dnt{\ms{R}})},]_i \\
       & = \dnt{\Gamma} \otimes \alpha^+_{\Sigma_i\dnt{A_i}} ; \delta^{-1}_{\Sigma}
-      ; [\dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{[t_i]^+}{\outlb([\ms{L}, \ms{R}])}} 
+      ; [\dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\pckd{t_i}^+}{\outlb(\pckd{\ms{L}, \ms{R}})}} 
       ; \alpha^+_{\mb{0} + (\dnt{\ms{L}} + \dnt{\ms{R}})},]_i\\
       & = \dnt{\Gamma} \otimes \alpha^+_{\Sigma_i\dnt{A_i}} ; \delta^{-1}_{\Sigma}
       ; [\dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, \ms{R}}} 
@@ -6250,12 +6265,12 @@ We may now state our desired result as follows:
     and therefore that
     \begin{equation}
       \begin{aligned}
-      & \dnt{\haslb{\Gamma, y : [R]}{L}{\outlb([\ms{L}])}} \\
-      & = \lmor{\dnt{\hasty{\Gamma, y : [R]}{\bot}{y}{A}}}
-      ; \rfix{\dnt{\haslb{\Gamma, \invar : [R]}{D}{\outlb([L] + [R])}} 
+      & \dnt{\haslb{\Gamma, y : \pckd{R}}{L}{\outlb(\pckd{\ms{L}})}} \\
+      & = \lmor{\dnt{\hasty{\Gamma, y : \pckd{R}}{\bot}{y}{A}}}
+      ; \rfix{\dnt{\haslb{\Gamma, \invar : \pckd{R}}{D}{\outlb(\pckd{L} + \pckd{R})}} 
       ; \alpha^+_{(\mb{0} + \dnt{\ms{L}}) + \dnt{\ms{R}}}} \\
       & = \rfix{\dnt{\Gamma} \otimes \alpha^+_{\Sigma_i\dnt{A_i}} ; \delta^{-1}_{\Sigma}
-      ; [\dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{[\ms{L}, \ms{R}]}} 
+      ; [\dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\pckd{\ms{L}, \ms{R}}}} 
       ; \alpha^+_{(\mb{0} + \dnt{\ms{L}}) + \dnt{\ms{R}}},]_i} \\
       & = \dnt{\Gamma} \otimes \alpha^+_{\Sigma_i\dnt{A_i}} 
         ; \rfix{\loopmor{\Gamma}{(\wbranch{\ell_i}{x_i}{t_i},)_i}{\ms{L}}}
@@ -6266,14 +6281,14 @@ We may now state our desired result as follows:
     \begin{equation}
       \begin{aligned}
       & \dnt{\haslb 
-        {\Gamma, \bhyp{\invar}{[\ms{L}, \ms{R}]}}
+        {\Gamma, \bhyp{\invar}{\pckd{\ms{L}, \ms{R}}}}
         {\caseexpr{\ms{ua}\;\invar}{x}{\brb{\outlb}{x}}{y}{L}}
         {\outlb([\ms{L}])}} \\
       & = \dnt{\Gamma} \otimes \alpha^+_{\dnt{\ms{L}} + \dnt{\ms{R}}}
       ; \delta^{-1}
       ; [
-        \dnt{\haslb{\Gamma, x : [L]}{\brb{\outlb}{x}}{\outlb([\ms{L}])}},
-        \dnt{\haslb{\Gamma, y : [R]}{L}{\outlb([\ms{L}])}}
+        \dnt{\haslb{\Gamma, x : \pckd{\ms{L}}}{\brb{\outlb}{x}}{\outlb(\pckd{\ms{L}})}},
+        \dnt{\haslb{\Gamma, y : \pckd{\ms{R}}}{L}{\outlb(\pckd{\ms{L}})}}
       ] \\
       & = \dnt{\Gamma} \otimes \alpha^+_{\dnt{\ms{L}} + \dnt{\ms{R}}}
       ; \delta^{-1}
@@ -6297,14 +6312,14 @@ We may now state our desired result as follows:
       \begin{aligned}
         & \dnt{\haslb{\Gamma}{\ms{seq}(
           \topwhile{\ms{L}}{r}, \caseexpr{\ms{ua}\;\invar}{x}{\brb{\outlb}{x}}{y}{L})
-        }{\outlb([\ms{L}])}} \\
-        & = \lmor{\dnt{\haslb{\Gamma}{\topwhile{\ms{L}}{r}}{\outlb([\ms{L}, \ms{R}])}}}
+        }{\outlb(\pckd{\ms{L}})}} \\
+        & = \lmor{\dnt{\haslb{\Gamma}{\topwhile{\ms{L}}{r}}{\outlb(\pckd{\ms{L}, \ms{R}})}}}
           ; \dnt{\Gamma} \otimes \alpha^+_{\dnt{\ms{L, R}}} 
           ; \\ & \qquad \dnt{\haslb 
-          {\Gamma, \bhyp{\invar}{[\ms{L}, \ms{R}]}}
+          {\Gamma, \bhyp{\invar}{\pckd{\ms{L}, \ms{R}}}}
           {\caseexpr{\ms{ua}\;\invar}{x}{\brb{\outlb}{x}}{y}{L}}
-          {\outlb([\ms{L}])}} \\
-        & = \lmor{\dnt{\haslb{\Gamma}{\topwhile{\ms{L}}{r}}{\outlb([\ms{L}, \ms{R}])}}}
+          {\outlb(\pckd{\ms{L}})}} \\
+        & = \lmor{\dnt{\haslb{\Gamma}{\topwhile{\ms{L}}{r}}{\outlb(\pckd{\ms{L}, \ms{R}})}}}
           ; \dnt{\Gamma} \otimes \alpha^+_{\dnt{\ms{L}} + \Sigma_i\dnt{A_i}}
           ; \delta^{-1}
           ; \\ & \qquad [
@@ -6389,10 +6404,6 @@ We may now state our desired result as follows:
     \end{equation}
   \end{enumerate}
 \end{lemma}
-
-% \begin{proof}
-%   \todo{this}
-% \end{proof}
 
 % \begin{lemma}
 %   The following facts about weakenings hold:
@@ -7402,10 +7413,6 @@ We may now state our desired result as follows:
   \label{lem:lsubst-distrib}
 \end{lemma}
 
-\begin{proof}
-  \todo{this}
-\end{proof}
-
 \begin{lemma}[Label Substitution Extension]
   Given $\sigma = \sigma_l, \sigma_r$,
     $\lbsubst{\Gamma}{\sigma}{\ms{L}, \ms{R}}{\ms{L}', \ms{R}'}$,
@@ -7438,10 +7445,6 @@ We may now state our desired result as follows:
     \lbsubst{\Gamma}{\ms{id}}{\ms{R}}{\ms{R}} = \pi_r
   \end{equation}
 \end{lemma}
-
-\begin{proof}
-  \todo{this}
-\end{proof}
 
 % \begin{lemma}
 %   Given $\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}$, we have
@@ -7766,8 +7769,6 @@ We may now state our desired result as follows:
 \end{proof}
 
 \subsection{Equational Theory}
-
-\TODO{separate expressions and regions?}
 
 \soundnesseqn*
 
