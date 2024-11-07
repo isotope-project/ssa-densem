@@ -210,7 +210,17 @@
 \orcid{0000-0003-2838-5865}
 
 \begin{abstract}
-  ...
+  Static single assignment form, or SSA, has been the dominant
+  compiler intermediate representation for decades. In this paper, we
+  give a type theory for a variant of SSA, including its equational
+  theory, which are strong enough to validate a variety of control and
+  data flow transformations. We also give a categorical semantics for
+  SSA, and show that the type theory is sound and complete with
+  respect to the categorical axiomatization. We demonstrate the
+  utility of our model by exhibiting a variety of concrete models
+  satisfying our axioms, including in particular a model of TSO weak
+  memory. The correctness of the syntactic metatheory, as well as the
+  completeness proof has been mechanized in the Lean proof assistant.
 \end{abstract}
 
 \begin{CCSXML}
@@ -248,6 +258,10 @@
 
 \maketitle
 
+\emph{This paper is dedicated to the memory of Alan Jeffrey, who
+  taught us about both premonoidal categories and the semantics of weak memory, and
+who never shied away from either theory or implementation.}
+
 \section{Introduction}
 
 Static single assignment form, or SSA form, has been the dominant compiler intermediate
@@ -259,7 +273,7 @@ The key idea behind SSA is to adapt an idea from functional programming: namely,
 defined only once. This means that substitution is unconditionally valid, without first requiring a
 dataflow analysis to compute where definitions reach. Unlike in functional programming, though,
 scoping of definitions in SSA is traditionally not lexical. Instead, scoping is determined by
-\emph{dominance}: every variable occurence must be dominated by a single assignment in the control
+\emph{dominance}: every variable occurrence must be dominated by a single assignment in the control
 flow graph.
 
 The semantics of SSA has traditionally been handled quite informally, because conceptually, it is a
@@ -338,7 +352,7 @@ transfer language (RTL)},  to normalize programs into a form more suitable for a
 optimization. We can normalize our code into 3-address code, as in Figure~\ref{fig:fact-3addr}, by:
 \begin{itemize}
   \item Converting structured control flow (e.g., \ms{while}) into unstructured jumps between basic
-  blocks labeled \ms{start}, \ms{loop}, and \ms{body}.
+  blocks labelled \ms{start}, \ms{loop}, and \ms{body}.
   \item Replacing subexpressions like $i + 1$ in $a * (i + 1)$ with \ms{let}-bindings so that every
   expression in our program is atomic.
 \end{itemize}
@@ -609,7 +623,7 @@ and functional programming for reasoning about and developing optimizations and 
 in particular, the result of our conversion to lexical scoping looks a lot like the correspondence
 between SSA and CPS described in \citet{kelsey-95-cps}. We can use this correspondence to guide us
 in developing an \textit{equational theory} for SSA programs, with the goal of enabling
-compositional reasoning aboutq program transformations such as:
+compositional reasoning about program transformations such as:
 \begin{itemize}
   \item \textit{Control-flow rewrites}, such as jump-threading or fusing two identical branches of
   an \ms{if}-statement
@@ -840,8 +854,8 @@ with each step rigorously justified via our denotational semantics
 
 We now give a formal account of \isotopessa{}, starting with the types. Our types are first order,
 and consists of binary sums $A + B$, products $A \otimes B$, the unit type $\mathbf{1}$, and the
-empty type $\mb{0}$, all parametrized over a set of base types $X \in \mc{T}$. We write our set of
-types as $\ms{Ty}(X)$. We also parametrize over:
+empty type $\mb{0}$, all parameterised over a set of base types $X \in \mc{T}$. We write our set of
+types as $\ms{Ty}(X)$. We also parameterise over:
 \begin{itemize}
   
   \item A set of effects $\epsilon \in \mc{E}$, forming a join-semilattice with bottom element $\bot
@@ -1052,7 +1066,7 @@ there is no shadowing,
 \subsection{Metatheory}
 
 We can now begin to state the syntactic metatheory of \isotopessa{}. One of the
-most important metatheorems, and a basic santity check of our type theory, is
+most important metatheorems, and a basic sanity check of our type theory, is
 \emph{weakening}; essentially, if things typecheck in a context $\Delta$, and
 $\Gamma$ contains all the variables of $\Delta$ (written $\Gamma \leq \Delta$,
 pronounced ``$\Gamma$ \emph{weakens} $\Delta$''), then these things should
@@ -1319,7 +1333,7 @@ $
 on terms $a, a'$ for each context $\Gamma$, effect $\epsilon$, and type $A$. For each of the rules
 we will present, we assume the rule is valid if and only if \emph{both sides} of the rule are
 well-typed. We also assume that variables are $\alpha$-converted as appropriate to avoid shadowing;
-our formalization uses de-Bruijn indices, but we stick with names in this exposition for simplicity.
+our formalization uses de Bruijn indices, but we stick with names in this exposition for simplicity.
 
 The rules for this relation can be roughly split into \emph{rewriting rules}, which denote when two
 particular expressions have equivalent semantics, and \emph{congruence rules}, which govern how
@@ -1331,7 +1345,7 @@ in Figure~\ref{fig:ssa-expr-congr-rules}, consist of:
   for each choice of $\Gamma, \epsilon, A$, and therefore an equivalence relation.
   \item \brle{let$_1$}, \brle{let$_2$}, \brle{pair}, \brle{inl}, \brle{inr}, \brle{case}, and
   \brle{abort}, which state that $\tmeq{\Gamma}{\epsilon}{\cdot}{\cdot}{A}$ is a \emph{congruence}
-  with respect to the corresponding expression contructor, and, in particular, that the expression
+  with respect to the corresponding expression constructor, and, in particular, that the expression
   constructors are well-defined functions on the quotient of expressions up to $\teqv$.
 \end{itemize} 
 We also include the following \emph{type-directed} rules as part of our congruence relation:
@@ -1340,7 +1354,7 @@ We also include the following \emph{type-directed} rules as part of our congruen
   $\mb{0}$, since we will deem any such context to be \emph{unreachable} by control flow. In
   particular, any instruction or function call returning $\mb{0}$ is assumed to diverge, similarly
   to Rust's ``never type'' ``$!$".
-  \item \brle{terminal}, which equats all \emph{pure} terms of unit type $\mb{1}$. Note that
+  \item \brle{terminal}, which equates all \emph{pure} terms of unit type $\mb{1}$. Note that
   \emph{impure} terms may be disequal, since while their result values are the same, their side
   effects may differ!
 \end{itemize}
@@ -1641,7 +1655,7 @@ will show that this is enough to state a relatively powerful completeness theore
 
 We now come to the equational theory for regions, which is similar to that for terms, except that we
 also need to support control-flow graphs. As before, we will split our rules into a set of
-\emph{cogruence rules} and, for each region constructor, \emph{rewriting rules} based on that
+\emph{congruence rules} and, for each region constructor, \emph{rewriting rules} based on that
 constructor's semantics. Our congruence rules, given in Figure~\ref{fig:ssa-reg-congr-rules}, are
 quite standard; we have:
 \begin{itemize}
@@ -1903,7 +1917,7 @@ The actual rule is quite complicated, so let's break it down point by point. Ass
     interpret branches to any other label as a (divergent) ``side effect.''
   \item A region $\haslb{\Gamma, \bhyp{x}{A}}{t}{\ms{L}, \ell(A)}$ taking ``input'' $x$ of type
     $A$ and, as ``output,'' jumping to a label $\ell$ with an argument of type $A$.
-  \item A \emph{pure} expression $\hasty{\Gamma, \bhyp{x}{A}}{\bot}{e}{B}$ parametrized by a value
+  \item A \emph{pure} expression $\hasty{\Gamma, \bhyp{x}{A}}{\bot}{e}{B}$ parameterised by a value
     $x$ of type $A$
 \end{itemize}
 Suppose further that the following condition holds:
@@ -2123,11 +2137,11 @@ and
   )
 \end{multline*}
 Rewrites like this are an instance of the principle we call \emph{dinaturality}, which, for
-structured control-flow, can be best expressed as an equivalence between the the control-flow graphs
+structured control-flow, can be best expressed as an equivalence between the control-flow graphs
 in Figure~\ref{fig:dinat-struct-cfg}. Unlike in the case of uniformity, however, this is true even
 when the program fragment $P$ is \emph{impure}, since we do not commute $P$ over an infinite number
 of iterations; hence, we cannot simply use uniformity to derive this rewrite rule in its most
-general form. We instead postulate our final rewriting rule, \brle{dinat}, which generalizes the
+general form. We instead postulate our final rewriting rule, \brle{dinat}, which generalises the
 above rewrite from sequential composition on a structured control-flow graph to label substitution
 on an arbitrary control-flow graph. 
 
@@ -2674,7 +2688,7 @@ An SSA program is \emph{well-formed} if:
   \item All variable uses are well-typed
   \item All variable uses respect dominance-based scoping
 \end{itemize}
-It is easy to see that any erased program is well-formed, since our typing rules guaranteee every
+It is easy to see that any erased program is well-formed, since our typing rules guarantee every
 expression is well-typed, while our lexical scoping for values ensures that variables are only
 visible in the children of the block $\beta$ in which they are defined, which the lexical scoping of
 labels guarantees are dominated by $\beta$. On the other hand, we may give an algorithm to convert
@@ -3149,7 +3163,7 @@ $$
 We would like to interpret an expression-in-context $\hasty{\Gamma}{\epsilon}{a}{A}$ as a morphism in
 $\mc{C}$ from $\dnt{\Gamma}$ to $\dnt{A}$. However, in standard SSA, it is possible for a variable
 to be unused, or used multiple times. Our premonoidal structure, however, does not give us any way
-to \emph{project} out of a product type, making it impossible to interpet expressions-in-context
+to \emph{project} out of a product type, making it impossible to interpret expressions-in-context
 like
 $
 \hasty{\bhyp{x}{A}, \bhyp{y}{B}}{}{x}{A}
@@ -3204,7 +3218,7 @@ $\hasty{\Gamma}{\bot}{a}{A}$ lies in $\mc{C}_\bot(\dnt{\Gamma}, \dnt{A})$; in ge
 morphisms in $\mc{C}_\bot$ as $A \to_\bot B$.
 
 At this point, we still have no way to interpret control-flow, i.e. $\ms{case}$-expressions.
-Furthermore, if we want to model regions as morphisms, we need some way of modeling label-contexts
+Furthermore, if we want to model regions as morphisms, we need some way of modelling label-contexts
 $\ms{L}$. At first glance, it seems sufficient for branching control-flow to require the existence
 of coproducts, and indeed, assuming the existence of all coproducts and an initial object, we may
 model label-contexts as follows:
@@ -3582,9 +3596,9 @@ do not in general validate \emph{sliding}. However, this is easy enough to fix: 
 ``state'' wire, drawn in red, which all impure morphisms require as an input and output, as in
 Figure~\ref{fig:premonoidal-string-diagram}. Since the state wire linearly threads through all
 impure boxes, it establishes a unique order in which they must be executed; this construction is
-shown to be sound in \citet{promonad}. Pure morphisms do not have a state wire, so a digram
+shown to be sound in \citet{promonad}. Pure morphisms do not have a state wire, so a diagram
 representing a pure morphism will simply have a red ``stripe'' on the side. This gives us a
-convenient way to distinguish between string diagrams using the monodial structure induced by the
+convenient way to distinguish between string diagrams using the monoidal structure induced by the
 coproduct and those using the premonoidal structure induced by the tensor product in a category
 having both (such as a distributive premonoidal category): the latter will have a state wire, while
 the former will not.
@@ -3652,10 +3666,10 @@ $\mc{C}$ is in fact Cartesian.
 %
 Fixing an \isotopessa{} expression model, we can model types in the obvious manner: 
 \begin{itemize}
-  \item The unit type $\mb{1}$ is modeled as the monoidal unit $I$
-  \item The empty type $\mb{0}$ is modeled as the initial object $\mb{0}$
-  \item Products $A \otimes B$ are modeled as tensor products $\dnt{A} \otimes \dnt{B}$
-  \item Sum types $A + B$ are modeled as coproducts $\dnt{A} + \dnt{B}$
+  \item The unit type $\mb{1}$ is modelled as the monoidal unit $I$
+  \item The empty type $\mb{0}$ is modelled as the initial object $\mb{0}$
+  \item Products $A \otimes B$ are modelled as tensor products $\dnt{A} \otimes \dnt{B}$
+  \item Sum types $A + B$ are modelled as coproducts $\dnt{A} + \dnt{B}$
 \end{itemize}
 We'll say an \isotopessa{} model \emph{interprets} a signature $(\mc{T}, \mc{I})$ if we have
 \begin{itemize}
@@ -3715,15 +3729,15 @@ denotations of their parameters, respectively.
 \end{figure}
 
 We can now interpret \isotopessa{} expressions $\hasty{\Gamma}{\epsilon}{a}{A}$ over a given
-signature in a model intepreting that signature as morphisms $\dnt{\Gamma} \to_\epsilon \dnt{A}$
+signature in a model interpreting that signature as morphisms $\dnt{\Gamma} \to_\epsilon \dnt{A}$
 using the rules in Figure~\ref{fig:ssa-expr-sem}. Up to this point, both our syntax and semantics
 are quite standard; in particular:
 \begin{itemize}
-  \item Variables $x$ are modeled as projections from the appropriate index in the context's
+  \item Variables $x$ are modelled as projections from the appropriate index in the context's
   denotation $\pi_{\Gamma, x} : \dnt{\Gamma} \to_\bot \dnt{A}$
-  \item Applications of primitive instructions $f\;a$ are modeled as $\dnt{f}$ precomposed with the
+  \item Applications of primitive instructions $f\;a$ are modelled as $\dnt{f}$ precomposed with the
   denotation of $a$. 
-  \item Unary \ms{let}-bindings are modeled by:
+  \item Unary \ms{let}-bindings are modelled by:
   \begin{itemize}
     \item Duplicating the context using the diagonal morphism $\Delta_{\dnt{\Gamma}}$
     \item Passing the right copy of the context through $\dnt{\hasty{\Gamma}{\epsilon}{a}{A}}$ to
@@ -3731,7 +3745,7 @@ are quite standard; in particular:
     \item Passing the result of this through $\dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{b}{B}}$ to get
     the final result of type $\dnt{B}$
   \end{itemize}
-  \item Pairs are modeled by passing the result of the diagonal morphism $\Delta_{\dnt{\Gamma}}$ to
+  \item Pairs are modelled by passing the result of the diagonal morphism $\Delta_{\dnt{\Gamma}}$ to
    $
    \dnt{\hasty{\Gamma}{\epsilon}{a}{A}} \ltimes \dnt{\hasty{\Gamma}{\epsilon}{b}{B}}
    $
@@ -3742,15 +3756,15 @@ are quite standard; in particular:
    $
     \langle \dnt{\hasty{\Gamma}{\epsilon}{a}{A}}, \dnt{\hasty{\Gamma}{\epsilon}{b}{B}} \rangle
    $.
-  \item Binary \ms{let}-bindings are modeled similarly to unary \ms{let}-bindings, except that after
+  \item Binary \ms{let}-bindings are modelled similarly to unary \ms{let}-bindings, except that after
   passing the right copy of the context through $\dnt{\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}$, we
   re-associate $\dnt{\Gamma} \otimes (\dnt{A} \otimes \dnt{B})$ to $(\dnt{\Gamma} \otimes \dnt{A})
   \otimes \dnt{B} = \dnt{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}$ before passing the entire result through
   $\dnt{\hasty{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{\epsilon}{c}{C}}$.
-  \item The unit value $()$ is modeled as the terminal morphism $1_{\dnt{\Gamma}}$, while
-  $\ms{abort}\;a$ is modeled as the denotation of $a$ postcomposed with the zero morphism 
-  $0_{\dnt{A}}$. Injections, similarly, are simply modeled as the appropriate coproduct injections.
-  \item A \ms{case}-expression is modeled by
+  \item The unit value $()$ is modelled as the terminal morphism $1_{\dnt{\Gamma}}$, while
+  $\ms{abort}\;a$ is modelled as the denotation of $a$ postcomposed with the zero morphism 
+  $0_{\dnt{A}}$. Injections, similarly, are simply modelled as the appropriate coproduct injections.
+  \item A \ms{case}-expression is modelled by
   \begin{itemize}
     \item Duplicating the context using the diagonal morphism $\Delta_{\dnt{\Gamma}}$
     \item Using the right copy of the context to compute the discriminant using
@@ -3926,9 +3940,9 @@ $s$ does not call $\ell$, this simplifies further to
 We can now begin to state the metatheoretic properties of our denotational semantics. Before we do so, we establish the convention that whenever we have an equation involving the interpretation of a derivation (e.g., $\dnt{\mathcal{D}} = \dnt{\mc{D}'}$), we assume that all the derivations (e.g., $\mc{D}$ and $\mc{D}'$) exist and are well-formed. 
 
 We begin with
-weakening: as shown in Figure~\ref{fig:ssa-ty-sem}, weakenings are modeled, essentially, as
+weakening: as shown in Figure~\ref{fig:ssa-ty-sem}, weakenings are modelled, essentially, as
 projections from a larger product $\dnt{\Gamma}$ to a smaller product $\dnt{\Delta}$, while
-label-weakenings are modeled as injections from a smaller coproduct $\dnt{\ms{L}}$ to a larger
+label-weakenings are modelled as injections from a smaller coproduct $\dnt{\ms{L}}$ to a larger
 coproduct $\dnt{\ms{K}}$; in particular, in both cases, the morphisms are pure.  A simple induction
 can then be used to derive the following weakening lemmas:
 \begin{lemma}[name=(Label) Weakening, restate=weakeninglem]
@@ -3988,7 +4002,7 @@ semantics, or, more formally:
   By a trivial induction, since our semantics is compositional.
 \end{proof}
 
-This result allows us to safely perform peephole rewrites which we can indepedently prove
+This result allows us to safely perform peephole rewrites which we can independently prove
 semantically valid, including on potentially impure operations. However, for pure substitutions, it
 is possible to relate the semantics of the substituted term to the original more precisely. By
 \emph{pure} substitutions, we mean substitutions which do not replace variables with impure terms.
@@ -4522,7 +4536,7 @@ submonads forms an (Elgot) submonad, i.e., the (Elgot) submonads form a complete
 
 A particularly important class of \isotopessa{} models are what we will call
 \emph{trace models}, which can be viewed as programs which either diverge or
-produce a result, while also producting (potentially nondeterministic,
+produce a result, while also producing (potentially nondeterministic,
 potentially infinite) traces of events $\epsilon \in \mc{E}$.
 
 \begin{definition}[(Monoidal) Stream Action]
@@ -4667,7 +4681,7 @@ with semantics
   \dnt{\ms{write}_x} = W_x^{\ms{PO}} =  \lambda v. \{((), \{x := v\})\}
 \).
 The semantics of \(\ms{read}\) in particular give a hint as to how this model works: rather than
-tracking the state of the heap, we simply \textit{emit} a pomset of the events that would have be
+tracking the state of the heap, we simply \textit{emit} a pomset of the events that would have been
 generated by a given execution (in the case of a read, a read event \(x = v\) whenever the read
 returns \(v\), and in the case of a write, the single write event \(x := v\) for a write of \(v\)),
 and later post-filter to obtain a set of valid executions. By doing so, our semantics remains
@@ -4689,7 +4703,7 @@ note, we can define the \textit{parallel execution} of two morphisms as follows:
   \end{aligned}
 \end{equation}
 It's tempting to try to use this to define a tensor product of morphisms to obtain a monoidal
-(rather than preomonoidal) category, but unfortunately, sliding still fails: \((W_x^{\ms{PO}} ||
+(rather than premonoidal) category, but unfortunately, sliding still fails: \((W_x^{\ms{PO}} ||
 \ms{id}) ; (\ms{id} || W_y^{\ms{PO}})\) emits the pomset \([x := a, y := b]\), while \((\ms{id} ||
 W_y^{\ms{PO}}) ; (W_x^{\ms{PO}} || \ms{id})\) emits the pomset \([y := b, x := a]\). 
 % If we did want this behaviour, we'd need to have a significantly more
