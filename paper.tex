@@ -4427,11 +4427,11 @@ since the case for \ms{where}-statements is particularly complex. With a little 
 
 As previously stated, every strong monad over a CCC, by virtue of providing a
 model of higher-order effectful programming, \emph{also} provides a model of
-first-order effectful programming, i.e., SSA. In particular, the Kleisli
-category of every such strong monad $\ms{T}$ is a premonoidal category and
+first-order effectful programming, i.e., (acyclic) SSA. In particular, the Kleisli
+category $\ms{C}_{\ms{T}}$ of every such strong monad $\ms{T}$ is a premonoidal category and
 induces a Freyd category with pure morphisms given by
 \begin{equation}
-  \ms{C}_{\ms{T}\bot}(A, B) = \{f;\eta_B : A \to \ms{T}B\} 
+  (\ms{C}_{\ms{T}})_{\bot}(A, B) = \{f;\eta_B : A \to \ms{T}B \mid f : A \to B\} 
   \subseteq \ms{C}(A, \ms{T}B) = \ms{C}_{\ms{T}}(A, B)
 \end{equation}
 It follows that every strong Elgot monad over a CCC with all coproducts is an
@@ -4477,15 +4477,16 @@ transformers}, many of which preserve Elgot-ness. For example, if $\ms{T}$ is a 
   $\ms{WriterT}\;W\;\ms{T}\;A = \ms{T}\;(A \times W)$ is strong Elgot 
   with monad operations
   \begin{equation}
-    \eta\;a = (\eta_{\ms{T}}\;a, 1) \qquad
+    \eta\;a = \eta_{\ms{T}}\;(a, 1) \qquad
     \ms{bind}\;a\;f = \ms{bind}_{\ms{T}}\;a\;(\lambda (a, w). 
-      \ms{bind}\;(f\;a)\;(\lambda (b, w') . (b, w \cdot w')))
+      \ms{bind}_{\ms{T}}\;(f\;a)\;(\lambda (b, w') . (b, w \cdot w')))
   \end{equation}
   and fixpoint
   \begin{equation}
     f^\dagger\;a = (
         \lambda (a, w). \ms{bind}_{\ms{T}}\;(f\;a)\;
-          (\lambda (b, w') . \eta_{\ms{T}}([(\cdot, w \cdot w'), (\cdot, w \cdot w')]\;b))
+          (\lambda (b, w') . \eta_{\ms{T}}([(\lambda c.\,  (c, w \cdot w')), 
+                                          (\lambda c.\, (c, w \cdot w'))]\;b))
       )^{\dagger_{\ms{T}}}
       (a, 1)
   \end{equation}
@@ -4500,7 +4501,7 @@ transformers}, many of which preserve Elgot-ness. For example, if $\ms{T}$ is a 
   \begin{equation}
     f^\dagger = \lambda s.(\lambda (a, s'). 
       \ms{bind}_{\ms{T}}\;(f\;a\;s')\;(\lambda (b, s') . 
-        \eta_{\ms{T}}([(\cdot, s'), (\cdot, s')]\;b)))^{\dagger_{\ms{T}}}
+        \eta_{\ms{T}}([(\lambda c.\, (c, s')), (\lambda c. (c, s'))]\;b)))^{\dagger_{\ms{T}}}
   \end{equation}
 \end{itemize}
 
@@ -4531,7 +4532,7 @@ potentially infinite) traces of events $\epsilon \in \mc{E}$.
   mapping infinite streams of $M$ to an element of $I$ satisfying $\Sigma \sigma
   = \sigma_0 \cdot \Sigma_i \sigma_{i + 1}$, where $\Sigma_i \sigma_i = \Sigma
   (\lambda i. \sigma_i)$. If $M$ is a monoid and $(M, I, \cdot)$ a monoid
-  action, in which case we have a \emph{monoidal} stream action
+  action, we say we  have a \emph{monoidal} stream action
 \end{definition}
 The most important example of a monoidal stream action is the \emph{free}
 monoidal stream action over a set $E$, called the set of \emph{events}, where:
@@ -4593,7 +4594,7 @@ Other important examples include:
   \end{itemize}
 \end{definition}
 
-As a simple, concrete example of type type of model this construction lets us define, consider the
+As a simple, concrete example of this type of model this construction lets us define, consider the
 \emph{nondeterministic printing monad}, which is simply defined as \(\ms{Print}\;A \equiv
 \ms{Traces}\;\Sigma\), where \(\Sigma: (\ms{byte}^*)^\omega \to \ms{byte}^{\leq \omega}\) denotes
 concatenation of bytestrings into a (potentially infinite) bytestream. This gives us us an
