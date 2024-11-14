@@ -9,7 +9,7 @@ resources.pdf: resources.tex acmart.cls references.bib
 # Needs paper.bbl for arXiv reasons, but I'm too lazy to make that
 # a separate target, so I'm adding paper.pdf as a dep  
 arxiv.tar.gz: paper.tex references.bib paper.pdf 
-	tar cvzf archive.tar.gz acmart.bib acmart.cls acmauthoryear.cbx acm-jdslogo.png acmnumeric.cbx paper.bbl paper.tex references.bib string-diagrams.sty 
+	tar cvzf arxiv.tar.gz acmart.bib acmart.cls acmauthoryear.cbx acm-jdslogo.png acmnumeric.cbx paper.bbl paper.tex references.bib string-diagrams.sty 
 
 
 clean: 
