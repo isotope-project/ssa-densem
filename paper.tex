@@ -3241,49 +3241,73 @@ before a branch. In particular, we define a \emph{distributive} premonoidal cate
   \delta_{A, B, C} 
     = [(A + \iota_l), (A + \iota_r)] : (A \otimes B) + (A \otimes C) \to A \otimes (B + C)
   $$
-  has an inverse $\delta^{-1}$. For any finite coproduct $\Sigma_iB_i$, we will write
-  $\delta_{\Sigma} : \Sigma_i (A \otimes B_i) \to A \otimes \Sigma_i B_i$ and $\delta_{\Sigma}^{-1}
-  : A \otimes \Sigma_i B_i \to \Sigma_i (A \otimes B_i)$ to denote the obvious morphisms
+  has an inverse $\delta^{-1}$. 
+  %
+  We will say a Freyd category $\mc{C}$ is distributive if the subcategory of pure morphisms
+  $\mc{C}_\bot$ is distributive, contains all injections, and is closed under coproducts (which
+  implies, in particular, that $\mc{C}$ is distributive when taken as a premonoidal category).
 \end{definition}
-We note in particular that every cartesian closed category with coproducts is distributive, as
-is the Kleisli category of a monad over a CCC with coproducts. 
-The last
-piece of the puzzle, allowing us to model loops in regions, is the existence of an \emph{Elgot
-structure}. We would also like our Elgot structure to be \emph{strong}; that is, compatible with the
-distributor, so that we can soundly access variables in scope in the loop body. Formally, we
-define a \emph{(strong) Elgot structure} as follows:
-\begin{definition}[(Strong) Elgot structure]
-  A category $\mc{C}$ with all coproducts is said to have an \emph{Elgot structure} if we can define
-  an operator $(-)^\dagger$ taking every morphism $f : A \to B + A$ to a morphism $f^\dagger : A \to
-  B$, the \emph{fixpoint} of $f$, satisfying the following axioms:
+We note in particular that every cartesian closed category with coproducts is a distributive Freyd
+category, as is the Kleisli category of a monad over a CCC with coproducts. 
+%
+For any finite coproduct $\Sigma_iB_i$, we will introduce the notation $\delta_{\Sigma} : \Sigma_i
+(A \otimes B_i) \to A \otimes \Sigma_i B_i$ and $\delta_{\Sigma}^{-1} : A \otimes \Sigma_i B_i \to
+\Sigma_i (A \otimes B_i)$ to denote the obvious morphisms.
+%
+The last piece of the puzzle, allowing us to model loops in regions, is the existence of an
+\emph{iteration operator}, since we currently cannot represent any nonterminating computations. We
+would further like this operator to be \emph{strong}; that is, compatible with the distributor, so
+that we can soundly access variables in scope in the loop body. Formally, we define a \emph{(strong)
+Conway iteration operator} as follows:
+\begin{definition}[Conway iteration]
+  A category $\mc{C}$ with all coproducts is said to have a \emph{iteration operator} if we can
+  define an operator $(-)^\dagger$ taking every morphism $f : A \to B + A$ to a morphism $f^\dagger
+  : A \to B$, the \emph{fixpoint} of $f$, with the following property: given $f : A \to B + A$, we
+  have $f^\dagger = f;[\ms{id}, f^\dagger]$. We say this operator is a \emph{Conway iteration
+  operator} if it additionally satisfies the following properties:
   \begin{itemize}
-    \item \emph{Fixpoint:} $\forall f : A \to B + A.\, f^\dagger = f;[\ms{id}, f^\dagger]$
-    \item \emph{Naturality:} $\forall f : A \to B + A.\, \forall g : B \to C.\,
-      (f;g + \ms{id})^\dagger = f^\dagger;g : A \to C$
-    \item \emph{Codiagonal:} $\forall f : A \to (B + A) + A.\,
-      (f^\dagger)^\dagger = (f;[\ms{id}, \iota_r])^\dagger : A \to B$
-    \item \emph{Uniformity:} 
-    $
-      \forall f : A' \to B + A'.\, \forall g : A \to B + A.\, \forall h : A \to A'.\;
-        h;f = g;\ms{id} + h \implies h;f^\dagger = g^\dagger
-    $
+    \item \emph{Naturality:} given $f : A \to B + A$ and $g : B \to C$, we have
+      $
+      (f;g + \ms{id})^\dagger = f^\dagger;g : A \to C
+      $
+    \item \emph{Dinaturality:} given morphisms $g : A \to B + C$ and $h : C \to B + A$, we have that
+      $
+      (g ; [\iota_l, h])^\dagger = g ; [\ms{id}_B, (h ; [\iota_l, g])^\dagger]
+      $
+    \item \emph{Codiagonal:} given $f : A \to (B + A) + A$, we have
+      $
+      (f^\dagger)^\dagger = (f;[\ms{id}, \iota_r])^\dagger : A \to B
+      $
   \end{itemize}
-  If $\mc{C}$ is distributive, we say it has a \emph{strong Elgot structure} if
-  $
+  If $\mc{C}$ is distributive, we say this operator is \emph{strong} if
+  $$
   \forall f: A \to B + A, (C \otimes f ; \delta^{-1})^\dagger = C \otimes f^\dagger
-  $
-  In particular, we say a monad is Elgot if its Kliesli category has an Elgot structure. Similarly,
-  we say a \emph{strong} monad is strong Elgot if its Kliesli category has a strong Elgot structure.
+  $$
+  Given a wide subcategory $\mc{K} \subseteq \mc{C}$, we say $\mc{C}$ is \emph{\mc{K}-uniform} if,
+  for all $h : A \to_{\mc{K}} B$, $f : B \to C + B$, and $g : A \to C + A$, we have that
+  $$
+  h ; f = g ; C + h \implies h ; f^\dagger = g^\dagger 
+  $$
 \end{definition}
-% One useful property we can derive from the axioms of an Elgot category is \emph{dinaturality}:
-% given $f: A \to B + A'$ and $g : A' \to A$, we have that
-% \begin{equation}
-%   (f ; B + g)^\dagger = f ; [\ms{id}_B, (g ; f)^\dagger]
-% \end{equation}
-% and, therefore, that
-% \begin{equation}
-%   g;(f ; B + g)^\dagger = (g ; f)^\dagger
-% \end{equation}
+We will call Freyd categories equipped with an appropriate Elgot structure \emph{strong Elgot
+categories}. In particular, we define
+\begin{definition}[(Strong) Elgot structure]
+  A Freyd category $\mc{C}$ with all coproducts is said to have an \emph{Elgot structure} if it has
+  a Conway iteration operator which is $\mc{C}_\bot$ uniform. If $\mc{C}$ is distributive, we say
+  $\mc{C}$ is strong Elgot if its iteration operator is strong. In particular, we say a monad is
+  Elgot if its Kliesli category has an Elgot structure. Similarly, we say a \emph{strong} monad is
+  strong Elgot if its Kliesli category has a strong Elgot structure.
+\end{definition}
+It turns out that, to check something is a strong Elgot category, we do not need to
+explicitly verify dinaturality. In particularly, we may verify the following:
+\begin{proposition}
+  If $(-)^\dagger$ is an iteration operator which is satisfies naturality, codiagonal, and is
+  $\mc{K}$-uniform for $\mc{K}$ containing all injections and closed under coproducts, then it also
+  satisfies dinaturality.
+\end{proposition}
+Since in a distributive Freyd category $\mc{C}_\bot$ contains all injections and is closed under
+coproducts, dinaturality follows from the other axioms of an Elgot category.
+%
 Given a distributive Freyd category equipped with a (strong) Elgot structure, we will often want to
 consider the fixpoint of a morphism $f: R \otimes A \to B + A$, where our ``context'' $R$ does not
 change between iterations. To do this, we first need to build up a morphism
@@ -3649,14 +3673,16 @@ the former will not.
 We now have all the ingredients we need to give a semantics to \isotopessa{} expressions and regions.
 In particular, an \isotopessa{} expression model consists of:
 \begin{itemize}
-  \item A distributive premonoidal category $\mc{C}$
+  \item A premonoidal category $\mc{C}$
   \item A complete lattice $E$, and a continuous function $\epsilon \mapsto \mc{C}_\epsilon$ from
-  $E$ to wide subcategories of $\mc{C}$, such that $\mc{C}_\top = \mc{C}$, and $(\mc{C}, \mc{C}_\bot)$ is a Freyd category. Furthermore, we ask that each $\mc{C}_\epsilon$ is closed under
-  tensor products and coproducts, and in particular that injections and (inverse) distributors are
-  pure and therefore contained in every $\mc{C}_\epsilon$.
+  $E$ to wide subcategories of $\mc{C}$, such that $\mc{C}_\top = \mc{C}$, and $(\mc{C},
+  \mc{C}_\bot)$ is a distributive Freyd category. Furthermore, we ask that each $\mc{C}_\epsilon$ is
+  closed under tensor products and coproducts, and in particular that injections and (inverse)
+  distributors are pure and therefore contained in every $\mc{C}_\epsilon$.
 \end{itemize}
-If an \isotopessa{} expression model additionally has an Elgot structure on $\mc{C}$, we will refer to it simply
-as an \isotopessa{} model.
+If an \isotopessa{} expression model additionally has an Elgot structure on $\mc{C}$ (taken as a
+Freyd category with pure morphisms $\mc{C}_\bot$), we will refer to it simply as an \isotopessa{}
+model.
 
 We will write morphisms $\mc{C}_\epsilon(A, B)$ as $A \to_\epsilon B$, and morphisms $\mc{C}(A, B)$
 as $A \to B$. Note that, whenever $\mc{C}$ is a distributive Elgot Freyd category, we can trivially
