@@ -3243,9 +3243,9 @@ before a branch. In particular, we define a \emph{distributive} premonoidal cate
   $$
   has an inverse $\delta^{-1}$. 
   %
-  We will say a Freyd category $\mc{C}$ is distributive if the subcategory of pure morphisms
-  $\mc{C}_\bot$ is distributive, contains all injections, and is closed under coproducts (which
-  implies, in particular, that $\mc{C}$ is distributive when taken as a premonoidal category).
+  We will say a Freyd category $\mc{C}$ is distributive if it has all coproducts and the subcategory
+  of pure morphisms $\mc{C}_\bot$ is distributive (which implies, in particular, that $\mc{C}$ is
+  distributive when taken as a premonoidal category).
 \end{definition}
 We note in particular that every cartesian closed category with coproducts is a distributive Freyd
 category, as is the Kleisli category of a monad over a CCC with coproducts. 
@@ -3301,12 +3301,14 @@ categories}. In particular, we define
 It turns out that, to check something is a strong Elgot category, we do not need to
 explicitly verify dinaturality. In particularly, we may verify the following:
 \begin{proposition}
-  If $(-)^\dagger$ is an iteration operator which is satisfies naturality, codiagonal, and is
-  $\mc{K}$-uniform for $\mc{K}$ containing all injections and closed under coproducts, then it also
-  satisfies dinaturality.
+  If $(-)^\dagger$ is an iteration operator which satisfies naturality and codiagonal and is
+  $\mc{K}$-uniform for $\mc{K}$ co-Cartesian, then it also satisfies dinaturality.
 \end{proposition}
-Since in a distributive Freyd category $\mc{C}_\bot$ contains all injections and is closed under
-coproducts, dinaturality follows from the other axioms of an Elgot category.
+\begin{proof}
+  See Lemma 31 of \citet{goncharov-18-guarded-traced}
+\end{proof}
+Since in a distributive Freyd category $\mc{C}_\bot$ must be distributive (and hence co-cartesian),
+dinaturality follows from the other axioms of an Elgot category.
 %
 Given a distributive Freyd category equipped with a (strong) Elgot structure, we will often want to
 consider the fixpoint of a morphism $f: R \otimes A \to B + A$, where our ``context'' $R$ does not
