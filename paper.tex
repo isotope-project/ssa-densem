@@ -1441,7 +1441,7 @@ summarized in Figure~\ref{fig:ssa-unary-let-expr}:
   separate rule since, while it follows trivially from $\beta$ for pure $a$, we also want to
   consider \emph{impure} expressions with some effect $e \neq \bot$.
   
-  \item Rules \brle{let$_1$-op}, \brle{let$_1$-pair}, \brle{let$_1$-inl}, and \brle{let$_1$-inr},
+  \item Rules \brle{let$_1$-op}, \brle{let$_1$-inl}, and \brle{let$_1$-inr},
   \brle{let$_1$-abort}, and \brle{let$_1$-case} which allow us to ``pull'' a let-statement out of
   any of the other expression constructors; operationally, this is saying that the bound expression
   we pull out is evaluated before the rest of the \ms{let}-binding.
@@ -1485,15 +1485,15 @@ summarized in Figure~\ref{fig:ssa-unary-let-expr}:
         {\letexpr{y}{(\letexpr{x}{a}{b})}{c}}
         {\letexpr{x}{a}{\letexpr{y}{b}{c}}}{C}}
     \\ 
-    \prftree[r]{\rle{let$_1$-pair}}
-      {\hasty{\Gamma}{\epsilon}{a}{A}}
-      {\hasty{\Gamma}{\epsilon}{b}{B}}
-      {\hasty{\Gamma, \bhyp{z}{A \otimes B}}{\epsilon}{c}{C}}
-      {\tmeq{\Gamma}{\epsilon}
-        {\letexpr{z}{(a, b)}{c}}
-        {\letexpr{x}{a}{
-          \letexpr{y}{b}{\letexpr{z}{(x, y)}{c}}}}{C}}
-    \\
+    % \prftree[r]{\rle{let$_1$-pair}}
+    %   {\hasty{\Gamma}{\epsilon}{a}{A}}
+    %   {\hasty{\Gamma}{\epsilon}{b}{B}}
+    %   {\hasty{\Gamma, \bhyp{z}{A \otimes B}}{\epsilon}{c}{C}}
+    %   {\tmeq{\Gamma}{\epsilon}
+    %     {\letexpr{z}{(a, b)}{c}}
+    %     {\letexpr{x}{a}{
+    %       \letexpr{y}{b}{\letexpr{z}{(x, y)}{c}}}}{C}}
+    % \\
     \prftree[r]{\rle{let$_1$-let$_2$}}
       {\hasty{\Gamma}{\epsilon}{e}{A \times B}}
       {\hasty{\Gamma, \bhyp{x}{A}, \bhyp{y}{C}}{\epsilon}{c}{C}}
@@ -1675,7 +1675,7 @@ analogous to those for unary \ms{let}-expressions:
 \begin{itemize}
   \item \brle{let$_1$-$\beta$} allows us to perform $\beta$-reduction of \emph{pure} expressions
   into regions; unlike for terms, we do not need an $\eta$-rule
-  \item Exactly like for \ms{let}-expressions, \brle{let$_1$-op}, \brle{let$_1$-pair},
+  \item Exactly like for \ms{let}-expressions, \brle{let$_1$-op},
   \brle{let$_1$-inl}, \brle{let$_1$-inr}, \brle{let$_1$-abort}, and \brle{let$_1$-case} allow us
   to pull out nested subexpressions of the bound value of a \ms{let}-statement into their own
   unary \ms{let}-statement
@@ -1747,15 +1747,15 @@ not necessary, as these are derivable from binding and the $\eta$-rules for expr
       {\haslb{\Gamma, \bhyp{y}{B}}{r}{\ms{L}}}
       {\lbeq{\Gamma}{\letstmt{y}{(\letexpr{x}{a}{b})}{r}}{\letstmt{x}{a}{\letstmt{y}{b}{r}}}{\ms{L}}}
     \\
-    \prftree[r]{\rle{let$_1$-pair}}
-      {\hasty{\Gamma}{\epsilon}{a}{A}}
-      {\hasty{\Gamma}{\epsilon}{b}{B}}
-      {\haslb{\Gamma, \bhyp{z}{A \otimes B}}{r}{\ms{L}}}
-      {\lbeq{\Gamma}
-        {\letstmt{z}{(a, b)}{r}}
-        {\letstmt{x}{a}{\letstmt{y}{b}{\letstmt{z}{(x, y)}{r}}}}
-        {\ms{L}}}
-    \\
+    % \prftree[r]{\rle{let$_1$-pair}}
+    %   {\hasty{\Gamma}{\epsilon}{a}{A}}
+    %   {\hasty{\Gamma}{\epsilon}{b}{B}}
+    %   {\haslb{\Gamma, \bhyp{z}{A \otimes B}}{r}{\ms{L}}}
+    %   {\lbeq{\Gamma}
+    %     {\letstmt{z}{(a, b)}{r}}
+    %     {\letstmt{x}{a}{\letstmt{y}{b}{\letstmt{z}{(x, y)}{r}}}}
+    %     {\ms{L}}}
+    % \\
     \prftree[r]{\rle{let$_{1}$-let$_2$}}
       {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
       {\hasty{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{\epsilon}{c}{C}}
@@ -7874,37 +7874,6 @@ We may now state our desired result as follows:
       ; \lmor{\dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{b}{B}}}
       ; \dnt{\hasty{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{\epsilon}{c}{C}} \\
       & = \dnt{\hasty{\Gamma}{\epsilon}{\letexpr{x}{a}{\letexpr{y}{b}{c}}}{C}}
-    \end{align*}
-    as desired.
-    \item \brle{let$_1$-pair}: we have that
-    \begin{align*}
-      & \dnt{\hasty{\Gamma}{\epsilon}{\letexpr{x}{a}{\letexpr{y}{b}{\letexpr{z}{(x, y)}{c}}}}{C}} \\
-      & = \lmor{\dnt{\hasty{\Gamma}{\epsilon}{a}{A}}}
-        ; \lmor{\dnt{\hasty{\Gamma, \bhyp{x}{A}}{\epsilon}{b}{B}}}
-        ; \\ & \qquad 
-        \lmor{\dnt{\hasty{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{\epsilon}{(x, y)}{A \otimes B}}}
-        ; \dnt{\hasty{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}, \bhyp{z}{A \otimes B}}{\epsilon}{c}{C}} \\
-      & = \lmor{\dnt{\hasty{\Gamma}{\epsilon}{a}{A}}}
-        ; \lmor{\pi_l ; \dnt{\hasty{\Gamma}{\epsilon}{b}{B}}}
-        ; \lmor{\alpha ; \pi_r}
-        ; (\pi_l ; \pi_l) \otimes (\dnt{A} \otimes \dnt{B})
-        ; \dnt{\hasty{\Gamma, \bhyp{z}{A \otimes B}}{\epsilon}{c}{C}} \\
-      & = \lmor{\dnt{\hasty{\Gamma}{\epsilon}{a}{A}}}
-        ; \lmor{\lmor{\pi_l ; \dnt{\hasty{\Gamma}{\epsilon}{b}{B}}} ; \alpha ; \pi_r}
-        ; \pi_l \otimes (\dnt{A} \otimes \dnt{B})
-        ; \dnt{\hasty{\Gamma, \bhyp{z}{A \otimes B}}{\epsilon}{c}{C}} \\
-      & = \lmor{
-        \lmor{\dnt{\hasty{\Gamma}{\epsilon}{a}{A}}}
-        ; \lmor{\pi_l ; \dnt{\hasty{\Gamma}{\epsilon}{b}{B}}}
-        ; \alpha ; \pi_r
-        } 
-        ; \dnt{\hasty{\Gamma, \bhyp{z}{A \otimes B}}{\epsilon}{c}{C}} \\
-      & = \lmor{
-          \dmor{\Gamma} 
-          ; \dnt{\hasty{\Gamma}{\epsilon}{a}{A}} \ltimes \dnt{\hasty{\Gamma}{\epsilon}{b}{B}}
-        } 
-        ; \dnt{\hasty{\Gamma, \bhyp{z}{A \otimes B}}{\epsilon}{c}{C}} \\
-      & = \dnt{\hasty{\Gamma}{\epsilon}{\letexpr{z}{(a, b)}{c}}{C}}
     \end{align*}
     as desired.
     \item \brle{let$_1$-let$_2$}: we have that
