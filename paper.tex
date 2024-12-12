@@ -950,9 +950,12 @@ expressions may be built up from the following fairly standard primitives:
   \item Pattern matching on sum types, typed by \brle{case}. Operationally, we interpret this as
   executing $e$, and then, if $e$ is a left injection $\iota_l\;x$, executing $a$ with its value
   ($x$), otherwise executing $b$.
-  \item An operator $\ms{abort}\;e$ allowing us to abort execution if given a value of the empty
-  type.
+  \item An operator $\ms{abort}\;e$ allowing us to abort execution if given a value of the empty type. Since the empty type is a 0-ary sum type, $\ms{abort}$ can be seen as a $\ms{case}$ with no branches. Since the empty type is uninhabited, execution can never reach an $\ms{abort}$. This can be viewed as a typesafe version of the \texttt{unreachable} instruction in LLVM IR. 
 \end{itemize}
+
+Traditional presentations of SSA use a boolean type instead of sum types. Naturally, booleans can be encoded with sum types as $\mb{1} + \mb{1}$. If-then-else is then a $\ms{case}$ which ignores the unit payloads, so that
+$\ite{e_1}{e_2}{e_3} := \caseexpr{e_1}{()}{e_2}{()}{e_3}$. 
+
 
 \begin{figure}
   \begin{gather*}
@@ -988,7 +991,7 @@ expressions may be built up from the following fairly standard primitives:
   \label{fig:ssa-expr-rules}
 \end{figure}
 
-\emph{Regions}, on the other hand, can be built up as follows:
+We now move on to \emph{regions}, which can be built up as follows:
 \begin{itemize}
   \item A branch to a label $\ell$ with pure argument $a$, typed with \brle{br}.
   
@@ -2440,7 +2443,7 @@ where we define $\letanf{x}{a}{r}$ by induction on expressions $a$ as follows
     \letanf{x}{a}{r} &= (\letstmt{x}{a}{r}) \hspace{8em} \text{if}\;a\;\text{atomic} \\
     \letanf{x}{f\;e}{r} &= \letanf{y}{e}{\letstmt{x}{f\;y}{r}} \\
     \letanf{x}{(\letexpr{y}{e}{a})}{r} &= \letanf{y}{e}{\letanf{x}{a}{r}} \\
-    \letanf{x}{(e_1, e_2)}{r} &= \letanf{y_1}{e_1}{\letanf{y_2}{e_2}{r}} \\
+    \letanf{x}{(e_1, e_2)}{r} &= \letanf{y_1}{e_1}{\letanf{y_2}{e_2}{\letanf{x}{(y_1,y_2)}{r}}} \\
     \letanf{x}{(\letexpr{(y, z)}{e}{a})}{r} 
       &= \letanf{w}{e}{(\letstmt{(y, z)}{w}{\letanf{x}{a}{r}})} \\
     \letanf{x}{\linl{e}}{r} &= \letanf{y}{e}{(\letstmt{x}{\linl{y}}{r})} \\
