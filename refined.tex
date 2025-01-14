@@ -1,0 +1,1445 @@
+%% Commands for TeXCount
+%TC:macro \cite [option:text,text]
+%TC:macro \citep [option:text,text]
+%TC:macro \citet [option:text,text]
+%TC:envir table 0 1
+%TC:envir table* 0 1
+%TC:envir tabular [ignore] word
+%TC:envir displaymath 0 word
+%TC:envir math 0 word
+%TC:envir comment 0 0
+
+\documentclass[acmsmall,screen,review]{acmart}
+
+\usepackage{syntax}
+\renewcommand{\syntleft}{\normalfont\itshape}
+\renewcommand{\syntright}{\normalfont\itshape}
+
+\usepackage{prftree}
+
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{fancyvrb}
+\usepackage{enumitem}
+\usepackage{string-diagrams}
+\usepackage{cancel}
+\usepackage{thmtools}
+\usetikzlibrary{calc}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+%    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\lstset{style=mystyle}
+
+\newcounter{todos}
+\newcommand{\TODO}[1]{{
+  \stepcounter{todos}
+  \begin{center}\large{\textcolor{red}{\textbf{TODO \arabic{todos}:} #1}}\end{center}
+}}
+
+\newcommand{\todo}[1]{\stepcounter{todos} \textcolor{red}{\textbf{TODO \arabic{todos}}: #1}}
+
+% Math fonts
+\newcommand{\mc}[1]{\ensuremath{\mathcal{#1}}}
+\newcommand{\mb}[1]{\ensuremath{\mathbf{#1}}}
+\newcommand{\ms}[1]{\ensuremath{\mathsf{#1}}}
+
+% Math
+\newcommand{\nats}{\mathbb{N}}
+
+% Syntax atoms
+\newcommand{\lbl}[1]{{`#1}}
+\newcommand{\lto}{:}
+\newcommand{\linl}[1]{\iota_l\;{#1}}
+\newcommand{\linr}[1]{\iota_r\;{#1}}
+\newcommand{\labort}[1]{\ms{abort}\;{#1}}
+
+% Syntax
+\newcommand{\letexpr}[3]{\ensuremath{\ms{let}\;#1 = #2;\;#3}}
+\newcommand{\caseexpr}[5]{\ms{case}\;#1\;\{\linl{#2} \lto #3, \linr{#4} \lto #5\}}
+\newcommand{\letstmt}[3]{\ensuremath{\ms{let}\;#1 = #2; #3}}
+\newcommand{\brb}[2]{\ms{br}\;#1\;#2}
+\newcommand{\ite}[3]{\ms{if}\;#1\;\{#2\}\;\ms{else}\;\{#3\}}
+\newcommand{\casestmt}[5]{\ms{case}\;#1\;\{\linl{#2} \lto #3, \linr{#4} \lto #5\}}
+\newcommand{\where}[2]{#1\;\ms{where}\;#2}
+\newcommand{\wbranch}[3]{#1(#2) \lto \{#3\}}
+\newcommand{\cfgsubst}[1]{\ms{cfgs}\;\{#1\}}
+\newcommand{\wseq}[2]{{#1} \mathbin{{;}{;}} {#2}}
+\newcommand{\rupg}[1]{{#1}^\upharpoonright}
+\newcommand{\lupg}[1]{{#1}^\upharpoonleft}
+\newcommand{\liter}[3]{\ms{iter}\;#1\;\{ \linr{#2} \lto #3 \}}
+\newcommand{\einf}[1]{#1 \in \ms{E}^\infty}
+
+% Judgements
+\newcommand{\qsp}[4]{#1 \vdash #2 = #3 + #4}
+\newcommand{\qwk}[4]{#1 \vdash #2 \geq #3 + #4}
+\newcommand{\swk}[3]{#1 \mapsto #2 ; #3}
+\newcommand{\cwk}[2]{#1 \mapsto #2}
+\newcommand{\lwk}[2]{#1 \rightsquigarrow #2}
+\newcommand{\thyp}[3]{#1 : {#2}^{#3}}
+\newcommand{\bhyp}[2]{#1 : #2}
+\newcommand{\lhyp}[2]{#1(#2)}
+\newcommand{\rle}[1]{{\scriptsize\textsf{#1}}}
+
+\newcommand{\hasty}[4]{#1 \vdash_{#2} #3: {#4}}
+\newcommand{\haslb}[3]{#1 \vdash #2 \rhd #3}
+
+\newcommand{\ahasty}[4]{#1 \vdash_{#2}^{\ms{anf}} #3 : {#4}}
+\newcommand{\thaslb}[3]{#1 \vdash^{\ms{t}}_{\ms{ssa}} #2 \rhd #3}
+\newcommand{\ahaslb}[3]{#1 \vdash^{\ms{anf}} #2 \rhd #3}
+\newcommand{\bhaslb}[3]{#1 \vdash^{\ms{b}}_{\ms{ssa}} #2 \rhd #3}
+% \newcommand{\chaslb}[3]{#1 \vdash^{\ms{c}}_{\ms{ssa}} #2 \rhd #3}
+
+\newcommand{\shaslb}[3]{#1 \vdash^{\ms{s}} #2 \rhd #3}
+
+\newcommand{\isop}[4]{#1 \in \mc{I}_{#4}(#2, #3)}
+\newcommand{\issubst}[3]{#1: #2 \mapsto #3}
+\newcommand{\csubst}[5]{#1 \vdash_{#4}^{#5} #2 : #3}
+\newcommand{\lbsubst}[4]{#1 \vdash #2: #3 \rightsquigarrow #4}
+\newcommand{\teqv}{\approx}
+\newcommand{\tref}{\leq}
+\newcommand{\tmle}[5]{#1 \vdash_{#2} #3 \tref #4 : {#5}}
+\newcommand{\tmeq}[5]{#1 \vdash_{#2} #3 \teqv #4 : {#5}}
+\newcommand{\lbeq}[4]{#1 \vdash #2 \teqv #3 \rhd {#4}}
+\newcommand{\tmseq}[4]{\issubst{#1 \teqv #2}{#3}{#4}}
+\newcommand{\lbseq}[5]{\lbsubst{#1 \teqv #2}{#3}{#4}{#5}}
+\newcommand{\brle}[1]{{\textsf{#1}}}
+
+\newcommand{\toanf}[1]{\ms{ANF}(#1)}
+\newcommand{\letanf}[3]{\ms{ANF}_{\ms{let}}(#1, #2, #3)}
+\newcommand{\tossa}[1]{\ms{SSA}(#1)}
+\newcommand{\ssawhere}[2]{\ms{SSA}_{\ms{a}}(#1, #2)}
+\newcommand{\toentry}[1]{\ms{entry}(#1)}
+\newcommand{\todom}[1]{\ms{children}(#1)}
+\newcommand{\tocfg}[1]{\ms{cfg}(#1)}
+\newcommand{\adddom}[2]{\ms{bb}(#1, #2)}
+\newcommand{\toreg}[1]{\ms{reg}(#1)}
+\newcommand{\todnf}[1]{\ms{dom}(#1)}
+\newcommand{\towhile}[2]{\ms{WH}_{#1}(#2)}
+\newcommand{\topwhile}[2]{\ms{PW}_{#1}(#2)}
+
+% Denotational semantics
+\newcommand{\dnt}[1]{\llbracket{#1}\rrbracket}
+\newcommand{\ednt}[1]{\left\llbracket{#1}\right\rrbracket}
+\newcommand{\tmor}[1]{{!}_{#1}}
+\newcommand{\dmor}[1]{{\Delta}_{#1}}
+\newcommand{\entrymor}[3]{\ms{esem}_{#1, #3}(#2)}
+\newcommand{\loopmor}[3]{\ms{lsem}_{#1, #3}(#2)}
+\newcommand{\substpure}[1]{#1\;\ms{pure}}
+
+% Comonadic lore
+\newcommand{\lmor}[1]{\ms{let}(#1)}
+\newcommand{\envcom}[2]{{#1}_{#2 \otimes \cdot}}
+\newcommand{\rlmor}[1]{\ms{rlet}(#1)}
+\newcommand{\rcase}[1]{\ms{rcase}(#1)}
+\newcommand{\rfix}[1]{\ms{rfix}(#1)}
+\newcommand{\rseq}[3]{#2 \gg_{#1} #3}
+\newcommand{\envpil}[1]{\pi_{{#1}l}}
+\newcommand{\envpir}[1]{\pi_{{#1}r}}
+
+\newcommand{\toenv}[2]{\ms{env}_{#1}(#2)}
+\newcommand{\envcop}[3]{[#2, #3]_{#1}}
+\newcommand{\envinr}[1]{\iota^{#1}_{r}}
+\newcommand{\envinl}[1]{\iota^{#1}_{l}}
+\newcommand{\envtn}[3]{{#2} \otimes_{#1} {#3}}
+
+% Composition
+\newcommand{\invar}{\square}
+\newcommand{\outlb}{\blacksquare}
+\newcommand{\pckd}[1]{\langle #1 \rangle}
+
+% Weak memory
+\newcommand{\bufloc}[1]{\overline{#1}}
+
+% Branding
+\newcommand{\submonssa}{\(\lambda_{\leq\otimes}\)}
+\newcommand{\subdistssa}{\(\lambda_{\leq\otimes+}\)}
+\newcommand{\subiterssa}{\(\lambda_{\leq\otimes+}^\dagger\)}
+\newcommand{\isotopessa}{\(\lambda_{\ms{SSA}}\)}
+\newcommand{\thsubmon}[1]{\ms{Th}_{\leq\otimes}(#1)}
+\newcommand{\thsubdist}[1]{\ms{Th}_{\leq\otimes+}(#1)}
+\newcommand{\thsubiter}[1]{\ms{Th}_{\leq\otimes+}^\dagger(#1)}
+
+% Formalization pointers
+\newcommand{\formalizedas}[1]{Formalized as \texttt{#1}}
+
+% Quantities
+\newcommand{\zeroq}{0}
+\newcommand{\oneq}{1}
+\newcommand{\delq}{1^?}
+\newcommand{\cpyq}{\omega^+}
+\newcommand{\topq}{\omega}
+
+% Operators
+\newcommand{\pto}{\rightharpoonup}
+\newcommand{\alquant}{\ms{q}}
+\newcommand{\alcount}{\sharp}
+\newcommand{\aldquant}{\bar{\ms{q}}}
+\newcommand{\varcount}[2]{\sharp(#1, #2)}
+
+
+%% Rights management information.  This information is sent to you
+%% when you complete the rights form.  These commands have SAMPLE
+%% values in them; it is your responsibility as an author to replace
+%% the commands and values with those provided to you when you
+%% complete the rights form.
+\setcopyright{acmcopyright}
+\copyrightyear{2025}
+\acmYear{2025}
+\acmDOI{XXXXXXX.XXXXXXX}
+
+%%
+%% These commands are for a JOURNAL article.
+% \acmJournal{JACM}
+% \acmVolume{37}
+% \acmNumber{4}
+% \acmArticle{111}
+% \acmMonth{8}
+
+%%
+%% Submission ID.
+%% Use this when submitting an article to a sponsored event. You'll
+%% receive a unique submission ID from the organizers
+%% of the event, and this ID should be used as the parameter to this command.
+%%\acmSubmissionID{123-A56-BU3}
+
+\begin{document}
+
+\title{A Complete Refinement System for Substructural SSA}
+
+\author{Jad Ghalayini}
+\email{jeg74@cl.cam.ac.uk}
+\orcid{0000-0002-6905-1303}
+
+\author{Neel Krishnaswami}
+\email{nk480@cl.cam.ac.uk}
+\orcid{0000-0003-2838-5865}
+
+\begin{abstract}
+  \TODO{this}
+\end{abstract}
+
+\begin{CCSXML}
+  <ccs2012>
+  <concept>
+  <concept_id>10003752.10010124.10010131.10010133</concept_id>
+  <concept_desc>Theory of computation~Denotational semantics</concept_desc>
+  <concept_significance>500</concept_significance>
+  </concept>
+  <concept>
+  <concept_id>10003752.10010124.10010131.10010137</concept_id>
+  <concept_desc>Theory of computation~Categorical semantics</concept_desc>
+  <concept_significance>500</concept_significance>
+  </concept>
+  <concept>
+  <concept_id>10003752.10003790.10011740</concept_id>
+  <concept_desc>Theory of computation~Type theory</concept_desc>
+  <concept_significance>500</concept_significance>
+  </concept>
+  </ccs2012>
+\end{CCSXML}
+
+\ccsdesc[500]{Theory of computation~Denotational semantics}
+\ccsdesc[500]{Theory of computation~Categorical semantics}
+\ccsdesc[500]{Theory of computation~Type theory}
+
+%%
+%% Keywords. The author(s) should pick words that accurately describe
+%% the work being presented. Separate the keywords with commas.
+\keywords{SSA, Categorical Semantics, Elgot Structure, Effectful Category}
+
+% \received{20 February 2007}
+% \received[revised]{12 March 2009}
+% \received[accepted]{5 June 2009}
+
+\maketitle
+
+\section{Introduction}
+
+\TODO{this}
+
+\section{Substructural Effects}
+
+\subsection{Syntax}
+
+\TODO{text for \submonssa}
+
+\begin{grammar}
+  <\(A, B, C\)> ::= 
+  \(X\)
+  \;|\; \(A \otimes B\)
+  \;|\; \(\mathbf{1}\)
+
+  <\(a, b, c\)> ::=
+  \(x\)
+  \;|\; \(f\;a\)
+  \;|\; \(\letexpr{x}{a}{b}\)
+  \;|\; \(()\)
+  \;|\; \((a, b)\)
+  \;|\; \(\letexpr{(x, y)}{a}{b}\)
+  
+  <\(q\)> ::= \(\bot\) | \(\zeroq\) | \(\oneq\) | \(\cpyq\) | \(\delq\) | \(\topq\)
+
+  <\(\Gamma\)> ::= \(\cdot\) \;|\; \(\Gamma, x : A\)
+
+  <\(\mb{q}\)> ::= \(\cdot\) \;|\; \(\mb{q}, q\)
+
+  <\(\mb{e}\)> ::= \(\cdot\) \;|\; \(\mb{e}, \epsilon\)
+\end{grammar}
+
+\begin{equation}
+  \oneq \leq \cpyq \qquad \topq = \top \qquad \delq = \zeroq \sqcup \oneq
+\end{equation}
+
+\begin{equation}
+  \alquant(A \otimes B) = \alquant(A) \sqcap \alquant(B) \qquad
+  \alquant(\mb{1}) = \topq
+\end{equation}
+
+\begin{gather*}
+  \prftree[r]{\rle{nil}}{\cwk{\cdot}{\cdot}} \qquad 
+  \prftree[r]{\rle{cons}}
+    {\cwk{\Gamma^{\mb{q}}_{\mb{e}}}{\Delta^{\mb{q}'}_{\mb{e}'}}}
+    {q \leq q'}
+    {e \leq e'}
+    {\cwk{\Gamma^{\mb{q}}_{\mb{e}}, x : A^q_\epsilon}
+         {\Delta^{\mb{q}'}_{\mb{e}'}, x : A^{q'}_{\epsilon'}}} \qquad
+  \prftree[r]{\rle{skip}}
+    {\cwk{\Gamma^{\mb{q}}_{\mb{e}}}{\Delta^{\mb{q}'}_{\mb{e}'}}}
+    {\zeroq \leq q \sqcap \alquant(A)}
+    {\cwk{\Gamma^{\mb{q}}_{\mb{e}}, x : A^q_\epsilon}{\Delta}^{\mb{q}'}_{\mb{e}'}}
+\end{gather*}
+
+\begin{gather*}
+  \prftree[r]{\rle{nil}}
+    {\qsp{\cdot}{\cdot}{\cdot}{\cdot}} \qquad
+  \prftree[r]{\rle{cons}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\cpyq \leq q \sqcap \alquant(A)}
+    {\qsp{\Gamma, x : A}{(\mb{q}, q)}{(\mb{q}_l, q)}{(\mb{q}_r, q)}}
+    \\
+  \prftree[r]{\rle{left}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\qsp{\Gamma, x : A}{(\mb{q}, q)}{(\mb{q}_l, q)}{(\mb{q}_r, \zeroq)}} \qquad
+  \prftree[r]{\rle{right}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\qsp{\Gamma, x : A}{(\mb{q}, q)}{(\mb{q}_l, \zeroq)}{(\mb{q}_r, q)}}
+\end{gather*}
+
+\begin{gather*}
+  \prftree[r]{\rle{var}}
+    {\cwk{\Gamma^{\mb{q}}_{\mb{e}}}{x : A^\oneq_\epsilon}}{\hasty{\Gamma}{\epsilon}{x}{A}} 
+    \qquad
+  \prftree[r]{\rle{op}}{f : A \to_\epsilon B}
+    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{a}{A}}
+    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{f\;a}{B}} \\
+  \prftree[r]{\rle{let$_1$}}{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A}}
+    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{b}{B}}
+    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{}{\letexpr{x}{a}{b}}{B}} \\
+  \prftree[r]{\rle{unit}}
+    {\cwk{\Gamma^{\mb{q}}_{\mb{e}}}{\cdot}}{\hasty{\Gamma;\vec{q}}{}{()}{\mb{1}}} 
+    \qquad
+  \prftree[r]{\rle{pair}}{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}}{\epsilon}{a}{A}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{b}{B}}
+    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{(a, b)}{A \otimes B}} \\
+  \prftree[r]{\rle{let$_2$}}{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{}{a}{A \otimes B}}
+    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A, y : B}{\epsilon}{c}{C}}
+    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\letexpr{(x, y)}{a}{c}}{C}}
+\end{gather*}
+
+\subsection{Syntactic Metatheory}
+
+\begin{lemma}[Weakening]
+  The following rule is derivable:
+  \begin{equation*}
+    \prftree[r]{\rle{wk}}
+      {\cwk{\Gamma'^{\mb{q}'}_{\mb{e}'}}{\Gamma^{\mb{q}}_{\ms{e}}}}
+      {\hasty{\Gamma^{\mb{q}}_{\ms{e}}}{\epsilon}{a}{A}}
+      {\hasty{\Gamma'^{\mb{q}'}_{\mb{e}'}}{\epsilon}{a}{A}}
+  \end{equation*}
+\end{lemma}
+
+% \begin{gather*}
+%   \prftree[r]{\rle{nil}}
+%     {\qwk{\cdot}{\cdot}{\cdot}{\cdot}} \qquad
+%   \prftree[r]{\rle{cons}}
+%     {\qwk{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+%     {\cpyq \leq q \sqcap \alquant(A)}
+%     {\qwk{\Gamma, x : A}{(\mb{q}, q)}{(\mb{q}_l, q)}{(\mb{q}_r, q)}}
+%     \\
+%   \prftree[r]{\rle{left}}
+%     {\qwk{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+%     {\qwk{\Gamma, x : A}{(\mb{q}, q)}{(\mb{q}_l, q)}{(\mb{q}_r, \zeroq)}} \qquad
+%   \prftree[r]{\rle{right}}
+%     {\qwk{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+%     {\qwk{\Gamma, x : A}{(\mb{q}, q)}{(\mb{q}_l, \zeroq)}{(\mb{q}_r, q)}}
+%     \\
+%   \prftree[r]{\rle{skip}}
+%     {\qwk{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+%     {0 \leq q \sqcap \alquant(A)}
+%     {\qwk{\Gamma, x : A}{(\mb{q}, q)}{(\mb{q}_l, 0)}{(\mb{q}_r, 0)}}
+% \end{gather*}
+
+\begin{equation*}
+  \alquant(\cdot) = \topq \qquad
+  \alquant(\Gamma^{\mb{q}}, x : A^q) = \alquant(\Gamma^{\mb{q}}) \sqcap \begin{cases}
+    \alquant(A) \sqcap q & \text{if } q \neq 0 \\
+    \topq & \text{if } q = 0
+  \end{cases}
+\end{equation*}
+
+\begin{gather*}
+  \prftree[r]{\rle{nil}}{\cwk{\Gamma^{\mb{q}}_{\ms{e}}}{\cdot}}
+                             {\issubst{\Gamma^{\mb{q}}_{\ms{e}}}{\cdot}{\cdot}} \qquad 
+  \prftree[r]{\rle{zero}}
+    {\issubst{\Gamma^{\mb{q}}_{\mb{e}}}{\sigma}{\Delta}}
+    % {\hasty{\Gamma^{\mb{q}'}_{\mb{e}'}}{\epsilon}{a}{A}}
+    {\issubst{\Gamma}{\sigma, x \mapsto a}{\Delta, x : A^0_\epsilon}}
+  \\
+  \prftree[r]{\rle{cons}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\issubst{\Gamma^{\mb{q_l}}_{\mb{e}}}{\sigma}{\Delta}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A}}
+    {q \leq \alquant(\Gamma^{\mb{q}_r})}
+    {\issubst{\Gamma}{\sigma, x \mapsto a}{\Delta, x : A^q_\epsilon}}
+\end{gather*}
+
+\begin{lemma}[Substitution]
+  The following rule is derivable:
+  \begin{equation*}
+    \prftree[r]{\rle{subst}}
+      {\issubst{\Gamma'^{\mb{q}'}_{\mb{e}'}}{\sigma}{\Gamma^{\mb{q}}_{\mb{e}}}}
+      {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{a}{A}}
+      {\hasty{\Gamma'^{\mb{q}'}_{\mb{e}'}}{\epsilon}{[\sigma]a}{A}}
+  \end{equation*}
+\end{lemma}
+
+\subsection{Refinement Theory}
+
+\begin{gather*}
+  \prftree[r]{\rle{base}}
+    {(\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{}{a}{b}{A}) \in \mc{R}}
+    {\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}} \qquad
+  \prftree[r]{\rle{var}}
+    {\cwk{\Gamma^{\mb{q}}_{\mb{e}}}{x : A^q_\epsilon}}
+    {1 \leq q}
+    {\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{x}{x}{A}} \qquad
+  \prftree[r]{\rle{op}}
+    {f : A \to_\epsilon B}
+    {\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{a'}{A}}
+    {\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{f\;a}{f\;a'}{B}} \\
+  \prftree[r]{\rle{let$_1$}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\tmle{\Gamma^{\mb{q}_r}_{\mb{e}}}{\mc{R}}{a}{a'}{A}}
+    {\tmle{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\mc{R}}{b}{b'}{B}}
+    {\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{\letexpr{x}{a}{b}}{\letexpr{x}{a'}{b'}}{B}} \\
+  \prftree[r]{\rle{unit}}
+    {\cwk{\Gamma^{\mb{q}}_{\mb{e}}}{\cdot}}
+    {\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{()}{()}{\mb{1}}} \qquad
+  \prftree[r]{\rle{pair}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\tmle{\Gamma^{\mb{q}_l}_{\mb{e}}}{\mc{R}}{a}{a'}{A}}
+    {\tmle{\Gamma^{\mb{q}_r}_{\mb{e}}}{\mc{R}}{b}{b'}{B}}
+    {\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{(a, b)}{(a', b')}{A \otimes B}} \\
+  \prftree[r]{\rle{let$_2$}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\tmle{\Gamma^{\mb{q}_r}_{\mb{e}}}{\mc{R}}{a}{a'}{A \otimes B}}
+    {\tmle{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A, y : B}{\mc{R}}{c}{c'}{C}}
+    {\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{\letexpr{(x, y)}{a}{c}}{\letexpr{(x, y)}{a'}{c'}}{C}}
+\end{gather*}
+
+\begin{gather*}
+  \prftree[r]{\rle{trans}}
+    {\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}}
+    {\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{b}{c}{A}}
+    {\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{c}{A}}
+\end{gather*}
+
+\begin{equation*}
+  \prftree[r]{\rle{refl}}
+    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{a}{A}}
+    {\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{a}{A}}
+\end{equation*}
+
+\begin{equation*}
+  \tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}
+  \iff \tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A} 
+  \land \tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{b}{a}{A}
+\end{equation*}
+
+\begin{gather*}
+  \prftree[r]{\rle{refl}}
+    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{\epsilon}{a}{A}}
+    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{a}{A}} \qquad
+  \prftree[r]{\rle{trans}}
+    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}}
+    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{b}{c}{A}}
+    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{c}{A}}\qquad
+  \prftree[r]{\rle{symm}}
+    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}}
+    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{b}{a}{A}}
+\end{gather*}
+
+\TODO{text for code-motion}
+
+\begin{gather*}
+  \prftree[r]{\rle{let-op}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {f : A \to_\epsilon B}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A}}
+    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, y : B}{\epsilon}{c}{C}}
+    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}
+      {\letexpr{y}{f\;a}{c}}
+      {\letexpr{x}{a}{\letexpr{y}{f\;x}{c}}}
+      {C}}
+    \\
+  \prftree[r]{\rle{let-let$_1$}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_c}{\mb{q}_r}}
+    {\qsp{\Gamma}{\mb{q}_c}{\mb{q}_l}{\mb{q}_m}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A}}
+    {\hasty{\Gamma^{\mb{q}_m}_{\mb{e}}, x : A}{\epsilon}{b}{B}}
+    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, y : B}{\epsilon}{c}{C}}
+    {
+      \tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}
+        {\letexpr{y}{(\letexpr{x}{a}{b})}{c}}
+        {\letexpr{x}{a}{\letexpr{y}{b}{c}}}
+        {C}
+    }
+    \\
+  \prftree[r]{\rle{let-let$_2$}}
+    {
+      \prfStackPremises
+      {\qsp{\Gamma}{\mb{q}}{\mb{q}_c}{\mb{q}_r}}
+      {\qsp{\Gamma}{\mb{q}_c}{\mb{q}_l}{\mb{q}_m}}
+    }
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A \otimes B}}
+    {\hasty{\Gamma^{\mb{q}_m}_{\mb{e}}, x : A, y : B}{\epsilon}{c}{C}}
+    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, z : C}{\epsilon}{d}{D}}
+    {
+      \tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}
+        {\letexpr{z}{(\letexpr{(x, y)}{a}{c})}{d}}
+        {\letexpr{(x, y)}{a}{\letexpr{z}{c}{d}}}
+        {D}
+    }
+    \\
+  \prftree[r]{\rle{let$_2$-bind}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A \otimes B}}
+    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A, y : B}{\epsilon}{c}{C}}
+    {
+      \tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}
+        {\letexpr{(x, y)}{a}{c}}
+        {\letexpr{z}{a}{\letexpr{(x, y)}{z}{c}}}
+        {C}
+    }
+\end{gather*}
+
+\TODO{text for $\beta-\eta$}
+
+\begin{gather*}
+  \prftree[r]{\rle{let$_2$-$\eta$}}
+    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{a}{A \otimes B}}
+    {
+      \tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{\letexpr{(x, y)}{a}{(x, y)}}{a}{A \otimes B}
+    }
+  \\
+  \prftree[r]{\rle{let$_2$-$\beta$}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\qsp{\Gamma}{\mb{q}_l}{\mb{q}_a}{\mb{q}_b}}
+    {\hasty{\Gamma^{\mb{q}_a}_{\mb{e}}}{\epsilon}{a}{A}}
+    {\hasty{\Gamma^{\mb{q}_b}_{\mb{e}}}{\epsilon}{b}{B}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}, x : A, y : B}{\epsilon}{c}{C}}
+    {
+      \tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}
+        {\letexpr{(x, y)}{(a, b)}{c}}
+        {\letexpr{x}{a}{\letexpr{y}{b}{c}}}{C}
+    }
+\end{gather*}
+
+\TODO{polar substitution}
+
+\begin{gather*}
+  \prftree[r]{\rle{let$_1$-$\beta^+$}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}}{\epsilon}{a}{A}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}, x : A^q}{\eta}{b}{B}}
+    {+ \in \epsilon \parallel \eta}
+    {q \leq \alquant(\Gamma^{\mb{q}_r}) \sqcap \alquant^+(\epsilon)}
+    {
+      \tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{\letexpr{x}{a}{b}}{[x/a]b}{B}
+    }
+  \\
+  \prftree[r]{\rle{let$_1$-$\beta^+$}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}}{\epsilon}{a}{A}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}, x : A^q}{\eta}{b}{B}}
+    {- \in \epsilon \parallel \eta}
+    {q \leq \alquant(\Gamma^{\mb{q}_r}) \sqcap \alquant^-(\epsilon)}
+    {
+      \tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{[x/a]b}{\letexpr{x}{a}{b}}{B}
+    }
+\end{gather*}
+
+We use this to define
+\begin{equation*}
+  \tmle{\Gamma^{\mb{q}_{\mb{e}}}}{}{a}{b}{A}
+  \iff
+  \tmle{\Gamma^{\mb{q}_{\mb{e}}}}{\varnothing}{a}{b}{A}
+\end{equation*}
+\begin{equation*}
+  \thsubmon{\mc{R}} 
+  = \{(\Gamma^{\mb{q}}_{\mb{e}}, A, a, b) \mid \tmle{\Gamma^{\mb{q}_{\mb{e}}}}{\mc{R}}{a}{b}{A}\}
+\end{equation*}
+We note in particular that
+\begin{itemize}
+  \item $\{
+    (\Gamma^{\mb{q}}_{\mb{e}}, A, a, a) \mid \hasty{\Gamma^{\mb{q}_{\mb{e}}}}{\epsilon}{a}{A}
+  \} \subseteq \thsubmon{\mc{R}}$
+  \item $\mc{R} \subseteq \mc{R}' \implies \thsubmon{\mc{R}} \subseteq \thsubmon{\mc{R}'}$
+  \item $\mc{R} \subseteq \thsubmon{\mc{R}}$
+  \item $\thsubmon{\thsubmon{\mc{R}}} = \thsubmon{\mc{R}}$
+  \item $\thsubmon{\mc{R} \cap \mc{R}'} = \thsubmon{\mc{R}} \cap \thsubmon{\mc{R}'}$
+\end{itemize}
+
+\TODO{congruence of weakening}
+
+\TODO{congruence of substitution}
+
+\begin{grammar}
+  <p> ::= \(+\) \;|\; \(-\)
+\end{grammar}
+
+\begin{gather*}
+  \prftree[r]{\rle{nil}}{\cwk{\Gamma^{\mb{q}}_{\ms{e}}}{\cdot}}
+                             {\csubst{\Gamma^{\mb{q}}_{\ms{e}}}{\cdot}{\cdot}{E}{p}} \qquad
+  \prftree[r]{\rle{zero}}
+    {\csubst{\Gamma^{\mb{q}}_{\mb{e}}}{\sigma}{\Delta}{E}{p}}
+    % {\hasty{\Gamma^{\mb{q}'}_{\mb{e}'}}{\epsilon}{a}{A}}
+    {\csubst{\Gamma}{\sigma, x \mapsto a}{\Delta, x : A^0_\epsilon}{E}{p}}
+  \\
+  \prftree[r]{\rle{cons}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\csubst{\Gamma^{\mb{q_l}}_{\mb{e}}}{\sigma}{\Delta}{\eta}{p}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\bot}}{\zeta}{a}{A}}
+    {p \in \zeta \parallel \eta}
+    {q \leq \alquant(\Gamma^{\mb{q}_r}) \sqcap \alquant^p(\zeta)}
+    {\csubst{\Gamma^{\mb{q}}_{\mb{e}}}{\sigma, x \mapsto a}{\Delta, x : A^q_\epsilon}{\eta}{p}}
+\end{gather*}
+
+\subsection{Semantics}
+
+\begin{multline*}
+  \sigma^{\ms{mid}}_{A, B, C, D} := 
+  \alpha_{A \otimes (B \otimes C) \otimes D}
+  ; A \otimes \sigma_{B, C} \otimes D
+  ; \alpha_{(A \otimes C) \otimes (B \otimes A)}
+  \\ : (A \otimes B) \otimes (C \otimes D) \to (A \otimes C) \otimes (B \otimes D)
+\end{multline*}
+
+\begin{definition}[Effectful category]
+  An effectful category $\mc{C}$ over an effect system $\mc{E}$ consists of a symmetric premonoidal
+  poset-enriched category $\mc{C}$ equipped with a  monotonic mapping from $\epsilon \in \mc{E}$ to
+  wide (symmetric premonoidal) subcategories $\mc{C}_\epsilon \subseteq \mc{E}$ such that, given
+  $\epsilon, \eta \in \mc{E}$, $f \in \mc{C}_\epsilon(A, B)$, and $g \in \mc{C}_\eta(A', B')$, 
+  \begin{itemize}
+    \item $+ \in \epsilon \parallel \eta \implies f \ltimes g \leq f \rtimes g$
+    \item $- \in \epsilon \parallel \eta \implies f \ltimes g \geq f \rtimes g$
+  \end{itemize}
+  An effectful category is \emph{meet-preserving} if $\mc{C}_{\epsilon \sqcap \eta} =
+  \mc{C}_\epsilon \cap \mc{C}_\eta$; every effect system over $\mc{E}$ can be extended in the
+  obvious unique way to a meet-preserving effect system over the free join-semilattice generated by
+  $\mc{E}$.
+\end{definition}
+
+In particular, if $\epsilon \parallel \eta = \{+, -\}$ then $\mc{C}_\epsilon \cap \mc{C}_\eta$ is a
+central subcategory of $\mc{C}_\epsilon$ and $\mc{C}_\eta$. It follows that, for a based effect
+system $\mc{E}$, $\mc{C}_\bot$ is a central subcategory of every $\mc{C}_\epsilon$.
+
+\begin{definition}[\submonssa-model]
+  A \submonssa-model $\mc{M} = (\mc{C}, \dnt{\cdot}, \dmor{}, \tmor{})$ of a \submonssa-signature
+  $\mc{S}$ over $\mc{E}$ is given by
+  \begin{itemize}
+    \item An effectful category $\mc{C}$ over $\mc{E}$
+    \item For each base type $X \in \ms{Base}(\mc{S})$, an object $\dnt{X} \in |\mc{C}|$, equipped
+    with
+    \begin{itemize}
+      \item For $X$ affine, a \emph{discard morphism} $\tmor{X} : \mc{C}_\bot(\dnt{X}, I)$
+      \item For $X$ relevant, a \emph{diagonal morphism} $\dmor{X} : \mc{C}_\bot(\dnt{X}, \dnt{X}
+      \otimes \dnt{X})$
+    \end{itemize}
+    \item For each function $f : \ms{Inst}(\mc{S})_\epsilon(A, B)$, a morphism $\dnt{f} :
+    \mc{C}_\epsilon(\dnt{A}, \dnt{B})$
+  \end{itemize}
+  such that, for all $A, B \in |\mc{S}|$, $f : \mc{C}_\epsilon(\dnt{A}, \dnt{B})$ we have
+  \begin{itemize}
+    \item If $A$ relevant, 
+      $\dmor{A} ; \dmor{A} \otimes \dnt{A} ; \alpha = \dmor{A} ; \dnt{A} \otimes \dmor{A}$
+    \item If $\zeroq \leq \alquant^+(\epsilon)$ and $A, B$ affine, $f ; !_B \leq !_A$
+    \item If $\zeroq \leq \alquant^+(\epsilon)$ and $A$ relevant, $B$ affine, 
+      $\dmor{A} ; (f ; !_B) \otimes \dnt{A} \leq \rho^{-1}$
+    \item If $\cpyq \leq \alquant^+(\epsilon)$ and $A, B$ relevant, 
+    $f ; \dmor{B} \leq \dmor{A} ; f \ltimes f = \dmor{A} ; f \rtimes f$
+    \item If $\zeroq \leq \alquant^-(\epsilon)$ and $A, B$ affine, $f ; !_B \geq !_A$
+    \item If $\zeroq \leq \alquant^-(\epsilon)$ and $A$ relevant, $B$ affine, 
+      $\dmor{A} ; (f ; !_B) \otimes \dnt{A} \geq \rho^{-1}$
+    \item If $\cpyq \leq \alquant^-(\epsilon)$ and $A, B$ relevant, 
+    $f ; \dmor{B} \geq \dmor{A} ; f \ltimes f = \dmor{A} ; f \rtimes f$
+  \end{itemize}
+  where
+  \begin{itemize}
+    \item $\dnt{\mb{1}} = I$
+    \item $\dnt{A \otimes B} = \dnt{A} \otimes \dnt{B}$
+    \item $!_{\mb{1}} = \ms{id}_I$
+    \item $\Delta_{\mb{1}} = \lambda^{-1} = \rho^{-1}$
+    \item For $A, B$ affine, $!_{A \otimes B} = !_A \otimes !_B ; \lambda$
+    \item For $A, B$ relevant, 
+    $\Delta_{A \otimes B} 
+      = \dmor{A} \otimes \dmor{B}
+      ; \sigma^{\ms{mid}}
+    $
+  \end{itemize}
+  \begin{gather*}
+  \end{gather*}
+\end{definition}
+
+\begin{equation*}
+  \dnt{A^q} = \begin{cases}
+    \dnt{A} & \text{if } q \neq 0 \\
+    I       & \text{if } q = 0
+  \end{cases} \qquad
+  !_{A^q} = \begin{cases}
+    !_A & \text{if } q \neq 0 \\
+    \ms{id}_I & \text{if } q = 0
+  \end{cases} \qquad
+  \Delta_{A^q} = \begin{cases}
+    \dmor{A} & \text{if } q \neq 0 \\
+    \lambda^{-1} & \text{if } q = 0
+  \end{cases}
+\end{equation*}
+
+\begin{gather*}
+  \boxed{\dnt{\Gamma^{\mb{q}}_{\mb{e}}} : |\mc{C}|} \\
+  \dnt{\cdot} = I
+  \qquad \dnt{\Gamma^{\mb{q}}_{\mb{e}}, x : A^q_\epsilon} 
+          = \dnt{\Gamma^{\mb{q}}_{\mb{e}}} \otimes \dnt{A^q}
+\end{gather*}
+
+\begin{gather*}
+  \boxed{\dnt{\cwk{\Gamma^{\mb{q}}_{\mb{e}}}{\Delta^{\mb{q}'}_{\mb{e}'}}} 
+    : \mc{C}_\bot(\dnt{\Gamma^{\mb{q}}_{\mb{e}}}, \dnt{\Delta^{\mb{q}'}_{\mb{e}'}})} \\
+  \dnt{\cwk{\cdot}{\cdot}} = \ms{id}_I \qquad
+  \dnt{\cwk{\Gamma^{\mb{q}}_{\mb{e}}, x : A^q_\epsilon}{\Delta^{\mb{q}'}_{\mb{e}'}}}
+    = \dnt{\Gamma^{\mb{q}}_{\mb{e}}} \otimes !_{A^q}
+    ; \lambda
+    ; \dnt{\cwk{\Gamma^{\mb{q}}_{\mb{e}}}{\Delta^{\mb{q}'}_{\mb{e}'}}} \\
+  \dnt{\cwk{\Gamma^{\mb{q}}_{\mb{e}}, x : A^q_\epsilon}
+            {\Delta^{\mb{q}'}_{\mb{e}'}, x : A^{q'}_{\epsilon'}}}
+    = \dnt{\cwk{\Gamma^{\mb{q}}_{\mb{e}}}{\Delta^{\mb{q}'}_{\mb{e}'}}} \otimes \begin{cases}
+      \ms{id}_{\dnt{A}} & \text{if } q, q' \neq 0 \\
+      !_{A^q} & \text{otherwise} \\
+    \end{cases}
+\end{gather*}
+
+\begin{gather*}
+  \boxed{\dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}} 
+    : \mc{C}_\bot(\dnt{\Gamma^{\mb{q}}_{\mb{e}}}, 
+      \dnt{\Gamma^{\mb{q}_l}_{\mb{e}_l}} \otimes \dnt{\Gamma^{\mb{q}_r}_{\mb{e}_r}})} 
+  \\
+  \dnt{\qsp{\cdot}{\cdot}{\cdot}{\cdot}} = \rho^{-1}
+  \\
+  \dnt{\qsp{\Gamma, x : A}{(\mb{q}, q)}{(\mb{q}_l, q_l)}{(\mb{q}_r, q_r)}}
+  = \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}} \otimes
+  \begin{cases}
+    !_{A^q} ; \rho^{-1} & \text{if } q_l = q_r = 0 \text{ else} \\
+    \lambda^{-1} & \text{if } q_l = 0 \text{ else} \\
+    \rho^{-1} & \text{if } q_r = 0 \text{ else} \\
+    \Delta_A & \text{otherwise}
+  \end{cases} ; \sigma^{\ms{mid}}
+\end{gather*}
+
+\begin{gather*}
+  \boxed{\dnt{\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{a}{A}} 
+    : \mc{C}_\epsilon(\dnt{\Gamma^{\mb{q}}_{\mb{e}}}, \dnt{A})} \\
+  \dnt{\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{x}{A}} 
+    = \dnt{\cwk{\Gamma^{\mb{q}}_{\mb{e}}}{x : A^\oneq_\epsilon}}
+  \qquad
+  \dnt{\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{f\;a}{B}} 
+    = \dnt{\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{a}{A}} ; \dnt{f} \\
+  \dnt{\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\letexpr{x}{a}{b}}{B}} 
+    = \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    ; \dnt{\Gamma^{\mb{q}_l}_{\mb{e}}} 
+      \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A}}
+    ; \dnt{\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{b}{B}}
+  \\
+  \dnt{\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{()}{\mb{1}}}
+    = \dnt{\cwk{\Gamma^{\mb{q}}_{\mb{e}}}{\cdot}}
+  \\
+  \dnt{\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{(a, b)}{A \otimes B}}
+    = \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    ; \dnt{\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}}{\epsilon}{a}{A}}
+    \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{b}{B}}
+\end{gather*}
+\begin{align*}
+  \dnt{\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\letexpr{(x, y)}{a}{c}}{C}}
+  = & \; \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    ; \dnt{\Gamma^{\mb{q}_l}_{\mb{e}}}
+    \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A \otimes B}}
+  \\ & 
+  ; \alpha_{\Gamma^{\mb{q}_r}_{\mb{e}} \otimes A \otimes B}
+  ; \dnt{\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A, y : B}{\epsilon}{c}{C}} \\
+\end{align*}
+
+\TODO{category of models}
+
+\subsection{Semantic Metatheory}
+
+\begin{lemma}[Semantic Weakening]
+  Given $\cwk{\Gamma'^{\mb{q}'}_{\mb{e}'}}{\Gamma^{\mb{q}}_{\mb{e}}}$ and
+  $\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{a}{A}$, we have
+  \begin{equation*}
+    \dnt{\hasty{\Gamma'^{\mb{q}'}_{\mb{e}'}}{\epsilon}{a}{A}}
+    = \dnt{\cwk{\Gamma'^{\mb{q}'}_{\mb{e}'}}{\Gamma^{\mb{q}}_{\mb{e}}}}
+    ; \dnt{\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{a}{A}}
+  \end{equation*}
+\end{lemma}
+
+\begin{gather*}
+  \boxed{\dnt{\issubst{\sigma}{\Gamma^{\mb{q}}_{\mb{e}}}{\Delta^{\mb{q}'}_{\mb{e}'}}}
+    : \mc{C}(\dnt{\Gamma^{\mb{q}}_{\mb{e}}}, \dnt{\Delta^{\mb{q}'}_{\mb{e}'}})} \\
+  \dnt{\issubst{\cdot}{\cdot}{\cdot}} = \ms{id}_I
+  \\
+  \dnt{\issubst{\sigma, x \mapsto a}{\Gamma^{\mb{q}}_{\mb{e}}}{\Delta^{\mb{q}'}_{\mb{e}'}, x : A^q}}
+  = \begin{cases}
+    \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}} 
+    ; \dnt{\issubst{\sigma}{\Gamma^{\mb{q}_l}_{\mb{e}_l}}{\Delta^{\mb{q}'}_{\mb{e}'}}}
+    \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A}}
+    \text{ if } q \neq 0 \\
+    \dnt{\issubst{\sigma}{\Gamma^{\mb{q}}_{\mb{e}}}{\Delta^{\mb{q}'}_{\mb{e}'}}}
+    ; \lambda^{-1} \text{ otherwise}
+  \end{cases}
+\end{gather*}
+
+\begin{lemma}[Semantic Substitution]
+  Given 
+  $\hasty{\Delta^{\mb{q}'}_{\mb{e}'}}{\eta}{a}{A}$ and 
+  $\issubst{\sigma}{\Gamma^{\mb{q}}_{\mb{e}}}{\Delta^{\mb{q}'}_{\mb{e}'}}$, we have
+  \begin{itemize}
+    \item If $\csubst{\sigma}{\Gamma^{\mb{q}}_{\mb{e}}}{\Delta^{\mb{q}'}_{\mb{e}'}}{\eta}{+}$, then
+    $
+    \dnt{\issubst{\sigma}{\Gamma^{\mb{q}}_{\mb{e}}}{\Delta^{\mb{q}'}_{\mb{e}'}}}
+    ; \dnt{\hasty{\Delta^{\mb{q}'}_{\mb{e}'}}{\eta}{a}{A}}
+    \leq \dnt{\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{[\sigma]a}{A}}
+    $
+    \item If $\csubst{\sigma}{\Gamma^{\mb{q}}_{\mb{e}}}{\Delta^{\mb{q}'}_{\mb{e}'}}{\eta}{-}$, then
+    $
+    \dnt{\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{[\sigma]a}{A}}
+    \leq \dnt{\issubst{\sigma}{\Gamma^{\mb{q}}_{\mb{e}}}{\Delta^{\mb{q}'}_{\mb{e}'}}}
+    ; \dnt{\hasty{\Delta^{\mb{q}'}_{\mb{e}'}}{\eta}{a}{A}}
+    $
+  \end{itemize}
+  In particular, if 
+  $\csubst{\sigma}{\Gamma^{\mb{q}}_{\mb{e}}}{\Delta^{\mb{q}'}_{\mb{e}'}}{\eta}{\pm}$, then
+  $
+  \dnt{\issubst{\sigma}{\Gamma^{\mb{q}}_{\mb{e}}}{\Delta^{\mb{q}'}_{\mb{e}'}}}
+  ; \dnt{\hasty{\Delta^{\mb{q}'}_{\mb{e}'}}{\eta}{a}{A}}
+  = \dnt{\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{[\sigma]a}{A}}
+  $
+\end{lemma}
+
+\begin{definition}
+  We say a model $\mc{M}$ \emph{validates} a typed refinement family $\mc{R}$, written $\mc{M}
+  \models \mc{R}$, if
+  $
+  \forall (\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{}{a}{b}{A}) \in \mc{E}
+  $, we have, whenever both sides are well-typed, that
+  $
+  \dnt{\hasty{\Gamma}{\epsilon}{a}{A}} \leq \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}
+  $
+\end{definition}
+
+\begin{theorem}[name=Soundness, restate=soundnessmon]
+  For any model $\mc{M}$, $\mc{M} \models \mc{R} \iff \mc{M} \models \thsubmon{\mc{R}}$. In
+  particular,
+  \begin{itemize}
+    \item If $\mc{M} \models \mc{R}$, given $\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}$, we
+    have $\dnt{\hasty{\Gamma}{\epsilon}{a}{A}}_{\mc{M}} =
+    \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}_{\mc{M}}$
+    \item In particular, for any model, if $\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{}{a}{b}{A}$, we have
+    $\dnt{\hasty{\Gamma}{\epsilon}{a}{A}} = \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}$
+  \end{itemize}
+\end{theorem}
+
+\TODO{definition...}
+
+\TODO{subcategory lore}
+
+\begin{theorem}[name=Completeness, restate=completenessmon]
+  We have that
+  $$
+  \tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}
+  \iff \forall \mc{M} \models \mc{R},
+  \dnt{\hasty{\Gamma}{\epsilon}{a}{A}}_{\mc{M}} \leq \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}_{\mc{M}}
+  $$
+  and in particular that
+  $$
+  \tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}
+  \iff \dnt{\hasty{\Gamma}{\epsilon}{a}{A}}_{\mc{S}_{\mc{R}}} 
+  \leq \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}_{\mc{S}_{\mc{R}}} 
+  $$
+\end{theorem}
+
+In particular,
+\begin{itemize}
+  \item The category $\mc{S}_{\mc{R}}$ is the initial object in the full subcategory of
+  \submonssa-models of $\mc{S}$ validating $\mc{R}$
+  \item The category $\mc{S}_\varnothing$, which we will write as simply $\mc{S}$, is the initial
+  object in the category of \submonssa-models of $\mc{S}$.
+\end{itemize}
+
+\subsection{Concrete Models}
+
+\TODO{fix a mapping $\dnt{\cdot}$ for base types and functions...}
+
+\TODO{every non-ordered model via the discrete order, \citet{ghalayini-24-ssa-densem-arxiv}}
+
+\TODO{every symmetric premonoidal category}
+
+\TODO{in particular, every Freyd category, garbage-share category, and Markov category}
+
+\TODO{in particular, every strong monad on an SMC}
+
+\TODO{let's do the Option monad...}
+
+\TODO{which becomes the UB monad WithTop when ordered}
+
+\TODO{let's add a heap state transformer, and a printing trace transformer}
+
+\TODO{can also pick more exotic models: the coproduct, for example}
+
+\TODO{to demonstrate linearity, let's build a very simple separation logic model}
+
+\TODO{more interesting: the category of concurrent games, \citet{vale-linearizability-24}, which
+has a cool refinement structure, too!}
+
+\TODO{another fun linear model for quantum computing: Hilbert spaces}
+
+\TODO{can we do quantum refinement???}
+
+\section{Distributivity}
+
+\subsection{Syntax}
+
+\begin{grammar}
+  <\(A, B, C\)> ::= 
+  \(X\)
+  \;|\; \(A \otimes B\)
+  \;|\; \(\mathbf{1}\)
+  \;|\; \(A + B\)
+  \;|\; \(\mathbf{0}\)
+
+  <\(a, b, c\)> ::=
+  \(x\)
+  \alt \(f\;a\)
+  \;|\; \(\letexpr{x}{a}{b}\)
+  \;|\; \(()\)
+  \;|\; \((a, b)\)
+  \;|\; \(\letexpr{(x, y)}{a}{b}\)
+  \alt  \(\linl{a}\)
+  \;|\; \(\linr{b}\)
+  \;|\; \(\caseexpr{a}{x}{b}{y}{c}\)
+  \;|\; \(\labort{a}\)
+\end{grammar}
+
+\begin{equation}
+  \alquant(A \otimes B) = \alquant(A + B) = \alquant(A) \sqcap \alquant(B) \qquad
+  \alquant(\mb{1}) = \alquant(\mb{0}) = \topq
+\end{equation}
+
+\begin{gather*}
+  \prftree[r]{\rle{inl}}{f : A \to B}
+    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{a}{A}}
+    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\linl{a}}{A + B}} \qquad
+  \prftree[r]{\rle{inr}}{f : A \to B}
+    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{b}{B}}
+    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\linr{b}}{A + B}} \qquad    
+  \prftree[r]{\rle{abort}}
+    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{a}{\mb{0}}}
+    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\labort{a}}{C}}
+    \\
+  \prftree[r]{\rle{case}}{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{e}{A + B}}
+    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{a}{C}}
+    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, y : B}{\epsilon}{b}{C}}
+    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\caseexpr{e}{x}{a}{y}{b}}{C}} \\
+\end{gather*}
+
+\TODO{this}
+
+\subsection{Refinement Theory}
+
+\begin{gather*}
+  \prftree[r]{\rle{inl}}
+    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{a'}{A}}
+    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{\linl{a}}{\linl{a'}}{A + B}} \qquad
+  \prftree[r]{\rle{inr}}
+    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{b}{b'}{B}}
+    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{\linr{b}}{\linr{b'}}{A + B}} \\
+  \prftree[r]{\rle{case}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\tmeq{\Gamma^{\mb{q}_r}_{\mb{e}}}{\mc{R}}{e}{e'}{A + B}}
+    {\tmeq{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\mc{R}}{a}{a'}{C}}
+    {\tmeq{\Gamma^{\mb{q}_l}_{\mb{e}}, y : B}{\mc{R}}{b}{b'}{C}}
+    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}
+      {\caseexpr{e}{x}{a}{y}{b}}{\caseexpr{e'}{x}{a'}{y}{b'}}{C}} \\
+  \prftree[r]{\rle{abort}}
+    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{a'}{\mb{0}}}
+    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{\labort{a}}{\labort{a'}}{C}}
+\end{gather*}
+
+\begin{gather*}
+  \prftree[r]{\rle{let-case}}
+    {
+      \prfStackPremises
+      {\qsp{\Gamma}{\mb{q}}{\mb{q}_c}{\mb{q}_r}}
+      {\qsp{\Gamma}{\mb{q}_c}{\mb{q}_l}{\mb{q}_m}}
+    }
+    {\hasty{\Gamma^{\mb{q}_m}_{\mb{e}}}{\mc{R}}{e}{A + B}}
+    {
+      \prfStackPremises
+      {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\mc{R}}{a}{C}}
+      {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, y : B}{\mc{R}}{b}{C}}
+    }
+    {
+      {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}, z : C}{\mc{R}}{d}{D}}
+    }
+    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}
+      {\letexpr{z}{\caseexpr{e}{x}{a}{y}{b}}{d}}
+      {\caseexpr{e}{x}{\letexpr{z}{a}{d}}{y}{\letexpr{z}{b}{d}}}
+      {D}
+    } \\
+  \prftree[r]{\rle{case-bind}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\mc{R}}{e}{A + B}}
+    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\mc{R}}{a}{C}}
+    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, y : B}{\mc{R}}{b}{C}}
+    {
+      \tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}
+      {\caseexpr{e}{x}{a}{y}{b}}
+      {\letexpr{z}{e}{\caseexpr{z}{x}{a}{y}{b}}}
+      {C}
+    } \\
+  \prftree[r]{\rle{let-abort}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}}{\mc{R}}{a}{\mb{0}}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}, x : A}{\mc{R}}{b}{B}}
+    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}
+      {\letexpr{x}{\labort{a}}{b}}
+      {\labort{a}}
+      {B}
+    }
+\end{gather*}
+
+\begin{gather*}
+  \prftree[r]{\rle{case-$\beta_l$}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\mc{R}}{e}{A}}
+    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\mc{R}}{a}{C}}
+    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, y : B}{\mc{R}}{b}{C}}
+    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}
+      {\caseexpr{\linl{e}}{x}{a}{y}{b}}
+      {\letexpr{x}{e}{a}}
+      {C}
+    } \\
+  \prftree[r]{\rle{case-$\beta_r$}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\mc{R}}{e}{B}}
+    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\mc{R}}{a}{C}}
+    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, y : B}{\mc{R}}{b}{C}}
+    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}
+      {\caseexpr{\linr{e}}{x}{a}{y}{b}}
+      {\letexpr{y}{e}{b}}
+      {C}
+    } \\
+  \prftree[r]{\rle{case-$\eta$}}
+    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{e}{A + B}}
+    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}
+      {\caseexpr{e}{x}{\linl{x}}{y}{\linr{y}}}
+      {e}
+      {A + B}
+    }
+\end{gather*}
+
+\TODO{this}
+
+\subsection{Semantics}
+
+\TODO{distributive categories}
+
+\begin{definition}[\subdistssa-model]
+  A \subdistssa-model $\mc{M} = (\mc{C}, \dnt{\cdot}, \dmor{}, \tmor{})$ of a \subdistssa-signature
+  $\mc{S}$ over $\mc{E}$ is a \submonssa-model such that
+  \begin{itemize}
+    \item $\mc{C}$ is a distributive category
+    \item $\mc{C}$ has chosen binary coproducts $A + B$, as well as an initial object $\mb{0}$
+    \item Each $\mc{C}_\epsilon$ is closed under the coproducts $+$ and contains all injections,
+    distributors, and initial morphisms (and therefore, in particular, inherits the structure of a
+    distributive category from $\mc{C}$)
+  \end{itemize}
+  where we extend the definitions of $\dnt{\cdot}$, $\dmor{}$, and $\tmor{}$ as follows
+  \begin{itemize}
+    \item $\dnt{\mb{0}} = \mb{0}$
+    \item $\dnt{A + B} = \dnt{A} + \dnt{B}$
+    \item $!_{\mb{0}} = 0_{I}$
+    \item $\Delta_{\mb{0}} = 0_{0 + 0}$
+    \item For $A, B$ affine, $!_{A + B} = [!_A, !_B]$
+    \item For $A, B$ relevant, 
+    $\Delta_{A + B} 
+      = [\dmor{A} ; \iota_l \otimes \iota_l, \dmor{B} ; \iota_r \otimes \iota_r]
+    $
+  \end{itemize}
+\end{definition}
+
+\begin{gather*}
+  \dnt{\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\linl{a}}{A + B}}
+  = \dnt{\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{a}{A}} ; \iota_l \qquad
+  \dnt{\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\linr{b}}{A + B}}
+  = \dnt{\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{b}{B}} ; \iota_r \\
+  \dnt{\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\labort{a}}{A}}
+  = \dnt{\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{a}{\mb{0}}} ; 0_A
+\end{gather*}
+\begin{align*}
+  \dnt{\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\caseexpr{e}{x}{a}{y}{b}}{C}}
+  =& \; 
+  \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+  ; \dnt{\Gamma^{\mb{q}_l}_{\mb{e}}} 
+  \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{e}{A + B}}
+  ; \delta^{-1} \\ & 
+  ; [
+    \dnt{\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{a}{C}},
+    \dnt{\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, y : B}{\epsilon}{b}{C}}
+  ]
+\end{align*}
+
+\begin{theorem}[name=Soundness, restate=soundnessdist]
+  For any model $\mc{M}$, $\mc{M} \models \mc{R} \iff \mc{M} \models \thsubdist{\mc{R}}$. In
+  particular,
+  \begin{itemize}
+    \item If $\mc{M} \models \mc{R}$, given $\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}$, we
+    have $\dnt{\hasty{\Gamma}{\epsilon}{a}{A}}_{\mc{M}} =
+    \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}_{\mc{M}}$
+    \item In particular, for any model, if $\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{}{a}{b}{A}$, we have
+    $\dnt{\hasty{\Gamma}{\epsilon}{a}{A}} = \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}$
+  \end{itemize}
+\end{theorem}
+
+\TODO{definition...}
+
+\TODO{subcategory lore}
+
+\begin{theorem}[name=Completeness, restate=completenessdist]
+  We have that
+  $$
+  \tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}
+  \iff \forall \mc{M} \models \mc{R},
+  \dnt{\hasty{\Gamma}{\epsilon}{a}{A}}_{\mc{M}} \leq \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}_{\mc{M}}
+  $$
+  and in particular that
+  $$
+  \tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}
+  \iff \dnt{\hasty{\Gamma}{\epsilon}{a}{A}}_{\mc{S}_{\mc{R}}} 
+  \leq \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}_{\mc{S}_{\mc{R}}} 
+  $$
+\end{theorem}
+
+In particular,
+\begin{itemize}
+  \item The category $\mc{S}_{\mc{R}}$ is the initial object in the full subcategory of
+  \subdistssa-models of $\mc{S}$ validating $\mc{R}$
+  \item The category $\mc{S}_\varnothing$, which we will write as simply $\mc{S}$, is the initial
+  object in the category of \subdistssa-models of $\mc{S}$.
+\end{itemize}
+
+\subsection{Concrete Models}
+
+\TODO{every distributive premonoidal category}
+
+\TODO{in particular, every Freyd category, garbage-share category, and Markov category w/ the
+appropriate niceness}
+
+\TODO{in particular, every strong monad on a distributive SMC}
+
+\TODO{previous examples work without changes: UB, heap, separation logic, and quantum}
+
+\TODO{lore}
+
+\section{Acyclic SSA}
+
+\subsection{Syntax}
+
+\begin{grammar}
+  <\(r, s, t\)> ::= \(\brb{\ell}{a}\)
+    \;|\; \(\letstmt{x}{a}{t}\)
+    \;|\; \(\letstmt{(x, y)}{a}{t}\)
+    \;|\; \(\casestmt{a}{x}{s}{y}{t}\)
+    \;|\; \(\where{r}{L}\)
+
+  <\(L\)> ::= \(\cdot\) \;|\; \(L, \wbranch{\ell}{x}{A}\)
+
+  <\(\ms{L}\)> ::= \(\cdot\) \;|\; \(\ms{L}, \lhyp{\ell}{A}\)
+
+  <\(\mb{Q}\)> ::= \(\cdot\) \;|\; \(\mb{Q}, \mb{q}\)
+\end{grammar}
+
+\TODO{this}
+
+\subsection{Refinement Theory}
+
+\TODO{this}
+
+\subsection{Semantics}
+
+\TODO{this}
+
+\section{Iteration}
+
+\subsection{Syntax}
+
+\begin{grammar}
+  <\(a, b, c\)> ::=
+  \(x\)
+  \alt \(f\;a\)
+  \;|\; \(\letexpr{x}{a}{b}\)
+  \;|\; \(()\)
+  \;|\; \((a, b)\)
+  \;|\; \(\letexpr{(x, y)}{a}{b}\)
+  \alt  \(\linl{a}\)
+  \;|\; \(\linr{b}\)
+  \;|\; \(\caseexpr{a}{x}{b}{y}{c}\)
+  \;|\; \(\labort{a}\)
+  \;|\; \(\liter{a}{x}{b}\)
+\end{grammar}
+
+\TODO{this}
+
+\begin{gather*}
+  \prftree[r]{\rle{iter}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\alquant(\Gamma^{\mb{q}_l}) = \top}
+    {\einf{\epsilon}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A}}
+    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{b}{B + A}}
+    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\liter{a}{x}{b}}{B}} \\
+\end{gather*}
+
+\subsection{Refinement Theory}
+
+\begin{gather*}
+  \prftree[r]{\rle{iter}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\alquant(\Gamma^{\mb{q}_l}) = \top}
+    {\tmeq{\Gamma^{\mb{q}_r}_{\mb{e}}}{\mc{R}}{a}{a'}{A}}
+    {\tmeq{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\mc{R}}{b}{b'}{B + A}}
+    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{\liter{a}{x}{b}}{\liter{a'}{x}{b'}}{B}}
+\end{gather*}
+
+\begin{gather*}
+  \prftree[r]{\rle{let-iter}}
+    {
+    \prfStackPremises
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_c}{\mb{q}_r}}
+    {\qsp{\Gamma}{\mb{q}_c}{\mb{q}_l}{\mb{q}_m}}
+    }
+    {\alquant(\Gamma^{\mb{q}_m}) = \top}
+    {\hasty{\Gamma^{\mb{q}_m}_{\mb{e}}}{\epsilon}{a}{A}}
+    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{b}{B + A}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}, y : B}{\epsilon}{c}{C}}
+    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}
+      {\letexpr{y}{\liter{a}{x}{b}}{c}}
+      {\liter{a'}{x}{\caseexpr{b}{y}{c}{z}{\linr{z}}}}
+      {C}}
+    \\
+  \prftree[r]{\rle{iter-bind}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\alquant(\Gamma^{\mb{q}_l}) = \top}
+    {\einf{\epsilon}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A}}
+    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{b}{B + A}}
+    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{\liter{a}{x}{b}}{\letexpr{y}{a}{\liter{y}{x}{b}}}{B}}
+    \\
+\end{gather*}
+
+\begin{gather*}
+  \prftree[r]{\rle{iter-$\beta$}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\alquant(\Gamma^{\mb{q}_l}) = \top}
+    {\einf{\epsilon}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A}}
+    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{b}{B + A}}
+    {\tmeq
+      {\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{\liter{a}{x}{b}}
+      {\letexpr{x}{a}{\caseexpr{b}{y}{y}{z}{\liter{z}{x}{b}}}}{B}}
+  \\
+  \prftree[r]{\rle{codiag}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\alquant(\Gamma^{\mb{q}_l}) = \top}
+    {\einf{\epsilon}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A}}
+    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, y : A}{\epsilon}{b}{(B + A) + A}}
+    {\tmeq
+      {\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{\liter{a}{x}{\liter{x}{y}{b}}}
+      {\liter{a}{y}{\caseexpr{b}{x}{x}{y}{\linr{y}}}}{B}}
+\end{gather*}
+
+Given
+\begin{gather*}
+  {\qsp{\Gamma}{\mb{q}}{\mb{q}_c}{\mb{q}_r}} \qquad
+  {\qsp{\Gamma}{\mb{q}_c}{\mb{q}_l}{\mb{q}_m}} \qquad
+  \alquant(\Gamma^{\mb{q}_l}) = \top \qquad
+  \einf{\epsilon}
+  \\
+  \qquad {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A}}
+  \qquad {\hasty{\Gamma^{\mb{q}_m}_{\mb{e}}, x : A}{\eta}{s}{S}}
+  \qquad {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, y : S}{\epsilon}{b}{B + A}}
+  \qquad {\hasty{\Gamma^{\mb{q}_c}_{\mb{e}}, x : A}{\epsilon}{b'}{B + A}}
+\end{gather*}
+
+\begin{gather*}
+  \prftree[r]{\rle{unif}$^+$}
+    {+ \in \eta \parallel \epsilon}
+    {\tmeq{\Gamma^{\mb{q}_c}_{\mb{e}}, x : A}{\mc{R}}
+      {\letexpr{y}{s}{b}}
+      {\caseexpr{b'}{x}{\linl{x}}{x}{\linr{s}}}{B + S}}
+    {
+      \tmle{\Gamma^{\mb{q}}_{\mb{e}}}
+        {\mc{R}}
+        {\letexpr{x}{a}{\liter{s}{y}{b}}}
+        {\liter{a}{x}{b'}}
+        {B}
+    } \\
+  \prftree[r]{\rle{unif}$^-$}
+    {- \in \eta \parallel \epsilon}
+    {\tmeq{\Gamma^{\mb{q}_c}_{\mb{e}}, x : A}{\mc{R}}
+      {\letexpr{y}{s}{b}}
+      {\caseexpr{b'}{x}{\linl{x}}{x}{\linr{s}}}{B + S}}
+    {
+      \tmle{\Gamma^{\mb{q}}_{\mb{e}}}
+        {\mc{R}}
+        {\liter{a}{x}{b'}}
+        {\letexpr{x}{a}{\liter{s}{y}{b}}}
+        {B}
+    }
+\end{gather*}
+
+\subsection{Semantics}
+
+\begin{align*}
+  &\dnt{\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\liter{a}{x}{b}}{B}} \\
+  &= 
+  \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+  ; \dnt{\Gamma^{\mb{q}_l}_{\mb{e}}}
+    \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A}} \\ & \quad 
+  ; (\dnt{\qsp{\Gamma}{\mb{q}_l}{\mb{q}_l}{\mb{q}_l}} \otimes \dnt{A} 
+  ; \alpha
+  ; \dnt{\Gamma^{\mb{q}_l}_{\mb{e}}} 
+    \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}, x : A}{\epsilon}{b}{B + A}}
+  ; \delta^{-1})^\dagger
+  ; \dnt{\cwk{\Gamma^{\mb{q}_l}}{\cdot}} \otimes \dnt{B}
+  ; \rho
+\end{align*}
+
+\TODO{directed uniformity lore...}
+
+\subsection{Concrete Models}
+
+\TODO{this}
+
+\section{SSA}
+
+\subsection{Syntax}
+
+\begin{grammar}
+  <\(r, s, t\)> ::= \(\brb{\ell}{a}\)
+    \;|\; \(\letstmt{x}{a}{t}\)
+    \;|\; \(\letstmt{(x, y)}{a}{t}\)
+    \;|\; \(\casestmt{a}{x}{s}{y}{t}\)
+    \;|\; \(\where{r}{L}\)
+
+  <\(L\)> ::= \(\cdot\) \;|\; \(L, \wbranch{\ell}{x}{A}\)
+
+  <\(\ms{L}\)> ::= \(\cdot\) \;|\; \(\ms{L}, \lhyp{\ell}{A}\)
+
+  <\(\mb{Q}\)> ::= \(\cdot\) \;|\; \(\mb{Q}, \mb{q}\)
+
+  <\(\mb{p}\)> ::= \(\cdot\) \;|\; \(\mb{p}, p\)  
+\end{grammar}
+
+\TODO{this}
+
+\subsection{Lowering to Standard SSA}
+
+\TODO{this}
+
+\subsection{Refinement Theory}
+
+\TODO{this}
+
+\subsection{Semantics}
+
+\TODO{this}
+
+\section{Release-Acquire Weak Memory}
+
+\TODO{this}
+
+\section{Related Work and Discussion}
+
+\citet{goncharov-metalang-21}
+
+\TODO{this}
+
+\subsection*{Acknowledgements}
+
+This work was supported in part by a European Research Council (ERC) Consolidator Grant for the
+project ``TypeFoundry'', funded under the European Union's Horizon 2020 Framework Programme (grant
+agreement no. 101002277).
+
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{references}
+
+\clearpage 
+
+\appendix
+
+\section{Proofs}
+
+\TODO{this}
+
+\end{document}
+\endinput
