@@ -84,6 +84,8 @@
 \newcommand{\brb}[2]{\ms{br}\;#1\;#2}
 \newcommand{\ite}[3]{\ms{if}\;#1\;\{#2\}\;\ms{else}\;\{#3\}}
 \newcommand{\casestmt}[5]{\ms{case}\;#1\;\{\linl{#2} \lto #3, \linr{#4} \lto #5\}}
+\newcommand{\awhere}[2]{#1\;\ms{where}_{\ms{nonrec}}\;#2}
+\newcommand{\cwhere}[2]{#1\;\ms{where}_{\ms{rec}}\;#2}
 \newcommand{\where}[2]{#1\;\ms{where}\;#2}
 \newcommand{\wbranch}[3]{#1(#2) \lto \{#3\}}
 \newcommand{\cfgsubst}[1]{\ms{cfgs}\;\{#1\}}
@@ -116,12 +118,13 @@
 \newcommand{\shaslb}[3]{#1 \vdash^{\ms{s}} #2 \rhd #3}
 
 \newcommand{\isop}[4]{#1 \in \mc{I}_{#4}(#2, #3)}
-\newcommand{\issubst}[3]{#1: #2 \mapsto #3}
-\newcommand{\csubst}[5]{#1 \vdash_{#4}^{#5} #2 : #3}
+\newcommand{\issubst}[3]{#1: #2 \rhd #3}
+\newcommand{\csubst}[5]{#1 \vdash_{#4}^{#5} #2 \rhd #3}
 \newcommand{\lbsubst}[4]{#1 \vdash #2: #3 \rightsquigarrow #4}
 \newcommand{\teqv}{\approx}
 \newcommand{\tref}{\leq}
 \newcommand{\tmle}[5]{#1 \vdash_{#2} #3 \tref #4 : {#5}}
+\newcommand{\tmlep}[6]{#1 \vdash_{#2} #3 \tref^{#6} #4 : {#5}}
 \newcommand{\tmeq}[5]{#1 \vdash_{#2} #3 \teqv #4 : {#5}}
 \newcommand{\lbeq}[4]{#1 \vdash #2 \teqv #3 \rhd {#4}}
 \newcommand{\tmseq}[4]{\issubst{#1 \teqv #2}{#3}{#4}}
@@ -351,7 +354,8 @@
 
 \begin{gather*}
   \prftree[r]{\rle{var}}
-    {\cwk{\Gamma^{\mb{q}}_{\mb{e}}}{x : A^\oneq_\epsilon}}{\hasty{\Gamma}{\epsilon}{x}{A}} 
+    {\cwk{\Gamma^{\mb{q}}_{\mb{e}}}{x : A^\oneq_\epsilon}}
+      {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{x}{A}} 
     \qquad
   \prftree[r]{\rle{op}}{f : A \to_\epsilon B}
     {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{a}{A}}
@@ -361,7 +365,7 @@
     {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{b}{B}}
     {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{}{\letexpr{x}{a}{b}}{B}} \\
   \prftree[r]{\rle{unit}}
-    {\cwk{\Gamma^{\mb{q}}_{\mb{e}}}{\cdot}}{\hasty{\Gamma;\vec{q}}{}{()}{\mb{1}}} 
+    {\cwk{\Gamma^{\mb{q}}_{\mb{e}}}{\cdot}}{\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{}{()}{\mb{1}}} 
     \qquad
   \prftree[r]{\rle{pair}}{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
     {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}}{\epsilon}{a}{A}}
@@ -385,31 +389,11 @@
   \end{equation*}
 \end{lemma}
 
-% \begin{gather*}
-%   \prftree[r]{\rle{nil}}
-%     {\qwk{\cdot}{\cdot}{\cdot}{\cdot}} \qquad
-%   \prftree[r]{\rle{cons}}
-%     {\qwk{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-%     {\cpyq \leq q \sqcap \alquant(A)}
-%     {\qwk{\Gamma, x : A}{(\mb{q}, q)}{(\mb{q}_l, q)}{(\mb{q}_r, q)}}
-%     \\
-%   \prftree[r]{\rle{left}}
-%     {\qwk{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-%     {\qwk{\Gamma, x : A}{(\mb{q}, q)}{(\mb{q}_l, q)}{(\mb{q}_r, \zeroq)}} \qquad
-%   \prftree[r]{\rle{right}}
-%     {\qwk{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-%     {\qwk{\Gamma, x : A}{(\mb{q}, q)}{(\mb{q}_l, \zeroq)}{(\mb{q}_r, q)}}
-%     \\
-%   \prftree[r]{\rle{skip}}
-%     {\qwk{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-%     {0 \leq q \sqcap \alquant(A)}
-%     {\qwk{\Gamma, x : A}{(\mb{q}, q)}{(\mb{q}_l, 0)}{(\mb{q}_r, 0)}}
-% \end{gather*}
-
 \begin{equation*}
   \alquant(\cdot) = \topq \qquad
-  \alquant(\Gamma^{\mb{q}}, x : A^q) = \alquant(\Gamma^{\mb{q}}) \sqcap \begin{cases}
-    \alquant(A) \sqcap q & \text{if } q \neq 0 \\
+  \alquant(\Gamma^{\mb{q}_{\mb{e}}}, x : A^q_\epsilon) 
+    = \alquant(\Gamma^{\mb{q}}_{\mb{e}}) \sqcap \begin{cases}
+    \alquant(A) \sqcap \alquant(\epsilon) \sqcap q & \text{if } q \neq 0 \\
     \topq & \text{if } q = 0
   \end{cases}
 \end{equation*}
@@ -419,15 +403,15 @@
                              {\issubst{\Gamma^{\mb{q}}_{\ms{e}}}{\cdot}{\cdot}} \qquad 
   \prftree[r]{\rle{zero}}
     {\issubst{\Gamma^{\mb{q}}_{\mb{e}}}{\sigma}{\Delta}}
-    % {\hasty{\Gamma^{\mb{q}'}_{\mb{e}'}}{\epsilon}{a}{A}}
-    {\issubst{\Gamma}{\sigma, x \mapsto a}{\Delta, x : A^0_\epsilon}}
+    {\issubst{\Gamma}{\sigma, x \mapsto a}{\Delta^{\mb{q}'}_{\mb{e}'}, x : A^0_\epsilon}}
   \\
   \prftree[r]{\rle{cons}}
     {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-    {\issubst{\Gamma^{\mb{q_l}}_{\mb{e}}}{\sigma}{\Delta}}
+    {\issubst{\Gamma^{\mb{q_l}}_{\mb{e}}}{\sigma}{\Delta^{\mb{q}}_{\mb{e}}}}
     {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A}}
-    {q \leq \alquant(\Gamma^{\mb{q}_r})}
-    {\issubst{\Gamma}{\sigma, x \mapsto a}{\Delta, x : A^q_\epsilon}}
+    {q \leq \alquant(\Gamma^{\mb{q}_r}_{\bot})}
+    {\issubst{\Gamma^{\mb{q}}_{\mb{e}}}{\sigma, x \mapsto a}
+    {\Delta^{\mb{q}'}_{\mb{e}'}, x : A^q_\epsilon}}
 \end{gather*}
 
 \begin{lemma}[Substitution]
@@ -548,6 +532,10 @@
         {D}
     }
     \\
+  \prftree[r]{\rle{unit-bind}}
+    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{a}{\mb{1}}}
+    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{\letexpr{-}{a}{()}}{a}{\mb{1}}}
+    \\
   \prftree[r]{\rle{let$_2$-bind}}
     {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
     {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A \otimes B}}
@@ -582,35 +570,31 @@
     }
 \end{gather*}
 
-\TODO{polar substitution}
+\begin{equation*}
+  \tmlep{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}{+}
+  \iff \tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}
+  \qquad
+  \tmlep{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}{-}
+  \iff \tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{b}{a}{A}
+\end{equation*}
 
 \begin{gather*}
-  \prftree[r]{\rle{let$_1$-$\beta^+$}}
+  \prftree[r]{\rle{let$_1$-$\beta^p$}}
     {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
     {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}}{\epsilon}{a}{A}}
     {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}, x : A^q}{\eta}{b}{B}}
-    {+ \in \epsilon \parallel \eta}
-    {q \leq \alquant(\Gamma^{\mb{q}_r}) \sqcap \alquant^+(\epsilon)}
+    {p \in \epsilon \parallel \eta}
+    {q \leq \alquant(\Gamma^{\mb{q}_r}) \sqcap \alquant^p(\epsilon)}
     {
-      \tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{\letexpr{x}{a}{b}}{[x/a]b}{B}
-    }
-  \\
-  \prftree[r]{\rle{let$_1$-$\beta^+$}}
-    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}}{\epsilon}{a}{A}}
-    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}, x : A^q}{\eta}{b}{B}}
-    {- \in \epsilon \parallel \eta}
-    {q \leq \alquant(\Gamma^{\mb{q}_r}) \sqcap \alquant^-(\epsilon)}
-    {
-      \tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{[x/a]b}{\letexpr{x}{a}{b}}{B}
+      \tmlep{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{\letexpr{x}{a}{b}}{[x/a]b}{B}{p}
     }
 \end{gather*}
 
 We use this to define
 \begin{equation*}
-  \tmle{\Gamma^{\mb{q}_{\mb{e}}}}{}{a}{b}{A}
+  \tmle{\Gamma^{\mb{q}}_{\mb{e}}}{}{a}{b}{A}
   \iff
-  \tmle{\Gamma^{\mb{q}_{\mb{e}}}}{\varnothing}{a}{b}{A}
+  \tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\varnothing}{a}{b}{A}
 \end{equation*}
 \begin{equation*}
   \thsubmon{\mc{R}} 
@@ -619,7 +603,7 @@ We use this to define
 We note in particular that
 \begin{itemize}
   \item $\{
-    (\Gamma^{\mb{q}}_{\mb{e}}, A, a, a) \mid \hasty{\Gamma^{\mb{q}_{\mb{e}}}}{\epsilon}{a}{A}
+    (\Gamma^{\mb{q}}_{\mb{e}}, A, a, a) \mid \hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{a}{A}
   \} \subseteq \thsubmon{\mc{R}}$
   \item $\mc{R} \subseteq \mc{R}' \implies \thsubmon{\mc{R}} \subseteq \thsubmon{\mc{R}'}$
   \item $\mc{R} \subseteq \thsubmon{\mc{R}}$
@@ -629,29 +613,31 @@ We note in particular that
 
 \TODO{congruence of weakening}
 
-\TODO{congruence of substitution}
-
 \begin{grammar}
   <p> ::= \(+\) \;|\; \(-\)
 \end{grammar}
 
 \begin{gather*}
   \prftree[r]{\rle{nil}}{\cwk{\Gamma^{\mb{q}}_{\ms{e}}}{\cdot}}
-                             {\csubst{\Gamma^{\mb{q}}_{\ms{e}}}{\cdot}{\cdot}{E}{p}} \qquad
+                             {\csubst{\Gamma^{\mb{q}}_{\ms{e}}}{\cdot}{\cdot}{\eta}{p}} \qquad
   \prftree[r]{\rle{zero}}
-    {\csubst{\Gamma^{\mb{q}}_{\mb{e}}}{\sigma}{\Delta}{E}{p}}
+    {\csubst{\Gamma^{\mb{q}}_{\mb{e}}}{\sigma}{\Delta^{\mb{q}'}_{\mb{e}'}}{\eta}{p}}
     % {\hasty{\Gamma^{\mb{q}'}_{\mb{e}'}}{\epsilon}{a}{A}}
-    {\csubst{\Gamma}{\sigma, x \mapsto a}{\Delta, x : A^0_\epsilon}{E}{p}}
+    {\csubst{\Gamma^{\mb{q}}_{\mb{e}}}{\sigma, x \mapsto a}
+            {\Delta^{\mb{q}'}_{\mb{e}'}, x : A^0_\epsilon}{\eta}{p}}
   \\
   \prftree[r]{\rle{cons}}
     {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-    {\csubst{\Gamma^{\mb{q_l}}_{\mb{e}}}{\sigma}{\Delta}{\eta}{p}}
+    {\csubst{\Gamma^{\mb{q_l}}_{\mb{e}}}{\sigma}{\Delta^{\mb{q}'}_{\mb{e}'}}{\eta}{p}}
     {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A}}
     {\hasty{\Gamma^{\mb{q}_r}_{\bot}}{\zeta}{a}{A}}
     {p \in \zeta \parallel \eta}
-    {q \leq \alquant(\Gamma^{\mb{q}_r}) \sqcap \alquant^p(\zeta)}
-    {\csubst{\Gamma^{\mb{q}}_{\mb{e}}}{\sigma, x \mapsto a}{\Delta, x : A^q_\epsilon}{\eta}{p}}
+    {q \leq \alquant(\Gamma^{\mb{q}_r}_{\mb{e}}) \sqcap \alquant^p(\zeta)}
+    {\csubst{\Gamma^{\mb{q}}_{\mb{e}}}{\sigma, x \mapsto a}
+            {\Delta^{\mb{q}}_{\mb{e}}, x : A^q_\epsilon}{\eta}{p}}
 \end{gather*}
+
+\TODO{congruence of substitution}
 
 \subsection{Semantics}
 
@@ -983,10 +969,10 @@ has a cool refinement structure, too!}
 \end{equation}
 
 \begin{gather*}
-  \prftree[r]{\rle{inl}}{f : A \to B}
+  \prftree[r]{\rle{inl}}
     {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{a}{A}}
     {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\linl{a}}{A + B}} \qquad
-  \prftree[r]{\rle{inr}}{f : A \to B}
+  \prftree[r]{\rle{inr}}
     {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{b}{B}}
     {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\linr{b}}{A + B}} \qquad    
   \prftree[r]{\rle{abort}}
@@ -999,8 +985,6 @@ has a cool refinement structure, too!}
     {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, y : B}{\epsilon}{b}{C}}
     {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\caseexpr{e}{x}{a}{y}{b}}{C}} \\
 \end{gather*}
-
-\TODO{this}
 
 \subsection{Refinement Theory}
 
@@ -1208,7 +1192,7 @@ appropriate niceness}
     \;|\; \(\letstmt{x}{a}{t}\)
     \;|\; \(\letstmt{(x, y)}{a}{t}\)
     \;|\; \(\casestmt{a}{x}{s}{y}{t}\)
-    \;|\; \(\where{r}{L}\)
+    \;|\; \(\awhere{r}{L}\)
 
   <\(L\)> ::= \(\cdot\) \;|\; \(L, \wbranch{\ell}{x}{A}\)
 
@@ -1389,7 +1373,8 @@ Given
     \;|\; \(\letstmt{x}{a}{t}\)
     \;|\; \(\letstmt{(x, y)}{a}{t}\)
     \;|\; \(\casestmt{a}{x}{s}{y}{t}\)
-    \;|\; \(\where{r}{L}\)
+    \alt \(\awhere{r}{L}\)
+    \;|\; \(\cwhere{r}{L}\)
 
   <\(L\)> ::= \(\cdot\) \;|\; \(L, \wbranch{\ell}{x}{A}\)
 
