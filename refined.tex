@@ -93,7 +93,7 @@
 \newcommand{\rupg}[1]{{#1}^\upharpoonright}
 \newcommand{\lupg}[1]{{#1}^\upharpoonleft}
 \newcommand{\liter}[3]{\ms{iter}\;#1\;\{ \linr{#2} \lto #3 \}}
-\newcommand{\einf}[1]{#1 \in \ms{E}^\infty}
+\newcommand{\einf}[1]{#1 \in \mc{E}^\infty}
 
 % Judgements
 \newcommand{\qsp}[4]{#1 \vdash #2 = #3 + #4}
@@ -323,41 +323,69 @@
 
 \TODO{signatures}
 
-\begin{grammar}
-  <\(A, B, C\)> ::= 
-  \(X\)
-  \;|\; \(A \otimes B\)
-  \;|\; \(\mathbf{1}\)
+\begin{definition}[\subiterssa-signature]
+  A \subiterssa signature $\mc{S} = (\mc{X}, \mc{I}, \mc{E})$ consists of:
+  \begin{itemize}
+    \item A set of \emph{base types} $X \in \mc{X}$
+    \item A set of \emph{instructions} $f \in \mc{I}$
+    \item A bounded lattice of \emph{effects} $\epsilon \in \mc{E}$
+    \item An upwards-closed set of \emph{looping effects} $\mc{E}^\infty \subseteq \mc{E}$
+    containing $\top$
+  \end{itemize}
+  such that every instruction is associated with a source type $\ms{src}(f) = A$, a target type
+  $\ms{trg}(f) = B$, and an effect $\ms{eff}(f) = e$ (where types are given by the grammar in
+  Figure~\ref{fig:subiterssa-syntax}).
+\end{definition}
 
-  <\(a, b, c\)> ::=
-  \(x\)
-  \;|\; \(f\;a\)
-  \;|\; \(\letexpr{x}{a}{b}\)
-  \;|\; \(()\)
-  \;|\; \((a, b)\)
-  \;|\; \(\letexpr{(x, y)}{a}{b}\)
-  \alt  \(\linl{a}\)
-  \;|\; \(\linr{b}\)
-  \;|\; \(\caseexpr{a}{x}{b}{y}{c}\)
-  \;|\; \(\labort{a}\)
-  \;|\; \(\liter{a}{x}{b}\)
-  
-  <\(q\)> ::= \(\zeroq\) | \(\oneq\) | \(\cpyq\) | \(\delq\) | \(\topq\)
+\begin{gather*}
+  \prftree[r]{\rle{inst}}
+    {f \in \mc{I}}
+    {\ms{src}(f) = A}
+    {\ms{trg}(f) = B}
+    {\ms{eff}(f) \leq \epsilon}
+    {f : A \to_\epsilon B}
+\end{gather*}
 
-  <\(\Gamma\)> ::= \(\cdot\) \;|\; \(\Gamma, x : A\)
+\begin{figure}
+  \begin{grammar}
+    <\(A, B, C\)> ::= 
+    \(X\)
+    \;|\; \(A \otimes B\)
+    \;|\; \(\mathbf{1}\)
 
-  <\(\mb{q}\)> ::= \(\cdot\) \;|\; \(\mb{q}, q\)
+    <\(a, b, c\)> ::=
+    \(x\)
+    \;|\; \(f\;a\)
+    \;|\; \(\letexpr{x}{a}{b}\)
+    \;|\; \(()\)
+    \;|\; \((a, b)\)
+    \;|\; \(\letexpr{(x, y)}{a}{b}\)
+    \alt  \(\linl{a}\)
+    \;|\; \(\linr{b}\)
+    \;|\; \(\caseexpr{a}{x}{b}{y}{c}\)
+    \;|\; \(\labort{a}\)
+    \;|\; \(\liter{a}{x}{b}\)
+    
+    <\(q\)> ::= \(\zeroq\) | \(\oneq\) | \(\cpyq\) | \(\delq\) | \(\topq\)
 
-  <\(\mb{e}\)> ::= \(\cdot\) \;|\; \(\mb{e}, \epsilon\)
-\end{grammar}
+    <\(\Gamma\)> ::= \(\cdot\) \;|\; \(\Gamma, x : A\)
+
+    <\(\mb{q}\)> ::= \(\cdot\) \;|\; \(\mb{q}, q\)
+
+    <\(\mb{e}\)> ::= \(\cdot\) \;|\; \(\mb{e}, \epsilon\)
+  \end{grammar}
+  \caption{Syntax for \subiterssa}
+  \Description{Syntax for our calculus}
+  \label{fig:subiterssa-syntax}
+\end{figure}
 
 \begin{equation}
   \oneq \leq \cpyq \qquad \topq = \top \qquad \delq = \zeroq \sqcup \oneq
 \end{equation}
 
 \begin{equation}
-  \alquant(A \otimes B) = \alquant(A) \sqcap \alquant(B) \qquad
-  \alquant(\mb{1}) = \topq
+  \alquant(A \otimes B) = \alquant(A + B) = \alquant(A) \sqcap \alquant(B) \qquad
+  \alquant(\mb{1}) = \alquant(\mb{0}) = \topq
 \end{equation}
 
 \TODO{we will assume $\bot \notin \mb{q}$ or somesuch}
@@ -428,6 +456,35 @@ It is easy to see that this induces a partial order on annotated contexts $\Gamm
     {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{}{a}{A \otimes B}}
     {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A, y : B}{\epsilon}{c}{C}}
     {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\letexpr{(x, y)}{a}{c}}{C}}
+\end{gather*}
+
+\begin{gather*}
+  \prftree[r]{\rle{inl}}
+    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{a}{A}}
+    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\linl{a}}{A + B}} \qquad
+  \prftree[r]{\rle{inr}}
+    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{b}{B}}
+    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\linr{b}}{A + B}} \qquad    
+  \prftree[r]{\rle{abort}}
+    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{a}{\mb{0}}}
+    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\labort{a}}{C}}
+    \\
+  \prftree[r]{\rle{case}}{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{e}{A + B}}
+    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{a}{C}}
+    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, y : B}{\epsilon}{b}{C}}
+    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\caseexpr{e}{x}{a}{y}{b}}{C}} \\
+\end{gather*}
+
+
+\begin{gather*}
+  \prftree[r]{\rle{iter}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\alquant(\Gamma^{\mb{q}_l}) = \top}
+    {\einf{\epsilon}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A}}
+    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{b}{B + A}}
+    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\liter{a}{x}{b}}{B}} \\
 \end{gather*}
 
 \subsection{Syntactic Metatheory}
@@ -509,6 +566,34 @@ It is easy to see that this induces a partial order on annotated contexts $\Gamm
     {\tmle{\Gamma^{\mb{q}_r}_{\mb{e}}}{\mc{R}}{a}{a'}{A \otimes B}}
     {\tmle{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A, y : B}{\mc{R}}{c}{c'}{C}}
     {\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{\letexpr{(x, y)}{a}{c}}{\letexpr{(x, y)}{a'}{c'}}{C}}
+\end{gather*}
+
+\begin{gather*}
+  \prftree[r]{\rle{inl}}
+    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{a'}{A}}
+    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{\linl{a}}{\linl{a'}}{A + B}} \qquad
+  \prftree[r]{\rle{inr}}
+    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{b}{b'}{B}}
+    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{\linr{b}}{\linr{b'}}{A + B}} \\
+  \prftree[r]{\rle{case}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\tmeq{\Gamma^{\mb{q}_r}_{\mb{e}}}{\mc{R}}{e}{e'}{A + B}}
+    {\tmeq{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\mc{R}}{a}{a'}{C}}
+    {\tmeq{\Gamma^{\mb{q}_l}_{\mb{e}}, y : B}{\mc{R}}{b}{b'}{C}}
+    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}
+      {\caseexpr{e}{x}{a}{y}{b}}{\caseexpr{e'}{x}{a'}{y}{b'}}{C}} \\
+  \prftree[r]{\rle{abort}}
+    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{a'}{\mb{0}}}
+    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{\labort{a}}{\labort{a'}}{C}}
+\end{gather*}
+
+\begin{gather*}
+  \prftree[r]{\rle{iter}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\alquant(\Gamma^{\mb{q}_l}) = \top}
+    {\tmeq{\Gamma^{\mb{q}_r}_{\mb{e}}}{\mc{R}}{a}{a'}{A}}
+    {\tmeq{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\mc{R}}{b}{b'}{B + A}}
+    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{\liter{a}{x}{b}}{\liter{a'}{x}{b'}}{B}}
 \end{gather*}
 
 \begin{gather*}
@@ -601,6 +686,75 @@ It is easy to see that this induces a partial order on annotated contexts $\Gamm
     }
 \end{gather*}
 
+\begin{gather*}
+  \prftree[r]{\rle{let-case}}
+    {
+      \prfStackPremises
+      {\qsp{\Gamma}{\mb{q}}{\mb{q}_c}{\mb{q}_r}}
+      {\qsp{\Gamma}{\mb{q}_c}{\mb{q}_l}{\mb{q}_m}}
+    }
+    {\hasty{\Gamma^{\mb{q}_m}_{\mb{e}}}{\mc{R}}{e}{A + B}}
+    {
+      \prfStackPremises
+      {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\mc{R}}{a}{C}}
+      {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, y : B}{\mc{R}}{b}{C}}
+    }
+    {
+      {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}, z : C}{\mc{R}}{d}{D}}
+    }
+    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}
+      {\letexpr{z}{\caseexpr{e}{x}{a}{y}{b}}{d}}
+      {\caseexpr{e}{x}{\letexpr{z}{a}{d}}{y}{\letexpr{z}{b}{d}}}
+      {D}
+    } \\
+  \prftree[r]{\rle{case-bind}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\mc{R}}{e}{A + B}}
+    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\mc{R}}{a}{C}}
+    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, y : B}{\mc{R}}{b}{C}}
+    {
+      \tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}
+      {\caseexpr{e}{x}{a}{y}{b}}
+      {\letexpr{z}{e}{\caseexpr{z}{x}{a}{y}{b}}}
+      {C}
+    } \\
+  \prftree[r]{\rle{let-abort}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}}{\mc{R}}{a}{\mb{0}}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}, x : A}{\mc{R}}{b}{B}}
+    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}
+      {\letexpr{x}{\labort{a}}{b}}
+      {\labort{a}}
+      {B}
+    }
+\end{gather*}
+
+\begin{gather*}
+  \prftree[r]{\rle{let-iter}}
+    {
+    \prfStackPremises
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_c}{\mb{q}_r}}
+    {\qsp{\Gamma}{\mb{q}_c}{\mb{q}_l}{\mb{q}_m}}
+    }
+    {\alquant(\Gamma^{\mb{q}_m}) = \top}
+    {\hasty{\Gamma^{\mb{q}_m}_{\mb{e}}}{\epsilon}{a}{A}}
+    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{b}{B + A}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}, y : B}{\epsilon}{c}{C}}
+    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}
+      {\letexpr{y}{\liter{a}{x}{b}}{c}}
+      {\liter{a'}{x}{\caseexpr{b}{y}{c}{z}{\linr{z}}}}
+      {C}}
+    \\
+  \prftree[r]{\rle{iter-bind}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\alquant(\Gamma^{\mb{q}_l}) = \top}
+    {\einf{\epsilon}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A}}
+    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{b}{B + A}}
+    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{\liter{a}{x}{b}}{\letexpr{y}{a}{\liter{y}{x}{b}}}{B}}
+    \\
+\end{gather*}
+
 \TODO{text for $\beta-\eta$}
 
 \begin{gather*}
@@ -620,6 +774,98 @@ It is easy to see that this induces a partial order on annotated contexts $\Gamm
       \tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}
         {\letexpr{(x, y)}{(a, b)}{c}}
         {\letexpr{x}{a}{\letexpr{y}{b}{c}}}{C}
+    }
+\end{gather*}
+
+\begin{gather*}
+  \prftree[r]{\rle{case-$\beta_l$}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\mc{R}}{e}{A}}
+    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\mc{R}}{a}{C}}
+    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, y : B}{\mc{R}}{b}{C}}
+    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}
+      {\caseexpr{\linl{e}}{x}{a}{y}{b}}
+      {\letexpr{x}{e}{a}}
+      {C}
+    } \\
+  \prftree[r]{\rle{case-$\beta_r$}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\mc{R}}{e}{B}}
+    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\mc{R}}{a}{C}}
+    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, y : B}{\mc{R}}{b}{C}}
+    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}
+      {\caseexpr{\linr{e}}{x}{a}{y}{b}}
+      {\letexpr{y}{e}{b}}
+      {C}
+    } \\
+  \prftree[r]{\rle{case-$\eta$}}
+    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{e}{A + B}}
+    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}
+      {\caseexpr{e}{x}{\linl{x}}{y}{\linr{y}}}
+      {e}
+      {A + B}
+    }
+\end{gather*}
+
+\begin{gather*}
+  \prftree[r]{\rle{iter-$\beta$}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\alquant(\Gamma^{\mb{q}_l}) = \top}
+    {\einf{\epsilon}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A}}
+    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{b}{B + A}}
+    {\tmeq
+      {\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{\liter{a}{x}{b}}
+      {\letexpr{x}{a}{\caseexpr{b}{y}{y}{z}{\liter{z}{x}{b}}}}{B}}
+  \\
+  \prftree[r]{\rle{codiag}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\alquant(\Gamma^{\mb{q}_l}) = \top}
+    {\einf{\epsilon}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A}}
+    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, y : A}{\epsilon}{b}{(B + A) + A}}
+    {\tmeq
+      {\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{\liter{a}{x}{\liter{x}{y}{b}}}
+      {\liter{a}{y}{\caseexpr{b}{x}{x}{y}{\linr{y}}}}{B}}
+\end{gather*}
+
+Given
+\begin{gather*}
+  {\qsp{\Gamma}{\mb{q}}{\mb{q}_c}{\mb{q}_r}} \qquad
+  {\qsp{\Gamma}{\mb{q}_c}{\mb{q}_l}{\mb{q}_m}} \qquad
+  \alquant(\Gamma^{\mb{q}_l}) = \top \qquad
+  \einf{\epsilon}
+  \\
+  \qquad {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A}}
+  \qquad {\hasty{\Gamma^{\mb{q}_m}_{\mb{e}}, x : A}{\eta}{s}{S}}
+  \qquad {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, y : S}{\epsilon}{b}{B + A}}
+  \qquad {\hasty{\Gamma^{\mb{q}_c}_{\mb{e}}, x : A}{\epsilon}{b'}{B + A}}
+\end{gather*}
+
+\begin{gather*}
+  \prftree[r]{\rle{unif}$^+$}
+    {+ \in \eta \parallel \epsilon}
+    {\tmeq{\Gamma^{\mb{q}_c}_{\mb{e}}, x : A}{\mc{R}}
+      {\letexpr{y}{s}{b}}
+      {\caseexpr{b'}{x}{\linl{x}}{x}{\linr{s}}}{B + S}}
+    {
+      \tmle{\Gamma^{\mb{q}}_{\mb{e}}}
+        {\mc{R}}
+        {\letexpr{x}{a}{\liter{s}{y}{b}}}
+        {\liter{a}{x}{b'}}
+        {B}
+    } \\
+  \prftree[r]{\rle{unif}$^-$}
+    {- \in \eta \parallel \epsilon}
+    {\tmeq{\Gamma^{\mb{q}_c}_{\mb{e}}, x : A}{\mc{R}}
+      {\letexpr{y}{s}{b}}
+      {\caseexpr{b'}{x}{\linl{x}}{x}{\linr{s}}}{B + S}}
+    {
+      \tmle{\Gamma^{\mb{q}}_{\mb{e}}}
+        {\mc{R}}
+        {\liter{a}{x}{b'}}
+        {\letexpr{x}{a}{\liter{s}{y}{b}}}
+        {B}
     }
 \end{gather*}
 
@@ -753,6 +999,16 @@ system $\mc{E}$, $\mc{C}_\bot$ is a central subcategory of every $\mc{C}_\epsilo
           = \dnt{\Gamma^{\mb{q}}_{\mb{e}}} \otimes \dnt{A^q}
 \end{gather*}
 
+
+\begin{gather*}
+  \dnt{\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\linl{a}}{A + B}}
+  = \dnt{\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{a}{A}} ; \iota_l \qquad
+  \dnt{\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\linr{b}}{A + B}}
+  = \dnt{\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{b}{B}} ; \iota_r \\
+  \dnt{\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\labort{a}}{A}}
+  = \dnt{\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{a}{\mb{0}}} ; 0_A
+\end{gather*}
+
 \begin{gather*}
   \boxed{\dnt{\cwk{\Gamma^{\mb{q}}_{\mb{e}}}{\Delta^{\mb{q}'}_{\mb{e}'}}} 
     : \mc{C}_\bot(\dnt{\Gamma^{\mb{q}}_{\mb{e}}}, \dnt{\Delta^{\mb{q}'}_{\mb{e}'}})} \\
@@ -816,6 +1072,35 @@ system $\mc{E}$, $\mc{C}_\bot$ is a central subcategory of every $\mc{C}_\epsilo
   \\ & 
   ; \alpha_{\Gamma^{\mb{q}_r}_{\mb{e}} \otimes A \otimes B}
   ; \dnt{\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A, y : B}{\epsilon}{c}{C}} \\
+\end{align*}
+
+\begin{align*}
+  \dnt{\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\caseexpr{e}{x}{a}{y}{b}}{C}}
+  =& \; 
+  \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+  ; \dnt{\Gamma^{\mb{q}_l}_{\mb{e}}} 
+  \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{e}{A + B}}
+  ; \delta^{-1} \\ & 
+  ; [
+    \dnt{\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{a}{C}},
+    \dnt{\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, y : B}{\epsilon}{b}{C}}
+  ]
+\end{align*}
+
+
+\begin{align*}
+  &\dnt{\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\liter{a}{x}{b}}{B}} \\
+  &= 
+  \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+  ; \dnt{\Gamma^{\mb{q}_l}_{\mb{e}}}
+    \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A}} \\ & \quad 
+  ; (\dnt{\qsp{\Gamma}{\mb{q}_l}{\mb{q}_l}{\mb{q}_l}} \otimes \dnt{A} 
+  ; \alpha
+  ; \dnt{\Gamma^{\mb{q}_l}_{\mb{e}}} 
+    \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}, x : A}{\epsilon}{b}{B + A}}
+  ; \delta^{-1})^\dagger
+  ; \dnt{\cwk{\Gamma^{\mb{q}_l}}{\cdot}} \otimes \dnt{B}
+  ; \rho
 \end{align*}
 
 \TODO{category of models}
@@ -885,286 +1170,6 @@ system $\mc{E}$, $\mc{C}_\bot$ is a central subcategory of every $\mc{C}_\epsilo
   \dnt{\hasty{\Gamma}{\epsilon}{a}{A}} \leq \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}
   $
 \end{definition}
-
-\section{Distributivity}
-
-\subsection{Syntax}
-
-\begin{equation}
-  \alquant(A \otimes B) = \alquant(A + B) = \alquant(A) \sqcap \alquant(B) \qquad
-  \alquant(\mb{1}) = \alquant(\mb{0}) = \topq
-\end{equation}
-
-\begin{gather*}
-  \prftree[r]{\rle{inl}}
-    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{a}{A}}
-    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\linl{a}}{A + B}} \qquad
-  \prftree[r]{\rle{inr}}
-    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{b}{B}}
-    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\linr{b}}{A + B}} \qquad    
-  \prftree[r]{\rle{abort}}
-    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{a}{\mb{0}}}
-    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\labort{a}}{C}}
-    \\
-  \prftree[r]{\rle{case}}{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{e}{A + B}}
-    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{a}{C}}
-    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, y : B}{\epsilon}{b}{C}}
-    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\caseexpr{e}{x}{a}{y}{b}}{C}} \\
-\end{gather*}
-
-\subsection{Refinement Theory}
-
-\begin{gather*}
-  \prftree[r]{\rle{inl}}
-    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{a'}{A}}
-    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{\linl{a}}{\linl{a'}}{A + B}} \qquad
-  \prftree[r]{\rle{inr}}
-    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{b}{b'}{B}}
-    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{\linr{b}}{\linr{b'}}{A + B}} \\
-  \prftree[r]{\rle{case}}
-    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-    {\tmeq{\Gamma^{\mb{q}_r}_{\mb{e}}}{\mc{R}}{e}{e'}{A + B}}
-    {\tmeq{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\mc{R}}{a}{a'}{C}}
-    {\tmeq{\Gamma^{\mb{q}_l}_{\mb{e}}, y : B}{\mc{R}}{b}{b'}{C}}
-    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}
-      {\caseexpr{e}{x}{a}{y}{b}}{\caseexpr{e'}{x}{a'}{y}{b'}}{C}} \\
-  \prftree[r]{\rle{abort}}
-    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{a'}{\mb{0}}}
-    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{\labort{a}}{\labort{a'}}{C}}
-\end{gather*}
-
-\begin{gather*}
-  \prftree[r]{\rle{let-case}}
-    {
-      \prfStackPremises
-      {\qsp{\Gamma}{\mb{q}}{\mb{q}_c}{\mb{q}_r}}
-      {\qsp{\Gamma}{\mb{q}_c}{\mb{q}_l}{\mb{q}_m}}
-    }
-    {\hasty{\Gamma^{\mb{q}_m}_{\mb{e}}}{\mc{R}}{e}{A + B}}
-    {
-      \prfStackPremises
-      {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\mc{R}}{a}{C}}
-      {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, y : B}{\mc{R}}{b}{C}}
-    }
-    {
-      {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}, z : C}{\mc{R}}{d}{D}}
-    }
-    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}
-      {\letexpr{z}{\caseexpr{e}{x}{a}{y}{b}}{d}}
-      {\caseexpr{e}{x}{\letexpr{z}{a}{d}}{y}{\letexpr{z}{b}{d}}}
-      {D}
-    } \\
-  \prftree[r]{\rle{case-bind}}
-    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\mc{R}}{e}{A + B}}
-    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\mc{R}}{a}{C}}
-    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, y : B}{\mc{R}}{b}{C}}
-    {
-      \tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}
-      {\caseexpr{e}{x}{a}{y}{b}}
-      {\letexpr{z}{e}{\caseexpr{z}{x}{a}{y}{b}}}
-      {C}
-    } \\
-  \prftree[r]{\rle{let-abort}}
-    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}}{\mc{R}}{a}{\mb{0}}}
-    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}, x : A}{\mc{R}}{b}{B}}
-    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}
-      {\letexpr{x}{\labort{a}}{b}}
-      {\labort{a}}
-      {B}
-    }
-\end{gather*}
-
-\begin{gather*}
-  \prftree[r]{\rle{case-$\beta_l$}}
-    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\mc{R}}{e}{A}}
-    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\mc{R}}{a}{C}}
-    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, y : B}{\mc{R}}{b}{C}}
-    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}
-      {\caseexpr{\linl{e}}{x}{a}{y}{b}}
-      {\letexpr{x}{e}{a}}
-      {C}
-    } \\
-  \prftree[r]{\rle{case-$\beta_r$}}
-    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\mc{R}}{e}{B}}
-    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\mc{R}}{a}{C}}
-    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, y : B}{\mc{R}}{b}{C}}
-    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}
-      {\caseexpr{\linr{e}}{x}{a}{y}{b}}
-      {\letexpr{y}{e}{b}}
-      {C}
-    } \\
-  \prftree[r]{\rle{case-$\eta$}}
-    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{e}{A + B}}
-    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}
-      {\caseexpr{e}{x}{\linl{x}}{y}{\linr{y}}}
-      {e}
-      {A + B}
-    }
-\end{gather*}
-
-\TODO{this}
-
-\subsection{Semantics}
-
-\TODO{distributive categories}
-
-\begin{gather*}
-  \dnt{\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\linl{a}}{A + B}}
-  = \dnt{\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{a}{A}} ; \iota_l \qquad
-  \dnt{\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\linr{b}}{A + B}}
-  = \dnt{\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{b}{B}} ; \iota_r \\
-  \dnt{\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\labort{a}}{A}}
-  = \dnt{\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{a}{\mb{0}}} ; 0_A
-\end{gather*}
-\begin{align*}
-  \dnt{\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\caseexpr{e}{x}{a}{y}{b}}{C}}
-  =& \; 
-  \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-  ; \dnt{\Gamma^{\mb{q}_l}_{\mb{e}}} 
-  \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{e}{A + B}}
-  ; \delta^{-1} \\ & 
-  ; [
-    \dnt{\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{a}{C}},
-    \dnt{\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, y : B}{\epsilon}{b}{C}}
-  ]
-\end{align*}
-
-\section{Iteration}
-
-\subsection{Syntax}
-
-\TODO{this}
-
-\begin{gather*}
-  \prftree[r]{\rle{iter}}
-    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-    {\alquant(\Gamma^{\mb{q}_l}) = \top}
-    {\einf{\epsilon}}
-    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A}}
-    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{b}{B + A}}
-    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\liter{a}{x}{b}}{B}} \\
-\end{gather*}
-
-\subsection{Refinement Theory}
-
-\begin{gather*}
-  \prftree[r]{\rle{iter}}
-    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-    {\alquant(\Gamma^{\mb{q}_l}) = \top}
-    {\tmeq{\Gamma^{\mb{q}_r}_{\mb{e}}}{\mc{R}}{a}{a'}{A}}
-    {\tmeq{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\mc{R}}{b}{b'}{B + A}}
-    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{\liter{a}{x}{b}}{\liter{a'}{x}{b'}}{B}}
-\end{gather*}
-
-\begin{gather*}
-  \prftree[r]{\rle{let-iter}}
-    {
-    \prfStackPremises
-    {\qsp{\Gamma}{\mb{q}}{\mb{q}_c}{\mb{q}_r}}
-    {\qsp{\Gamma}{\mb{q}_c}{\mb{q}_l}{\mb{q}_m}}
-    }
-    {\alquant(\Gamma^{\mb{q}_m}) = \top}
-    {\hasty{\Gamma^{\mb{q}_m}_{\mb{e}}}{\epsilon}{a}{A}}
-    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{b}{B + A}}
-    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}, y : B}{\epsilon}{c}{C}}
-    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}
-      {\letexpr{y}{\liter{a}{x}{b}}{c}}
-      {\liter{a'}{x}{\caseexpr{b}{y}{c}{z}{\linr{z}}}}
-      {C}}
-    \\
-  \prftree[r]{\rle{iter-bind}}
-    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-    {\alquant(\Gamma^{\mb{q}_l}) = \top}
-    {\einf{\epsilon}}
-    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A}}
-    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{b}{B + A}}
-    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{\liter{a}{x}{b}}{\letexpr{y}{a}{\liter{y}{x}{b}}}{B}}
-    \\
-\end{gather*}
-
-\begin{gather*}
-  \prftree[r]{\rle{iter-$\beta$}}
-    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-    {\alquant(\Gamma^{\mb{q}_l}) = \top}
-    {\einf{\epsilon}}
-    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A}}
-    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{b}{B + A}}
-    {\tmeq
-      {\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{\liter{a}{x}{b}}
-      {\letexpr{x}{a}{\caseexpr{b}{y}{y}{z}{\liter{z}{x}{b}}}}{B}}
-  \\
-  \prftree[r]{\rle{codiag}}
-    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-    {\alquant(\Gamma^{\mb{q}_l}) = \top}
-    {\einf{\epsilon}}
-    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A}}
-    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, y : A}{\epsilon}{b}{(B + A) + A}}
-    {\tmeq
-      {\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{\liter{a}{x}{\liter{x}{y}{b}}}
-      {\liter{a}{y}{\caseexpr{b}{x}{x}{y}{\linr{y}}}}{B}}
-\end{gather*}
-
-Given
-\begin{gather*}
-  {\qsp{\Gamma}{\mb{q}}{\mb{q}_c}{\mb{q}_r}} \qquad
-  {\qsp{\Gamma}{\mb{q}_c}{\mb{q}_l}{\mb{q}_m}} \qquad
-  \alquant(\Gamma^{\mb{q}_l}) = \top \qquad
-  \einf{\epsilon}
-  \\
-  \qquad {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A}}
-  \qquad {\hasty{\Gamma^{\mb{q}_m}_{\mb{e}}, x : A}{\eta}{s}{S}}
-  \qquad {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, y : S}{\epsilon}{b}{B + A}}
-  \qquad {\hasty{\Gamma^{\mb{q}_c}_{\mb{e}}, x : A}{\epsilon}{b'}{B + A}}
-\end{gather*}
-
-\begin{gather*}
-  \prftree[r]{\rle{unif}$^+$}
-    {+ \in \eta \parallel \epsilon}
-    {\tmeq{\Gamma^{\mb{q}_c}_{\mb{e}}, x : A}{\mc{R}}
-      {\letexpr{y}{s}{b}}
-      {\caseexpr{b'}{x}{\linl{x}}{x}{\linr{s}}}{B + S}}
-    {
-      \tmle{\Gamma^{\mb{q}}_{\mb{e}}}
-        {\mc{R}}
-        {\letexpr{x}{a}{\liter{s}{y}{b}}}
-        {\liter{a}{x}{b'}}
-        {B}
-    } \\
-  \prftree[r]{\rle{unif}$^-$}
-    {- \in \eta \parallel \epsilon}
-    {\tmeq{\Gamma^{\mb{q}_c}_{\mb{e}}, x : A}{\mc{R}}
-      {\letexpr{y}{s}{b}}
-      {\caseexpr{b'}{x}{\linl{x}}{x}{\linr{s}}}{B + S}}
-    {
-      \tmle{\Gamma^{\mb{q}}_{\mb{e}}}
-        {\mc{R}}
-        {\liter{a}{x}{b'}}
-        {\letexpr{x}{a}{\liter{s}{y}{b}}}
-        {B}
-    }
-\end{gather*}
-
-\subsection{Semantics}
-
-\begin{align*}
-  &\dnt{\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\liter{a}{x}{b}}{B}} \\
-  &= 
-  \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-  ; \dnt{\Gamma^{\mb{q}_l}_{\mb{e}}}
-    \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A}} \\ & \quad 
-  ; (\dnt{\qsp{\Gamma}{\mb{q}_l}{\mb{q}_l}{\mb{q}_l}} \otimes \dnt{A} 
-  ; \alpha
-  ; \dnt{\Gamma^{\mb{q}_l}_{\mb{e}}} 
-    \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}, x : A}{\epsilon}{b}{B + A}}
-  ; \delta^{-1})^\dagger
-  ; \dnt{\cwk{\Gamma^{\mb{q}_l}}{\cdot}} \otimes \dnt{B}
-  ; \rho
-\end{align*}
 
 \begin{theorem}[name=Soundness, restate=soundnessiter]
   For any model $\mc{M}$, $\mc{M} \models \mc{R} \iff \mc{M} \models \thsubiter{\mc{R}}$. In
