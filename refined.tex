@@ -179,12 +179,12 @@
 
 % Branding
 \newcommand{\submonssa}{\(\lambda_{\leq\otimes}\)}
-\newcommand{\subdistssa}{\(\lambda_{\leq\otimes+}\)}
-\newcommand{\subiterssa}{\(\lambda_{\leq\otimes+}^\dagger\)}
+\newcommand{\subdistssa}{\(\lambda_{\ms{dist}}\)}
+\newcommand{\subiterssa}{\(\lambda_{\ms{iter}}\)}
 \newcommand{\isotopessa}{\(\lambda_{\ms{SSA}}\)}
 \newcommand{\thsubmon}[1]{\ms{Th}_{\leq\otimes}(#1)}
-\newcommand{\thsubdist}[1]{\ms{Th}_{\leq\otimes+}(#1)}
-\newcommand{\thsubiter}[1]{\ms{Th}_{\leq\otimes+}^\dagger(#1)}
+\newcommand{\thsubdist}[1]{\ms{Th}_{\ms{dist}}(#1)}
+\newcommand{\thsubiter}[1]{\ms{Th}_{\ms{iter}}(#1)}
 
 % Formalization pointers
 \newcommand{\formalizedas}[1]{Formalized as \texttt{#1}}
@@ -280,15 +280,48 @@
 
 \maketitle
 
+\TODO{paper structure:}
+\begin{enumerate}
+  \item Basic narrative
+  \item Term syntax with iteration; much like an RVSDG \cite{rvsdg}
+  \item Equational theory
+  \item Semantics + completeness; diagrams \emph{are} an RVSDG
+  \item SSA syntax with structured control-flow
+  \item Lowering unstructured to structured
+  \item Lowering to terms
+  \item Appendix:
+  \begin{itemize}
+    \item Complete calculus for premonoidal categories
+    \item Basic blocks?
+    \item Complete calculus for distributive premonoidal categories
+    \item Acyclic SSA
+  \end{itemize}
+\end{enumerate}
+
 \section{Introduction}
 
-\TODO{this}
+\TODO{narrative:}
+\begin{enumerate}
+  \item Have \citet{ghalayini-24-ssa-densem-arxiv}'s axiomatization of SSA
+  \item Have equational theory
+  \item Compiler writers need \emph{refinements}, rather than \emph{equations}
+  \item Semantically, refinements are naturally represented using poset-enriched categories
+  \item We need an (axiomatic) \emph{refinement theory} for this, since compiler writers work with
+        syntax rather than semantics.
+  \item To get all the refinements we want, we have to \emph{classify} effects:
+  \begin{itemize}
+      \item \citet{fuhrmann-direct-1999}'s \emph{central/copyable/duplicable}
+      \item \citet{lipton-mover-75}'s \emph{left/right movers}
+  \end{itemize}
+  \item To use our classification of effects, we need to track substructural variable use
+  \item And hence, substructural SSA, which lets us support substructural types for free
+\end{enumerate}
 
 \section{Substructural Effects}
 
 \subsection{Syntax}
 
-\TODO{text for \submonssa}
+\TODO{signatures}
 
 \begin{grammar}
   <\(A, B, C\)> ::= 
@@ -303,8 +336,13 @@
   \;|\; \(()\)
   \;|\; \((a, b)\)
   \;|\; \(\letexpr{(x, y)}{a}{b}\)
+  \alt  \(\linl{a}\)
+  \;|\; \(\linr{b}\)
+  \;|\; \(\caseexpr{a}{x}{b}{y}{c}\)
+  \;|\; \(\labort{a}\)
+  \;|\; \(\liter{a}{x}{b}\)
   
-  <\(q\)> ::= \(\bot\) | \(\zeroq\) | \(\oneq\) | \(\cpyq\) | \(\delq\) | \(\topq\)
+  <\(q\)> ::= \(\zeroq\) | \(\oneq\) | \(\cpyq\) | \(\delq\) | \(\topq\)
 
   <\(\Gamma\)> ::= \(\cdot\) \;|\; \(\Gamma, x : A\)
 
@@ -322,11 +360,15 @@
   \alquant(\mb{1}) = \topq
 \end{equation}
 
+\TODO{we will assume $\bot \notin \mb{q}$ or somesuch}
+
+\TODO{fix this to deal with $q = 0$ properly!!!}
+
 \begin{gather*}
   \prftree[r]{\rle{nil}}{\cwk{\cdot}{\cdot}} \qquad 
   \prftree[r]{\rle{cons}}
     {\cwk{\Gamma^{\mb{q}}_{\mb{e}}}{\Delta^{\mb{q}'}_{\mb{e}'}}}
-    {q \leq q'}
+    {q' \leq q}
     {e \leq e'}
     {\cwk{\Gamma^{\mb{q}}_{\mb{e}}, x : A^q_\epsilon}
          {\Delta^{\mb{q}'}_{\mb{e}'}, x : A^{q'}_{\epsilon'}}} \qquad
@@ -334,6 +376,17 @@
     {\cwk{\Gamma^{\mb{q}}_{\mb{e}}}{\Delta^{\mb{q}'}_{\mb{e}'}}}
     {\zeroq \leq q \sqcap \alquant(A)}
     {\cwk{\Gamma^{\mb{q}}_{\mb{e}}, x : A^q_\epsilon}{\Delta}^{\mb{q}'}_{\mb{e}'}}
+\end{gather*}
+
+It is easy to see that this induces a partial order on annotated contexts $\Gamma^{\mb{q}}_{\mb{e}}$
+; in particular, the following rules are admissible:
+
+\begin{gather*}
+  \prftree[r]{\rle{refl}}{}{\cwk{\Gamma^{\mb{q}}_{\mb{e}}}{\Gamma^{\mb{q}}_{\mb{e}}}} \qquad 
+  \prftree[r]{\rle{trans}}
+    {\cwk{{\Gamma_1}^{\mb{q}_1}_{\mb{e}_1}}{{\Gamma_2}^{\mb{q}_2}_{\mb{e}_2}}}
+    {\cwk{{\Gamma_2}^{\mb{q}_2}_{\mb{e}_2}}{{\Gamma_3}^{\mb{q}_3}_{\mb{e}_3}}}
+    {\cwk{{\Gamma_1}^{\mb{q}_1}_{\mb{e}_1}}{{\Gamma_3}^{\mb{q}_3}_{\mb{e}_3}}}
 \end{gather*}
 
 \begin{gather*}
@@ -379,8 +432,8 @@
 
 \subsection{Syntactic Metatheory}
 
-\begin{lemma}[Weakening]
-  The following rule is derivable:
+\begin{lemma}[name=Weakening, restate=synmonwk]
+  The following rule is admissible:
   \begin{equation*}
     \prftree[r]{\rle{wk}}
       {\cwk{\Gamma'^{\mb{q}'}_{\mb{e}'}}{\Gamma^{\mb{q}}_{\ms{e}}}}
@@ -414,8 +467,8 @@
     {\Delta^{\mb{q}'}_{\mb{e}'}, x : A^q_\epsilon}}
 \end{gather*}
 
-\begin{lemma}[Substitution]
-  The following rule is derivable:
+\begin{lemma}[name=Substitution, restate=synmonsubst]
+  The following rule is admissible:
   \begin{equation*}
     \prftree[r]{\rle{subst}}
       {\issubst{\Gamma'^{\mb{q}'}_{\mb{e}'}}{\sigma}{\Gamma^{\mb{q}}_{\mb{e}}}}
@@ -617,6 +670,8 @@ We note in particular that
   <p> ::= \(+\) \;|\; \(-\)
 \end{grammar}
 
+\TODO{lattice-ify substitution!}
+
 \begin{gather*}
   \prftree[r]{\rle{nil}}{\cwk{\Gamma^{\mb{q}}_{\ms{e}}}{\cdot}}
                              {\csubst{\Gamma^{\mb{q}}_{\ms{e}}}{\cdot}{\cdot}{\eta}{p}} \qquad
@@ -668,51 +723,12 @@ In particular, if $\epsilon \parallel \eta = \{+, -\}$ then $\mc{C}_\epsilon \ca
 central subcategory of $\mc{C}_\epsilon$ and $\mc{C}_\eta$. It follows that, for a based effect
 system $\mc{E}$, $\mc{C}_\bot$ is a central subcategory of every $\mc{C}_\epsilon$.
 
-\begin{definition}[\submonssa-model]
-  A \submonssa-model $\mc{M} = (\mc{C}, \dnt{\cdot}, \dmor{}, \tmor{})$ of a \submonssa-signature
-  $\mc{S}$ over $\mc{E}$ is given by
-  \begin{itemize}
-    \item An effectful category $\mc{C}$ over $\mc{E}$
-    \item For each base type $X \in \ms{Base}(\mc{S})$, an object $\dnt{X} \in |\mc{C}|$, equipped
-    with
-    \begin{itemize}
-      \item For $X$ affine, a \emph{discard morphism} $\tmor{X} : \mc{C}_\bot(\dnt{X}, I)$
-      \item For $X$ relevant, a \emph{diagonal morphism} $\dmor{X} : \mc{C}_\bot(\dnt{X}, \dnt{X}
-      \otimes \dnt{X})$
-    \end{itemize}
-    \item For each function $f : \ms{Inst}(\mc{S})_\epsilon(A, B)$, a morphism $\dnt{f} :
-    \mc{C}_\epsilon(\dnt{A}, \dnt{B})$
-  \end{itemize}
-  such that, for all $A, B \in |\mc{S}|$, $f : \mc{C}_\epsilon(\dnt{A}, \dnt{B})$ we have
-  \begin{itemize}
-    \item If $A$ relevant, 
-      $\dmor{A} ; \dmor{A} \otimes \dnt{A} ; \alpha = \dmor{A} ; \dnt{A} \otimes \dmor{A}$
-    \item If $\zeroq \leq \alquant^+(\epsilon)$ and $A, B$ affine, $f ; !_B \leq !_A$
-    \item If $\zeroq \leq \alquant^+(\epsilon)$ and $A$ relevant, $B$ affine, 
-      $\dmor{A} ; (f ; !_B) \otimes \dnt{A} \leq \rho^{-1}$
-    \item If $\cpyq \leq \alquant^+(\epsilon)$ and $A, B$ relevant, 
-    $f ; \dmor{B} \leq \dmor{A} ; f \ltimes f = \dmor{A} ; f \rtimes f$
-    \item If $\zeroq \leq \alquant^-(\epsilon)$ and $A, B$ affine, $f ; !_B \geq !_A$
-    \item If $\zeroq \leq \alquant^-(\epsilon)$ and $A$ relevant, $B$ affine, 
-      $\dmor{A} ; (f ; !_B) \otimes \dnt{A} \geq \rho^{-1}$
-    \item If $\cpyq \leq \alquant^-(\epsilon)$ and $A, B$ relevant, 
-    $f ; \dmor{B} \geq \dmor{A} ; f \ltimes f = \dmor{A} ; f \rtimes f$
-  \end{itemize}
-  where
-  \begin{itemize}
-    \item $\dnt{\mb{1}} = I$
-    \item $\dnt{A \otimes B} = \dnt{A} \otimes \dnt{B}$
-    \item $!_{\mb{1}} = \ms{id}_I$
-    \item $\Delta_{\mb{1}} = \lambda^{-1} = \rho^{-1}$
-    \item For $A, B$ affine, $!_{A \otimes B} = !_A \otimes !_B ; \lambda$
-    \item For $A, B$ relevant, 
-    $\Delta_{A \otimes B} 
-      = \dmor{A} \otimes \dmor{B}
-      ; \sigma^{\ms{mid}}
-    $
-  \end{itemize}
-  \begin{gather*}
-  \end{gather*}
+\TODO{lore}
+
+\begin{definition}[\subiterssa-model]
+  A \subiterssa-model $\mc{M} = (\mc{C}, (\cdot)^\dagger, \dnt{\cdot}, \dmor{}, \tmor{})$ of a
+  \subiterssa-signature $\mc{S}$ over $\mc{E}$ is a \subdistssa-model such that for each
+  $\einf{\epsilon}$, $(\mc{C}_\epsilon, (\cdot)^\dagger)$ is a distributive Elgot category.
 \end{definition}
 
 \begin{equation*}
@@ -870,98 +886,9 @@ system $\mc{E}$, $\mc{C}_\bot$ is a central subcategory of every $\mc{C}_\epsilo
   $
 \end{definition}
 
-\begin{theorem}[name=Soundness, restate=soundnessmon]
-  For any model $\mc{M}$, $\mc{M} \models \mc{R} \iff \mc{M} \models \thsubmon{\mc{R}}$. In
-  particular,
-  \begin{itemize}
-    \item If $\mc{M} \models \mc{R}$, given $\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}$, we
-    have $\dnt{\hasty{\Gamma}{\epsilon}{a}{A}}_{\mc{M}} =
-    \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}_{\mc{M}}$
-    \item In particular, for any model, if $\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{}{a}{b}{A}$, we have
-    $\dnt{\hasty{\Gamma}{\epsilon}{a}{A}} = \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}$
-  \end{itemize}
-\end{theorem}
-
-\TODO{definition...}
-
-\TODO{subcategory lore}
-
-\begin{theorem}[name=Completeness, restate=completenessmon]
-  We have that
-  $$
-  \tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}
-  \iff \forall \mc{M} \models \mc{R},
-  \dnt{\hasty{\Gamma}{\epsilon}{a}{A}}_{\mc{M}} \leq \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}_{\mc{M}}
-  $$
-  and in particular that
-  $$
-  \tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}
-  \iff \dnt{\hasty{\Gamma}{\epsilon}{a}{A}}_{\mc{S}_{\mc{R}}} 
-  \leq \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}_{\mc{S}_{\mc{R}}} 
-  $$
-\end{theorem}
-
-In particular,
-\begin{itemize}
-  \item The category $\mc{S}_{\mc{R}}$ is the initial object in the full subcategory of
-  \submonssa-models of $\mc{S}$ validating $\mc{R}$
-  \item The category $\mc{S}_\varnothing$, which we will write as simply $\mc{S}$, is the initial
-  object in the category of \submonssa-models of $\mc{S}$.
-\end{itemize}
-
-\subsection{Concrete Models}
-
-\TODO{fix a mapping $\dnt{\cdot}$ for base types and functions...}
-
-\TODO{every non-ordered model via the discrete order, \citet{ghalayini-24-ssa-densem-arxiv}}
-
-\TODO{every symmetric premonoidal category}
-
-\TODO{in particular, every Freyd category, garbage-share category, and Markov category}
-
-\TODO{in particular, every strong monad on an SMC}
-
-\TODO{let's do the Option monad...}
-
-\TODO{which becomes the UB monad WithTop when ordered}
-
-\TODO{let's add a heap state transformer, and a printing trace transformer}
-
-\TODO{can also pick more exotic models: the coproduct, for example}
-
-\TODO{to demonstrate linearity, let's build a very simple separation logic model}
-
-\TODO{more interesting: the category of concurrent games, \citet{vale-linearizability-24}, which
-has a cool refinement structure, too!}
-
-\TODO{another fun linear model for quantum computing: Hilbert spaces}
-
-\TODO{can we do quantum refinement???}
-
 \section{Distributivity}
 
 \subsection{Syntax}
-
-\begin{grammar}
-  <\(A, B, C\)> ::= 
-  \(X\)
-  \;|\; \(A \otimes B\)
-  \;|\; \(\mathbf{1}\)
-  \;|\; \(A + B\)
-  \;|\; \(\mathbf{0}\)
-
-  <\(a, b, c\)> ::=
-  \(x\)
-  \alt \(f\;a\)
-  \;|\; \(\letexpr{x}{a}{b}\)
-  \;|\; \(()\)
-  \;|\; \((a, b)\)
-  \;|\; \(\letexpr{(x, y)}{a}{b}\)
-  \alt  \(\linl{a}\)
-  \;|\; \(\linr{b}\)
-  \;|\; \(\caseexpr{a}{x}{b}{y}{c}\)
-  \;|\; \(\labort{a}\)
-\end{grammar}
 
 \begin{equation}
   \alquant(A \otimes B) = \alquant(A + B) = \alquant(A) \sqcap \alquant(B) \qquad
@@ -1086,30 +1013,6 @@ has a cool refinement structure, too!}
 
 \TODO{distributive categories}
 
-\begin{definition}[\subdistssa-model]
-  A \subdistssa-model $\mc{M} = (\mc{C}, \dnt{\cdot}, \dmor{}, \tmor{})$ of a \subdistssa-signature
-  $\mc{S}$ over $\mc{E}$ is a \submonssa-model such that
-  \begin{itemize}
-    \item $\mc{C}$ is a distributive category
-    \item $\mc{C}$ has chosen binary coproducts $A + B$, as well as an initial object $\mb{0}$
-    \item Each $\mc{C}_\epsilon$ is closed under the coproducts $+$ and contains all injections,
-    distributors, and initial morphisms (and therefore, in particular, inherits the structure of a
-    distributive category from $\mc{C}$)
-  \end{itemize}
-  where we extend the definitions of $\dnt{\cdot}$, $\dmor{}$, and $\tmor{}$ as follows
-  \begin{itemize}
-    \item $\dnt{\mb{0}} = \mb{0}$
-    \item $\dnt{A + B} = \dnt{A} + \dnt{B}$
-    \item $!_{\mb{0}} = 0_{I}$
-    \item $\Delta_{\mb{0}} = 0_{0 + 0}$
-    \item For $A, B$ affine, $!_{A + B} = [!_A, !_B]$
-    \item For $A, B$ relevant, 
-    $\Delta_{A + B} 
-      = [\dmor{A} ; \iota_l \otimes \iota_l, \dmor{B} ; \iota_r \otimes \iota_r]
-    $
-  \end{itemize}
-\end{definition}
-
 \begin{gather*}
   \dnt{\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\linl{a}}{A + B}}
   = \dnt{\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{a}{A}} ; \iota_l \qquad
@@ -1131,104 +1034,9 @@ has a cool refinement structure, too!}
   ]
 \end{align*}
 
-\begin{theorem}[name=Soundness, restate=soundnessdist]
-  For any model $\mc{M}$, $\mc{M} \models \mc{R} \iff \mc{M} \models \thsubdist{\mc{R}}$. In
-  particular,
-  \begin{itemize}
-    \item If $\mc{M} \models \mc{R}$, given $\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}$, we
-    have $\dnt{\hasty{\Gamma}{\epsilon}{a}{A}}_{\mc{M}} =
-    \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}_{\mc{M}}$
-    \item In particular, for any model, if $\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{}{a}{b}{A}$, we have
-    $\dnt{\hasty{\Gamma}{\epsilon}{a}{A}} = \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}$
-  \end{itemize}
-\end{theorem}
-
-\TODO{definition...}
-
-\TODO{subcategory lore}
-
-\begin{theorem}[name=Completeness, restate=completenessdist]
-  We have that
-  $$
-  \tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}
-  \iff \forall \mc{M} \models \mc{R},
-  \dnt{\hasty{\Gamma}{\epsilon}{a}{A}}_{\mc{M}} \leq \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}_{\mc{M}}
-  $$
-  and in particular that
-  $$
-  \tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}
-  \iff \dnt{\hasty{\Gamma}{\epsilon}{a}{A}}_{\mc{S}_{\mc{R}}} 
-  \leq \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}_{\mc{S}_{\mc{R}}} 
-  $$
-\end{theorem}
-
-In particular,
-\begin{itemize}
-  \item The category $\mc{S}_{\mc{R}}$ is the initial object in the full subcategory of
-  \subdistssa-models of $\mc{S}$ validating $\mc{R}$
-  \item The category $\mc{S}_\varnothing$, which we will write as simply $\mc{S}$, is the initial
-  object in the category of \subdistssa-models of $\mc{S}$.
-\end{itemize}
-
-\subsection{Concrete Models}
-
-\TODO{every distributive premonoidal category}
-
-\TODO{in particular, every Freyd category, garbage-share category, and Markov category w/ the
-appropriate niceness}
-
-\TODO{in particular, every strong monad on a distributive SMC}
-
-\TODO{previous examples work without changes: UB, heap, separation logic, and quantum}
-
-\TODO{lore}
-
-\section{Acyclic SSA}
-
-\subsection{Syntax}
-
-\begin{grammar}
-  <\(r, s, t\)> ::= \(\brb{\ell}{a}\)
-    \;|\; \(\letstmt{x}{a}{t}\)
-    \;|\; \(\letstmt{(x, y)}{a}{t}\)
-    \;|\; \(\casestmt{a}{x}{s}{y}{t}\)
-    \;|\; \(\awhere{r}{L}\)
-
-  <\(L\)> ::= \(\cdot\) \;|\; \(L, \wbranch{\ell}{x}{A}\)
-
-  <\(\ms{L}\)> ::= \(\cdot\) \;|\; \(\ms{L}, \lhyp{\ell}{A}\)
-
-  <\(\mb{Q}\)> ::= \(\cdot\) \;|\; \(\mb{Q}, \mb{q}\)
-\end{grammar}
-
-\TODO{this}
-
-\subsection{Refinement Theory}
-
-\TODO{this}
-
-\subsection{Semantics}
-
-\TODO{this}
-
 \section{Iteration}
 
 \subsection{Syntax}
-
-\begin{grammar}
-  <\(a, b, c\)> ::=
-  \(x\)
-  \alt \(f\;a\)
-  \;|\; \(\letexpr{x}{a}{b}\)
-  \;|\; \(()\)
-  \;|\; \((a, b)\)
-  \;|\; \(\letexpr{(x, y)}{a}{b}\)
-  \alt  \(\linl{a}\)
-  \;|\; \(\linr{b}\)
-  \;|\; \(\caseexpr{a}{x}{b}{y}{c}\)
-  \;|\; \(\labort{a}\)
-  \;|\; \(\liter{a}{x}{b}\)
-\end{grammar}
 
 \TODO{this}
 
@@ -1358,11 +1166,53 @@ Given
   ; \rho
 \end{align*}
 
+\begin{theorem}[name=Soundness, restate=soundnessiter]
+  For any model $\mc{M}$, $\mc{M} \models \mc{R} \iff \mc{M} \models \thsubiter{\mc{R}}$. In
+  particular,
+  \begin{itemize}
+    \item If $\mc{M} \models \mc{R}$, given $\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}$, we
+    have $\dnt{\hasty{\Gamma}{\epsilon}{a}{A}}_{\mc{M}} =
+    \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}_{\mc{M}}$
+    \item In particular, for any model, if $\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{}{a}{b}{A}$, we have
+    $\dnt{\hasty{\Gamma}{\epsilon}{a}{A}} = \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}$
+  \end{itemize}
+\end{theorem}
+
 \TODO{directed uniformity lore...}
+
+
+\begin{theorem}[name=Completeness, restate=completenessiter]
+  We have that
+  $$
+  \tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}
+  \iff \forall \mc{M} \models \mc{R},
+  \dnt{\hasty{\Gamma}{\epsilon}{a}{A}}_{\mc{M}} \leq \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}_{\mc{M}}
+  $$
+  and in particular that
+  $$
+  \tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}
+  \iff \dnt{\hasty{\Gamma}{\epsilon}{a}{A}}_{\mc{S}_{\mc{R}}} 
+  \leq \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}_{\mc{S}_{\mc{R}}} 
+  $$
+\end{theorem}
 
 \subsection{Concrete Models}
 
 \TODO{this}
+
+% \section{Remainders and Guarded Iteration}
+
+% \subsection{Syntax}
+
+% \TODO{work up to nicer iteration rule}
+
+% \subsection{Refinement Theory}
+
+% \TODO{this}
+
+% \subsection{Semantics}
+
+% \TODO{this}
 
 \section{SSA}
 
@@ -1409,6 +1259,10 @@ Given
 
 \TODO{this}
 
+\TODO{future work: remainders}
+
+\TODO{future work: guarded iteration}
+
 \subsection*{Acknowledgements}
 
 This work was supported in part by a European Research Council (ERC) Consolidator Grant for the
@@ -1423,6 +1277,309 @@ agreement no. 101002277).
 \appendix
 
 \section{Proofs}
+
+\subsection{Syntactic Metatheory}
+
+We begin by stating the following lemmas:
+\begin{lemma}
+  \begin{itemize}
+    \item 
+  \end{itemize}
+\end{lemma}
+\begin{proof}
+\end{proof}
+
+\synmonwk*
+
+\begin{proof}
+  This proof is by induction over \subiterssa derivations; the proof for \submonssa and \subdistssa
+  is the same except that irrelevant cases are omitted.
+
+  \begin{itemize}
+    \item \brle{var}: \TODO{this}
+    \item \brle{op}: \TODO{this}
+    \item \brle{let$_1$}: \TODO{this}
+    \item \brle{let$_2$}: \TODO{this}
+    \item \brle{unit}: \TODO{this}
+    \item \brle{pair}: \TODO{this}
+    \item \brle{inl}: \TODO{this}
+    \item \brle{inr}: \TODO{this}
+    \item \brle{case}: \TODO{this}
+    \item \brle{abort}: \TODO{this}
+    \item \brle{iter}: \TODO{this}
+  \end{itemize}
+\end{proof}
+
+\synmonsubst*
+
+\begin{proof}
+  This proof is by induction over \subiterssa derivations; the proof for \submonssa and \subdistssa
+  is the same except that irrelevant cases are omitted.
+
+  \TODO{this}
+\end{proof}
+
+\TODO{weakening congruence}
+
+\TODO{substitution congruence}
+
+\subsection{Semantic Metatheory}
+
+\TODO{this}
+
+\subsection{Soundness}
+
+\soundnessiter*
+
+\begin{proof}
+  \;\TODO{this}
+\end{proof}
+
+\subsection{Completeness}
+
+\completenessiter*
+
+\begin{proof}
+  \;\TODO{this}
+\end{proof}
+
+\section{Poset-Enriched Effectful Categories}
+
+\subsection{Syntax}
+
+\begin{grammar}
+  <\(A, B, C\)> ::= 
+  \(X\)
+  \;|\; \(A \otimes B\)
+  \;|\; \(\mathbf{1}\)
+
+  <\(a, b, c\)> ::=
+  \(x\)
+  \;|\; \(f\;a\)
+  \;|\; \(\letexpr{x}{a}{b}\)
+  \;|\; \(()\)
+  \;|\; \((a, b)\)
+  \;|\; \(\letexpr{(x, y)}{a}{b}\)
+  
+  <\(q\)> ::= \(\zeroq\) | \(\oneq\) | \(\cpyq\) | \(\delq\) | \(\topq\)
+
+  <\(\Gamma\)> ::= \(\cdot\) \;|\; \(\Gamma, x : A\)
+
+  <\(\mb{q}\)> ::= \(\cdot\) \;|\; \(\mb{q}, q\)
+
+  <\(\mb{e}\)> ::= \(\cdot\) \;|\; \(\mb{e}, \epsilon\)
+\end{grammar}
+
+
+\TODO{this}
+
+\subsection{Semantics}
+
+\begin{definition}[\submonssa-model]
+  A \submonssa-model $\mc{M} = (\mc{C}, \dnt{\cdot}, \dmor{}, \tmor{})$ of a \submonssa-signature
+  $\mc{S}$ over $\mc{E}$ is given by
+  \begin{itemize}
+    \item An effectful category $\mc{C}$ over $\mc{E}$
+    \item For each base type $X \in \ms{Base}(\mc{S})$, an object $\dnt{X} \in |\mc{C}|$, equipped
+    with
+    \begin{itemize}
+      \item For $X$ affine, a \emph{discard morphism} $\tmor{X} : \mc{C}_\bot(\dnt{X}, I)$
+      \item For $X$ relevant, a \emph{diagonal morphism} $\dmor{X} : \mc{C}_\bot(\dnt{X}, \dnt{X}
+      \otimes \dnt{X})$
+    \end{itemize}
+    \item For each function $f : \ms{Inst}(\mc{S})_\epsilon(A, B)$, a morphism $\dnt{f} :
+    \mc{C}_\epsilon(\dnt{A}, \dnt{B})$
+  \end{itemize}
+  such that, for all $A, B \in |\mc{S}|$, $f : \mc{C}_\epsilon(\dnt{A}, \dnt{B})$ we have
+  \begin{itemize}
+    \item If $A$ relevant, 
+      $\dmor{A} ; \dmor{A} \otimes \dnt{A} ; \alpha = \dmor{A} ; \dnt{A} \otimes \dmor{A}$
+    \item If $\zeroq \leq \alquant^+(\epsilon)$ and $A, B$ affine, $f ; !_B \leq !_A$
+    \item If $\zeroq \leq \alquant^+(\epsilon)$ and $A$ relevant, $B$ affine, 
+      $\dmor{A} ; (f ; !_B) \otimes \dnt{A} \leq \rho^{-1}$
+    \item If $\cpyq \leq \alquant^+(\epsilon)$ and $A, B$ relevant, 
+    $f ; \dmor{B} \leq \dmor{A} ; f \ltimes f = \dmor{A} ; f \rtimes f$
+    \item If $\zeroq \leq \alquant^-(\epsilon)$ and $A, B$ affine, $f ; !_B \geq !_A$
+    \item If $\zeroq \leq \alquant^-(\epsilon)$ and $A$ relevant, $B$ affine, 
+      $\dmor{A} ; (f ; !_B) \otimes \dnt{A} \geq \rho^{-1}$
+    \item If $\cpyq \leq \alquant^-(\epsilon)$ and $A, B$ relevant, 
+    $f ; \dmor{B} \geq \dmor{A} ; f \ltimes f = \dmor{A} ; f \rtimes f$
+  \end{itemize}
+  where
+  \begin{itemize}
+    \item $\dnt{\mb{1}} = I$
+    \item $\dnt{A \otimes B} = \dnt{A} \otimes \dnt{B}$
+    \item $!_{\mb{1}} = \ms{id}_I$
+    \item $\Delta_{\mb{1}} = \lambda^{-1} = \rho^{-1}$
+    \item For $A, B$ affine, $!_{A \otimes B} = !_A \otimes !_B ; \lambda$
+    \item For $A, B$ relevant, 
+    $\Delta_{A \otimes B} 
+      = \dmor{A} \otimes \dmor{B}
+      ; \sigma^{\ms{mid}}
+    $
+  \end{itemize}
+  \begin{gather*}
+  \end{gather*}
+\end{definition}
+
+\begin{theorem}[name=Soundness]
+  For any model $\mc{M}$, $\mc{M} \models \mc{R} \iff \mc{M} \models \thsubmon{\mc{R}}$. In
+  particular,
+  \begin{itemize}
+    \item If $\mc{M} \models \mc{R}$, given $\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}$, we
+    have $\dnt{\hasty{\Gamma}{\epsilon}{a}{A}}_{\mc{M}} =
+    \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}_{\mc{M}}$
+    \item In particular, for any model, if $\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{}{a}{b}{A}$, we have
+    $\dnt{\hasty{\Gamma}{\epsilon}{a}{A}} = \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}$
+  \end{itemize}
+\end{theorem}
+
+\TODO{definition...}
+
+\TODO{subcategory lore}
+
+\begin{theorem}[name=Completeness]
+  We have that
+  $$
+  \tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}
+  \iff \forall \mc{M} \models \mc{R},
+  \dnt{\hasty{\Gamma}{\epsilon}{a}{A}}_{\mc{M}} \leq \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}_{\mc{M}}
+  $$
+  and in particular that
+  $$
+  \tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}
+  \iff \dnt{\hasty{\Gamma}{\epsilon}{a}{A}}_{\mc{S}_{\mc{R}}} 
+  \leq \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}_{\mc{S}_{\mc{R}}} 
+  $$
+\end{theorem}
+
+In particular,
+\begin{itemize}
+  \item The category $\mc{S}_{\mc{R}}$ is the initial object in the full subcategory of
+  \submonssa-models of $\mc{S}$ validating $\mc{R}$
+  \item The category $\mc{S}_\varnothing$, which we will write as simply $\mc{S}$, is the initial
+  object in the category of \submonssa-models of $\mc{S}$.
+\end{itemize}
+
+\TODO{this}
+
+\section{Distributive Effectful Categories}
+
+\subsection{Syntax}
+
+\begin{grammar}
+  <\(A, B, C\)> ::= 
+  \(X\)
+  \;|\; \(A \otimes B\)
+  \;|\; \(\mathbf{1}\)
+  \;|\; \(A + B\)
+  \;|\; \(\mathbf{0}\)
+
+  <\(a, b, c\)> ::=
+  \(x\)
+  \alt \(f\;a\)
+  \;|\; \(\letexpr{x}{a}{b}\)
+  \;|\; \(()\)
+  \;|\; \((a, b)\)
+  \;|\; \(\letexpr{(x, y)}{a}{b}\)
+  \alt  \(\linl{a}\)
+  \;|\; \(\linr{b}\)
+  \;|\; \(\caseexpr{a}{x}{b}{y}{c}\)
+  \;|\; \(\labort{a}\)
+\end{grammar}
+
+\TODO{this}
+
+\subsection{Semantics}
+
+\begin{definition}[\subdistssa-model]
+  A \subdistssa-model $\mc{M} = (\mc{C}, \dnt{\cdot}, \dmor{}, \tmor{})$ of a \subdistssa-signature
+  $\mc{S}$ over $\mc{E}$ is a \submonssa-model such that
+  \begin{itemize}
+    \item $\mc{C}$ is a distributive category
+    \item $\mc{C}$ has chosen binary coproducts $A + B$, as well as an initial object $\mb{0}$
+    \item Each $\mc{C}_\epsilon$ is closed under the coproducts $+$ and contains all injections,
+    distributors, and initial morphisms (and therefore, in particular, inherits the structure of a
+    distributive category from $\mc{C}$)
+  \end{itemize}
+  where we extend the definitions of $\dnt{\cdot}$, $\dmor{}$, and $\tmor{}$ as follows
+  \begin{itemize}
+    \item $\dnt{\mb{0}} = \mb{0}$
+    \item $\dnt{A + B} = \dnt{A} + \dnt{B}$
+    \item $!_{\mb{0}} = 0_{I}$
+    \item $\Delta_{\mb{0}} = 0_{0 + 0}$
+    \item For $A, B$ affine, $!_{A + B} = [!_A, !_B]$
+    \item For $A, B$ relevant, 
+    $\Delta_{A + B} 
+      = [\dmor{A} ; \iota_l \otimes \iota_l, \dmor{B} ; \iota_r \otimes \iota_r]
+    $
+  \end{itemize}
+\end{definition}
+
+\begin{theorem}[name=Soundness, restate=soundnessdist]
+  For any model $\mc{M}$, $\mc{M} \models \mc{R} \iff \mc{M} \models \thsubdist{\mc{R}}$. In
+  particular,
+  \begin{itemize}
+    \item If $\mc{M} \models \mc{R}$, given $\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}$, we
+    have $\dnt{\hasty{\Gamma}{\epsilon}{a}{A}}_{\mc{M}} =
+    \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}_{\mc{M}}$
+    \item In particular, for any model, if $\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{}{a}{b}{A}$, we have
+    $\dnt{\hasty{\Gamma}{\epsilon}{a}{A}} = \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}$
+  \end{itemize}
+\end{theorem}
+
+\TODO{definition...}
+
+\TODO{subcategory lore}
+
+\begin{theorem}[name=Completeness, restate=completenessdist]
+  We have that
+  $$
+  \tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}
+  \iff \forall \mc{M} \models \mc{R},
+  \dnt{\hasty{\Gamma}{\epsilon}{a}{A}}_{\mc{M}} \leq \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}_{\mc{M}}
+  $$
+  and in particular that
+  $$
+  \tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}
+  \iff \dnt{\hasty{\Gamma}{\epsilon}{a}{A}}_{\mc{S}_{\mc{R}}} 
+  \leq \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}_{\mc{S}_{\mc{R}}} 
+  $$
+\end{theorem}
+
+In particular,
+\begin{itemize}
+  \item The category $\mc{S}_{\mc{R}}$ is the initial object in the full subcategory of
+  \subdistssa-models of $\mc{S}$ validating $\mc{R}$
+  \item The category $\mc{S}_\varnothing$, which we will write as simply $\mc{S}$, is the initial
+  object in the category of \subdistssa-models of $\mc{S}$.
+\end{itemize}
+
+\section{Acyclic SSA}
+
+\subsection{Syntax}
+
+\begin{grammar}
+  <\(r, s, t\)> ::= \(\brb{\ell}{a}\)
+    \;|\; \(\letstmt{x}{a}{t}\)
+    \;|\; \(\letstmt{(x, y)}{a}{t}\)
+    \;|\; \(\casestmt{a}{x}{s}{y}{t}\)
+    \;|\; \(\where{r}{L}\)
+
+  <\(L\)> ::= \(\cdot\) \;|\; \(L, \wbranch{\ell}{x}{A}\)
+
+  <\(\ms{L}\)> ::= \(\cdot\) \;|\; \(\ms{L}, \lhyp{\ell}{A}\)
+
+  <\(\mb{Q}\)> ::= \(\cdot\) \;|\; \(\mb{Q}, \mb{q}\)
+\end{grammar}
+
+\TODO{this}
+
+\subsection{Refinement Theory}
+
+\TODO{this}
+
+\subsection{Semantics}
 
 \TODO{this}
 
