@@ -84,6 +84,7 @@
 \newcommand{\brb}[2]{\ms{br}\;#1\;#2}
 \newcommand{\ite}[3]{\ms{if}\;#1\;\{#2\}\;\ms{else}\;\{#3\}}
 \newcommand{\casestmt}[5]{\ms{case}\;#1\;\{\linl{#2} \lto #3, \linr{#4} \lto #5\}}
+\newcommand{\loopstmt}[3]{\ms{loop}\;#1(#2) \lto \;\{#3\}}
 \newcommand{\awhere}[2]{#1\;\ms{where}_{\ms{nonrec}}\;#2}
 \newcommand{\cwhere}[2]{#1\;\ms{where}_{\ms{rec}}\;#2}
 \newcommand{\where}[2]{#1\;\ms{where}\;#2}
@@ -321,20 +322,28 @@
 
 \subsection{Syntax}
 
-\TODO{signatures}
-
 \begin{definition}[\subiterssa-signature]
   A \subiterssa signature $\mc{S} = (\mc{X}, \mc{I}, \mc{E})$ consists of:
   \begin{itemize}
     \item A set of \emph{base types} $X \in \mc{X}$
     \item A set of \emph{instructions} $f \in \mc{I}$
-    \item A bounded lattice of \emph{effects} $\epsilon \in \mc{E}$
+    \item A bounded 
+    %lattice 
+    partial order
+    %
+    of \emph{effects} $\epsilon \in \mc{E}$
     \item An upwards-closed set of \emph{looping effects} $\mc{E}^\infty \subseteq \mc{E}$
     containing $\top$
   \end{itemize}
-  such that every instruction is associated with a source type $\ms{src}(f) = A$, a target type
-  $\ms{trg}(f) = B$, and an effect $\ms{eff}(f) = e$ (where types are given by the grammar in
-  Figure~\ref{fig:subiterssa-syntax}).
+  such that we associate:
+  \begin{itemize}
+    \item Every base type $X$ type to a \emph{quantity} $\ms{q}(X) \in \{1, \delq, \cpyq, \topq\}$.
+    \item Every effect $e$ to a \emph{quantity} $\ms{q}(e) \in \{1, \delq, \cpyq, \topq\}$, such
+    that the map $\ms{q}$ is antitone and $\ms{q}(\bot) = \topq$
+    \item Every instruction to a \emph{source type} $\ms{src}(f) = A$, a \emph{target type}
+    $\ms{trg}(f) = B$, and an \emph{effect} $\ms{eff}(f) = e$ (where types are given by the grammar
+    in Figure~\ref{fig:subiterssa-syntax}).
+  \end{itemize}
 \end{definition}
 
 \begin{gather*}
@@ -388,8 +397,6 @@
   \alquant(\mb{1}) = \alquant(\mb{0}) = \topq
 \end{equation}
 
-\TODO{we will assume $\bot \notin \mb{q}$ or somesuch}
-
 \TODO{fix this to deal with $q = 0$ properly!!!}
 
 \begin{gather*}
@@ -407,15 +414,16 @@
 \end{gather*}
 
 It is easy to see that this induces a partial order on annotated contexts $\Gamma^{\mb{q}}_{\mb{e}}$
-; in particular, the following rules are admissible:
+%.
+%; in particular, the following rules are admissible:
 
-\begin{gather*}
-  \prftree[r]{\rle{refl}}{}{\cwk{\Gamma^{\mb{q}}_{\mb{e}}}{\Gamma^{\mb{q}}_{\mb{e}}}} \qquad 
-  \prftree[r]{\rle{trans}}
-    {\cwk{{\Gamma_1}^{\mb{q}_1}_{\mb{e}_1}}{{\Gamma_2}^{\mb{q}_2}_{\mb{e}_2}}}
-    {\cwk{{\Gamma_2}^{\mb{q}_2}_{\mb{e}_2}}{{\Gamma_3}^{\mb{q}_3}_{\mb{e}_3}}}
-    {\cwk{{\Gamma_1}^{\mb{q}_1}_{\mb{e}_1}}{{\Gamma_3}^{\mb{q}_3}_{\mb{e}_3}}}
-\end{gather*}
+% \begin{gather*}
+%   \prftree[r]{\rle{refl}}{}{\cwk{\Gamma^{\mb{q}}_{\mb{e}}}{\Gamma^{\mb{q}}_{\mb{e}}}} \qquad 
+%   \prftree[r]{\rle{trans}}
+%     {\cwk{{\Gamma_1}^{\mb{q}_1}_{\mb{e}_1}}{{\Gamma_2}^{\mb{q}_2}_{\mb{e}_2}}}
+%     {\cwk{{\Gamma_2}^{\mb{q}_2}_{\mb{e}_2}}{{\Gamma_3}^{\mb{q}_3}_{\mb{e}_3}}}
+%     {\cwk{{\Gamma_1}^{\mb{q}_1}_{\mb{e}_1}}{{\Gamma_3}^{\mb{q}_3}_{\mb{e}_3}}}
+% \end{gather*}
 
 \begin{gather*}
   \prftree[r]{\rle{nil}}
@@ -916,7 +924,7 @@ We note in particular that
   <p> ::= \(+\) \;|\; \(-\)
 \end{grammar}
 
-\TODO{lattice-ify substitution!}
+\TODO{can't lattice-ify substitution due to $\bot$-parameter}
 
 \begin{gather*}
   \prftree[r]{\rle{nil}}{\cwk{\Gamma^{\mb{q}}_{\ms{e}}}{\cdot}}
@@ -969,12 +977,68 @@ In particular, if $\epsilon \parallel \eta = \{+, -\}$ then $\mc{C}_\epsilon \ca
 central subcategory of $\mc{C}_\epsilon$ and $\mc{C}_\eta$. It follows that, for a based effect
 system $\mc{E}$, $\mc{C}_\bot$ is a central subcategory of every $\mc{C}_\epsilon$.
 
-\TODO{lore}
+\TODO{Freyd categories}
+
+\begin{definition}[Distributive effectful category]
+  \;\TODO{this}
+\end{definition}
+
+\begin{definition}[Effectful Elgot category]
+  \;\TODO{this}
+\end{definition}
 
 \begin{definition}[\subiterssa-model]
   A \subiterssa-model $\mc{M} = (\mc{C}, (\cdot)^\dagger, \dnt{\cdot}, \dmor{}, \tmor{})$ of a
-  \subiterssa-signature $\mc{S}$ over $\mc{E}$ is a \subdistssa-model such that for each
-  $\einf{\epsilon}$, $(\mc{C}_\epsilon, (\cdot)^\dagger)$ is a distributive Elgot category.
+  \subiterssa-signature $\mc{S} = (\mc{X}, \mc{I}, \mc{E})$ is composed of:
+  \begin{itemize}
+    \item An effectful Elgot category ($\mc{C}$, $(\cdot)^\dagger$) over $(\mc{E},
+    \mc{E}^\infty)$
+    \item For each base type $X \in \mc{X}$, an object $\dnt{X} \in |\mc{C}|$, equipped with
+    \begin{itemize}
+      \item For $X$ affine, a \emph{discard morphism} $\tmor{X} : \mc{C}_\bot(\dnt{X}, I)$
+      \item For $X$ relevant, a \emph{diagonal morphism} $\dmor{X} : \mc{C}_\bot(\dnt{X}, \dnt{X}
+      \otimes \dnt{X})$
+    \end{itemize}
+    \item For each function $f : \ms{Inst}(\mc{S})_\epsilon(A, B)$, a morphism $\dnt{f} :
+    \mc{C}_\epsilon(\dnt{A}, \dnt{B})$
+  \end{itemize}
+  such that, for all $A, B \in |\mc{S}|$, $f : \mc{C}_\epsilon(\dnt{A}, \dnt{B})$ we have
+  \begin{itemize}
+    \item If $A$ relevant, 
+      $\dmor{A} ; \dmor{A} \otimes \dnt{A} ; \alpha = \dmor{A} ; \dnt{A} \otimes \dmor{A}$
+    \item If $\zeroq \leq \alquant^+(\epsilon)$ and $A, B$ affine, $f ; !_B \leq !_A$
+    \item If $\zeroq \leq \alquant^+(\epsilon)$ and $A$ relevant, $B$ affine, 
+      $\dmor{A} ; (f ; !_B) \otimes \dnt{A} \leq \rho^{-1}$
+    \item If $\cpyq \leq \alquant^+(\epsilon)$ and $A, B$ relevant, 
+    $f ; \dmor{B} \leq \dmor{A} ; f \ltimes f = \dmor{A} ; f \rtimes f$
+    \item If $\zeroq \leq \alquant^-(\epsilon)$ and $A, B$ affine, $f ; !_B \geq !_A$
+    \item If $\zeroq \leq \alquant^-(\epsilon)$ and $A$ relevant, $B$ affine, 
+      $\dmor{A} ; (f ; !_B) \otimes \dnt{A} \geq \rho^{-1}$
+    \item If $\cpyq \leq \alquant^-(\epsilon)$ and $A, B$ relevant, 
+    $f ; \dmor{B} \geq \dmor{A} ; f \ltimes f = \dmor{A} ; f \rtimes f$
+  \end{itemize}
+  where
+  \begin{itemize}
+    \item $\dnt{\mb{1}} = I$
+    \item $\dnt{A \otimes B} = \dnt{A} \otimes \dnt{B}$
+    \item $!_{\mb{1}} = \ms{id}_I$
+    \item $\Delta_{\mb{1}} = \lambda^{-1} = \rho^{-1}$
+    \item For $A, B$ affine, $!_{A \otimes B} = !_A \otimes !_B ; \lambda$
+    \item For $A, B$ relevant, 
+    $\Delta_{A \otimes B} 
+      = \dmor{A} \otimes \dmor{B}
+      ; \sigma^{\ms{mid}}
+    $
+    \item $\dnt{\mb{0}} = \mb{0}$
+    \item $\dnt{A + B} = \dnt{A} + \dnt{B}$
+    \item $!_{\mb{0}} = 0_{I}$
+    \item $\Delta_{\mb{0}} = 0_{0 + 0}$
+    \item For $A, B$ affine, $!_{A + B} = [!_A, !_B]$
+    \item For $A, B$ relevant, 
+    $\Delta_{A + B} 
+      = [\dmor{A} ; \iota_l \otimes \iota_l, \dmor{B} ; \iota_r \otimes \iota_r]
+    $
+  \end{itemize}
 \end{definition}
 
 \begin{equation*}
@@ -1185,6 +1249,13 @@ system $\mc{E}$, $\mc{C}_\bot$ is a central subcategory of every $\mc{C}_\epsilo
 
 \TODO{directed uniformity lore...}
 
+\subsection{Concrete Models}
+
+\TODO{this}
+
+\section{Completeness}
+
+\TODO{this}
 
 \begin{theorem}[name=Completeness, restate=completenessiter]
   We have that
@@ -1201,24 +1272,6 @@ system $\mc{E}$, $\mc{C}_\bot$ is a central subcategory of every $\mc{C}_\epsilo
   $$
 \end{theorem}
 
-\subsection{Concrete Models}
-
-\TODO{this}
-
-% \section{Remainders and Guarded Iteration}
-
-% \subsection{Syntax}
-
-% \TODO{work up to nicer iteration rule}
-
-% \subsection{Refinement Theory}
-
-% \TODO{this}
-
-% \subsection{Semantics}
-
-% \TODO{this}
-
 \section{SSA}
 
 \subsection{Syntax}
@@ -1227,7 +1280,8 @@ system $\mc{E}$, $\mc{C}_\bot$ is a central subcategory of every $\mc{C}_\epsilo
   <\(r, s, t\)> ::= \(\brb{\ell}{a}\)
     \;|\; \(\letstmt{x}{a}{t}\)
     \;|\; \(\letstmt{(x, y)}{a}{t}\)
-    \;|\; \(\casestmt{a}{x}{s}{y}{t}\)
+    \alt \(\casestmt{a}{x}{s}{y}{t}\)
+    \;|\; \(\loopstmt{\ell}{x}{t}\)
     \alt \(\awhere{r}{L}\)
     \;|\; \(\cwhere{r}{L}\)
 
@@ -1382,7 +1436,7 @@ We begin by stating the following lemmas:
 
 \begin{definition}[\submonssa-model]
   A \submonssa-model $\mc{M} = (\mc{C}, \dnt{\cdot}, \dmor{}, \tmor{})$ of a \submonssa-signature
-  $\mc{S}$ over $\mc{E}$ is given by
+  $\mc{S} = (\mc{X}, \mc{I}, \mc{E})$ is given by
   \begin{itemize}
     \item An effectful category $\mc{C}$ over $\mc{E}$
     \item For each base type $X \in \ms{Base}(\mc{S})$, an object $\dnt{X} \in |\mc{C}|$, equipped
@@ -1423,8 +1477,6 @@ We begin by stating the following lemmas:
       ; \sigma^{\ms{mid}}
     $
   \end{itemize}
-  \begin{gather*}
-  \end{gather*}
 \end{definition}
 
 \begin{theorem}[name=Soundness]
