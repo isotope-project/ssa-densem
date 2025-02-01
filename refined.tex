@@ -301,82 +301,37 @@
 
 \section{Introduction}
 
-Most major compilers today use \emph{static single assignment form}, or \emph{SSA}, as their intermediate representation. 
-%
-Unlike traditional 3-address code, SSA makes it much easier to perform algebraic, equational reasoning on values. 
-%
-\citet{ghalayini-24-ssa-densem-arxiv} give an equational theory of SSA designed to enable reasoning about such algebraic rewrites in a variety of different settings. 
-%
-Compiler writers, however, are often interested in rewritings which are not \emph{equivalences}, but rather \emph{refinements}. 
-%
-We would like to extend the equational theory of SSA to a \emph{refinement theory} to be able to reason about such rewrites axiomatically.
-
-To be able to build up such a theory without tying ourselves to a fixed set of primitives, 
-%
-we need to \emph{classify} effects into different kinds. 
-%
-We begin with \citet{fuhrmann-direct-1999}'s notions \emph{copyable} and \emph{discardable} effects. 
-%
-An operation with \emph{discardable} effect is one for which, if the output is unused, it is safe to discard the operation entirely.
-%
-An example of such an effect is \emph{randomness}: 
-%
-while probabilistic operations are \emph{impure}, we can safely discard the result of an unused coin-flip.
-%
-\TODO{example program here: discarding a coin flip is valid, duplicating one is not}
-%
-An operation with \emph{copyable} effect is one in which performing the operation once and then using the output twice is the same as performing the operation twice on copied inputs.
-%
-An example of such an effect is \emph{nontermination}: 
-%
-while we cannot totally eliminate a call to a potentially nonterminating function, we can freely duplicate such a call.
-%
-\TODO{example program here: collatz step function duplication is valid, but is it truly valid to discard multiplication by 0?}
-%
-\TODO{systems example, UB is also copyable}
-%
-\TODO{but UB is \emph{not} discardable}
-%
-\TODO{we can remove it}
-%
-\TODO{but we can't add it}
-%
-\TODO{segue...}
-
-%
-To introduce refinement into the mix,
-%
-we can generalize discardable effects into \emph{erasable} and \emph{NAME GOES HERE (introducable?)},
-%
-and copyable effects into \emph{fusable} and \emph{duplicable}.
-%
-\TODO{UB is the canonical example of an erasable effect: you can remove potential UB, but its
-dangerous to introduce!}
-%
-\TODO{similarly, while nondeterminism is not copyable, it is \emph{fusable}}
-%
-\TODO{what about the other way around: \emph{duplicable} and \emph{introducable?}?}
-%
-\TODO{\emph{memory fences} are introducable and copyable, but not erasable}
-%
-\TODO{think of an effect which is duplicable but not fusable...}
-
-\TODO{narrative:}
-\begin{enumerate}
-  \item Have \citet{ghalayini-24-ssa-densem-arxiv}'s axiomatization of SSA
-  \item Have equational theory
-  \item Compiler writers need \emph{refinements}, rather than \emph{equations}
-  \item Semantically, refinements are naturally represented using poset-enriched categories
-  \item We need an (axiomatic) \emph{refinement theory} for this, since compiler writers work with
-        syntax rather than semantics.
-  \item To get all the refinements we want, we have to \emph{classify} effects:
+\begin{itemize}
+  \item SSA is useful because it enables substitution of pure things
+  \item And therefore algebraic reasoning in the presence of complex, unstructured control-flow
+  \item \citet{ghalayini-24-ssa-densem-arxiv} give an equational theory for SSA supporting:
   \begin{itemize}
-      \item \citet{fuhrmann-direct-1999}'s \emph{central/copyable/discardable}
-      \item \citet{lipton-mover-75}'s \emph{left/right movers}
+    \item Algebraic reasoning via substitution of pure expressions
+    \item Control-flow optimization
+    \item Instructions with complex side-effects, such as weak memory accesses
   \end{itemize}
-  \item To use our classification of effects, we need to track substructural variable use
-  \item And hence, substructural SSA, which lets us support substructural types for free
-\end{enumerate}
+  \item Not all the substitutions we might want to consider even while doing algebra are strictly
+  \emph{pure}, however, per se
+  \item For example, consider an operation like \ms{div}, which exhibits \emph{undefined behavior}
+  if we divide by zero
+  \item Let's say we have a program like $\letexpr{x}{\ms{div}\;y\;z}{e}$, where the optimizer
+  cannot deduce whether $z$ is nonzero
+  \item In general, this program is \emph{not} equivalent to $[\ms{div}\;y\;z/x]e$
+  \item However, it turns out it is always safe to rewrite $\letexpr{x}{\ms{div}\;y\;z}{e}$ to
+  $[\ms{div}\;y\;z/x]e$. Let's think about why:
+  \begin{itemize}
+    \item If $z$ is zero, then $\letexpr{x}{\ms{div}\;y\;z}{e}$ has UB, so we can rewrite it to
+    anything we want!
+    \item Otherwise, $\ms{div}\;y\;z$ is pure, so substitution is unconditionally valid
+  \end{itemize}
+  \item On the other hand, it is obviously not safe to optimize $[\ms{div}\;y\;z/x]e$ to
+  $\letexpr{x}{\ms{div}\;y\;z}{e}$ in the general case, since, for example, if $e$ does not contain
+  $x$, then we might \emph{introduce} UB whereas previously there was none!
+  \item This is an example of a \emph{refinement}, rather than an \emph{equation}: we have
+  $\letexpr{x}{\ms{div}\;y\;z}{e} \tref [\ms{div}\;y\;z/x]e$, meaning that the left-hand side
+  has fewer equations than the right-hand side.
+  \item 
+\end{itemize}
 
 \section{Substructural Effects}
 
