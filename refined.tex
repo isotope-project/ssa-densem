@@ -18,7 +18,7 @@
 \usepackage{prftree}
 
 \usepackage{listings}
-\usepackage{xcolor}
+\usepackage[dvipsnames]{xcolor}
 \usepackage{caption}
 \usepackage{subcaption}
 \usepackage{fancyvrb}
@@ -26,6 +26,7 @@
 \usepackage{string-diagrams}
 \usepackage{cancel}
 \usepackage{thmtools}
+\usepackage{pifont}
 \usetikzlibrary{calc}
 
 \definecolor{codegreen}{rgb}{0,0.6,0}
@@ -123,7 +124,7 @@
 \newcommand{\csubst}[5]{#1 \vdash_{#4}^{#5} #2 \rhd #3}
 \newcommand{\lbsubst}[4]{#1 \vdash #2: #3 \rightsquigarrow #4}
 \newcommand{\teqv}{\approx}
-\newcommand{\tref}{\leq}
+\newcommand{\tref}{\twoheadrightarrow}
 \newcommand{\tmle}[5]{#1 \vdash_{#2} #3 \tref #4 : {#5}}
 \newcommand{\tmlep}[6]{#1 \vdash_{#2} #3 \tref^{#6} #4 : {#5}}
 \newcommand{\tmeq}[5]{#1 \vdash_{#2} #3 \teqv #4 : {#5}}
@@ -203,6 +204,10 @@
 \newcommand{\alcount}{\sharp}
 \newcommand{\aldquant}{\bar{\ms{q}}}
 \newcommand{\varcount}[2]{\sharp(#1, #2)}
+
+% Truth tables
+\newcommand{\cmark}{\textcolor{Green}{\ding{51}}}%
+\newcommand{\xmark}{\textcolor{BrickRed}{\ding{55}}}%
 
 
 %% Rights management information.  This information is sent to you
@@ -287,6 +292,15 @@
   \item Term syntax with iteration; much like an RVSDG \cite{rvsdg}
   \item Equational theory
   \item Semantics + completeness; diagrams \emph{are} an RVSDG
+  \item Concrete models:
+  \begin{itemize}
+    \item Partial functions
+    \item Undefined behaviour + freeze + heap $=$ toy single-threaded C
+    \item Sequentially-consistent concurrency via traces
+    \item Release-acquire weak memory
+    \item Should have an exotic, non-monadic model w/ iteration...
+    \item Note about exotic models \emph{without} iteration: Hilbert spaces and game semantics
+  \end{itemize}
   \item SSA syntax with structured control-flow
   \item Lowering unstructured to structured
   \item Lowering to terms
@@ -296,10 +310,22 @@
     \item Basic blocks?
     \item Complete calculus for distributive premonoidal categories
     \item Acyclic SSA
+    \item Notes about making effects into a lattice?
+    \item Notes about alias analysis?
   \end{itemize}
 \end{enumerate}
 
 \section{Introduction}
+
+\TODO{introduction structure:}
+\begin{enumerate}
+  \item Introduction (see below)
+  \item Bullet list of contributions
+  \item Background
+  \item What is SSA?
+  \item Classification of effects, continued
+  \item Lore on reads and writes?
+\end{enumerate}
 
 \begin{itemize}
   \item SSA is useful because it enables substitution of pure things
@@ -313,7 +339,8 @@
   \item Not all the substitutions we might want to consider even while doing algebra are strictly
   \emph{pure}, however, per se
   \item For example, consider an operation like \ms{div}, which exhibits \emph{undefined behavior}
-  if we divide by zero
+  if we divide by zero; such an operation has a potential side-effect, and so is not pure, but we
+  still would like to be able to do algebra on expressions containing it
   \item Let's say we have a program like $\letexpr{x}{\ms{div}\;y\;z}{e}$, where the optimizer
   cannot deduce whether $z$ is nonzero
   \item In general, this program is \emph{not} equivalent to $[\ms{div}\;y\;z/x]e$
@@ -324,14 +351,120 @@
     anything we want!
     \item Otherwise, $\ms{div}\;y\;z$ is pure, so substitution is unconditionally valid
   \end{itemize}
-  \item On the other hand, it is obviously not safe to optimize $[\ms{div}\;y\;z/x]e$ to
-  $\letexpr{x}{\ms{div}\;y\;z}{e}$ in the general case, since, for example, if $e$ does not contain
-  $x$, then we might \emph{introduce} UB whereas previously there was none!
-  \item This is an example of a \emph{refinement}, rather than an \emph{equation}: we have
-  $\letexpr{x}{\ms{div}\;y\;z}{e} \tref [\ms{div}\;y\;z/x]e$, meaning that the left-hand side
-  has fewer equations than the right-hand side.
-  \item 
+  \item This is an example of a \emph{refinement}, we can safely rewrite
+  $\letexpr{x}{\ms{div}\;y\;z}{e} \tref [\ms{div}\;y\;z/x]e$, since the right-hand side has fewer
+  behaviors than the left-hand side.
+  \item This is \emph{not} an equation though: it is obviously not safe to optimize
+  $[\ms{div}\;y\;z/x]e \tref \letexpr{x}{\ms{div}\;y\;z}{e}$ in the general case, since, for example,
+  if $e$ does not contain $x$, then we might \emph{introduce} UB whereas previously there was none!
+  \item We say such a refinement is \emph{strict}.
+  \item We might want to consider in what cases such impure rewrites \emph{are} valid.
+  \item Let's consider some simple programs!
+  \item We obviously have $(\ms{div}\;y\;z, \ms{div}\;y\;z) \tref \letexpr{x}{\ms{div}\;y\;z}{(x,
+  x)}$, in other words, UB is a \emph{fusable} effect.
+  \item We previously deduced that $\letexpr{x}{\ms{div}\;y\;z}{(x, x)} \tref (\ms{div}\;y\;z,
+  \ms{div}\;y\;z)$ (by choosing $e = (x, x)$), so UB is also \emph{duplicable}. An effect which is
+  both duplicable and fusable is called \emph{copyable}, following \citet{fuhrmann-direct-1999}.
+  \item An example of an effect which is fusable, but not duplicable, is nondeterminism: the
+  refinement $(\ms{nondet}, \ms{nondet}) \tref \letexpr{x}{\ms{nondet}}{(x, x)}$ is not an equation
+  since the right-hand side will only evaluate to pairs $(x, x)$ with equal components, whereas the
+  right-hand side can evaluate to arbitrary pairs $(x, y)$.
+  \item Leave out but cool: it is much harder to think of a non-contrived effect which is duplicable
+  but not fusable. But think about yielding!
+  \item Similarly, we have already seen that $\letexpr{x}{\ms{div}\;y\;z}{()} \tref ()$, so UB is
+  \emph{eliminable}.
+  \item On the other hand, we would hope that UB is not \emph{introducable}, and indeed, in general,
+  we have $() \not\tref \letexpr{x}{\ms{div}\;y\;z}{()}$
+  \item On the other hand, nondeterminism is both introducable and eliminable, since
+  $\letexpr{x}{\ms{nondet}}{()} \teqv ()$. Following \citet{fuhrmann-direct-1999}, we say an effect
+  which is both introducable and eliminable is \emph{discardable}.
+  \item The fact that UB is copyable and eliminable, but not discardable, while nondeterminism is
+  fusable and discardable, but not copyable, is one of the core differences between undefined and
+  unspecified behavior.
+  \item We classify some common effects in this manner in the table in
+  Figure~\ref{fig:effect-classification}
+  \item The next thing we want to find out is whether our effect \emph{commutes} with other effects
+  \item Consider the expression $(e, x)$, where $x \notin \ms{fv}(e)$. We have that
+  $$\letexpr{x}{\ms{div}\;y\;z}{(e, x)} \tref (e, \ms{div}\;y\;z)$$
+  regardless of $e$; in other words, UB is a \emph{right-mover}.
+  \TODO{clarify}
+  \item On the other hand, 
+  $$(e, \ms{div}\;y\;z) \tref \letexpr{x}{\ms{div}\;y\;z}{(e, x)}$$ only when execution is
+  guaranteed to continue after evaluating $e$, so this rules out effects like nontermination or
+  exceptions, but effects like nondeterminism or memory access are fine. That is, UB is a
+  \emph{left-mover} with respect to nondeterminism and memory access, but not in general. Since it
+  is both a left and right mover w.r.t. these effects, we say UB \emph{commutes} with them.
+  \item It turns out that effect $e$ is a right-mover w.r.t. effect $e'$ if and only if effect $e'$
+  is a left-mover w.r.t. effect $e$.
+  \item We can also ask whether an effect commutes with \emph{itself}, in which case we say it is
+  \emph{commutative}. If an effect commutes with all other effects, it is \emph{central}.
 \end{itemize}
+
+\subsection{Contributions}
+
+\TODO{this}
+
+\section{Background}
+
+\begin{figure}
+  \begin{center}
+  \begin{tabular}{ c | c c c c }
+    Effect & Fusable & Duplicable & Eliminable & Introducable \\
+    \hline
+    Nothing ($\bot$)                    & \cmark & \cmark & \cmark & \cmark \\
+    Undefined behavior ($\ms{UB}$)      & \cmark & \cmark & \cmark & \xmark \\
+    Nondeterminism ($\ms{ND}$)          & \cmark & \xmark & \cmark & \cmark \\
+    Exception ($\ms{Ex}$)               & \cmark & \cmark & \xmark & \xmark \\
+    Nontermination ($\ms{Part}$)        & \cmark & \cmark & \xmark & \xmark \\
+    Probability ($\ms{Prob}$)           & \xmark & \xmark & \cmark & \cmark \\
+    Concurrent read ($\ms{Rd}$)         & \cmark & \xmark & \cmark & \cmark \\
+    Concurrent write ($\ms{Wr}$)        & \cmark & \xmark & \xmark & \xmark \\
+    Concurrent fence ($\ms{Bar}$)       & \cmark & \cmark & \xmark & \cmark \\
+    Sequential read ($\ms{Rd}_s$)       & \cmark & \cmark & \cmark & \cmark \\
+    Sequential write ($\ms{Wr}_s$)      & \cmark & \cmark & \xmark & \xmark \\
+    Memory ($\ms{Mem}$)                 & \xmark & \xmark & \xmark & \xmark \\
+    External IO ($\ms{IO}$)             & \xmark & \xmark & \xmark & \xmark \\
+  \end{tabular}
+  \end{center}
+  \caption{Classification of some common effects}
+  \Description{Classification of some common effects}
+  \label{fig:effect-classification}
+\end{figure}
+
+\begin{figure}
+  \begin{center}
+  \begin{tabular}{ c | c c c c c c c c c c c }
+    & $\bot$ & $\ms{UB}$ & $\ms{ND}$ & $\ms{Ex}$ & $\ms{Part}$ 
+    & $\ms{Rd}$ & $\ms{Wr}$ & $\ms{Bar}$ & $\ms{Mem}$ & $\ms{IO}$ & $\top$ \\
+    \hline
+    $\bot$ 
+    & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ \\
+    $\ms{UB}$
+    & $\pm$ & $\pm$ & $\pm$ & $+$ & $+$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $+$ & $+$ \\
+    $\ms{ND}$
+    & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$  & $\pm$ & $\pm$  & $\pm$ & $\pm$ & $\pm$ \\
+    $\ms{Ex}$
+    & $\pm$ & $-$ & $\pm$ & $0$ & $0$ & $\pm$ & $0$ & $\pm$ & $0$ & $0$ & $0$ \\
+    $\ms{Part}$
+    & $\pm$ & $-$ & $\pm$ & $0$ & $\pm$ & $\pm$ & $0$ & $\pm$ & $0$ & $0$ & $0$ \\
+    $\ms{Rd}$
+    & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $0$ & $+$ & $0$ & $\pm$ & $0$ \\
+    $\ms{Wr}$
+    & $\pm$ & $\pm$ & $\pm$ & $0$ & $0$ & $0$ & $0$ & $0$ & $0$ & $\pm$ & $0$ \\
+    $\ms{Bar}$
+    & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $-$ & $0$ & $0$ & $0$ & $\pm$ & $0$ \\
+    $\ms{Mem}$
+    & $\pm$ & $\pm$ & $\pm$ & $0$ & $0$ & $0$ & $0$ & $0$ & $0$ & $\pm$ & $0$ \\
+    $\ms{IO}$
+    & $\pm$ & $-$ & $\pm$ & $0$ & $0$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $0$ & $0$ \\
+    $\top$
+    & $\pm$ & $-$ & $\pm$ & $0$ & $0$ & $0$ & $0$ & $0$ & $0$ & $0$ & $0$ \\
+  \end{tabular}
+  \end{center}
+  \caption{Commutativity of some common effects}
+  \Description{Commutativity of some common effects}
+  \label{fig:effect-comm}
+\end{figure}
 
 \section{Substructural Effects}
 
@@ -1366,22 +1499,7 @@ We begin by stating the following lemmas:
 \synmonwk*
 
 \begin{proof}
-  This proof is by induction over \subiterssa derivations; the proof for \submonssa and \subdistssa
-  is the same except that irrelevant cases are omitted.
-
-  \begin{itemize}
-    \item \brle{var}: \TODO{this}
-    \item \brle{op}: \TODO{this}
-    \item \brle{let$_1$}: \TODO{this}
-    \item \brle{let$_2$}: \TODO{this}
-    \item \brle{unit}: \TODO{this}
-    \item \brle{pair}: \TODO{this}
-    \item \brle{inl}: \TODO{this}
-    \item \brle{inr}: \TODO{this}
-    \item \brle{case}: \TODO{this}
-    \item \brle{abort}: \TODO{this}
-    \item \brle{iter}: \TODO{this}
-  \end{itemize}
+  \;\TODO{link formalization...}
 \end{proof}
 
 \synmonsubst*
@@ -1494,6 +1612,8 @@ We begin by stating the following lemmas:
   \end{itemize}
 \end{definition}
 
+\TODO{per-term, same as above}
+
 \begin{theorem}[name=Soundness]
   For any model $\mc{M}$, $\mc{M} \models \mc{R} \iff \mc{M} \models \thsubmon{\mc{R}}$. In
   particular,
@@ -1587,6 +1707,8 @@ In particular,
     $
   \end{itemize}
 \end{definition}
+
+\TODO{per-term, same as above}
 
 \begin{theorem}[name=Soundness, restate=soundnessdist]
   For any model $\mc{M}$, $\mc{M} \models \mc{R} \iff \mc{M} \models \thsubdist{\mc{R}}$. In
