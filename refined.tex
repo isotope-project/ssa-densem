@@ -317,15 +317,22 @@
 
 \section{Introduction}
 
+Ever since its introduction in the late 1980's by \citet{alpern-ssa-original-88},
+\emph{static-single assignment form}, or \emph{SSA}, has been arguably the most popular intermediate
+representation in modern compiler toolchains. Classical \emph{register-transfer level (RTL)}
+intermediate representations, often known as 3-address code, decompose programs into a graph of
+\emph{basic blocks} of straight-line control-flow, each of which is composed of a sequence of simple
+instructions followed by a terminator. SSA form borrows an additional restriction from functional
+programming; namely, that every variable must be defined exactly once. The key advantage of this
+restriction is that it allows the substitution of pure expressions to be valid
+\emph{unconditionally}, which enables \emph{algebraic reasoning}.
+
+Recent work by \citet{ghalayini-24-ssa-densem-arxiv} develops an equational theory for SSA which
+supports both algebraic reasoning through substitution and complex control-flow optimizations in
+a wide variety of models, including those supporting instructions with complex side-effects such
+as weak memory accesses. 
+
 \TODO{introduction structure:}
-\begin{enumerate}
-  \item Introduction (see below)
-  \item Bullet list of contributions
-  \item Background
-  \item What is SSA?
-  \item Classification of effects, continued
-  \item Lore on reads and writes?
-\end{enumerate}
 
 \begin{itemize}
   \item SSA is useful because it enables substitution of pure things
@@ -402,9 +409,21 @@
 
 \subsection{Contributions}
 
-\TODO{this}
+\begin{itemize}
+  \item Simplified syntax equivalent to substructural SSA, inspired by the RVSDG
+  \item Type and refinement theory for substructural SSA
+  \item Categorical semantics for substructural SSA
+  \item Proof of soundness and completeness of type and refinement theory
+  \item Concrete models, including for release-acquire weak memory
+\end{itemize}
 
 \section{Background}
+
+\begin{itemize}
+  \item What is SSA, syntax of SSA
+  \item Simplified syntax, \citet{ghalayini-24-ssa-densem-arxiv}
+  \item Some examples of effects, table of effects
+\end{itemize}
 
 \begin{figure}
   \begin{center}
@@ -425,6 +444,7 @@
     Memory ($\ms{Mem}$)                 & \xmark & \xmark & \xmark & \xmark \\
     External IO ($\ms{IO}$)             & \xmark & \xmark & \xmark & \xmark \\
   \end{tabular}
+  \TODO{consider whether reads/writes can be UB}
   \end{center}
   \caption{Classification of some common effects}
   \Description{Classification of some common effects}
@@ -461,12 +481,13 @@
     & $\pm$ & $-$ & $\pm$ & $0$ & $0$ & $0$ & $0$ & $0$ & $0$ & $0$ & $0$ \\
   \end{tabular}
   \end{center}
+  \TODO{consider whether reads/writes can be UB}
   \caption{Commutativity of some common effects}
   \Description{Commutativity of some common effects}
   \label{fig:effect-comm}
 \end{figure}
 
-\section{Substructural Effects}
+\section{Type Theory}
 
 \subsection{Syntax}
 
@@ -1068,6 +1089,8 @@ We note in particular that
 
 \TODO{congruence of weakening}
 
+\TODO{congruence of substitution}
+
 \begin{grammar}
   <p> ::= \(+\) \;|\; \(-\)
 \end{grammar}
@@ -1094,9 +1117,9 @@ We note in particular that
             {\Delta^{\mb{q}}_{\mb{e}}, x : A^q_\epsilon}{\eta}{p}}
 \end{gather*}
 
-\TODO{congruence of substitution}
+\TODO{note that the above does \emph{not} compose, but this is fine...}
 
-\subsection{Semantics}
+\section{Semantics}
 
 \begin{multline*}
   \sigma^{\ms{mid}}_{A, B, C, D} := 
@@ -1397,11 +1420,23 @@ system $\mc{E}$, $\mc{C}_\bot$ is a central subcategory of every $\mc{C}_\epsilo
 
 \TODO{directed uniformity lore...}
 
-\subsection{Concrete Models}
+\section{Concrete Models}
 
 \TODO{this}
 
-\section{Completeness}
+\subsection{Undefined Behavior}
+
+\TODO{this}
+
+\subsection{Poison and Freeze}
+
+\TODO{this}
+
+\subsection{Release-Acquire Weak Memory}
+
+\TODO{this}
+
+\subsection{Completeness}
 
 \TODO{this}
 
@@ -1450,21 +1485,19 @@ system $\mc{E}$, $\mc{C}_\bot$ is a central subcategory of every $\mc{C}_\epsilo
 
 \subsection{Refinement Theory}
 
-\TODO{this}
+\TODO{this?}
 
 \subsection{Semantics}
 
 \TODO{this}
 
-\section{Release-Acquire Weak Memory}
-
-\TODO{this}
-
-\section{Related Work and Discussion}
+\section{Discussion and Related Work}
 
 \citet{goncharov-metalang-21}
 
 \TODO{this}
+
+\TODO{freeze is like UB but central; domain theory lore goes here}
 
 \TODO{future work: remainders}
 
