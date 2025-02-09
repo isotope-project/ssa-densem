@@ -317,20 +317,59 @@
 
 \section{Introduction}
 
-Ever since its introduction in the late 1980's by \citet{alpern-ssa-original-88},
-\emph{static-single assignment form}, or \emph{SSA}, has been arguably the most popular intermediate
-representation in modern compiler toolchains. Classical \emph{register-transfer level (RTL)}
-intermediate representations, often known as 3-address code, decompose programs into a graph of
-\emph{basic blocks} of straight-line control-flow, each of which is composed of a sequence of simple
-instructions followed by a terminator. SSA form borrows an additional restriction from functional
-programming; namely, that every variable must be defined exactly once. The key advantage of this
-restriction is that it allows the substitution of pure expressions to be valid
-\emph{unconditionally}, which enables \emph{algebraic reasoning}.
+Computer programs are written for two audiences: the \emph{computer}, which executes them, and the
+\emph{programmer}, who writes, interfaces with, modifies, and maintains them. The needs of these two
+audiences are often in tension, hence, the need for \emph{compilers}, which translate programs from
+high-level, human-readable languages to low-level languages amenable to execution. A single
+high-level program, however, can compile to a vast variety of low-level programs with the same
+\emph{semantics} but vastly different \emph{performance characteristics}. The job of an
+\emph{optimizing compiler} is to generate a ``\emph{good}'' low-level program from a high-level
+source file, where ``good'' most commonly refers to fast execution time, but often includes low
+binary size and memory usage as well, especially when targeting embedded systems and web platforms. 
 
-Recent work by \citet{ghalayini-24-ssa-densem-arxiv} develops an equational theory for SSA which
-supports both algebraic reasoning through substitution and complex control-flow optimizations in
-a wide variety of models, including those supporting instructions with complex side-effects such
-as weak memory accesses. 
+The issue is that neither high-level source code nor low-level machine code is particularly amenable
+to machine analysis and rewriting: high-level source code is too varied, while low-level
+instructions are often complex and highly side-effectful, with both often having extremely
+context-dependent semantics for the same operations. Hence, compilers typically transform programs
+through a series of \emph{intermediate representations} specifically designed to be amenable to
+automated reasoning.
+
+The most basic form of intermediate representation, variants of which are still commonly used as a
+high-level intermediate representation at the start of modern compiler pipelines (e.g. Rust's MIR),
+is \emph{register-transfer level (RTL)} code, often known as \emph{3-address code}. RTL programs are
+represented as a \emph{control-flow graph} of \emph{basic blocks}, which are sequences of simple
+instructions having only straight-line control flow followed by a single \emph{terminator} which
+can jump to other basic blocks in the graph. For example, the program
+\TODO{a program with a for-loop, say, factorial, as an lstlisting in Rust-like pseudocode}
+compiles to the RTL code
+\TODO{the RTL code}
+
+Since variables may be redefined in RTL code, algebraic reasoning about programs can be quite
+difficult, especially in the presence of complex control-flow.
+\TODO{SSA fixes this by borrowing an idea from functional programming} %
+\TODO{we can add arguments to basic blocks (or equivalently, $\phi$-nodes) to deal with control-flow
+dependent values} %
+\TODO{the program above becomes this} %
+\TODO{we can now do algebra} %
+\TODO{in \emph{particular}, substitution of pure expressions is unconditionally valid} %
+\TODO{\citet{ghalayini-24-ssa-densem-arxiv} use this to give a sound and complete equational theory
+for SSA} %
+\TODO{pure expressions can be substituted and we can do arbitrary algebra} %
+\TODO{we can also do arbitrary control-flow optimizations like B\"ohm-Jacopini} %
+\TODO{combined with algebra we get Fun Stuff (TM) like Sparse Conditional Constant Propagation} %
+\TODO{impure expressions are treated opaquely} %
+\TODO{but not all the algebra we want to do is equational} %
+\TODO{consider division; division by zero is UB} %
+\TODO{but division isn't just some opaque IO operation} %
+\TODO{substitution of division is not an equation, but a \emph{refinement}, since...} 
+it is always safe to rewrite $\letexpr{x}{\ms{div}\;y\;z}{e}$ to
+$[\ms{div}\;y\;z/x]e$. Let's think about why:
+\begin{itemize}
+  \item If $z$ is zero, then $\letexpr{x}{\ms{div}\;y\;z}{e}$ has UB, so we can rewrite it to
+  anything we want!
+  \item Otherwise, $\ms{div}\;y\;z$ is pure, so substitution is unconditionally valid
+\end{itemize}
+
 
 \TODO{introduction structure:}
 
