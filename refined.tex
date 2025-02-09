@@ -18,6 +18,7 @@
 \usepackage{prftree}
 
 \usepackage{listings}
+\usepackage{lstautogobble}
 \usepackage[dvipsnames]{xcolor}
 \usepackage{caption}
 \usepackage{subcaption}
@@ -28,6 +29,10 @@
 \usepackage{thmtools}
 \usepackage{pifont}
 \usetikzlibrary{calc}
+
+\lstset{ %
+  autogobble=true,
+}
 
 \definecolor{codegreen}{rgb}{0,0.6,0}
 \definecolor{codegray}{rgb}{0.5,0.5,0.5}
@@ -339,112 +344,161 @@ high-level intermediate representation at the start of modern compiler pipelines
 is \emph{register-transfer level (RTL)} code, often known as \emph{3-address code}. RTL programs are
 represented as a \emph{control-flow graph} of \emph{basic blocks}, which are sequences of simple
 instructions having only straight-line control flow followed by a single \emph{terminator} which
-can jump to other basic blocks in the graph. For example, the program
-\TODO{a program with a for-loop, say, factorial, as an lstlisting in Rust-like pseudocode}
-compiles to the RTL code
-\TODO{the RTL code}
+can jump to other basic blocks in the graph.
+
+\begin{figure}
+  \begin{subfigure}{0.4\textwidth}
+    \begin{lstlisting}[language=C]
+      int fact(int n) {
+        int acc = 1;
+        for (int i = 1; i <= n; i++) {
+          acc *= i;
+        }
+        return acc;
+      }
+    \end{lstlisting}
+    \vspace{2.5em}
+  \end{subfigure}%
+  \begin{subfigure}{0.2\textwidth}
+    $\hspace{2em} \implies \hspace{2em}$
+    \vspace{7em}
+  \end{subfigure}%
+  \begin{subfigure}{0.35\textwidth}
+    \begin{lstlisting}[language=C]
+      int fact(int n) {
+        int acc = 1;
+        int i = 1;
+        goto head;
+      head:
+        if (i <= n) return acc;
+        goto body;
+      body:
+        acc = acc * i;
+        i = i + 1;
+        goto head;
+      }
+    \end{lstlisting}
+  \end{subfigure}
+  \caption{A C program compiled to three-address code}
+  \Description{A C program compiled to three-address code}
+\end{figure}
 
 Since variables may be redefined in RTL code, algebraic reasoning about programs can be quite
-difficult, especially in the presence of complex control-flow.
-\TODO{SSA fixes this by borrowing an idea from functional programming} %
-\TODO{we can add arguments to basic blocks (or equivalently, $\phi$-nodes) to deal with control-flow
-dependent values} %
-\TODO{the program above becomes this} %
-\TODO{we can now do algebra} %
-\TODO{in \emph{particular}, substitution of pure expressions is unconditionally valid} %
-\TODO{\citet{ghalayini-24-ssa-densem-arxiv} use this to give a sound and complete equational theory
-for SSA} %
-\TODO{pure expressions can be substituted and we can do arbitrary algebra} %
-\TODO{we can also do arbitrary control-flow optimizations like B\"ohm-Jacopini} %
-\TODO{combined with algebra we get Fun Stuff (TM) like Sparse Conditional Constant Propagation} %
-\TODO{impure expressions are treated opaquely} %
-\TODO{but not all the algebra we want to do is equational} %
-\TODO{consider division; division by zero is UB} %
-\TODO{but division isn't just some opaque IO operation} %
-\TODO{substitution of division is not an equation, but a \emph{refinement}, since...} 
-it is always safe to rewrite $\letexpr{x}{\ms{div}\;y\;z}{e}$ to
+difficult, especially in the presence of complex control flow. SSA fixes this by borrowing an idea
+from functional programming: it enforces the property that every variable has exactly one
+definition. To deal with the case where a variable can have a different value depending on
+control-flow, we extend basic blocks with \emph{arguments} (or equivalently, $\phi$-nodes). Since
+every variable has exactly one definition, we can now, regardless of control-flow, conveniently
+perform algebraic-reasoning based on a variable's value.
+
+\begin{figure}
+  \begin{subfigure}{0.4\textwidth}
+    \begin{lstlisting}[language=C]
+      int fact(int n) {
+        int acc = 1;
+        int i = 1;
+        goto head;
+      head:
+        if (i <= n) return acc;
+        goto body;
+      body:
+        acc = acc * i;
+        i = i + 1;
+        goto head;
+      }
+    \end{lstlisting}
+  \end{subfigure}%
+  \begin{subfigure}{0.2\textwidth}
+    $\hspace{1em} \implies \hspace{2em}$
+    \vspace{7em}
+  \end{subfigure}%
+  \begin{subfigure}{0.35\textwidth}
+    \begin{lstlisting}[language=C]
+      int fact(int n) {
+        acc0 = 1;
+        i0 = 1;
+        goto head(i0, acc0);
+      head(i1, acc1):
+        if (i1 <= n) return acc1;
+        goto body(i1, acc1);
+      body(i2, acc2):
+        acc3 = acc2 * i;
+        i3 = i2 + 1;
+        goto head(acc3, i3);
+      }
+    \end{lstlisting}
+  \end{subfigure}
+  \caption{A program in three-address code converted to SSA}
+  \Description{A program in three-address code converted to SSA}
+\end{figure}
+
+One way of viewing this is to note that, since every variable has exactly one definition, SSA makes
+every usage of a pure variable \emph{referentially transparent}, in that we can simply replace it
+with its definition to do algebra. \citet{ghalayini-24-ssa-densem-arxiv} use this property to
+develop a sound and complete equational theory for SSA, based on the insight that substitution of
+pure expressions is therefore unconditionally valid, i.e., the following programs are equivalent:
+\begin{equation*}
+  a\text{ pure} \implies \letexpr{x}{a}{b} \teqv [a/x]b
+\end{equation*}
+By combining this with a theory of control-flow, and treating impure expressions opaquely, they
+manage to justify a variety of complex optimizations in models with complex side-effects such as
+weak memory accesses.
+
+Unfortunately, not all the algebraic reasoning optimizing compilers want to do is equational
+reasoning about pure expressions. For example, consider an operation like \ms{div}, which exhibits
+\emph{undefined behavior} if we divide by zero; such an operation has a potential side-effect, and
+so is not pure, but we still would like to be able to do algebra on expressions containing it. Let's
+say we have a program like $\letexpr{x}{\ms{div}\;y\;z}{e}$, where the optimizer cannot deduce
+whether $z$ is nonzero.  In general, this program is \emph{not} equivalent to $[\ms{div}\;y\;z/x]e$,
+since, for example, if we choose $e = ()$ and $z = 0$, the former has UB whereas the latter does
+nothing. However, it turns out it is always safe to rewrite $\letexpr{x}{\ms{div}\;y\;z}{e}$ to
 $[\ms{div}\;y\;z/x]e$. Let's think about why:
 \begin{itemize}
   \item If $z$ is zero, then $\letexpr{x}{\ms{div}\;y\;z}{e}$ has UB, so we can rewrite it to
   anything we want!
   \item Otherwise, $\ms{div}\;y\;z$ is pure, so substitution is unconditionally valid
 \end{itemize}
+This is an example of a \emph{refinement}, we can safely rewrite $\letexpr{x}{\ms{div}\;y\;z}{e}
+\tref [\ms{div}\;y\;z/x]e$, since the right-hand always side has fewer behaviors than the left-hand
+side. This is \emph{not} an equation though: it is obviously not safe to optimize
+$[\ms{div}\;y\;z/x]e \tref \letexpr{x}{\ms{div}\;y\;z}{e}$ in the general case, since, for example,
+if $e$ does not contain $x$, then we might \emph{introduce} UB whereas previously there was none!
+We say such a refinement is \emph{strict}.
 
+We might want to consider in what cases such impure rewrites \emph{are} valid. Let's consider some
+simple programs! We obviously have $(\ms{div}\;y\;z, \ms{div}\;y\;z) \tref
+\letexpr{x}{\ms{div}\;y\;z}{(x, x)}$, in other words, UB is a \emph{fusable} effect. We previously
+deduced that $\letexpr{x}{\ms{div}\;y\;z}{(x, x)} \tref (\ms{div}\;y\;z, \ms{div}\;y\;z)$ (by
+choosing $e = (x, x)$), so UB is also \emph{duplicable}. An effect which is both duplicable and
+fusable is called \emph{copyable}, following \citet{fuhrmann-direct-1999}. An example of an effect
+which is fusable, but not duplicable, is nondeterminism: the refinement $(\ms{nondet}, \ms{nondet})
+\tref \letexpr{x}{\ms{nondet}}{(x, x)}$ is not an equation since the right-hand side will only
+evaluate to pairs $(x, x)$ with equal components, whereas the right-hand side can evaluate to
+arbitrary pairs $(x, y)$.
 
-\TODO{introduction structure:}
+Similarly, we have already seen that $\letexpr{x}{\ms{div}\;y\;z}{()} \tref ()$, so UB is
+\emph{eliminable}. On the other hand, we would hope that UB is not \emph{introducable}, and indeed,
+in general, we have $() \not\tref \letexpr{x}{\ms{div}\;y\;z}{()}$.
 
-\begin{itemize}
-  \item SSA is useful because it enables substitution of pure things
-  \item And therefore algebraic reasoning in the presence of complex, unstructured control-flow
-  \item \citet{ghalayini-24-ssa-densem-arxiv} give an equational theory for SSA supporting:
-  \begin{itemize}
-    \item Algebraic reasoning via substitution of pure expressions
-    \item Control-flow optimization
-    \item Instructions with complex side-effects, such as weak memory accesses
-  \end{itemize}
-  \item Not all the substitutions we might want to consider even while doing algebra are strictly
-  \emph{pure}, however, per se
-  \item For example, consider an operation like \ms{div}, which exhibits \emph{undefined behavior}
-  if we divide by zero; such an operation has a potential side-effect, and so is not pure, but we
-  still would like to be able to do algebra on expressions containing it
-  \item Let's say we have a program like $\letexpr{x}{\ms{div}\;y\;z}{e}$, where the optimizer
-  cannot deduce whether $z$ is nonzero
-  \item In general, this program is \emph{not} equivalent to $[\ms{div}\;y\;z/x]e$
-  \item However, it turns out it is always safe to rewrite $\letexpr{x}{\ms{div}\;y\;z}{e}$ to
-  $[\ms{div}\;y\;z/x]e$. Let's think about why:
-  \begin{itemize}
-    \item If $z$ is zero, then $\letexpr{x}{\ms{div}\;y\;z}{e}$ has UB, so we can rewrite it to
-    anything we want!
-    \item Otherwise, $\ms{div}\;y\;z$ is pure, so substitution is unconditionally valid
-  \end{itemize}
-  \item This is an example of a \emph{refinement}, we can safely rewrite
-  $\letexpr{x}{\ms{div}\;y\;z}{e} \tref [\ms{div}\;y\;z/x]e$, since the right-hand side has fewer
-  behaviors than the left-hand side.
-  \item This is \emph{not} an equation though: it is obviously not safe to optimize
-  $[\ms{div}\;y\;z/x]e \tref \letexpr{x}{\ms{div}\;y\;z}{e}$ in the general case, since, for example,
-  if $e$ does not contain $x$, then we might \emph{introduce} UB whereas previously there was none!
-  \item We say such a refinement is \emph{strict}.
-  \item We might want to consider in what cases such impure rewrites \emph{are} valid.
-  \item Let's consider some simple programs!
-  \item We obviously have $(\ms{div}\;y\;z, \ms{div}\;y\;z) \tref \letexpr{x}{\ms{div}\;y\;z}{(x,
-  x)}$, in other words, UB is a \emph{fusable} effect.
-  \item We previously deduced that $\letexpr{x}{\ms{div}\;y\;z}{(x, x)} \tref (\ms{div}\;y\;z,
-  \ms{div}\;y\;z)$ (by choosing $e = (x, x)$), so UB is also \emph{duplicable}. An effect which is
-  both duplicable and fusable is called \emph{copyable}, following \citet{fuhrmann-direct-1999}.
-  \item An example of an effect which is fusable, but not duplicable, is nondeterminism: the
-  refinement $(\ms{nondet}, \ms{nondet}) \tref \letexpr{x}{\ms{nondet}}{(x, x)}$ is not an equation
-  since the right-hand side will only evaluate to pairs $(x, x)$ with equal components, whereas the
-  right-hand side can evaluate to arbitrary pairs $(x, y)$.
-  \item Leave out but cool: it is much harder to think of a non-contrived effect which is duplicable
-  but not fusable. But think about yielding!
-  \item Similarly, we have already seen that $\letexpr{x}{\ms{div}\;y\;z}{()} \tref ()$, so UB is
-  \emph{eliminable}.
-  \item On the other hand, we would hope that UB is not \emph{introducable}, and indeed, in general,
-  we have $() \not\tref \letexpr{x}{\ms{div}\;y\;z}{()}$
-  \item On the other hand, nondeterminism is both introducable and eliminable, since
-  $\letexpr{x}{\ms{nondet}}{()} \teqv ()$. Following \citet{fuhrmann-direct-1999}, we say an effect
-  which is both introducable and eliminable is \emph{discardable}.
-  \item The fact that UB is copyable and eliminable, but not discardable, while nondeterminism is
-  fusable and discardable, but not copyable, is one of the core differences between undefined and
-  unspecified behavior.
-  \item We classify some common effects in this manner in the table in
-  Figure~\ref{fig:effect-classification}
-  \item The next thing we want to find out is whether our effect \emph{commutes} with other effects
-  \item Consider the expression $(e, x)$, where $x \notin \ms{fv}(e)$. We have that
-  $$\letexpr{x}{\ms{div}\;y\;z}{(e, x)} \tref (e, \ms{div}\;y\;z)$$
-  regardless of $e$; in other words, UB is a \emph{right-mover}.
-  \TODO{clarify}
-  \item On the other hand, 
-  $$(e, \ms{div}\;y\;z) \tref \letexpr{x}{\ms{div}\;y\;z}{(e, x)}$$ only when execution is
-  guaranteed to continue after evaluating $e$, so this rules out effects like nontermination or
-  exceptions, but effects like nondeterminism or memory access are fine. That is, UB is a
-  \emph{left-mover} with respect to nondeterminism and memory access, but not in general. Since it
-  is both a left and right mover w.r.t. these effects, we say UB \emph{commutes} with them.
-  \item It turns out that effect $e$ is a right-mover w.r.t. effect $e'$ if and only if effect $e'$
-  is a left-mover w.r.t. effect $e$.
-  \item We can also ask whether an effect commutes with \emph{itself}, in which case we say it is
-  \emph{commutative}. If an effect commutes with all other effects, it is \emph{central}.
-\end{itemize}
+Unlike UB, nondeterminism is both introducable and eliminable, since $\letexpr{x}{\ms{nondet}}{()}
+\teqv ()$. Following \citet{fuhrmann-direct-1999}, we say an effect which is both introducable and
+eliminable is \emph{discardable}. The fact that UB is copyable and eliminable, but not discardable,
+while nondeterminism is fusable and discardable, but not copyable, is one of the core differences
+between undefined and unspecified behavior.
+
+The next thing we want to find out is whether our effect \emph{commutes} with other effects
+Consider the expression $(e, x)$, where $x \notin \ms{fv}(e)$. We have that
+$$\letexpr{x}{\ms{div}\;y\;z}{(e, x)} \tref (e, \ms{div}\;y\;z)$$
+regardless of $e$; in other words, UB is a \emph{right-mover}.
+On the other hand, 
+$$(e, \ms{div}\;y\;z) \tref \letexpr{x}{\ms{div}\;y\;z}{(e, x)}$$ only when execution is guaranteed
+to continue after evaluating $e$, so this rules out effects like nontermination or exceptions, but
+effects like nondeterminism or memory access are fine. That is, UB is a \emph{left-mover} with
+respect to nondeterminism and memory access, but not in general. Since it is both a left and right
+mover w.r.t. these effects, we say UB \emph{commutes} with them. It turns out that effect $e$ is a
+right-mover w.r.t. effect $e'$ if and only if effect $e'$ is a left-mover w.r.t. effect $e$. We can
+also ask whether an effect commutes with \emph{itself}, in which case we say it is
+\emph{commutative}. If an effect commutes with all other effects, it is \emph{central}.
 
 \subsection{Contributions}
 
