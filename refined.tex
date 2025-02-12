@@ -386,11 +386,24 @@ tools such as separation logic.
 \subsection{Contributions}
 
 \begin{itemize}
-  \item Simplified syntax equivalent to substructural SSA, inspired by the RVSDG
-  \item Type and refinement theory for substructural SSA
-  \item Categorical semantics for substructural SSA
-  \item Proof of soundness and completeness of type and refinement theory
-  \item Concrete models, including for release-acquire weak memory
+  \item First, we extend the type-theoretic presentation of SSA given in
+  \citet{ghalayini-24-ssa-densem-arxiv} to support tracking variable multiplicity and iteration
+  in expressions; we later argue that this is enough to be able to give our refinement theory
+  purely in terms of expressions.
+  \item We then give a categorical semantics for this type-theory in terms of poset-enriched
+  distributive Elgot categories. We show that any denotational model with this categorical structure
+  is also a model of SSA. This shows that all of the refinements we give are sound with respect to
+  the categorical structure.
+  \item We give a notion of morphisms between models of SSA, and construct the initial model in this
+  category by quotienting the syntax of our expressions, showing that our refinement theory is
+  \emph{complete}: any equation which holds in \emph{all} models of SSA can be derived from it.
+  \item We proceed to use our semantics to model a variety of increasingly complex effects
+  exhibiting refinements, including undefined behavior, memory accesses, and weak memory models. In
+  the process, we give a streamlined way of constructing models from monads in the category of
+  partial orders.
+  \item Finally, we show how our notion of morphisms between models allows us to study more complex
+  program analysis techniques, such as separation logic, and prove them sound, inspired by
+  \citet{mellies-ftrs}.
 \end{itemize}
 
 \section{Background}
@@ -1208,7 +1221,67 @@ We note in particular that
 
 \TODO{note that the above does \emph{not} compose, but this is fine...}
 
+\subsection{Translation}
+
+\begin{definition}[\subiterssa-signature morphism]
+  We define a morphism $T: \mc{S} \to \mc{S}'$ between two \subiterssa-signatures $\mc{S} = (\mc{X},
+  \mc{I}, \mc{E})$ and $\mc{S}' = (\mc{X}', \mc{I}', \mc{E}')$ to be given by
+  \begin{itemize}
+    \item An action on base types $T_{\ms{base}} : \mc{X} \to \ms{Ty}(\mc{X}')$ such that
+    $\alquant{A} \leq \alquant{T A}$, which can be extended to a types and contexts in the obvious
+    manner
+    \item A monotonic action on effects $T_{\ms{eff}} : \mc{E} \to \mc{E}'$ such that
+    $T_{\ms{eff}}(\mc{E}^\infty) \subseteq {\mc{E}^\infty}'$.
+    \item An action on instructions $T_{\ms{op}} : \mc{I}_\epsilon(A, B) \to
+    \mc{I}_{T\;\epsilon}(T\;A, T\;B)$
+  \end{itemize}
+  We say that a morphism $T$
+  \begin{itemize}
+    \item $T$ is \emph{strict} if, for all effects $\epsilon, \eta$, we have $\alquant{\epsilon}
+    \leq \alquant{T\;\epsilon}$; this property holds for the identity and is preserved by
+    composition, and therefore forms a wide subcategory.
+    \item $T$ sends $\mc{R}$ to $\mc{R}'$ if, for all $(\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{}{a}{b}{A})
+    \in \mc{R}$, we have $\tmle{(T\;\Gamma)^{\mb{q}}_{T\;\mb{e}}}{\mc{R}'}{T\;a}{T\;b}{T\;A}$. In
+    particular, we vacuously have that $T$ sends $\mc{R} = \varnothing$ to every $\mc{R}'$.
+  \end{itemize}
+  We define composition and the identity morphism in the obvious manner, giving us the structure of
+  a category. We say 
+\end{definition}
+
+We use this to define an action on terms by induction:
+\begin{gather*}
+  T\;x = x \qquad T\;(f\;a) = (T\;f)\;(T\;a) \qquad T\;() = () \qquad T\;(a, b) = (T\;a, T\;b) \\
+  T\;(\letexpr{x}{a}{e}) = \letexpr{x}{T\;a}{T\;e} \qquad
+  T\;(\letexpr{(x, y)}{a}{e}) = \letexpr{(x, y)}{T\;a}{T\;e} \\
+  T\;(\linr{a}) = \linr{T\;a} \qquad T\;(\linl{a}) = \linl{T\;a} \qquad
+  T\;(\labort{a}) = \labort{T\;a} \\
+  T\;(\caseexpr{e}{x}{a}{y}{b}) = \caseexpr{T\;e}{x}{T\;a}{y}{T\;b} \\
+  T\;(\liter{a}{x}{b}) = \liter{T\;a}{x}{T\;b}
+\end{gather*}
+
+We use this to state the following lemma:
+\begin{lemma}[Syntactic translation]
+  Given a morphism $T: \mc{S} \to \mc{S}'$, we have that
+  \begin{itemize}
+    \item $\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{a}{A} 
+      \implies \hasty{(T\;\Gamma)^{\mb{q}}_{T\;\mb{e}}}{T\;\epsilon}{T\;a}{T\;A}$
+    \item If $T$ is strict and sends $\mc{R}$ to $\mc{R}'$, then
+    $\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}
+      \implies \tmle{(T\;\Gamma)^{\mb{q}}_{T\;\mb{e}}}{\mc{R}'}{T\;a}{T\;b}{T\;A}$
+  \end{itemize}
+\end{lemma}
+
 \section{Semantics}
+
+\begin{definition}[Poset-Enriched Category]
+  \;\TODO{this}
+\end{definition}
+
+\begin{definition}[Symmetric Premonoidal Category]
+  \;\TODO{this}
+\end{definition}
+
+\TODO{note on string diagrams?}
 
 \begin{multline*}
   \sigma^{\ms{mid}}_{A, B, C, D} := 
@@ -1227,10 +1300,10 @@ We note in particular that
     \item $+ \in \epsilon \parallel \eta \implies f \ltimes g \leq f \rtimes g$
     \item $- \in \epsilon \parallel \eta \implies f \ltimes g \geq f \rtimes g$
   \end{itemize}
-  An effectful category is \emph{meet-preserving} if $\mc{C}_{\epsilon \sqcap \eta} =
-  \mc{C}_\epsilon \cap \mc{C}_\eta$; every effect system over $\mc{E}$ can be extended in the
-  obvious unique way to a meet-preserving effect system over the free join-semilattice generated by
-  $\mc{E}$.
+  % An effectful category is \emph{meet-preserving} if (wherever the meet $\epsilon \sqcap \eta$
+  % exists) $\mc{C}_{\epsilon \sqcap \eta} = \mc{C}_\epsilon \cap \mc{C}_\eta$; every effect system
+  % over $\mc{E}$ can be extended in the obvious unique way to a meet-preserving effect system over
+  % the free join-semilattice generated by $\mc{E}$.
 \end{definition}
 
 In particular, if $\epsilon \parallel \eta = \{+, -\}$ then $\mc{C}_\epsilon \cap \mc{C}_\eta$ is a
@@ -1239,11 +1312,22 @@ system $\mc{E}$, $\mc{C}_\bot$ is a central subcategory of every $\mc{C}_\epsilo
 
 \TODO{Freyd categories}
 
+\begin{definition}[Distributive Category]
+  \;\TODO{this}
+\end{definition}
+
 \begin{definition}[Distributive effectful category]
   \;\TODO{this}
 \end{definition}
 
-\begin{definition}[Effectful Elgot category]
+\begin{definition}[Conway Iteration Operator]
+  \;\TODO{this}
+  \;\TODO{enrichment}
+  \;\TODO{\emph{enriched} uniformity}
+  \;\TODO{strength}
+\end{definition}
+
+\begin{definition}[Elgot effectful category]
   \;\TODO{this}
 \end{definition}
 
@@ -1427,8 +1511,6 @@ system $\mc{E}$, $\mc{C}_\bot$ is a central subcategory of every $\mc{C}_\epsilo
   ; \rho
 \end{align*}
 
-\TODO{category of models}
-
 \subsection{Semantic Metatheory}
 
 \begin{lemma}[Semantic Weakening]
@@ -1509,6 +1591,36 @@ system $\mc{E}$, $\mc{C}_\bot$ is a central subcategory of every $\mc{C}_\epsilo
 
 \TODO{directed uniformity lore...}
 
+
+\subsection{Translation}
+
+\begin{definition}[\subiterssa-model morphism]
+  Given \subiterssa-signatures $\mc{S}, \mc{S}'$ models
+  $\mc{M} = (\mc{C}, (\cdot)^\dagger, \dnt{\cdot}, \dmor{}, \tmor{})$ of $\mc{S}$ and $\mc{M}' =
+  (\mc{C}', (\cdot)^\dagger, \dnt{\cdot}, \dmor{}, \tmor{})$ of $\mc{S}'$, respectively, we define
+  a morphism from $\mc{M}$ to $\mc{M}'$ to be given by a pair $(T, F)$ where
+  \begin{itemize}
+    \item $T: \mc{S} \to \mc{S}'$ is a \subiterssa-signature morphism
+    \item $F: \mc{C} \to \mc{C}'$ is a strict symmetric monoidal functor
+    \item For all base types $X$, $F(\dnt{X}_{\mc{M}}) = \dnt{T\;A}_{\mc{M}'}$
+    \item $F(\dmor{A}) = \dmor{T\;A}$
+    \item $F(\tmor{A}) = \tmor{T\;A}$
+  \end{itemize}
+  For each $\mc{S}$, we define the subcategory of $\mc{S}$-models to have as objects models $\mc{M}$
+  of $\mc{S}$ and morphisms of the form $(\ms{id}, F)$, which we will just write as $F$. We may then
+  define the full subcategory of $\mc{S}$-models validating $\mc{R}$ to have as objects models
+  $\mc{M} \models \mc{R}$.
+\end{definition}
+
+\begin{lemma}[Semantic Translation]
+  Given a \subiterssa-model morphism $(T, F) : \mc{M} \to \mc{M}'$ and
+  $\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{a}{A}$, we have that
+  \begin{equation*}
+    \dnt{\hasty{(T\;\Gamma)^{\mb{q}}_{T\;\mb{e}}}{T\;\epsilon}{T\;a}{T\;A}}_{\mc{M}'} = 
+    F(\dnt{\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{a}{A}}_{\mc{M}})
+  \end{equation*}
+\end{lemma}
+
 \section{Concrete Models}
 
 \TODO{this}
@@ -1546,6 +1658,8 @@ system $\mc{E}$, $\mc{C}_\bot$ is a central subcategory of every $\mc{C}_\epsilo
   \iff \dnt{\hasty{\Gamma}{\epsilon}{a}{A}}_{\mc{S}_{\mc{R}}} 
   \leq \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}_{\mc{S}_{\mc{R}}} 
   $$
+  and hence that $\mc{S}_{\mc{R}}$ is the initial object in the category of $\mc{S}$-models
+  validating $\mc{R}$.
 \end{theorem}
 
 \section{SSA}
