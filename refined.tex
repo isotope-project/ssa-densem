@@ -327,28 +327,31 @@ imperative languages, and yet borrows its core idea from functional programming.
 every variable's value can be traced back to a single assignment (which may still be executed
 multiple times, hence \emph{static}), we can always look up a variable's definition regardless of
 where in a program it is used, and hence perform algebraic reasoning in the presence of complex,
-unstructured control-flow. In particular, this means that variables assigned pure expressions enjoy
-the property of \emph{referential transparency}, in that they can always be replaced with their
-definitions without changing a program's semantics.
+unstructured control-flow. In particular, this means that SSA ensures that variables bound to pure
+expressions can always be replaced by their definitions without altering semantics, a property known
+as \emph{referential transparency}.
 
 Recent work by \citet{ghalayini-24-ssa-densem-arxiv} leverages this insight to develop an equational
 theory of SSA by combining the validity of pure substitution with standard equations for
 control-flow, treating all impure expressions opaquely. They then proceed to give a categorical
 model for their equational theory, with respect to which their equational theory is both sound and
 complete. Their equational theory is rich enough to formalize a wide variety of program
-transformations and optimizations, such as the B\"ohm-Jacopini theorem \cite{bohm-jacopini}, and
-provides, in essence, a ``free'' model of control-flow optimization when we know nothing about
-expressions except whether they are pure.
+transformations and optimizations, such as the B\"ohm-Jacopini theorem \cite{bohm-jacopini},
+independently of the underlying model of computation.
 
-When writing optimizations, we often want to perform algebraic reasoning about the results of
-\emph{impure} expressions, rather than just pure ones. This becomes essential when fundamental
-operations, such as addition and division, can exhibit impurity. For example, consider an operation
-like \ms{div}, which exhibits \emph{undefined behavior} in both C and LLVM if we divide by zero.
-Let's say we have a program like $\letexpr{x}{\ms{div}\;y\;z}{e}$, where the optimizer cannot deduce
-whether $z$ is nonzero; since $\ms{div}\;y\;z$ may exhibit UB, it is \emph{impure}, and hence, in
-general, this program is \emph{not} equivalent to $[\ms{div}\;y\;z/x]e$.
+However, real-world compiler optimizations must often reason about operations that are not purely
+functional. This becomes essential when fundamental operations, such as addition and division, can
+exhibit impurity due to undefined behavior, which intermediate representations often leverage to
+increase optimization opportunities. 
 
-However, it turns out it is always safe to rewrite $\letexpr{x}{\ms{div}\;y\;z}{e}$ to
+For example, consider an operation like \ms{div}, which exhibits \emph{undefined behavior} in both C
+and LLVM if we divide by zero. Let's say we have a program like $\letexpr{x}{\ms{div}\;y\;z}{e}$,
+where the optimizer cannot deduce whether $z$ is nonzero; since $\ms{div}\;y\;z$ may exhibit UB, it
+is \emph{impure}, and hence, in general, this program is \emph{not} equivalent to
+$[\ms{div}\;y\;z/x]e$; for example, if $z = 0$ and $e = ()$, $\letexpr{x}{\ms{div}\;y\;z}{e}$ always
+exhibits UB, whereas $[\ms{div}\;y\;z/x]e \equiv ()$ simply does nothing!
+
+It turns out, however, that it is always safe to rewrite $\letexpr{x}{\ms{div}\;y\;z}{e}$ to
 $[\ms{div}\;y\;z/x]e$, since
 \begin{itemize}
   \item If $z$ is zero, then $\letexpr{x}{\ms{div}\;y\;z}{e}$ has UB, so we can rewrite it to
@@ -362,26 +365,23 @@ $[\ms{div}\;y\;z/x]e \tref \letexpr{x}{\ms{div}\;y\;z}{e}$ in the general case, 
 if $e = ()$, then we might \emph{introduce} UB by adding a $\ms{div}\;y\;z$ to the program, whereas
 previously there was none! We say such a refinement is \emph{strict}.
 
-Introducing UB is often used by compilers as a device to \emph{increase} (rather than, as we would
-expect from an effect, decrease) the number of optimization opportunities available. Even for
-deterministic programs, refinement can be used to reason about rewrites of potentially
-nondeterministic subprograms while avoiding more complex global reasoning.
+By shifting from an equational to a \emph{refinement} theory, we develop a structured way to reason
+about transformations that preserve correctness in a directed sense. Our approach extends
+\citet{ghalayini-24-ssa-densem-arxiv} by replacing pure substitution with a more general notion of
+\emph{directed substitution}, which accounts for the asymmetric behavior of impure operations while
+preserving the rest of the equational framework. This requires a principled classification of
+effects along two axes: (1) their \emph{multiplicity}, which determines whether introducing,
+eliminating, duplicating, or fusing occurrences of an operation constitutes a refinement; and (2)
+their \emph{temporal commutativity}, distinguishing effects that can be safely reordered forward
+(\emph{right-movers}) from those that can be pushed backward (\emph{left-movers}). For instance, UB
+is a \emph{right-mover}, since delaying UB is always safe; on the other hand, every \emph{other}
+effect is a left-mover \emph{with respect to UB}.
 
-By generalizing from an equational theory to a \emph{refinement theory}, we develop a principled way
-to reason about this type of program transformation in a variety of different models. In particular,
-we directly generalize the work in \citet{ghalayini-24-ssa-densem-arxiv} by replacing the equations
-generated by pure substitution with \emph{refinements} generated by \emph{directed substitution},
-leaving the rest of the equational theory essentially unchanged. To achieve this, we are required to
-classify effects both by their \emph{multiplicity} (i.e. whether \emph{introducing},
-\emph{eliminating}, \emph{duplicating}, or \emph{fusing} operations is a refinement) and by their
-commutativity with each other. In particular, we distinguish between \emph{left-movers}, which can
-be moved forwards in time, and \emph{right-movers}, which can be moved backwards in time; for
-example, UB is a left-mover, but not a right-mover. By combining directed substitution with the
-standard theory of iteration, we can construct a sound and complete refinement theory for the
-\emph{poset-enriched} analogue of models of the calculus presented in
-\citet{ghalayini-24-ssa-densem-arxiv}. As an added bonus, the machinery needed to deal with
-multiplicity allows us to easily support \emph{substructural types}, opening the door to reasoning
-about more exotic models such as separation logic.
+By integrating directed substitution with a structured treatment of iteration, we construct a sound
+and complete refinement theory for \emph{poset-enriched} models of SSA. As an added bonus, our
+treatment of multiplicity allows us to handle substructural types with minimal additional effort,
+expanding the scope of our theory to allow us to reason about more sophisticated program analysis
+tools such as separation logic.
 
 \subsection{Contributions}
 
