@@ -1896,12 +1896,23 @@ cocartesian, it follows that we only need to check naturality and codiagonal.
     {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\loopstmt{a}{\ell}{x}{t}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
   \\
   \prftree[r]{\rle{where$_{\ms{nonrec}}$}}
-    {...}
-    {...}
+    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{r}
+      {\ms{L}^{\mb{Q}}_{\mb{e}}, \ms{R}^{\mb{Q}'}_{\mb{e}'}}}
+    {\forall \lhyp{\ell_i}{A_i}^{\mb{q}_i}_{\epsilon_i} \in \ms{R}^{\mb{Q}'}_{\mb{e}'} .
+      \haslb{\Gamma^{\mb{q}}_{\mb{e}}, x_i : A_i}{\epsilon_i}{t_i}{\ms{L}^{\mb{Q}}_{\mb{e}}}
+    }
+    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\awhere{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
+      {\ms{L}^{\mb{Q}}_{\mb{e}}}}
   \\
   \prftree[r]{\rle{where$_{\ms{rec}}$}}
-    {...}
-    {...}
+  {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{r}
+    {\ms{L}^{\mb{Q}}_{\mb{e}}, \ms{R}^{\mb{Q}'}_{\mb{e}'}}}
+  {\forall \lhyp{\ell_i}{A_i}^{\mb{q}_i}_{\epsilon_i} \in \ms{R}^{\mb{Q}'}_{\mb{e}'} .
+    \haslb{\Gamma^{\mb{q}}_{\mb{e}}, x_i : A_i}{\epsilon_i}{t_i}{
+      \ms{L}^{\mb{Q}}_{\mb{e}}, \ms{R}^{\mb{Q}'}_{\mb{e}'}}
+  }
+  {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\cwhere{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
+    {\ms{L}^{\mb{Q}}_{\mb{e}}}}
 \end{gather*}
 
 
