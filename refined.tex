@@ -90,7 +90,7 @@
 \newcommand{\brb}[2]{\ms{br}\;#1\;#2}
 \newcommand{\ite}[3]{\ms{if}\;#1\;\{#2\}\;\ms{else}\;\{#3\}}
 \newcommand{\casestmt}[5]{\ms{case}\;#1\;\{\linl{#2} \lto #3, \linr{#4} \lto #5\}}
-\newcommand{\loopstmt}[3]{\ms{loop}\;#1(#2) \lto \;\{#3\}}
+\newcommand{\loopstmt}[4]{\ms{loop}\;#1\;\{#2(#3) \lto #4\}}
 \newcommand{\awhere}[2]{#1\;\ms{where}_{\ms{nonrec}}\;#2}
 \newcommand{\cwhere}[2]{#1\;\ms{where}_{\ms{rec}}\;#2}
 \newcommand{\where}[2]{#1\;\ms{where}\;#2}
@@ -112,9 +112,10 @@
 \newcommand{\bhyp}[2]{#1 : #2}
 \newcommand{\lhyp}[2]{#1(#2)}
 \newcommand{\rle}[1]{{\scriptsize\textsf{#1}}}
+\newcommand{\qbc}[2]{#1 , #2}
 
 \newcommand{\hasty}[4]{#1 \vdash_{#2} #3: {#4}}
-\newcommand{\haslb}[3]{#1 \vdash #2 \rhd #3}
+\newcommand{\haslb}[4]{#1 \vdash_{#2} #3 \rhd #4}
 
 \newcommand{\ahasty}[4]{#1 \vdash_{#2}^{\ms{anf}} #3 : {#4}}
 \newcommand{\thaslb}[3]{#1 \vdash^{\ms{t}}_{\ms{ssa}} #2 \rhd #3}
@@ -138,18 +139,10 @@
 \newcommand{\lbseq}[5]{\lbsubst{#1 \teqv #2}{#3}{#4}{#5}}
 \newcommand{\brle}[1]{{\textsf{#1}}}
 
+\newcommand{\tossa}[2]{\ms{SSA}(#1 \Rightarrow #2)}
 \newcommand{\toanf}[1]{\ms{ANF}(#1)}
-\newcommand{\letanf}[3]{\ms{ANF}_{\ms{let}}(#1, #2, #3)}
-\newcommand{\tossa}[1]{\ms{SSA}(#1)}
-\newcommand{\ssawhere}[2]{\ms{SSA}_{\ms{a}}(#1, #2)}
-\newcommand{\toentry}[1]{\ms{entry}(#1)}
-\newcommand{\todom}[1]{\ms{children}(#1)}
-\newcommand{\tocfg}[1]{\ms{cfg}(#1)}
-\newcommand{\adddom}[2]{\ms{bb}(#1, #2)}
-\newcommand{\toreg}[1]{\ms{reg}(#1)}
-\newcommand{\todnf}[1]{\ms{dom}(#1)}
-\newcommand{\towhile}[2]{\ms{WH}_{#1}(#2)}
-\newcommand{\topwhile}[2]{\ms{PW}_{#1}(#2)}
+\newcommand{\anflet}[3]{\ms{ANF}_{\ms{let}}(#1, #2, #3)}
+\newcommand{\toterm}[1]{\ms{Term}(#1)}
 
 % Denotational semantics
 \newcommand{\dnt}[1]{\llbracket{#1}\rrbracket}
@@ -195,6 +188,11 @@
 
 % Formalization pointers
 \newcommand{\formalizedas}[1]{Formalized as \texttt{#1}}
+
+% Commutativity
+\newcommand{\rightmove}{\rightharpoonup}
+\newcommand{\leftmove}{\leftharpoondown}
+\newcommand{\slides}{\rightleftharpoons}
 
 % Quantities
 \newcommand{\zeroq}{0}
@@ -594,18 +592,26 @@ tools such as separation logic.
 
 \subsection{Syntax}
 
+\begin{definition}[Effect system]
+  We define an \emph{effect system} $\mc{E}$ to be a bounded partial order of effects $\mc{E}$
+  equipped with a \emph{directed commutativity relation} $\rightmove$ such that, for all effects
+  $\epsilon$, $\bot \rightmove \epsilon$ and $\epsilon \rightmove \bot$. We write:
+  \begin{itemize}
+    \item $\epsilon \leftmove \eta \iff \eta \rightmove \epsilon$
+    \item $\epsilon \slides \eta \iff \epsilon \rightmove \eta \land \epsilon \leftmove \eta$
+    \item $\epsilon \rightmove^+ \eta \iff \epsilon \rightmove \eta$
+    \item $\epsilon \rightmove^- \eta \iff \epsilon \leftmove \eta$
+  \end{itemize}
+  We say an effect system is \emph{iterative} if it is equipped with an upwards closed subset
+  $\mc{E}^\infty$ of \emph{iterative effects} containing $\top$.
+\end{definition}
+
 \begin{definition}[\subiterssa-signature]
   A \subiterssa signature $\mc{S} = (\mc{X}, \mc{I}, \mc{E})$ consists of:
   \begin{itemize}
     \item A set of \emph{base types} $X \in \mc{X}$
     \item A set of \emph{instructions} $f \in \mc{I}$
-    \item A bounded 
-    %lattice 
-    partial order
-    %
-    of \emph{effects} $\epsilon \in \mc{E}$
-    \item An upwards-closed set of \emph{looping effects} $\mc{E}^\infty \subseteq \mc{E}$
-    containing $\top$
+    \item An iterative effect system $\mc{E}$
   \end{itemize}
   such that we associate:
   \begin{itemize}
@@ -1124,7 +1130,7 @@ Given
 
 \begin{gather*}
   \prftree[r]{\rle{unif}$^+$}
-    {+ \in \eta \parallel \epsilon}
+    {\eta \rightmove \epsilon}
     {\tmeq{\Gamma^{\mb{q}_c}_{\mb{e}}, x : A}{\mc{R}}
       {\letexpr{y}{s}{b}}
       {\caseexpr{b'}{x}{\linl{x}}{x}{\linr{s}}}{B + S}}
@@ -1136,7 +1142,7 @@ Given
         {B}
     } \\
   \prftree[r]{\rle{unif}$^-$}
-    {- \in \eta \parallel \epsilon}
+    {\eta \leftmove \epsilon}
     {\tmeq{\Gamma^{\mb{q}_c}_{\mb{e}}, x : A}{\mc{R}}
       {\letexpr{y}{s}{b}}
       {\caseexpr{b'}{x}{\linl{x}}{x}{\linr{s}}}{B + S}}
@@ -1162,7 +1168,7 @@ Given
     {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
     {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}}{\epsilon}{a}{A}}
     {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}, x : A^q}{\eta}{b}{B}}
-    {p \in \epsilon \parallel \eta}
+    {\epsilon \rightmove^p \eta}
     {q \leq \alquant(\Gamma^{\mb{q}_r}) \sqcap \alquant^p(\epsilon)}
     {
       \tmlep{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{\letexpr{x}{a}{b}}{[x/a]b}{B}{p}
@@ -1214,7 +1220,7 @@ We note in particular that
     {\csubst{\Gamma^{\mb{q_l}}_{\mb{e}}}{\sigma}{\Delta^{\mb{q}'}_{\mb{e}'}}{\eta}{p}}
     {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A}}
     {\hasty{\Gamma^{\mb{q}_r}_{\bot}}{\zeta}{a}{A}}
-    {p \in \zeta \parallel \eta}
+    {\zeta \rightmove^p \eta}
     {q \leq \alquant(\Gamma^{\mb{q}_r}_{\mb{e}}) \sqcap \alquant^p(\zeta)}
     {\csubst{\Gamma^{\mb{q}}_{\mb{e}}}{\sigma, x \mapsto a}
             {\Delta^{\mb{q}}_{\mb{e}}, x : A^q_\epsilon}{\eta}{p}}
@@ -1236,11 +1242,15 @@ We note in particular that
     \item An action on instructions $T_{\ms{op}} : \mc{I}_\epsilon(A, B) \to
     \mc{I}_{T\;\epsilon}(T\;A, T\;B)$
   \end{itemize}
-  We say that a morphism $T$
+  We say that, given a morphism $T : \mc{S} \to \mc{S}'$,
   \begin{itemize}
-    \item $T$ is \emph{strict} if, for all effects $\epsilon, \eta$, we have $\alquant{\epsilon}
-    \leq \alquant{T\;\epsilon}$; this property holds for the identity and is preserved by
-    composition, and therefore forms a wide subcategory.
+    \item $T$ is \emph{strict} if, for all effects $\epsilon, \eta$, we have:
+    \begin{itemize}
+      \item $\alquant{\epsilon} \leq \alquant{T\;\epsilon}$
+      \item $\epsilon \rightmove \eta \implies T\;\epsilon \rightmove T\;\eta$
+    \end{itemize} 
+    This property holds for the identity and is preserved by composition, and therefore forms a wide
+    subcategory.
     \item $T$ sends $\mc{R}$ to $\mc{R}'$ if, for all $(\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{}{a}{b}{A})
     \in \mc{R}$, we have $\tmle{(T\;\Gamma)^{\mb{q}}_{T\;\mb{e}}}{\mc{R}'}{T\;a}{T\;b}{T\;A}$. In
     particular, we vacuously have that $T$ sends $\mc{R} = \varnothing$ to every $\mc{R}'$.
@@ -1272,15 +1282,114 @@ We use this to state the following lemma:
   \end{itemize}
 \end{lemma}
 
+\subsection{ANF}
+
+\begin{grammar}
+  <\(e\)> ::=
+    \(i\)
+    \;|\; \(\letexpr{x}{i}{e}\)
+    \;|\; \(\letexpr{(x, y)}{i}{e}\)
+    \;|\; \(\caseexpr{x}{y}{e}{z}{e'}\)
+    \;|\; \(\liter{x}{y}{e}\)
+
+  <\(i\)> ::=
+  \(x\)
+  \;|\; \(f\;x\)
+  \;|\; \(()\)
+  \;|\; \((x, y)\)
+  \;|\; \(\linl{x}\)
+  \;|\; \(\linr{y}\)
+  \;|\; \(\labort{x}\)
+\end{grammar}
+
+\begin{gather*}
+  \toanf{a} := \anflet{w}{a}{w}
+\end{gather*}
+
+\begin{align*}
+  \anflet{w}{x}{e} &:= (\letexpr{w}{x}{e}) \\
+  \anflet{w}{f\;a}{e} &:= \anflet{w_a}{a}{\anflet{w}{f\;w_a}{e}} \\
+  \anflet{w}{(a, b)}{e} &:= \anflet{w_a}{a}{\anflet{w_b}{b}{(\letexpr{w}{(w_a, w_b)}{e})}} \\
+  \anflet{w}{}{} &:=
+\end{align*}
+
 \section{Semantics}
 
 \begin{definition}[Poset-Enriched Category]
-  \;\TODO{this}
+  We define a \emph{poset-enriched category}, sometimes called a \emph{2-poset}, to be a category
+  $\mc{C}$ where every hom-set $\mc{C}(A, B)$ is equipped with a partial order $\leq$ such that
+  $\leq$ is compatible with composition: $f \leq f'$ and $g \leq g'$ implies $f;g \leq f';g'$. A
+  functor $F$ between poset-enriched categories $\mc{C}, \mc{D}$ is then just a functor between the
+  underlying categories $F : \mc{C} \to \mc{D}$ whose action on hom-sets is monotone.
+
+  In particular, we note that every category $\mc{C}$ can be equipped with the structure of a
+  poset-enriched category by giving each hom-set the discrete order, with functors between ordinary
+  categories now valid functors between their corresponding enrichments.
 \end{definition}
 
 \begin{definition}[Symmetric Premonoidal Category]
-  \;\TODO{this}
+  We define a \emph{binoidal category} to be a category $\mc{C}$ equipped with a binary operation
+  $\otimes : |\mc{C}| \times |\mc{C}| \to |\mc{C}|$ on the objects of $\mc{C}$ and, for each $A, B
+  \in |\mc{C}|$, functors $A \otimes -, - \otimes B : \mc{C} \to \mc{C}$. We say a morphism $f : A
+  \to A'$ in a binoidal category is \emph{central} if, for all $g : B \to B'$, it satisfies
+  \emph{sliding}:
+  $$
+  f \otimes B ; A' \otimes g = A \otimes g ; f \otimes B' \qquad
+  B \otimes f ; g \otimes A' = g \otimes A ; B' \otimes f
+  $$
+  in which case we may write these morphisms as $f \otimes g : A \otimes B \to A' \otimes B'$ and $g
+  \otimes f : B \otimes A \to B' \otimes A'$ respectively. A binoidal category is
+  \emph{poset-enriched} if the underlying category is poset-enriched, and the left and right tensor
+  functors are poset-enriched functors.
+  
+  A \emph{premonoidal category} is, then, a
+  binoidal category equipped with:
+  \begin{itemize}
+    \item An \emph{identity} object $I \in |\mc{C}|$
+    \item For each triple of objects $A, B, C \in |\mc{C}|$, a central, natural isomorphism
+    $\alpha_{A, B, C} : (A \otimes B) \otimes C \to A \otimes (B \otimes C)$, the \emph{associator}
+    \item For each object $A$, central, natural isomorphisms $\lambda_A : A \otimes I \to A$ and
+    $\rho_A : I \otimes A \to A$, the \emph{left} and \emph{right unitors}
+  \end{itemize}
+  satisfying the \emph{triangle} and \emph{pentagon identity}
+  $$
+  \alpha_{A, I, B} ; A \otimes \lambda_B = \rho_A \otimes B \qquad
+  \alpha_{A \otimes B, C, D} ; \alpha_{A, B, C \otimes D}
+  = \alpha_{A, B, C} \otimes D ; \alpha_{A, B \otimes C, D} ; A \otimes \alpha_{A, B, C}
+  $$
+  We say a premonoidal category is \emph{symmetric} if it is also equipped with a central, natural
+  involution $\sigma_{A, B} : A \otimes B \to B \otimes A$, the \textit{symmetry}, satisfying the
+  \emph{hexagon identity}
+  $$
+  \alpha_{A, B, C} ; \sigma_{A, B \otimes C} ; \alpha_{B, C, A}
+  = \sigma_{A, B} \otimes C ; \alpha_{B, A, C} ; B \otimes \sigma_{A, C}
+  $$
+  We say a premonoidal category is \emph{monoidal} if every morphism is central.
 \end{definition}
+One important theorem about premonoidal categories is \emph{coherence}:
+\begin{theorem}
+  The subcategory $\mc{A}$ generated by associators, unitors, and their tensor products is an
+  equivalence relation, i.e., for all $A, B : |\mc{A}|$, if
+  $f, g : A \to B$ can be constructed using only identity, composition, associators, unitors, and
+  their tensor products, then:
+  \begin{enumerate}[label=(\alph*)]
+    \item $f = g$
+    \item $f, g$ are isomorphisms in $\mc{A}$
+  \end{enumerate}
+  \label{thm:monoidal-coherence}
+\end{theorem}
+In particular, as a syntactic convenience, we will often simply write ``$\alpha$" for the (unique)
+morphism between objects $A$ and $B$, when it exists, satisfying the requirements of
+Theorem~\ref{thm:monoidal-coherence}. For example, given $f : A \to B \otimes ((C \otimes I)
+\otimes D)$ and $g : ((B \otimes (I \otimes C)) \otimes D) \to E$, we have
+$$
+f;\alpha;g := 
+  f ; 
+  B \otimes (\lambda_C \otimes D) ; 
+  \alpha_{B, C, D}^{-1} ; 
+  (B \otimes \rho_C^{-1}) \otimes D ;
+  g 
+$$
 
 \TODO{note on string diagrams?}
 
@@ -1298,8 +1407,8 @@ We use this to state the following lemma:
   wide (symmetric premonoidal) subcategories $\mc{C}_\epsilon \subseteq \mc{E}$ such that, given
   $\epsilon, \eta \in \mc{E}$, $f \in \mc{C}_\epsilon(A, B)$, and $g \in \mc{C}_\eta(A', B')$, 
   \begin{itemize}
-    \item $+ \in \epsilon \parallel \eta \implies f \ltimes g \leq f \rtimes g$
-    \item $- \in \epsilon \parallel \eta \implies f \ltimes g \geq f \rtimes g$
+    \item $\epsilon \rightmove \eta \implies f \ltimes g \leq f \rtimes g$
+    \item $\epsilon \leftmove \eta \implies f \ltimes g \geq f \rtimes g$
   \end{itemize}
   % An effectful category is \emph{meet-preserving} if (wherever the meet $\epsilon \sqcap \eta$
   % exists) $\mc{C}_{\epsilon \sqcap \eta} = \mc{C}_\epsilon \cap \mc{C}_\eta$; every effect system
@@ -1307,30 +1416,93 @@ We use this to state the following lemma:
   % the free join-semilattice generated by $\mc{E}$.
 \end{definition}
 
-In particular, if $\epsilon \parallel \eta = \{+, -\}$ then $\mc{C}_\epsilon \cap \mc{C}_\eta$ is a
-central subcategory of $\mc{C}_\epsilon$ and $\mc{C}_\eta$. It follows that, for a based effect
-system $\mc{E}$, $\mc{C}_\bot$ is a central subcategory of every $\mc{C}_\epsilon$.
+In particular, if $\epsilon \slides \eta$ then $\mc{C}_\epsilon \cap \mc{C}_\eta$ is a central
+subcategory of $\mc{C}_\epsilon$ and $\mc{C}_\eta$. It follows that $\mc{C}_\bot$ is a central
+subcategory of every $\mc{C}_\epsilon$.
 
 \TODO{Freyd categories}
 
 \begin{definition}[Distributive Category]
-  \;\TODO{this}
+  We say a premonoidal category is \emph{distributive} if:
+  \begin{itemize}
+    \item It is equipped with chosen coproducts $A + B$ such that the injections $\iota_l, \iota_r$
+    are central
+    \item The obvious morphism $\delta : (A \otimes B) + (A \otimes C) \to A \otimes (B + C)$ is an
+    isomorphism.
+  \end{itemize}
 \end{definition}
 
 \begin{definition}[Distributive effectful category]
-  \;\TODO{this}
+  We say an effectful category is \emph{distributive} if:
+  \begin{itemize}
+    \item The underlying premonoidal category is distributive
+    \item Each $\mc{C}_\epsilon$ contains all injections $\iota_l, \iota_r$ and is closed under
+    coproducts $[f, g]$, and so in particular is co-cartesian
+  \end{itemize}
 \end{definition}
 
 \begin{definition}[Conway Iteration Operator]
-  \;\TODO{this}
-  \;\TODO{enrichment}
-  \;\TODO{\emph{enriched} uniformity}
-  \;\TODO{strength}
+  Let $\mc{C}$ be a category with chosen coproducts. We say $\mc{C}$ is \emph{pre-iterative} if it
+  is equipped with a fixpoint operator $(-)^\dagger : \mc{C}(A, B + A) \to \mc{C}(A, B)$ satisfying
+  \begin{itemize}
+    \item \emph{Monotonicity}: $f \leq g \implies f^\dagger \leq g^\dagger$
+    \item \emph{Fixpoint}: $f ; [\ms{id}, f^\dagger] = f$
+  \end{itemize}
+  We say $(-)^\dagger$ is a \emph{Conway iteration operator} if it additionally satisfies
+  \begin{itemize}
+    \item \emph{Naturality:} given $f : A \to B + A$ and $g : B \to C$, we have
+      $
+      (f;g + \ms{id})^\dagger = f^\dagger;g : A \to C
+      $
+    \item \emph{Dinaturality:} given morphisms $g : A \to B + C$ and $h : C \to B + A$, we have that
+      $
+      (g ; [\iota_l, h])^\dagger = g ; [\ms{id}_B, (h ; [\iota_l, g])^\dagger]
+      $
+    \item \emph{Codiagonal:} given $f : A \to (B + A) + A$, we have
+      $
+      (f^\dagger)^\dagger = (f;[\ms{id}, \iota_r])^\dagger : A \to B
+      $
+  \end{itemize}
+  If $\mc{C}$ is distributive, we say this operator is \emph{strong} if
+  $$
+  \forall f: A \to B + A, (C \otimes f ; \delta^{-1})^\dagger = C \otimes f^\dagger
+  $$
+  Given a wide subcategory $\mc{K} \subseteq \mc{C}$, we say $\mc{C}$ is \emph{$\mc{K}^+$-uniform}
+  if, for all $h : A \to_{\mc{K}} B$, $f : B \to C + B$, and $g : A \to C + A$, we have that
+  $$
+  h ; f \leq g ; C + h \implies h ; f^\dagger \leq g^\dagger 
+  $$
+  and \emph{$\mc{K}^-$-uniform} if
+  $$
+  h ; f \geq g ; C + h \implies h ; f^\dagger \geq g^\dagger 
+  $$
+  We say it is \emph{$\mc{K}$-uniform} if it is both $\mc{K}^+$- and $\mc{K}^-$-uniform, which
+  implies in particular that
+  $$
+  h ; f = g ; C + h \implies h ; f^\dagger = g^\dagger 
+  $$
 \end{definition}
 
-\begin{definition}[Elgot effectful category]
-  \;\TODO{this}
+\begin{definition}[Elgot category]
+  We say a distributive effectful category $\mc{C}$ is \emph{Elgot} if it has an iterative effect
+  system and is equipped with a strong Conway iteration operator, such that, for all effects
+  $\epsilon, \eta$ where $\epsilon \in \mc{E}^\infty$,
+  \begin{itemize}
+    \item The wide subcategory $\mc{C}_\epsilon$ is closed under iteration
+    \item if $\epsilon \rightmove^p \eta$, then $\mc{C}_\epsilon$ is $\mc{C}_\eta^p$-uniform.
+  \end{itemize}
 \end{definition}
+
+We note the following useful proposition
+\begin{proposition}
+  If $(-)^\dagger$ is an iteration operator which satisfies naturality and codiagonal and is
+  $\mc{K}$-uniform for $\mc{K}$ cocartesian, then it also satisfies dinaturality.
+\end{proposition}
+\begin{proof}
+  See Lemma 31 of \citet{goncharov-18-guarded-traced}
+\end{proof}
+In particular, since every Elgot category is $\mc{C}_\bot$-uniform and all $\mc{C}_\epsilon$ are
+cocartesian, it follows that we only need to check naturality and codiagonal.
 
 \begin{definition}[\subiterssa-model]
   A \subiterssa-model $\mc{M} = (\mc{C}, (\cdot)^\dagger, \dnt{\cdot}, \dmor{}, \tmor{})$ of a
@@ -1595,6 +1767,18 @@ system $\mc{E}$, $\mc{C}_\bot$ is a central subcategory of every $\mc{C}_\epsilo
 
 \subsection{Translation}
 
+\begin{definition}[Strict Elgot functor]
+  Given effectful Elgot categories $\mc{C}, \mc{C}'$, a strict symmetric monoidal functor $F :
+  \mc{C} \to \mc{C}'$ is a strict Elgot functor if:
+  \begin{itemize}
+    \item It preserves chosen coproducts, i.e. $F(A + B) = F(A) + F(B)$, $F(\iota_l) = \iota_l$,
+    $F(\iota_r) = \iota_r$.
+    \item It commutes with the fixpoint operator, i.e. $F(f^\dagger) = F(f)^\dagger$
+    \item If $\mc{C}_\epsilon$ is $p$-uniform w.r.t. $\mc{C}_\eta$, then $F(\mc{C}_\epsilon)$ is
+    $p$-uniform w.r.t. $F(\mc{C}_\eta)$
+  \end{itemize}
+\end{definition}
+
 \begin{definition}[\subiterssa-model morphism]
   Given \subiterssa-signatures $\mc{S}, \mc{S}'$ models
   $\mc{M} = (\mc{C}, (\cdot)^\dagger, \dnt{\cdot}, \dmor{}, \tmor{})$ of $\mc{S}$ and $\mc{M}' =
@@ -1602,7 +1786,7 @@ system $\mc{E}$, $\mc{C}_\bot$ is a central subcategory of every $\mc{C}_\epsilo
   a morphism from $\mc{M}$ to $\mc{M}'$ to be given by a pair $(T, F)$ where
   \begin{itemize}
     \item $T: \mc{S} \to \mc{S}'$ is a \subiterssa-signature morphism
-    \item $F: \mc{C} \to \mc{C}'$ is a strict symmetric monoidal functor
+    \item $F: \mc{C} \to \mc{C}'$ is a strict Elgot functor
     \item For all base types $X$, $F(\dnt{X}_{\mc{M}}) = \dnt{T\;A}_{\mc{M}'}$
     \item $F(\dmor{A}) = \dmor{T\;A}$
     \item $F(\tmor{A}) = \tmor{T\;A}$
@@ -1672,7 +1856,7 @@ system $\mc{E}$, $\mc{C}_\bot$ is a central subcategory of every $\mc{C}_\epsilo
     \;|\; \(\letstmt{x}{a}{t}\)
     \;|\; \(\letstmt{(x, y)}{a}{t}\)
     \alt \(\casestmt{a}{x}{s}{y}{t}\)
-    \;|\; \(\loopstmt{\ell}{x}{t}\)
+    \;|\; \(\loopstmt{a}{\ell}{x}{t}\)
     \alt \(\awhere{r}{L}\)
     \;|\; \(\cwhere{r}{L}\)
 
@@ -1680,18 +1864,117 @@ system $\mc{E}$, $\mc{C}_\bot$ is a central subcategory of every $\mc{C}_\epsilo
 
   <\(\ms{L}\)> ::= \(\cdot\) \;|\; \(\ms{L}, \lhyp{\ell}{A}\)
 
-  <\(\mb{Q}\)> ::= \(\cdot\) \;|\; \(\mb{Q}, \mb{q}\)
-
-  <\(\mb{p}\)> ::= \(\cdot\) \;|\; \(\mb{p}, p\)  
+  <\(\mb{Q}\)> ::= \(\cdot\) \;|\; \(\mb{Q}; \mb{q}\)
 \end{grammar}
+
+\begin{gather*}
+  \qbc{\cdot}{q} = \cdot \qquad
+  \qbc{\mb{Q}; \mb{q}}{q} = \qbc{\mb{Q}}{q}; (\mb{q}, q)
+\end{gather*}
+
+\begin{gather*}
+  \prftree[r]{\rle{nil}}{\lwk{\cdot}{\cdot}} \qquad 
+  \prftree[r]{\rle{cons}}
+    {\lwk{\ms{L}^{\mb{Q}}_{\mb{E}}}{\ms{K}^{\mb{Q}}_{\mb{E}}}}
+    {\mb{q}' \leq \mb{q}}
+    {\epsilon \leq \epsilon'}
+    {\lwk{\ms{L}^{\mb{Q}}_{\mb{e}}, \lhyp{\ell}{A}^{\mb{q}}_{\epsilon}}
+    {\ms{K}^{\mb{Q}}_{\mb{e}}, \lhyp{\ell}{A}^{\mb{q}'}_{\epsilon'}}} \qquad
+  \prftree[r]{\rle{skip}}
+    {\lwk{\ms{L}^{\mb{Q}}_{\mb{E}}}{\ms{K}^{\mb{Q}}_{\mb{E}}}}
+    {\lwk{\ms{L}^{\mb{Q}}_{\mb{E}}}{\ms{K}^{\mb{Q}}_{\mb{E}}, \lhyp{\ell}{A}^{\mb{q}}_{\epsilon}}}
+\end{gather*}
+
+\begin{gather*}
+  \prftree[r]{\rle{br}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A}}
+    {\lwk{\lhyp{\ell}{A}_\epsilon^{\mb{q}_l}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\brb{\ell}{a}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+  \\
+  \prftree[r]{\rle{let$_1$}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A}}
+    {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{t}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\letstmt{x}{a}{t}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+  \\
+  \prftree[r]{\rle{let$_2$}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A \otimes B}}
+    {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A, y : B}{\epsilon}{t}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\letstmt{(x, y)}{a}{t}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+  \\
+  \prftree[r]{\rle{case}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A + B}}
+    {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{s}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+    {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, y : B}{\epsilon}{t}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\casestmt{a}{x}{s}{y}{t}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+  \\
+  \prftree[r]{\rle{loop}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A}}
+    {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{t}
+      {\ms{L}^{\qbc{\mb{Q}}{0}}_{\mb{e}}}, \lhyp{\ell}{A}^{\mb{q}_l, 0}_\epsilon}
+    {\einf{\epsilon}}
+    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\loopstmt{a}{\ell}{x}{t}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+  \\
+  \prftree[r]{\rle{where$_{\ms{nonrec}}$}}
+    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{r}
+      {\ms{L}^{\mb{Q}}_{\mb{e}}, \ms{R}^{\mb{Q}'}_{\mb{e}'}}}
+    {\forall \lhyp{\ell_i}{A_i}^{\mb{q}_i}_{\epsilon_i} \in \ms{R}^{\mb{Q}'}_{\mb{e}'} .
+      \haslb{\Gamma^{\mb{q}}_{\mb{e}}, x_i : A_i}{\epsilon_i}{t_i}{\ms{L}^{\mb{Q}}_{\mb{e}}}
+    }
+    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\awhere{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
+      {\ms{L}^{\mb{Q}}_{\mb{e}}}}
+  \\
+  \prftree[r]{\rle{where$_{\ms{rec}}$}}
+  {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{r}
+    {\ms{L}^{\mb{Q}}_{\mb{e}}, \ms{R}^{\mb{Q}'}_{\mb{e}'}}}
+  {\forall \lhyp{\ell_i}{A_i}^{\mb{q}_i}_{\epsilon_i} \in \ms{R}^{\mb{Q}'}_{\mb{e}'} .
+    \haslb{\Gamma^{\mb{q}}_{\mb{e}}, x_i : A_i}{\epsilon_i}{t_i}{
+      \ms{L}^{\mb{Q}}_{\mb{e}}, \ms{R}^{\mb{Q}'}_{\mb{e}'}}
+  }
+  {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\cwhere{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
+    {\ms{L}^{\mb{Q}}_{\mb{e}}}}
+\end{gather*}
 
 \TODO{this}
 
-\subsection{Lowering to Standard SSA}
+\subsection{Compiling Terms to SSA}
+
+\begin{grammar}
+  <\(r, s, t\)> ::= \(\tau\)
+    \;|\; \(\letstmt{x}{a}{t}\)
+    \;|\; \(\letstmt{(x, y)}{a}{t}\)
+    \;|\; \(\awhere{r}{L}\)
+    \;|\; \(\cwhere{r}{L}\)
+
+  <\(\tau\)> ::= \(\brb{\ell}{x}\)
+    \;|\; \(\casestmt{x}{y}{\tau}{z}{\tau'}\)
+
+  <\(a, b, c\)> ::=
+  \(x\)
+  \;|\; \(f\;x\)
+  \;|\; \(()\)
+  \;|\; \((x, y)\)
+  \;|\;  \(\linl{x}\)
+  \;|\; \(\linr{x}\)
+  \;|\; \(\labort{a}\)
+\end{grammar}
+
+\begin{gather*}
+  \tossa{x}{\ell} = \brb{\ell}{x} \qquad
+  \tossa{f\;a}{\ell} = \letstmt{x}{a}{\brb{\ell}{f\;x}} \\
+\end{gather*}
 
 \TODO{this}
 
 \subsection{Refinement Theory}
+
+\TODO{this?}
+
+\subsection{Label Substitution}
 
 \TODO{this?}
 
