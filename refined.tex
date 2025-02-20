@@ -19,7 +19,7 @@
 
 \usepackage{listings}
 \usepackage{lstautogobble}
-\usepackage[dvipsnames]{xcolor}
+\usepackage{xcolor} % \usepackage[dvipsnames]{xcolor}
 \usepackage{caption}
 \usepackage{subcaption}
 \usepackage{fancyvrb}
@@ -211,8 +211,10 @@
 \newcommand{\varcount}[2]{\sharp(#1, #2)}
 
 % Truth tables
-\newcommand{\cmark}{\textcolor{Green}{\ding{51}}}%
-\newcommand{\xmark}{\textcolor{BrickRed}{\ding{55}}}%
+\newcommand{\cmark}{\textcolor{green}{\ding{51}}}%
+\newcommand{\xmark}{\textcolor{red}{\ding{55}}}%
+% \newcommand{\cmark}{\textcolor{Green}{\ding{51}}}%
+% \newcommand{\xmark}{\textcolor{BrickRed}{\ding{55}}}%
 
 
 %% Rights management information.  This information is sent to you
@@ -372,7 +374,7 @@ about transformations that preserve correctness in a directed sense. Our approac
 preserving the rest of the equational framework. This requires a principled classification of
 effects along two axes: (1) their \emph{multiplicity}, which determines whether introducing,
 eliminating, duplicating, or fusing occurrences of an operation constitutes a refinement; and (2)
-their \emph{temporal commutativity}, distinguishing effects that can be safely reordered forward
+their \emph{commutativity}, distinguishing effects that can be safely reordered forward
 (\emph{right-movers}) from those that can be pushed backward (\emph{left-movers}). For instance, UB
 is a \emph{right-mover}, since delaying UB is always safe; on the other hand, every \emph{other}
 effect is a left-mover \emph{with respect to UB}.
@@ -388,9 +390,8 @@ tools such as separation logic.
 \begin{itemize}
   \item First, we extend the type-theoretic presentation of SSA given in
   \citet{ghalayini-24-ssa-densem-arxiv} to support tracking variable multiplicity and iteration
-  in expressions; we later argue that this is enough to be able to give our refinement theory
-  purely in terms of expressions.
-  \item We then give a categorical semantics for this type-theory in terms of poset-enriched
+  in expressions, and give a refinement theory (i.e., a directed equational theory) for this language. 
+  \item We then give a categorical semantics for this type theory in terms of poset-enriched
   distributive Elgot categories. We show that any denotational model with this categorical structure
   is also a model of SSA. This shows that all of the refinements we give are sound with respect to
   the categorical structure.
