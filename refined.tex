@@ -139,18 +139,10 @@
 \newcommand{\lbseq}[5]{\lbsubst{#1 \teqv #2}{#3}{#4}{#5}}
 \newcommand{\brle}[1]{{\textsf{#1}}}
 
+\newcommand{\tossa}[2]{\ms{SSA}(#1 \Rightarrow #2)}
 \newcommand{\toanf}[1]{\ms{ANF}(#1)}
-\newcommand{\letanf}[3]{\ms{ANF}_{\ms{let}}(#1, #2, #3)}
-\newcommand{\tossa}[1]{\ms{SSA}(#1)}
-\newcommand{\ssawhere}[2]{\ms{SSA}_{\ms{a}}(#1, #2)}
-\newcommand{\toentry}[1]{\ms{entry}(#1)}
-\newcommand{\todom}[1]{\ms{children}(#1)}
-\newcommand{\tocfg}[1]{\ms{cfg}(#1)}
-\newcommand{\adddom}[2]{\ms{bb}(#1, #2)}
-\newcommand{\toreg}[1]{\ms{reg}(#1)}
-\newcommand{\todnf}[1]{\ms{dom}(#1)}
-\newcommand{\towhile}[2]{\ms{WH}_{#1}(#2)}
-\newcommand{\topwhile}[2]{\ms{PW}_{#1}(#2)}
+\newcommand{\anflet}[3]{\ms{ANF}_{\ms{let}}(#1, #2, #3)}
+\newcommand{\toterm}[1]{\ms{Term}(#1)}
 
 % Denotational semantics
 \newcommand{\dnt}[1]{\llbracket{#1}\rrbracket}
@@ -1289,6 +1281,37 @@ We use this to state the following lemma:
   \end{itemize}
 \end{lemma}
 
+\subsection{ANF}
+
+\begin{grammar}
+  <\(e\)> ::=
+    \(i\)
+    \;|\; \(\letexpr{x}{i}{e}\)
+    \;|\; \(\letexpr{(x, y)}{i}{e}\)
+    \;|\; \(\caseexpr{x}{y}{e}{z}{e'}\)
+    \;|\; \(\liter{x}{y}{e}\)
+
+  <\(i\)> ::=
+  \(x\)
+  \;|\; \(f\;x\)
+  \;|\; \(()\)
+  \;|\; \((x, y)\)
+  \;|\; \(\linl{x}\)
+  \;|\; \(\linr{y}\)
+  \;|\; \(\labort{x}\)
+\end{grammar}
+
+\begin{gather*}
+  \toanf{a} := \anflet{w}{a}{w}
+\end{gather*}
+
+\begin{align*}
+  \anflet{w}{x}{e} &:= (\letexpr{w}{x}{e}) \\
+  \anflet{w}{f\;a}{e} &:= \anflet{w_a}{a}{\anflet{w}{f\;w_a}{e}} \\
+  \anflet{w}{(a, b)}{e} &:= \anflet{w_a}{a}{\anflet{w_b}{b}{(\letexpr{w}{(w_a, w_b)}{e})}} \\
+  \anflet{w}{}{} &:=
+\end{align*}
+
 \section{Semantics}
 
 \begin{definition}[Poset-Enriched Category]
@@ -1915,10 +1938,34 @@ cocartesian, it follows that we only need to check naturality and codiagonal.
     {\ms{L}^{\mb{Q}}_{\mb{e}}}}
 \end{gather*}
 
-
 \TODO{this}
 
-\subsection{Lowering to Standard SSA}
+\subsection{Compiling Terms to SSA}
+
+\begin{grammar}
+  <\(r, s, t\)> ::= \(\tau\)
+    \;|\; \(\letstmt{x}{a}{t}\)
+    \;|\; \(\letstmt{(x, y)}{a}{t}\)
+    \;|\; \(\awhere{r}{L}\)
+    \;|\; \(\cwhere{r}{L}\)
+
+  <\(\tau\)> ::= \(\brb{\ell}{x}\)
+    \;|\; \(\casestmt{x}{y}{\tau}{z}{\tau'}\)
+
+  <\(a, b, c\)> ::=
+  \(x\)
+  \;|\; \(f\;x\)
+  \;|\; \(()\)
+  \;|\; \((x, y)\)
+  \;|\;  \(\linl{x}\)
+  \;|\; \(\linr{x}\)
+  \;|\; \(\labort{a}\)
+\end{grammar}
+
+\begin{gather*}
+  \tossa{x}{\ell} = \brb{\ell}{x} \qquad
+  \tossa{f\;a}{\ell} = \letstmt{x}{a}{\brb{\ell}{f\;x}} \\
+\end{gather*}
 
 \TODO{this}
 
