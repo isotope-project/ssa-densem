@@ -627,6 +627,39 @@ effect. Our grammar of types consists of:
 We assume every \emph{instruction} $f \in \mc{I}$ is equipped with a \emph{source type} $A$, a
 \emph{target type} $B$, and an \emph{effect} $e \in \mc{E}$.
 
+\begin{figure}
+  \begin{grammar}
+    <\(A, B, C\)> ::= 
+    \(X\)
+    \;|\; \(A \otimes B\)
+    \;|\; \(\mathbf{1}\)
+
+    <\(a, b, c\)> ::=
+    \(x\)
+    \;|\; \(f\;a\)
+    \;|\; \(\letexpr{x}{a}{b}\)
+    \;|\; \(()\)
+    \;|\; \((a, b)\)
+    \;|\; \(\letexpr{(x, y)}{a}{b}\)
+    \alt  \(\linl{a}\)
+    \;|\; \(\linr{b}\)
+    \;|\; \(\caseexpr{a}{x}{b}{y}{c}\)
+    \;|\; \(\labort{a}\)
+    \;|\; \(\liter{a}{x}{b}\)
+    
+    <\(q\)> ::= \(\zeroq\) | \(\oneq\) | \(\cpyq\) | \(\delq\) | \(\topq\)
+
+    <\(\Gamma\)> ::= \(\cdot\) \;|\; \(\Gamma, x : A\)
+
+    <\(\mb{q}\)> ::= \(\cdot\) \;|\; \(\mb{q}, q\)
+
+    <\(\mb{e}\)> ::= \(\cdot\) \;|\; \(\mb{e}, \epsilon\)
+  \end{grammar}
+  \caption{Syntax for \subiterssa}
+  \Description{Syntax for our calculus}
+  \label{fig:subiterssa-syntax}
+\end{figure}
+
 Our type system will need to track how often individual variables are used to be able to properly
 reason about rewrites involving substructural effects. While we could use a natural number as
 multiplicity for this purpose, the number of times a variable is used may be control-flow dependent
@@ -652,11 +685,10 @@ consist of a list $\Gamma$ of variables typed $x : A$ along with a list of quant
 length $\mb{q}$, which we will write as $\Gamma^{\mb{q}}$. This may equivalently be viewed as a list
 of variables $x : A^q$ each annotated with a quantity, and, in particular, we will define syntax
 sugar
-\begin{equation*}
+\begin{equation}
   \Gamma^{\mb{q}}, x : A^q = (\Gamma, x : A)^{\mb{q}, q} \qquad
   \Gamma^{\mb{q}}, x : A =  (\Gamma, x : A)^{\mb{q}, \topq}
-\end{equation*}
-
+\end{equation}
 Since we will need to track the usage of variables anyways, it requires only minimal additional
 complexity to add support for substructural types (which are types which can \emph{only} be used a
 certain number of times) in as well. In particular, assuming that every base type $X \in \mc{X}$ is
@@ -669,13 +701,14 @@ inductively as follows:
 We can further define the linearity of a context $\Gamma$ by induction as follows
 \begin{equation}
   \alquant(\cdot) = \topq \qquad
-  \alquant(\Gamma^{\mb{q}}, x : A^q) = \alquant(\Gamma^{\mb{q}}) \sqcap \alquant(A) \sqcap \bar{q}
-  \qquad
-  \bar{0} = \topq \qquad
-  \bar{q} = q \text{ for } q \in Q
+  \alquant(\Gamma^{\mb{q}_{\mb{e}}}, x : A^q_\epsilon) 
+    = \alquant(\Gamma^{\mb{q}}_{\mb{e}}) \sqcap \begin{cases}
+    \alquant(A) \sqcap \alquant(\epsilon) \sqcap q & \text{if } q \neq 0 \\
+    \topq & \text{if } q = 0
+  \end{cases}
 \end{equation}
 In particular, note that the linearity of an unused variable is always unrestricted.
-
+%
 The final piece of data we will need to construct our type theory is how effects interact with each
 other, and with themselves. In particular, we need to know:
 \begin{itemize}
@@ -730,76 +763,10 @@ We now have all the pieces we need to define a \subiterssa{}-\emph{signature}.
     in Figure~\ref{fig:subiterssa-syntax}).
   \end{itemize}
 \end{definition}
-
 All the following definitions in this section will be with respect to an arbitrary
-\subiterssa{}-signature $\mc{S}$.
+\subiterssa{}-signature $\mc{S}$. 
 
-\begin{gather*}
-  \prftree[r]{\rle{inst}}
-    {f \in \mc{I}}
-    {\ms{src}(f) = A}
-    {\ms{trg}(f) = B}
-    {\ms{eff}(f) \leq \epsilon}
-    {f : A \to_\epsilon B}
-\end{gather*}
-
-\TODO{remove the effects from variables since changed that in formalization}
-
-\TODO{discuss how a whole context can also be given a quantity using the quantity of its variables}
-
-\begin{equation*}
-  \alquant(\cdot) = \topq \qquad
-  \alquant(\Gamma^{\mb{q}_{\mb{e}}}, x : A^q_\epsilon) 
-    = \alquant(\Gamma^{\mb{q}}_{\mb{e}}) \sqcap \begin{cases}
-    \alquant(A) \sqcap \alquant(\epsilon) \sqcap q & \text{if } q \neq 0 \\
-    \topq & \text{if } q = 0
-  \end{cases}
-\end{equation*}
-
-\TODO{discuss weakening, use this to further discuss quantities}
-
-\TODO{contrast with \emph{splitting}, which uses duplicability rather than discardability}
-
-\begin{figure}
-  \begin{grammar}
-    <\(A, B, C\)> ::= 
-    \(X\)
-    \;|\; \(A \otimes B\)
-    \;|\; \(\mathbf{1}\)
-
-    <\(a, b, c\)> ::=
-    \(x\)
-    \;|\; \(f\;a\)
-    \;|\; \(\letexpr{x}{a}{b}\)
-    \;|\; \(()\)
-    \;|\; \((a, b)\)
-    \;|\; \(\letexpr{(x, y)}{a}{b}\)
-    \alt  \(\linl{a}\)
-    \;|\; \(\linr{b}\)
-    \;|\; \(\caseexpr{a}{x}{b}{y}{c}\)
-    \;|\; \(\labort{a}\)
-    \;|\; \(\liter{a}{x}{b}\)
-    
-    <\(q\)> ::= \(\zeroq\) | \(\oneq\) | \(\cpyq\) | \(\delq\) | \(\topq\)
-
-    <\(\Gamma\)> ::= \(\cdot\) \;|\; \(\Gamma, x : A\)
-
-    <\(\mb{q}\)> ::= \(\cdot\) \;|\; \(\mb{q}, q\)
-
-    <\(\mb{e}\)> ::= \(\cdot\) \;|\; \(\mb{e}, \epsilon\)
-  \end{grammar}
-  \caption{Syntax for \subiterssa}
-  \Description{Syntax for our calculus}
-  \label{fig:subiterssa-syntax}
-\end{figure}
-
-\begin{equation}
-  \oneq \leq \cpyq \qquad \topq = \top \qquad \delq = \zeroq \sqcup \oneq
-\end{equation}
-
-
-\TODO{fix this to deal with $q = 0$ properly!!!}
-
+We begin by defining weakening $\cwk{\Gamma^{\mb{q}}}{\Delta^{\mb{q}'}}$ of contexts as follows:
 \begin{gather*}
   \prftree[r]{\rle{nil}}{\cwk{\cdot}{\cdot}} \qquad 
   \prftree[r]{\rle{cons}}
@@ -813,19 +780,9 @@ All the following definitions in this section will be with respect to an arbitra
     {\zeroq \leq q \sqcap \alquant(A)}
     {\cwk{\Gamma^{\mb{q}}_{\mb{e}}, x : A^q_\epsilon}{\Delta}^{\mb{q}'}_{\mb{e}'}}
 \end{gather*}
-
-It is easy to see that this induces a partial order on annotated contexts $\Gamma^{\mb{q}}_{\mb{e}}$
-%.
-%; in particular, the following rules are admissible:
-
-% \begin{gather*}
-%   \prftree[r]{\rle{refl}}{}{\cwk{\Gamma^{\mb{q}}_{\mb{e}}}{\Gamma^{\mb{q}}_{\mb{e}}}} \qquad 
-%   \prftree[r]{\rle{trans}}
-%     {\cwk{{\Gamma_1}^{\mb{q}_1}_{\mb{e}_1}}{{\Gamma_2}^{\mb{q}_2}_{\mb{e}_2}}}
-%     {\cwk{{\Gamma_2}^{\mb{q}_2}_{\mb{e}_2}}{{\Gamma_3}^{\mb{q}_3}_{\mb{e}_3}}}
-%     {\cwk{{\Gamma_1}^{\mb{q}_1}_{\mb{e}_1}}{{\Gamma_3}^{\mb{q}_3}_{\mb{e}_3}}}
-% \end{gather*}
-
+It is easy to see that this induces a partial order on annotated contexts. Since our variables are
+substructural, we also need to define \emph{context splitting}
+$\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}$ as follows:
 \begin{gather*}
   \prftree[r]{\rle{nil}}
     {\qsp{\cdot}{\cdot}{\cdot}{\cdot}} \qquad
@@ -841,70 +798,91 @@ It is easy to see that this induces a partial order on annotated contexts $\Gamm
     {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
     {\qsp{\Gamma, x : A}{(\mb{q}, q)}{(\mb{q}_l, \zeroq)}{(\mb{q}_r, q)}}
 \end{gather*}
+\TODO{some text explaining context splitting}
 
-\TODO{typing rules for monoidal subtheory; very basic first-order system}
+\begin{figure}
+  \begin{gather*}
+    \prftree[r]{\rle{var}}
+      {\cwk{\Gamma^{\mb{q}}_{\mb{e}}}{x : A^\oneq_\epsilon}}
+        {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{x}{A}} 
+      \qquad
+    \prftree[r]{\rle{let$_1$}}{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+      {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A}}
+      {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{b}{B}}
+      {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{}{\letexpr{x}{a}{b}}{B}}
+      \\
+    \prftree[r]{\rle{op}}{f : A \to_\epsilon B}
+      {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{a}{A}}
+      {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{f\;a}{B}}
+      \qquad
+    \prftree[r]{\rle{inst}}
+      {f \in \mc{I}}
+      {\ms{src}(f) = A}
+      {\ms{trg}(f) = B}
+      {\ms{eff}(f) \leq \epsilon}
+      {f : A \to_\epsilon B}
+      \\
+    \prftree[r]{\rle{unit}}
+      {\cwk{\Gamma^{\mb{q}}_{\mb{e}}}{\cdot}}{\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{}{()}{\mb{1}}} 
+      \qquad
+    \prftree[r]{\rle{pair}}{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+      {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}}{\epsilon}{a}{A}}
+      {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{b}{B}}
+      {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{(a, b)}{A \otimes B}} \\
+    \prftree[r]{\rle{let$_2$}}{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+      {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{}{a}{A \otimes B}}
+      {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A, y : B}{\epsilon}{c}{C}}
+      {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\letexpr{(x, y)}{a}{c}}{C}}
+      \\
+    \prftree[r]{\rle{inl}}
+      {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{a}{A}}
+      {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\linl{a}}{A + B}} \qquad
+    \prftree[r]{\rle{inr}}
+      {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{b}{B}}
+      {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\linr{b}}{A + B}} \qquad    
+    \prftree[r]{\rle{abort}}
+      {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{a}{\mb{0}}}
+      {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\labort{a}}{C}}
+      \\
+    \prftree[r]{\rle{case}}{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+      {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{e}{A + B}}
+      {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{a}{C}}
+      {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, y : B}{\epsilon}{b}{C}}
+      {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\caseexpr{e}{x}{a}{y}{b}}{C}} \\
+    \prftree[r]{\rle{iter}}
+      {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+      {\alquant(\Gamma^{\mb{q}_l}) = \top}
+      {\einf{\epsilon}}
+      {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A}}
+      {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{b}{B + A}}
+      {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\liter{a}{x}{b}}{B}}
+  \end{gather*}
+  \caption{Typing rules for \subiterssa{}}
+  \Description{}
+  \label{fig:subiterssa-typing}
+\end{figure}
 
-\begin{gather*}
-  \prftree[r]{\rle{var}}
-    {\cwk{\Gamma^{\mb{q}}_{\mb{e}}}{x : A^\oneq_\epsilon}}
-      {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{x}{A}} 
-    \qquad
-  \prftree[r]{\rle{op}}{f : A \to_\epsilon B}
-    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{a}{A}}
-    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{f\;a}{B}} \\
-  \prftree[r]{\rle{let$_1$}}{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A}}
-    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{b}{B}}
-    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{}{\letexpr{x}{a}{b}}{B}} \\
-  \prftree[r]{\rle{unit}}
-    {\cwk{\Gamma^{\mb{q}}_{\mb{e}}}{\cdot}}{\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{}{()}{\mb{1}}} 
-    \qquad
-  \prftree[r]{\rle{pair}}{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}}{\epsilon}{a}{A}}
-    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{b}{B}}
-    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{(a, b)}{A \otimes B}} \\
-  \prftree[r]{\rle{let$_2$}}{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{}{a}{A \otimes B}}
-    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A, y : B}{\epsilon}{c}{C}}
-    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\letexpr{(x, y)}{a}{c}}{C}}
-\end{gather*}
+We can now give the typing rules for \subiterssa{} in Figure~\ref{fig:subiterssa-typing}.
 
-\TODO{extension with coproducts; corresponds to adding branching control-flow}
+\TODO{explain: variables}
 
-\begin{gather*}
-  \prftree[r]{\rle{inl}}
-    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{a}{A}}
-    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\linl{a}}{A + B}} \qquad
-  \prftree[r]{\rle{inr}}
-    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{b}{B}}
-    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\linr{b}}{A + B}} \qquad    
-  \prftree[r]{\rle{abort}}
-    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{a}{\mb{0}}}
-    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\labort{a}}{C}}
-    \\
-  \prftree[r]{\rle{case}}{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{e}{A + B}}
-    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{a}{C}}
-    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, y : B}{\epsilon}{b}{C}}
-    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\caseexpr{e}{x}{a}{y}{b}}{C}} \\
-\end{gather*}
+\TODO{explain: applications}
 
-\TODO{extension with Elgot structure; corresponds to adding loops}
+\TODO{explain: pairs}
+
+\TODO{explain: let-bindings}
+
+\TODO{explain: injections, cases, and aborts}
+
+\TODO{explain: iteration}
 
 \TODO{explain: all variables used in a loop must be \emph{nonlinear} (not just relevant!) because
-the loop may execute 0, 1, \emph{or} many times}
+the loop may execute an arbitrary number of times}
 
 \TODO{the effect of a loop must be \emph{iterative} for obvious reasons (since the loop may execute
 infinitely many times)}
 
 \begin{gather*}
-  \prftree[r]{\rle{iter}}
-    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-    {\alquant(\Gamma^{\mb{q}_l}) = \top}
-    {\einf{\epsilon}}
-    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A}}
-    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{b}{B + A}}
-    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\liter{a}{x}{b}}{B}} \\
 \end{gather*}
 
 \subsection{Syntactic Metatheory}
