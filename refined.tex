@@ -851,7 +851,7 @@ $\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}$ as follows:
       {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\caseexpr{e}{x}{a}{y}{b}}{C}} \\
     \prftree[r]{\rle{iter}}
       {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-      {\alquant(\Gamma^{\mb{q}_l}) = \top}
+      {\alquant(\Gamma^{\mb{q}_l}) = \topq}
       {\einf{\epsilon}}
       {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A}}
       {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{b}{B + A}}
@@ -862,28 +862,24 @@ $\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}$ as follows:
   \label{fig:subiterssa-typing}
 \end{figure}
 
-We can now give the typing rules for \subiterssa{} in Figure~\ref{fig:subiterssa-typing}.
+We can now give the typing rules for \subiterssa{} in Figure~\ref{fig:subiterssa-typing}. We type
+variables with the \brle{var} rule, which states that a variable $x$ has type $A$ in the context
+$\Gamma^{\mb{q}}$ if $\Gamma$ weakens to the singleton context $x: A^\oneq$, i.e., if $x$ has
+nonzero quantity and all other variables are affine. Applications, pairs, let-bindings,
+destructuring let-bindings, and injections are all typed in the usual manner, with context-splitting
+used to split the context between different fragments of the expression. The \brle{case} rule is
+similarly standard, except both the left branch $a$ and right branch $b$ of a case-statement share
+the same resource vector $\mb{q}_l$ since exactly one of them will be executed.
 
-\TODO{explain: variables}
-
-\TODO{explain: applications}
-
-\TODO{explain: pairs}
-
-\TODO{explain: let-bindings}
-
-\TODO{explain: injections, cases, and aborts}
-
-\TODO{explain: iteration}
-
-\TODO{explain: all variables used in a loop must be \emph{nonlinear} (not just relevant!) because
-the loop may execute an arbitrary number of times}
-
-\TODO{the effect of a loop must be \emph{iterative} for obvious reasons (since the loop may execute
-infinitely many times)}
-
-\begin{gather*}
-\end{gather*}
+The \brle{iter} rule, on the other hand, is a little bit more complicated: we split the context into
+a component $\mb{q}_r$ for the initial value and a component $\mb{q}_l$ for the body. The initial
+value is then evaluated and passed in as an additional parameter of type $A$ to the body. We require
+that the body's context has unrestricted quantity since the loop may execute any number of times;
+while one could argue that we should only require the body's context to have quantity $\cpyq$ (since
+the loop body is guaranteed to execute at least once, as long as $a$ terminates), this would make
+our semantics more complicated, and such variables can be passed in as arguments to the loop body.
+Our final requirement is that the effect of a loop must be iterative, i.e., stable under infinite
+repetitions.
 
 \subsection{Syntactic Metatheory}
 
