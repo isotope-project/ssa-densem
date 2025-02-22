@@ -413,145 +413,145 @@ tools such as separation logic.
   \item Some examples of effects, table of effects
 \end{itemize}
 
-\begin{figure}
-  \begin{subfigure}{0.4\textwidth}
-    \begin{lstlisting}[language=C]
-      int fact(int n) {
-        int acc = 1;
-        for (int i = 1; i <= n; i++) {
-          acc *= i;
-        }
-        return acc;
-      }
-    \end{lstlisting}
-    \vspace{2.5em}
-  \end{subfigure}%
-  \begin{subfigure}{0.2\textwidth}
-    $\hspace{2em} \implies \hspace{2em}$
-    \vspace{7em}
-  \end{subfigure}%
-  \begin{subfigure}{0.35\textwidth}
-    \begin{lstlisting}[language=C]
-      int fact(int n) {
-        int acc = 1;
-        int i = 1;
-        goto head;
-      head:
-        if (i <= n) return acc;
-        goto body;
-      body:
-        acc = acc * i;
-        i = i + 1;
-        goto head;
-      }
-    \end{lstlisting}
-  \end{subfigure}
-  \caption{A C program compiled to three-address code}
-  \Description{A C program compiled to three-address code}
-\end{figure}
+% \begin{figure}
+%   \begin{subfigure}{0.4\textwidth}
+%     \begin{lstlisting}[language=C]
+%       int fact(int n) {
+%         int acc = 1;
+%         for (int i = 1; i <= n; i++) {
+%           acc *= i;
+%         }
+%         return acc;
+%       }
+%     \end{lstlisting}
+%     \vspace{2.5em}
+%   \end{subfigure}%
+%   \begin{subfigure}{0.2\textwidth}
+%     $\hspace{2em} \implies \hspace{2em}$
+%     \vspace{7em}
+%   \end{subfigure}%
+%   \begin{subfigure}{0.35\textwidth}
+%     \begin{lstlisting}[language=C]
+%       int fact(int n) {
+%         int acc = 1;
+%         int i = 1;
+%         goto head;
+%       head:
+%         if (i <= n) return acc;
+%         goto body;
+%       body:
+%         acc = acc * i;
+%         i = i + 1;
+%         goto head;
+%       }
+%     \end{lstlisting}
+%   \end{subfigure}
+%   \caption{A C program compiled to three-address code}
+%   \Description{A C program compiled to three-address code}
+% \end{figure}
 
-\begin{figure}
-  \begin{subfigure}{0.4\textwidth}
-    \begin{lstlisting}[language=C]
-      int fact(int n) {
-        int acc = 1;
-        int i = 1;
-        goto head;
-      head:
-        if (i <= n) return acc;
-        goto body;
-      body:
-        acc = acc * i;
-        i = i + 1;
-        goto head;
-      }
-    \end{lstlisting}
-  \end{subfigure}%
-  \begin{subfigure}{0.2\textwidth}
-    $\hspace{1em} \implies \hspace{2em}$
-    \vspace{7em}
-  \end{subfigure}%
-  \begin{subfigure}{0.35\textwidth}
-    \begin{lstlisting}[language=C]
-      int fact(int n) {
-        acc0 = 1;
-        i0 = 1;
-        goto head(i0, acc0);
-      head(i1, acc1):
-        if (i1 <= n) return acc1;
-        goto body(i1, acc1);
-      body(i2, acc2):
-        acc3 = acc2 * i;
-        i3 = i2 + 1;
-        goto head(acc3, i3);
-      }
-    \end{lstlisting}
-  \end{subfigure}
-  \caption{A program in three-address code converted to SSA}
-  \Description{A program in three-address code converted to SSA}
-\end{figure}
+% \begin{figure}
+%   \begin{subfigure}{0.4\textwidth}
+%     \begin{lstlisting}[language=C]
+%       int fact(int n) {
+%         int acc = 1;
+%         int i = 1;
+%         goto head;
+%       head:
+%         if (i <= n) return acc;
+%         goto body;
+%       body:
+%         acc = acc * i;
+%         i = i + 1;
+%         goto head;
+%       }
+%     \end{lstlisting}
+%   \end{subfigure}%
+%   \begin{subfigure}{0.2\textwidth}
+%     $\hspace{1em} \implies \hspace{2em}$
+%     \vspace{7em}
+%   \end{subfigure}%
+%   \begin{subfigure}{0.35\textwidth}
+%     \begin{lstlisting}[language=C]
+%       int fact(int n) {
+%         acc0 = 1;
+%         i0 = 1;
+%         goto head(i0, acc0);
+%       head(i1, acc1):
+%         if (i1 <= n) return acc1;
+%         goto body(i1, acc1);
+%       body(i2, acc2):
+%         acc3 = acc2 * i;
+%         i3 = i2 + 1;
+%         goto head(acc3, i3);
+%       }
+%     \end{lstlisting}
+%   \end{subfigure}
+%   \caption{A program in three-address code converted to SSA}
+%   \Description{A program in three-address code converted to SSA}
+% \end{figure}
 
-\begin{figure}
-  \begin{center}
-  \begin{tabular}{ c | c c c c }
-    Effect & Fusable & Duplicable & Eliminable & Introducable \\
-    \hline
-    Nothing ($\bot$)                    & \cmark & \cmark & \cmark & \cmark \\
-    Undefined behavior ($\ms{UB}$)      & \cmark & \cmark & \cmark & \xmark \\
-    Nondeterminism ($\ms{ND}$)          & \cmark & \xmark & \cmark & \cmark \\
-    Exception ($\ms{Ex}$)               & \cmark & \cmark & \xmark & \xmark \\
-    Nontermination ($\ms{Part}$)        & \cmark & \cmark & \xmark & \xmark \\
-    Probability ($\ms{Prob}$)           & \xmark & \xmark & \cmark & \cmark \\
-    Concurrent read ($\ms{Rd}$)         & \cmark & \xmark & \cmark & \cmark \\
-    Concurrent write ($\ms{Wr}$)        & \cmark & \xmark & \xmark & \xmark \\
-    Concurrent fence ($\ms{Bar}$)       & \cmark & \cmark & \xmark & \cmark \\
-    Sequential read ($\ms{Rd}_s$)       & \cmark & \cmark & \cmark & \cmark \\
-    Sequential write ($\ms{Wr}_s$)      & \cmark & \cmark & \xmark & \xmark \\
-    Memory ($\ms{Mem}$)                 & \xmark & \xmark & \xmark & \xmark \\
-    External IO ($\ms{IO}$)             & \xmark & \xmark & \xmark & \xmark \\
-  \end{tabular}
-  \TODO{consider whether reads/writes can be UB}
-  \end{center}
-  \caption{Classification of some common effects}
-  \Description{Classification of some common effects}
-  \label{fig:effect-classification}
-\end{figure}
+% \begin{figure}
+%   \begin{center}
+%   \begin{tabular}{ c | c c c c }
+%     Effect & Fusable & Duplicable & Eliminable & Introducable \\
+%     \hline
+%     Nothing ($\bot$)                    & \cmark & \cmark & \cmark & \cmark \\
+%     Undefined behavior ($\ms{UB}$)      & \cmark & \cmark & \cmark & \xmark \\
+%     Nondeterminism ($\ms{ND}$)          & \cmark & \xmark & \cmark & \cmark \\
+%     Exception ($\ms{Ex}$)               & \cmark & \cmark & \xmark & \xmark \\
+%     Nontermination ($\ms{Part}$)        & \cmark & \cmark & \xmark & \xmark \\
+%     Probability ($\ms{Prob}$)           & \xmark & \xmark & \cmark & \cmark \\
+%     Concurrent read ($\ms{Rd}$)         & \cmark & \xmark & \cmark & \cmark \\
+%     Concurrent write ($\ms{Wr}$)        & \cmark & \xmark & \xmark & \xmark \\
+%     Concurrent fence ($\ms{Bar}$)       & \cmark & \cmark & \xmark & \cmark \\
+%     Sequential read ($\ms{Rd}_s$)       & \cmark & \cmark & \cmark & \cmark \\
+%     Sequential write ($\ms{Wr}_s$)      & \cmark & \cmark & \xmark & \xmark \\
+%     Memory ($\ms{Mem}$)                 & \xmark & \xmark & \xmark & \xmark \\
+%     External IO ($\ms{IO}$)             & \xmark & \xmark & \xmark & \xmark \\
+%   \end{tabular}
+%   \TODO{consider whether reads/writes can be UB}
+%   \end{center}
+%   \caption{Classification of some common effects}
+%   \Description{Classification of some common effects}
+%   \label{fig:effect-classification}
+% \end{figure}
 
-\begin{figure}
-  \begin{center}
-  \begin{tabular}{ c | c c c c c c c c c c c }
-    & $\bot$ & $\ms{UB}$ & $\ms{ND}$ & $\ms{Ex}$ & $\ms{Part}$ 
-    & $\ms{Rd}$ & $\ms{Wr}$ & $\ms{Bar}$ & $\ms{Mem}$ & $\ms{IO}$ & $\top$ \\
-    \hline
-    $\bot$ 
-    & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ \\
-    $\ms{UB}$
-    & $\pm$ & $\pm$ & $\pm$ & $+$ & $+$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $+$ & $+$ \\
-    $\ms{ND}$
-    & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$  & $\pm$ & $\pm$  & $\pm$ & $\pm$ & $\pm$ \\
-    $\ms{Ex}$
-    & $\pm$ & $-$ & $\pm$ & $0$ & $0$ & $\pm$ & $0$ & $\pm$ & $0$ & $0$ & $0$ \\
-    $\ms{Part}$
-    & $\pm$ & $-$ & $\pm$ & $0$ & $\pm$ & $\pm$ & $0$ & $\pm$ & $0$ & $0$ & $0$ \\
-    $\ms{Rd}$
-    & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $0$ & $+$ & $0$ & $\pm$ & $0$ \\
-    $\ms{Wr}$
-    & $\pm$ & $\pm$ & $\pm$ & $0$ & $0$ & $0$ & $0$ & $0$ & $0$ & $\pm$ & $0$ \\
-    $\ms{Bar}$
-    & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $-$ & $0$ & $0$ & $0$ & $\pm$ & $0$ \\
-    $\ms{Mem}$
-    & $\pm$ & $\pm$ & $\pm$ & $0$ & $0$ & $0$ & $0$ & $0$ & $0$ & $\pm$ & $0$ \\
-    $\ms{IO}$
-    & $\pm$ & $-$ & $\pm$ & $0$ & $0$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $0$ & $0$ \\
-    $\top$
-    & $\pm$ & $-$ & $\pm$ & $0$ & $0$ & $0$ & $0$ & $0$ & $0$ & $0$ & $0$ \\
-  \end{tabular}
-  \end{center}
-  \TODO{consider whether reads/writes can be UB}
-  \caption{Commutativity of some common effects}
-  \Description{Commutativity of some common effects}
-  \label{fig:effect-comm}
-\end{figure}
+% \begin{figure}
+%   \begin{center}
+%   \begin{tabular}{ c | c c c c c c c c c c c }
+%     & $\bot$ & $\ms{UB}$ & $\ms{ND}$ & $\ms{Ex}$ & $\ms{Part}$ 
+%     & $\ms{Rd}$ & $\ms{Wr}$ & $\ms{Bar}$ & $\ms{Mem}$ & $\ms{IO}$ & $\top$ \\
+%     \hline
+%     $\bot$ 
+%     & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ \\
+%     $\ms{UB}$
+%     & $\pm$ & $\pm$ & $\pm$ & $+$ & $+$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $+$ & $+$ \\
+%     $\ms{ND}$
+%     & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$  & $\pm$ & $\pm$  & $\pm$ & $\pm$ & $\pm$ \\
+%     $\ms{Ex}$
+%     & $\pm$ & $-$ & $\pm$ & $0$ & $0$ & $\pm$ & $0$ & $\pm$ & $0$ & $0$ & $0$ \\
+%     $\ms{Part}$
+%     & $\pm$ & $-$ & $\pm$ & $0$ & $\pm$ & $\pm$ & $0$ & $\pm$ & $0$ & $0$ & $0$ \\
+%     $\ms{Rd}$
+%     & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $0$ & $+$ & $0$ & $\pm$ & $0$ \\
+%     $\ms{Wr}$
+%     & $\pm$ & $\pm$ & $\pm$ & $0$ & $0$ & $0$ & $0$ & $0$ & $0$ & $\pm$ & $0$ \\
+%     $\ms{Bar}$
+%     & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $-$ & $0$ & $0$ & $0$ & $\pm$ & $0$ \\
+%     $\ms{Mem}$
+%     & $\pm$ & $\pm$ & $\pm$ & $0$ & $0$ & $0$ & $0$ & $0$ & $0$ & $\pm$ & $0$ \\
+%     $\ms{IO}$
+%     & $\pm$ & $-$ & $\pm$ & $0$ & $0$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $0$ & $0$ \\
+%     $\top$
+%     & $\pm$ & $-$ & $\pm$ & $0$ & $0$ & $0$ & $0$ & $0$ & $0$ & $0$ & $0$ \\
+%   \end{tabular}
+%   \end{center}
+%   \TODO{consider whether reads/writes can be UB}
+%   \caption{Commutativity of some common effects}
+%   \Description{Commutativity of some common effects}
+%   \label{fig:effect-comm}
+% \end{figure}
 
 % We might want to consider in what cases such impure rewrites \emph{are} valid. Let's consider some
 % simple programs! We obviously have $(\ms{div}\;y\;z, \ms{div}\;y\;z) \tref
@@ -590,11 +590,82 @@ tools such as separation logic.
 
 \section{Type Theory}
 
+In this section, we introduce the \subiterssa{} expression language, which we will later use to
+build up our SSA formalism.
+\subiterssa{} is, at first glance, a standard first-order language with branching and iteration.
+% segue
+We equip \subiterssa{} with a type-and-effect system, with every expression having as \emph{effect}
+an element of a bounded meet-semilattice $\mc{E}$. We will represent pure expressions as having the
+bottom effect $\bot$, whereas expressions with effect $\top$ have ``arbitrary'' effect.
+
+\TODO{talk about a signature at a high-level: \emph{types, instructions, and effects}}
+
 \subsection{Syntax}
 
+\TODO{types are parametrized by \emph{base types}, effects and instructions are parameters}
+
+\TODO{we will discuss the grammar of types}
+
+\TODO{now: we will discuss what effect are}
+
+The core purpose of our type system is to determine which substitutions are valid so as to use them
+as building blocks for more complex optimizations, building on the observation in
+\citet{ghalayini-24-ssa-densem-arxiv} that substitution can be used to build up a complete
+equational theory for SSA. Since we are building a \emph{refinement} theory, however, we need to
+track \emph{directed} substitution validity, which is determined by:
+\begin{itemize}
+  \item Whether an effect $\epsilon$ is a \emph{left-mover} (i.e. can be moved before) or
+  \emph{right-mover} (i.e. can be moved after) an effect $\eta$.
+  \item Whether an effect $\epsilon$ is \emph{duplicable}, i.e., it is a refinement to replace it
+  with two copies of itself, or \emph{fusable}, i.e., it is a refinement to fuse two copies of it
+  into one
+  \item Whether an effect $\epsilon$ is \emph{eliminable}, i.e., it is a refinement to remove it,
+  or \emph{introducable}, i.e., it is a refinement to introduce it
+  \item Whether an effect $\epsilon$ is \emph{iterable}, i.e., if doing it in a (potentially
+  infinite) loop does not introduce any new effects; in particular, all iterable effects must have
+  nontermination as a \emph{subeffect}.
+\end{itemize}
+To be able to do this, we need to track how often variables are used. While we could use a natural
+number for this purpose, the number of times a variable is used may be control-flow dependent
+(consider, for example, a variable used in only one branch of a case-statement, or in a loop), and
+so, instead of dealing with sets of potential usages, we instead keep track of a \emph{quantity}
+drawn from an abstract lattice mirroring the basic usage patterns described above. In particular,
+a variable can be used
+\begin{itemize}
+  \item Zero ($\zeroq$) times
+  \item Exactly one ($\oneq$) times
+  \item Multiple ($\cpyq$) times, here including one time, i.e., \emph{at least once}
+\end{itemize}
+This forms a partial order $\{\zeroq, \oneq \leq \cpyq\}$. To be able to make this into a proper
+analysis, we simply complete this order into a join-semilattice by adding elements
+\begin{itemize}
+  \item $\zeroq \sqcup \oneq = \delq$, corresponding to being used \emph{at most once}
+  \item $\zeroq \sqcup \cpyq = \topq$, corresponding to being used any number of times
+\end{itemize}
+While it would be more natural to have an element corresponding to being used (strictly) multiple
+times, this would make our semantics more complex.
+
+We will call the set $Q^0 = \{\zeroq, \oneq, \cpyq, \delq, \topq\}$ the \emph{extended} set of
+quantities, and $Q = \{\oneq, \cpyq, \delq, \topq\}$ the set of (\emph{nonzero}) quantities. We can
+represent the data of how an effect can be deleted/duplicated by simply assigning each effect a
+\emph{pair} of quantities $\alquant^+(e), \alquant^-(e) \in Q$, such that
+\begin{itemize}
+  \item An effect can be deleted if $\delq \leq \alquant^+(e)$, and introduced if $\delq \leq
+  \alquant^-(e)$
+  \item An effect can be duplicated if $\cpyq \leq \alquant^+(e)$, and fused if $\cpyq \leq
+  \alquant^-(e)$
+\end{itemize}
+To be compatible with our notion of sub-effect, such a map should be \emph{antitone} and have
+$\alquant^p(\bot) = \topq$ for $p \in \{+, -\}$.
+
+\TODO{just like we can give an effect a quantity, we can give a type a quantity}
+
+Combining the above with tracking of commutativity and whether effects are iterative leads us to the
+following definition of an \emph{effect system}:
 \begin{definition}[Effect system]
   We define an \emph{effect system} $\mc{E}$ to be a bounded partial order of effects $\mc{E}$
-  equipped with a \emph{directed commutativity relation} $\rightmove$ such that, for all effects
+  equipped with an upwards closed subset $\mc{E}^\infty$ of \emph{iterative effects} containing
+  $\top$ and a \emph{directed commutativity relation} $\rightmove$ such that, for all effects
   $\epsilon$, $\bot \rightmove \epsilon$ and $\epsilon \rightmove \bot$. We write:
   \begin{itemize}
     \item $\epsilon \leftmove \eta \iff \eta \rightmove \epsilon$
@@ -602,9 +673,10 @@ tools such as separation logic.
     \item $\epsilon \rightmove^+ \eta \iff \epsilon \rightmove \eta$
     \item $\epsilon \rightmove^- \eta \iff \epsilon \leftmove \eta$
   \end{itemize}
-  We say an effect system is \emph{iterative} if it is equipped with an upwards closed subset
-  $\mc{E}^\infty$ of \emph{iterative effects} containing $\top$.
 \end{definition}
+
+\TODO{if we add some instructions which get an effect, we get the definition of a \subiterssa{}
+signature}
 
 \begin{definition}[\subiterssa-signature]
   A \subiterssa signature $\mc{S} = (\mc{X}, \mc{I}, \mc{E})$ consists of:
@@ -624,6 +696,8 @@ tools such as separation logic.
   \end{itemize}
 \end{definition}
 
+\TODO{segue into grammar; reference figures}
+
 \begin{gather*}
   \prftree[r]{\rle{inst}}
     {f \in \mc{I}}
@@ -632,6 +706,25 @@ tools such as separation logic.
     {\ms{eff}(f) \leq \epsilon}
     {f : A \to_\epsilon B}
 \end{gather*}
+
+\TODO{introduce contexts, every variable is annotated with a quantity $q$}
+
+\TODO{remove the effects from variables since changed that in formalization}
+
+\TODO{discuss how a whole context can also be given a quantity using the quantity of its variables}
+
+\begin{equation*}
+  \alquant(\cdot) = \topq \qquad
+  \alquant(\Gamma^{\mb{q}_{\mb{e}}}, x : A^q_\epsilon) 
+    = \alquant(\Gamma^{\mb{q}}_{\mb{e}}) \sqcap \begin{cases}
+    \alquant(A) \sqcap \alquant(\epsilon) \sqcap q & \text{if } q \neq 0 \\
+    \topq & \text{if } q = 0
+  \end{cases}
+\end{equation*}
+
+\TODO{discuss weakening, use this to further discuss quantities}
+
+\TODO{contrast with \emph{splitting}, which uses duplicability rather than discardability}
 
 \begin{figure}
   \begin{grammar}
@@ -719,6 +812,8 @@ It is easy to see that this induces a partial order on annotated contexts $\Gamm
     {\qsp{\Gamma, x : A}{(\mb{q}, q)}{(\mb{q}_l, \zeroq)}{(\mb{q}_r, q)}}
 \end{gather*}
 
+\TODO{typing rules for monoidal subtheory; very basic first-order system}
+
 \begin{gather*}
   \prftree[r]{\rle{var}}
     {\cwk{\Gamma^{\mb{q}}_{\mb{e}}}{x : A^\oneq_\epsilon}}
@@ -744,6 +839,8 @@ It is easy to see that this induces a partial order on annotated contexts $\Gamm
     {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\letexpr{(x, y)}{a}{c}}{C}}
 \end{gather*}
 
+\TODO{extension with coproducts; corresponds to adding branching control-flow}
+
 \begin{gather*}
   \prftree[r]{\rle{inl}}
     {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{a}{A}}
@@ -762,6 +859,13 @@ It is easy to see that this induces a partial order on annotated contexts $\Gamm
     {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\caseexpr{e}{x}{a}{y}{b}}{C}} \\
 \end{gather*}
 
+\TODO{extension with Elgot structure; corresponds to adding loops}
+
+\TODO{explain: all variables used in a loop must be \emph{nonlinear} (not just relevant!) because
+the loop may execute 0, 1, \emph{or} many times}
+
+\TODO{the effect of a loop must be \emph{iterative} for obvious reasons (since the loop may execute
+infinitely many times)}
 
 \begin{gather*}
   \prftree[r]{\rle{iter}}
@@ -775,6 +879,8 @@ It is easy to see that this induces a partial order on annotated contexts $\Gamm
 
 \subsection{Syntactic Metatheory}
 
+\TODO{now, we begin with basic metatheory; weakening as a sanity check}
+
 \begin{lemma}[name=Weakening, restate=synmonwk]
   The following rule is admissible:
   \begin{equation*}
@@ -785,14 +891,7 @@ It is easy to see that this induces a partial order on annotated contexts $\Gamm
   \end{equation*}
 \end{lemma}
 
-\begin{equation*}
-  \alquant(\cdot) = \topq \qquad
-  \alquant(\Gamma^{\mb{q}_{\mb{e}}}, x : A^q_\epsilon) 
-    = \alquant(\Gamma^{\mb{q}}_{\mb{e}}) \sqcap \begin{cases}
-    \alquant(A) \sqcap \alquant(\epsilon) \sqcap q & \text{if } q \neq 0 \\
-    \topq & \text{if } q = 0
-  \end{cases}
-\end{equation*}
+\TODO{the main point is \emph{substitution}; so we define one here}
 
 \begin{gather*}
   \prftree[r]{\rle{nil}}{\cwk{\Gamma^{\mb{q}}_{\ms{e}}}{\cdot}}
@@ -810,6 +909,8 @@ It is easy to see that this induces a partial order on annotated contexts $\Gamm
     {\Delta^{\mb{q}'}_{\mb{e}'}, x : A^q_\epsilon}}
 \end{gather*}
 
+\TODO{syntactic substitution defined here}
+
 \begin{lemma}[name=Substitution, restate=synmonsubst]
   The following rule is admissible:
   \begin{equation*}
@@ -822,10 +923,38 @@ It is easy to see that this induces a partial order on annotated contexts $\Gamm
 
 \subsection{Refinement Theory}
 
+\TODO{now we have a syntax which is ``sane'' (weakening + substitution); and we want to develop our
+refinement theory}
+
+\TODO{we will start with a base theory $\mc{R}$ of refinements, and compute its closure}
+
+\TODO{refinement is a partial order, so we need reflexivity and transitivity}
+
 \begin{gather*}
   \prftree[r]{\rle{base}}
     {(\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{}{a}{b}{A}) \in \mc{R}}
     {\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}} \qquad
+  \prftree[r]{\rle{refl}}
+    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{a}{A}}
+    {\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{a}{A}}
+  \qquad
+  \prftree[r]{\rle{trans}}
+    {\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}}
+    {\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{b}{c}{A}}
+    {\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{c}{A}}
+\end{gather*}
+
+\TODO{this of course induces an equivalence relation}
+
+\begin{equation*}
+  \tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}
+  \iff \tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A} 
+  \land \tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{b}{a}{A}
+\end{equation*}
+
+\TODO{we also want our resulting relation to be a \emph{congruence}, i.e.}
+
+\begin{gather*}
   \prftree[r]{\rle{var}}
     {\cwk{\Gamma^{\mb{q}}_{\mb{e}}}{x : A^q_\epsilon}}
     {1 \leq q}
@@ -856,65 +985,103 @@ It is easy to see that this induces a partial order on annotated contexts $\Gamm
 
 \begin{gather*}
   \prftree[r]{\rle{inl}}
-    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{a'}{A}}
-    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{\linl{a}}{\linl{a'}}{A + B}} \qquad
+    {\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{a'}{A}}
+    {\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{\linl{a}}{\linl{a'}}{A + B}} \qquad
   \prftree[r]{\rle{inr}}
-    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{b}{b'}{B}}
-    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{\linr{b}}{\linr{b'}}{A + B}} \\
+    {\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{b}{b'}{B}}
+    {\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{\linr{b}}{\linr{b'}}{A + B}} \\
   \prftree[r]{\rle{case}}
     {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-    {\tmeq{\Gamma^{\mb{q}_r}_{\mb{e}}}{\mc{R}}{e}{e'}{A + B}}
-    {\tmeq{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\mc{R}}{a}{a'}{C}}
-    {\tmeq{\Gamma^{\mb{q}_l}_{\mb{e}}, y : B}{\mc{R}}{b}{b'}{C}}
-    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}
+    {\tmle{\Gamma^{\mb{q}_r}_{\mb{e}}}{\mc{R}}{e}{e'}{A + B}}
+    {\tmle{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\mc{R}}{a}{a'}{C}}
+    {\tmle{\Gamma^{\mb{q}_l}_{\mb{e}}, y : B}{\mc{R}}{b}{b'}{C}}
+    {\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}
       {\caseexpr{e}{x}{a}{y}{b}}{\caseexpr{e'}{x}{a'}{y}{b'}}{C}} \\
   \prftree[r]{\rle{abort}}
-    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{a'}{\mb{0}}}
-    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{\labort{a}}{\labort{a'}}{C}}
+    {\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{a'}{\mb{0}}}
+    {\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{\labort{a}}{\labort{a'}}{C}}
 \end{gather*}
 
 \begin{gather*}
   \prftree[r]{\rle{iter}}
     {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
     {\alquant(\Gamma^{\mb{q}_l}) = \top}
-    {\tmeq{\Gamma^{\mb{q}_r}_{\mb{e}}}{\mc{R}}{a}{a'}{A}}
-    {\tmeq{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\mc{R}}{b}{b'}{B + A}}
-    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{\liter{a}{x}{b}}{\liter{a'}{x}{b'}}{B}}
+    {\tmle{\Gamma^{\mb{q}_r}_{\mb{e}}}{\mc{R}}{a}{a'}{A}}
+    {\tmle{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\mc{R}}{b}{b'}{B + A}}
+    {\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{\liter{a}{x}{b}}{\liter{a'}{x}{b'}}{B}}
 \end{gather*}
+
+\TODO{the problem is our congruence rules are not \emph{continuous} w.r.t. to loops}
+
+\TODO{there is no finite axiomatization of the theory of loops due to Milner trauma, remove this
+if I can't find a citation}
+
+\TODO{so we need an axiom schema; an infinite family of commutativity axioms for loops}
+
+\TODO{these are the \emph{uniformity} rules; since our rewrite rules are \emph{directed}, our
+uniformity rules will be as well, and we need one for both directions, i.e., }
+
+
+Given
+\begin{gather*}
+  {\qsp{\Gamma}{\mb{q}}{\mb{q}_c}{\mb{q}_r}} \qquad
+  {\qsp{\Gamma}{\mb{q}_c}{\mb{q}_l}{\mb{q}_m}} \qquad
+  \alquant(\Gamma^{\mb{q}_l}) = \top \qquad
+  \einf{\epsilon}
+  \\
+  \qquad {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A}}
+  \qquad {\hasty{\Gamma^{\mb{q}_m}_{\mb{e}}, x : A}{\eta}{s}{S}}
+  \qquad {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, y : S}{\epsilon}{b}{B + A}}
+  \qquad {\hasty{\Gamma^{\mb{q}_c}_{\mb{e}}, x : A}{\epsilon}{b'}{B + A}}
+\end{gather*}
+
+\TODO{we have}
 
 \begin{gather*}
-  \prftree[r]{\rle{trans}}
-    {\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}}
-    {\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{b}{c}{A}}
-    {\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{c}{A}}
+  \prftree[r]{\rle{unif$^p$}}
+    {\eta \rightmove \epsilon}
+    {\tmlep{\Gamma^{\mb{q}_c}_{\mb{e}}, x : A}{\mc{R}}
+      {\letexpr{y}{s}{b}}
+      {\caseexpr{b'}{x}{\linl{x}}{x}{\linr{s}}}{B + S}{p}}
+    {
+      \tmlep{\Gamma^{\mb{q}}_{\mb{e}}}
+        {\mc{R}}
+        {\letexpr{x}{a}{\liter{s}{y}{b}}}
+        {\liter{a}{x}{b'}}
+        {B}
+        {p}
+    } \\
 \end{gather*}
 
-\begin{equation*}
-  \prftree[r]{\rle{refl}}
-    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{a}{A}}
-    {\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{a}{A}}
-\end{equation*}
+\TODO{where, for each direction $p \in \{+, -\}$, we will write}
 
 \begin{equation*}
-  \tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}
-  \iff \tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A} 
-  \land \tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{b}{a}{A}
+  \tmlep{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}{+}
+  \iff \tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}
+  \qquad
+  \tmlep{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}{-}
+  \iff \tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{b}{a}{A}
 \end{equation*}
 
-\begin{gather*}
-  \prftree[r]{\rle{refl}}
-    {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{\epsilon}{a}{A}}
-    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{a}{A}} \qquad
-  \prftree[r]{\rle{trans}}
-    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}}
-    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{b}{c}{A}}
-    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{c}{A}}\qquad
-  \prftree[r]{\rle{symm}}
-    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}}
-    {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{b}{a}{A}}
-\end{gather*}
+\TODO{note in particular that this means commuting with $\epsilon$ includes commuting with
+infinitely many $\epsilon$ if $\epsilon$ is iterative}
 
-\TODO{text for code-motion}
+% \begin{gather*}
+%   \prftree[r]{\rle{refl}}
+%     {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{\epsilon}{a}{A}}
+%     {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{a}{A}} \qquad
+%   \prftree[r]{\rle{trans}}
+%     {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}}
+%     {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{b}{c}{A}}
+%     {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{c}{A}}\qquad
+%   \prftree[r]{\rle{symm}}
+%     {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}}
+%     {\tmeq{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{b}{a}{A}}
+% \end{gather*}
+
+\TODO{now we want some basic equations which always hold}
+
+\TODO{we start with re-associating data flow:}
 
 \begin{gather*}
   \prftree[r]{\rle{let-op}}
@@ -1041,7 +1208,19 @@ It is easy to see that this induces a partial order on annotated contexts $\Gamm
     \\
 \end{gather*}
 
-\TODO{text for $\beta-\eta$}
+\TODO{then we want $\beta$-rules for computation and $\eta$-rules for identities}
+
+\begin{gather*}
+  \prftree[r]{\rle{let$_1$-$\beta^p$}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}}{\epsilon}{a}{A}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}, x : A^q}{\eta}{b}{B}}
+    {\epsilon \rightmove^p \eta}
+    {q \leq \alquant(\Gamma^{\mb{q}_r}) \sqcap \alquant^p(\epsilon)}
+    {
+      \tmlep{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{\letexpr{x}{a}{b}}{[x/a]b}{B}{p}
+    }
+\end{gather*}
 
 \begin{gather*}
   \prftree[r]{\rle{let$_2$-$\eta$}}
@@ -1115,65 +1294,9 @@ It is easy to see that this induces a partial order on annotated contexts $\Gamm
       {\liter{a}{y}{\caseexpr{b}{x}{x}{y}{\linr{y}}}}{B}}
 \end{gather*}
 
-Given
-\begin{gather*}
-  {\qsp{\Gamma}{\mb{q}}{\mb{q}_c}{\mb{q}_r}} \qquad
-  {\qsp{\Gamma}{\mb{q}_c}{\mb{q}_l}{\mb{q}_m}} \qquad
-  \alquant(\Gamma^{\mb{q}_l}) = \top \qquad
-  \einf{\epsilon}
-  \\
-  \qquad {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A}}
-  \qquad {\hasty{\Gamma^{\mb{q}_m}_{\mb{e}}, x : A}{\eta}{s}{S}}
-  \qquad {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}, y : S}{\epsilon}{b}{B + A}}
-  \qquad {\hasty{\Gamma^{\mb{q}_c}_{\mb{e}}, x : A}{\epsilon}{b'}{B + A}}
-\end{gather*}
+\TODO{We note that this is monotonic in $\mc{R}$}
 
-\begin{gather*}
-  \prftree[r]{\rle{unif}$^+$}
-    {\eta \rightmove \epsilon}
-    {\tmeq{\Gamma^{\mb{q}_c}_{\mb{e}}, x : A}{\mc{R}}
-      {\letexpr{y}{s}{b}}
-      {\caseexpr{b'}{x}{\linl{x}}{x}{\linr{s}}}{B + S}}
-    {
-      \tmle{\Gamma^{\mb{q}}_{\mb{e}}}
-        {\mc{R}}
-        {\letexpr{x}{a}{\liter{s}{y}{b}}}
-        {\liter{a}{x}{b'}}
-        {B}
-    } \\
-  \prftree[r]{\rle{unif}$^-$}
-    {\eta \leftmove \epsilon}
-    {\tmeq{\Gamma^{\mb{q}_c}_{\mb{e}}, x : A}{\mc{R}}
-      {\letexpr{y}{s}{b}}
-      {\caseexpr{b'}{x}{\linl{x}}{x}{\linr{s}}}{B + S}}
-    {
-      \tmle{\Gamma^{\mb{q}}_{\mb{e}}}
-        {\mc{R}}
-        {\liter{a}{x}{b'}}
-        {\letexpr{x}{a}{\liter{s}{y}{b}}}
-        {B}
-    }
-\end{gather*}
-
-\begin{equation*}
-  \tmlep{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}{+}
-  \iff \tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}
-  \qquad
-  \tmlep{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}{-}
-  \iff \tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{b}{a}{A}
-\end{equation*}
-
-\begin{gather*}
-  \prftree[r]{\rle{let$_1$-$\beta^p$}}
-    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-    {\hasty{\Gamma^{\mb{q}_l}_{\mb{e}}}{\epsilon}{a}{A}}
-    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}, x : A^q}{\eta}{b}{B}}
-    {\epsilon \rightmove^p \eta}
-    {q \leq \alquant(\Gamma^{\mb{q}_r}) \sqcap \alquant^p(\epsilon)}
-    {
-      \tmlep{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{\letexpr{x}{a}{b}}{[x/a]b}{B}{p}
-    }
-\end{gather*}
+\TODO{so we define}
 
 We use this to define
 \begin{equation*}
@@ -1181,11 +1304,16 @@ We use this to define
   \iff
   \tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\varnothing}{a}{b}{A}
 \end{equation*}
+
+\TODO{we define the theory of $\mc{R}$}
+
 \begin{equation*}
   \thsubmon{\mc{R}} 
   = \{(\Gamma^{\mb{q}}_{\mb{e}}, A, a, b) \mid \tmle{\Gamma^{\mb{q}_{\mb{e}}}}{\mc{R}}{a}{b}{A}\}
 \end{equation*}
-We note in particular that
+
+\TODO{we note that}
+
 \begin{itemize}
   \item $\{
     (\Gamma^{\mb{q}}_{\mb{e}}, A, a, a) \mid \hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{a}{A}
@@ -1196,15 +1324,11 @@ We note in particular that
   \item $\thsubmon{\mc{R} \cap \mc{R}'} = \thsubmon{\mc{R}} \cap \thsubmon{\mc{R}'}$
 \end{itemize}
 
-\TODO{congruence of weakening}
+\TODO{and if $\mc{R}$ is closed under weakening/substitution so is $\thsubmon{\mc{R}}$}
 
-\TODO{congruence of substitution}
+\TODO{and now we need to fix the below rule to agree with the new version:}
 
-\begin{grammar}
-  <p> ::= \(+\) \;|\; \(-\)
-\end{grammar}
-
-\TODO{can't lattice-ify substitution due to $\bot$-parameter}
+\TODO{but this rule basically makes substitution work}
 
 \begin{gather*}
   \prftree[r]{\rle{nil}}{\cwk{\Gamma^{\mb{q}}_{\ms{e}}}{\cdot}}
@@ -1226,9 +1350,11 @@ We note in particular that
             {\Delta^{\mb{q}}_{\mb{e}}, x : A^q_\epsilon}{\eta}{p}}
 \end{gather*}
 
-\TODO{note that the above does \emph{not} compose, but this is fine...}
-
 \subsection{Translation}
+
+\TODO{now we want to syntactically translate between models}
+
+\TODO{we do it with this stuff}
 
 \begin{definition}[\subiterssa-signature morphism]
   We define a morphism $T: \mc{S} \to \mc{S}'$ between two \subiterssa-signatures $\mc{S} = (\mc{X},
@@ -1284,6 +1410,8 @@ We use this to state the following lemma:
 
 \subsection{ANF}
 
+\TODO{now we want to start studying the SSA transformation, we start with ANF}
+
 \begin{grammar}
   <\(e\)> ::=
     \(i\)
@@ -1313,7 +1441,11 @@ We use this to state the following lemma:
   \anflet{w}{}{} &:=
 \end{align*}
 
+\TODO{and this preserves equations, yo}
+
 \section{Semantics}
+
+\TODO{and now, we give all this a semantics...}
 
 \begin{definition}[Poset-Enriched Category]
   We define a \emph{poset-enriched category}, sometimes called a \emph{2-poset}, to be a category
@@ -1686,6 +1818,8 @@ cocartesian, it follows that we only need to check naturality and codiagonal.
 
 \subsection{Semantic Metatheory}
 
+\TODO{and we prove the semantics is compatible with our metatheory}
+
 \begin{lemma}[Semantic Weakening]
   Given $\cwk{\Gamma'^{\mb{q}'}_{\mb{e}'}}{\Gamma^{\mb{q}}_{\mb{e}}}$ and
   $\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{a}{A}$, we have
@@ -1739,6 +1873,8 @@ cocartesian, it follows that we only need to check naturality and codiagonal.
   $
 \end{lemma}
 
+\TODO{and our equational theory}
+
 \begin{definition}
   We say a model $\mc{M}$ \emph{validates} a typed refinement family $\mc{R}$, written $\mc{M}
   \models \mc{R}$, if
@@ -1766,6 +1902,8 @@ cocartesian, it follows that we only need to check naturality and codiagonal.
 
 
 \subsection{Translation}
+
+\TODO{and semantics should respect translation, too!}
 
 \begin{definition}[Strict Elgot functor]
   Given effectful Elgot categories $\mc{C}, \mc{C}'$, a strict symmetric monoidal functor $F :
@@ -1808,6 +1946,8 @@ cocartesian, it follows that we only need to check naturality and codiagonal.
 
 \section{Concrete Models}
 
+\TODO{now we give some concrete models}
+
 \TODO{this}
 
 \subsection{Undefined Behavior}
@@ -1824,9 +1964,13 @@ cocartesian, it follows that we only need to check naturality and codiagonal.
 
 \subsection{Release-Acquire Weak Memory}
 
+\TODO{including a particularly nasty one}
+
 \TODO{this}
 
 \subsection{Completeness}
+
+\TODO{and now we show our model indeed rules all concrete models}
 
 \TODO{this}
 
@@ -1848,6 +1992,8 @@ cocartesian, it follows that we only need to check naturality and codiagonal.
 \end{theorem}
 
 \section{SSA}
+
+\TODO{and now we actually define SSA and show it is the same thing}
 
 \subsection{Syntax}
 
@@ -1983,6 +2129,8 @@ cocartesian, it follows that we only need to check naturality and codiagonal.
 \TODO{this}
 
 \section{Discussion and Related Work}
+
+\TODO{and then we do related work}
 
 \citet{goncharov-metalang-21}
 
