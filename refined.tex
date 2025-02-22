@@ -590,47 +590,50 @@ tools such as separation logic.
 
 \section{Type Theory}
 
-In this section, we introduce the \subiterssa{} expression language, which we will later use to
-build up our SSA formalism.
-\subiterssa{} is, at first glance, a standard first-order language with branching and iteration.
-% segue
-We equip \subiterssa{} with a type-and-effect system, with every expression having as \emph{effect}
-an element of a bounded meet-semilattice $\mc{E}$. We will represent pure expressions as having the
-bottom effect $\bot$, whereas expressions with effect $\top$ have ``arbitrary'' effect.
-
-\TODO{talk about a signature at a high-level: \emph{types, instructions, and effects}}
 
 \subsection{Syntax}
 
-\TODO{types are parametrized by \emph{base types}, effects and instructions are parameters}
-
-\TODO{we will discuss the grammar of types}
-
-\TODO{now: we will discuss what effect are}
-
-The core purpose of our type system is to determine which substitutions are valid so as to use them
-as building blocks for more complex optimizations, building on the observation in
-\citet{ghalayini-24-ssa-densem-arxiv} that substitution can be used to build up a complete
-equational theory for SSA. Since we are building a \emph{refinement} theory, however, we need to
-track \emph{directed} substitution validity, which is determined by:
+In this section, we introduce the \subiterssa{} expression language, which we will later use to
+build up our SSA formalism. \subiterssa{} is, at first glance, a standard first-order language with
+branching and iteration, with a grammar (given in Figure~\ref{fig:subiterssa-syntax})  parametrized
+by a set of \emph{base types} $\mc{X}$ and a set of \emph{instructions} $\mc{I}$. In particular,
+expressions can consist of
 \begin{itemize}
-  \item Whether an effect $\epsilon$ is a \emph{left-mover} (i.e. can be moved before) or
-  \emph{right-mover} (i.e. can be moved after) an effect $\eta$.
-  \item Whether an effect $\epsilon$ is \emph{duplicable}, i.e., it is a refinement to replace it
-  with two copies of itself, or \emph{fusable}, i.e., it is a refinement to fuse two copies of it
-  into one
-  \item Whether an effect $\epsilon$ is \emph{eliminable}, i.e., it is a refinement to remove it,
-  or \emph{introducable}, i.e., it is a refinement to introduce it
-  \item Whether an effect $\epsilon$ is \emph{iterable}, i.e., if doing it in a (potentially
-  infinite) loop does not introduce any new effects; in particular, all iterable effects must have
-  nontermination as a \emph{subeffect}.
+  \item \emph{Variables} $x, y, z$
+  \item \emph{Applications} $f\;a$, consisting of instructions $f \in \mc{I}$ applied to an
+  expression $a$
+  \item \emph{Let-bindings} $\letexpr{x}{a}{b}$ and \emph{destructuring let-bindings} $\letexpr{(x,
+  y)}{a}{b}$
+  \item \emph{Case-expressions} $\caseexpr{e}{x}{a}{y}{b}$, representing branching control-flow
+  \item \emph{Iteration-expressions} $\liter{a}{x}{b}$ representing a variant of
+  \emph{tail-controlled loop}, which:
+  \begin{itemize}
+    \item Evaluates an initial value $a : A$
+    \item Evaluates the loop body $b : B + A$ with $x = a$; if the loop evaluates to a value of type
+    $B$, we return it, otherwise, we re-evaluate the loop with $x$ having the new value of type $A$
+  \end{itemize}
 \end{itemize}
-To be able to do this, we need to track how often variables are used. While we could use a natural
-number for this purpose, the number of times a variable is used may be control-flow dependent
+We will equip \subiterssa{} with a type-and-effect system, with every expression having as
+\emph{effect} an element of a bounded meet-semilattice $\mc{E}$. We will represent pure expressions
+as having the bottom effect $\bot$, whereas expressions with effect $\top$ have ``arbitrary''
+effect. Our grammar of types consists of:
+\begin{itemize}
+  \item \emph{Base types} $X \in \mc{X}$
+  \item \emph{Tensor products} of types $A \otimes B$, and a \emph{unit type} $\mb{1}$; we write
+  this as a tensor product rather than a cartesian product to emphasize that $A$ or $B$ may be
+  substructural
+  \item \emph{Coproducts} $A + B$, and an \emph{empty type} $\mb{0}$.
+\end{itemize}
+We assume every \emph{instruction} $f \in \mc{I}$ is equipped with a \emph{source type} $A$, a
+\emph{target type} $B$, and an \emph{effect} $e \in \mc{E}$.
+
+Our type system will need to track how often individual variables are used to be able to properly
+reason about rewrites involving substructural effects. While we could use a natural number as
+multiplicity for this purpose, the number of times a variable is used may be control-flow dependent
 (consider, for example, a variable used in only one branch of a case-statement, or in a loop), and
 so, instead of dealing with sets of potential usages, we instead keep track of a \emph{quantity}
-drawn from an abstract lattice mirroring the basic usage patterns described above. In particular,
-a variable can be used
+drawn from an abstract lattice mirroring the basic usage patterns described above. In particular, a
+variable can be used
 \begin{itemize}
   \item Zero ($\zeroq$) times
   \item Exactly one ($\oneq$) times
@@ -642,13 +645,49 @@ analysis, we simply complete this order into a join-semilattice by adding elemen
   \item $\zeroq \sqcup \oneq = \delq$, corresponding to being used \emph{at most once}
   \item $\zeroq \sqcup \cpyq = \topq$, corresponding to being used any number of times
 \end{itemize}
-While it would be more natural to have an element corresponding to being used (strictly) multiple
-times, this would make our semantics more complex.
-
 We will call the set $Q^0 = \{\zeroq, \oneq, \cpyq, \delq, \topq\}$ the \emph{extended} set of
-quantities, and $Q = \{\oneq, \cpyq, \delq, \topq\}$ the set of (\emph{nonzero}) quantities. We can
-represent the data of how an effect can be deleted/duplicated by simply assigning each effect a
-\emph{pair} of quantities $\alquant^+(e), \alquant^-(e) \in Q$, such that
+quantities, and $Q = \{\oneq, \cpyq, \delq, \topq\}$ the set of (\emph{nonzero}) quantities. We note
+in particular that $Q$ forms a lattice, with $\cpyq \sqcap \delq = 1$. Our contexts will then simply
+consist of a list $\Gamma$ of variables typed $x : A$ along with a list of quantities $q$ of equal
+length $\mb{q}$, which we will write as $\Gamma^{\mb{q}}$. This may equivalently be viewed as a list
+of variables $x : A^q$ each annotated with a quantity, and, in particular, we will define syntax
+sugar
+\begin{equation*}
+  \Gamma^{\mb{q}}, x : A^q = (\Gamma, x : A)^{\mb{q}, q} \qquad
+  \Gamma^{\mb{q}}, x : A =  (\Gamma, x : A)^{\mb{q}, \topq}
+\end{equation*}
+
+Since we will need to track the usage of variables anyways, it requires only minimal additional
+complexity to add support for substructural types (which are types which can \emph{only} be used a
+certain number of times) in as well. In particular, assuming that every base type $X \in \mc{X}$ is
+equipped with a \emph{linearity} $\alquant(X) \in Q$, we can define the linearity of a type $A$
+inductively as follows:
+\begin{equation}
+  \alquant(A \otimes B) = \alquant(A + B) = \alquant(A) \sqcap \alquant(B) \qquad
+  \alquant(\mb{1}) = \alquant(\mb{0}) = \topq
+\end{equation}
+We can further define the linearity of a context $\Gamma$ by induction as follows
+\begin{equation}
+  \alquant(\cdot) = \topq \qquad
+  \alquant(\Gamma^{\mb{q}}, x : A^q) = \alquant(\Gamma^{\mb{q}}) \sqcap \alquant(A) \sqcap \bar{q}
+  \qquad
+  \bar{0} = \topq \qquad
+  \bar{q} = q \text{ for } q \in Q
+\end{equation}
+In particular, note that the linearity of an unused variable is always unrestricted.
+
+The final piece of data we will need to construct our type theory is how effects interact with each
+other, and with themselves. In particular, we need to know:
+\begin{itemize}
+  \item Which effects $\epsilon$ are \emph{left-movers} (i.e. can be moved before) or
+  \emph{right-movers} (i.e. can be moved after) other effects $\eta$
+  \item Which effects are \emph{iterable}, i.e., stable under loops. In particular, all iterable
+  effects must have nontermination as a \emph{subeffect}.
+  \item What \emph{multiplicity} each effect has, and in particular, whether a given effect
+  $\epsilon$ is \emph{duplicable}, \emph{fusable}, \emph{introducable}, or \emph{eliminable}.
+\end{itemize}
+We can represent the latter simply assigning each effect a \emph{pair} of quantities $\alquant^+(e),
+\alquant^-(e) \in Q$, such that
 \begin{itemize}
   \item An effect can be deleted if $\delq \leq \alquant^+(e)$, and introduced if $\delq \leq
   \alquant^-(e)$
@@ -656,12 +695,9 @@ represent the data of how an effect can be deleted/duplicated by simply assignin
   \alquant^-(e)$
 \end{itemize}
 To be compatible with our notion of sub-effect, such a map should be \emph{antitone} and have
-$\alquant^p(\bot) = \topq$ for $p \in \{+, -\}$.
-
-\TODO{just like we can give an effect a quantity, we can give a type a quantity}
-
-Combining the above with tracking of commutativity and whether effects are iterative leads us to the
-following definition of an \emph{effect system}:
+$\alquant^p(\bot) = \topq$ for $p \in \{+, -\}$. Combined with an upward-closed set of iterative
+effects, and a directed commutativity relation, we arrive at the following definition for an
+\emph{effect system}:
 \begin{definition}[Effect system]
   We define an \emph{effect system} $\mc{E}$ to be a bounded partial order of effects $\mc{E}$
   equipped with an upwards closed subset $\mc{E}^\infty$ of \emph{iterative effects} containing
@@ -675,8 +711,7 @@ following definition of an \emph{effect system}:
   \end{itemize}
 \end{definition}
 
-\TODO{if we add some instructions which get an effect, we get the definition of a \subiterssa{}
-signature}
+We now have all the pieces we need to define a \subiterssa{}-\emph{signature}.
 
 \begin{definition}[\subiterssa-signature]
   A \subiterssa signature $\mc{S} = (\mc{X}, \mc{I}, \mc{E})$ consists of:
@@ -696,7 +731,8 @@ signature}
   \end{itemize}
 \end{definition}
 
-\TODO{segue into grammar; reference figures}
+All the following definitions in this section will be with respect to an arbitrary
+\subiterssa{}-signature $\mc{S}$.
 
 \begin{gather*}
   \prftree[r]{\rle{inst}}
@@ -706,8 +742,6 @@ signature}
     {\ms{eff}(f) \leq \epsilon}
     {f : A \to_\epsilon B}
 \end{gather*}
-
-\TODO{introduce contexts, every variable is annotated with a quantity $q$}
 
 \TODO{remove the effects from variables since changed that in formalization}
 
@@ -763,10 +797,6 @@ signature}
   \oneq \leq \cpyq \qquad \topq = \top \qquad \delq = \zeroq \sqcup \oneq
 \end{equation}
 
-\begin{equation}
-  \alquant(A \otimes B) = \alquant(A + B) = \alquant(A) \sqcap \alquant(B) \qquad
-  \alquant(\mb{1}) = \alquant(\mb{0}) = \topq
-\end{equation}
 
 \TODO{fix this to deal with $q = 0$ properly!!!}
 
