@@ -1412,41 +1412,6 @@ We use this to state the following lemma:
   \end{itemize}
 \end{lemma}
 
-\subsection{ANF}
-
-\TODO{now we want to start studying the SSA transformation, we start with ANF}
-
-\begin{grammar}
-  <\(e\)> ::=
-    \(i\)
-    \;|\; \(\letexpr{x}{i}{e}\)
-    \;|\; \(\letexpr{(x, y)}{i}{e}\)
-    \;|\; \(\caseexpr{x}{y}{e}{z}{e'}\)
-    \;|\; \(\liter{x}{y}{e}\)
-
-  <\(i\)> ::=
-  \(x\)
-  \;|\; \(f\;x\)
-  \;|\; \(()\)
-  \;|\; \((x, y)\)
-  \;|\; \(\linl{x}\)
-  \;|\; \(\linr{y}\)
-  \;|\; \(\labort{x}\)
-\end{grammar}
-
-\begin{gather*}
-  \toanf{a} := \anflet{w}{a}{w}
-\end{gather*}
-
-\begin{align*}
-  \anflet{w}{x}{e} &:= (\letexpr{w}{x}{e}) \\
-  \anflet{w}{f\;a}{e} &:= \anflet{w_a}{a}{\anflet{w}{f\;w_a}{e}} \\
-  \anflet{w}{(a, b)}{e} &:= \anflet{w_a}{a}{\anflet{w_b}{b}{(\letexpr{w}{(w_a, w_b)}{e})}} \\
-  \anflet{w}{}{} &:=
-\end{align*}
-
-\TODO{and this preserves equations, yo}
-
 \section{Semantics}
 
 \TODO{and now, we give all this a semantics...}
@@ -1997,18 +1962,55 @@ cocartesian, it follows that we only need to check naturality and codiagonal.
 
 \section{SSA}
 
-\TODO{and now we actually define SSA and show it is the same thing}
+\subsection{ANF}
 
-\subsection{Syntax}
+\TODO{now we want to start studying the SSA transformation, we start with ANF}
 
 \begin{grammar}
-  <\(r, s, t\)> ::= \(\brb{\ell}{a}\)
-    \;|\; \(\letstmt{x}{a}{t}\)
-    \;|\; \(\letstmt{(x, y)}{a}{t}\)
-    \alt \(\casestmt{a}{x}{s}{y}{t}\)
-    \;|\; \(\loopstmt{a}{\ell}{x}{t}\)
-    \alt \(\awhere{r}{L}\)
-    \;|\; \(\cwhere{r}{L}\)
+  <\(a, b, c\)> ::=
+    \(o\)
+    \;|\; \(\letexpr{x}{o}{b}\)
+    \;|\; \(\letexpr{(x, y)}{o}{b}\)
+    \;|\; \(\caseexpr{o}{x}{a}{y}{b}\)
+    \;|\; \(\liter{o}{x}{b}\)
+
+  <\(o, p, q\)> ::=
+  \(x\)
+  \;|\; \(f\;o\)
+  \;|\; \(()\)
+  \;|\; \((o, p)\)
+  \;|\;  \(\linl{o}\)
+  \;|\; \(\linr{o}\)
+  \;|\; \(\labort{o}\)
+\end{grammar}
+
+\TODO{this is a subset of SSA; we have a simple transformation algorithm}
+
+\TODO{this transformation algorithm gives us an equivalent expression according to the equational
+theory}
+
+\subsection{SSA Syntax}
+
+\TODO{we now study the syntax of SSA, which is as follows}
+
+\begin{grammar}
+  <\(r, s, t\)> ::= \(\kappa\)
+    \;|\; \(\letstmt{x}{o}{t}\)
+    \;|\; \(\letstmt{(x, y)}{o}{t}\)
+
+  <\(\kappa\)> ::= \(\tau\) \;|\; \(\awhere{\kappa}{L}\) \;|\; \(\cwhere{\kappa}{L}\)
+
+  <\(\tau\)> ::= \(\brb{\ell}{o}\)
+    \;|\; \(\casestmt{o}{y}{\tau}{z}{\tau'}\)
+
+  <\(o, p, q\)> ::=
+  \(x\)
+  \;|\; \(f\;o\)
+  \;|\; \(()\)
+  \;|\; \((o, p)\)
+  \;|\;  \(\linl{o}\)
+  \;|\; \(\linr{o}\)
+  \;|\; \(\labort{o}\)
 
   <\(L\)> ::= \(\cdot\) \;|\; \(L, \wbranch{\ell}{x}{A}\)
 
@@ -2016,6 +2018,8 @@ cocartesian, it follows that we only need to check naturality and codiagonal.
 
   <\(\mb{Q}\)> ::= \(\cdot\) \;|\; \(\mb{Q}; \mb{q}\)
 \end{grammar}
+
+\TODO{we've got label contexts, which of course have their own fun form of weakening}
 
 \begin{gather*}
   \qbc{\cdot}{q} = \cdot \qquad
@@ -2035,83 +2039,61 @@ cocartesian, it follows that we only need to check naturality and codiagonal.
     {\lwk{\ms{L}^{\mb{Q}}_{\mb{E}}}{\ms{K}^{\mb{Q}}_{\mb{E}}, \lhyp{\ell}{A}^{\mb{q}}_{\epsilon}}}
 \end{gather*}
 
+\TODO{we've got typing rules}
+
 \begin{gather*}
-  \prftree[r]{\rle{br}}
-    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A}}
-    {\lwk{\lhyp{\ell}{A}_\epsilon^{\mb{q}_l}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
-    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\brb{\ell}{a}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
-  \\
   \prftree[r]{\rle{let$_1$}}
     {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{o}{A}}
     {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{t}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
-    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\letstmt{x}{a}{t}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\letstmt{x}{o}{t}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
   \\
   \prftree[r]{\rle{let$_2$}}
     {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A \otimes B}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{o}{A \otimes B}}
     {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A, y : B}{\epsilon}{t}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
-    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\letstmt{(x, y)}{a}{t}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\letstmt{(x, y)}{o}{t}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+  \\
+  \prftree[r]{\rle{br}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\bot}{a}{A}}
+    {\lwk{\lhyp{\ell}{A}_\epsilon^{\mb{q}_l}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\brb{\ell}{a}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
   \\
   \prftree[r]{\rle{case}}
     {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A + B}}
-    {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{s}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
-    {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, y : B}{\epsilon}{t}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
-    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\casestmt{a}{x}{s}{y}{t}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
-  \\
-  \prftree[r]{\rle{loop}}
-    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A}}
-    {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{t}
-      {\ms{L}^{\qbc{\mb{Q}}{0}}_{\mb{e}}}, \lhyp{\ell}{A}^{\mb{q}_l, 0}_\epsilon}
-    {\einf{\epsilon}}
-    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\loopstmt{a}{\ell}{x}{t}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{o}{A + B}}
+    {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{\tau_l}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+    {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, y : B}{\epsilon}{\tau_r}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\casestmt{o}{x}{\tau_l}{y}{\tau_r}}
+                                               {\ms{L}^{\mb{Q}}_{\mb{e}}}}
   \\
   \prftree[r]{\rle{where$_{\ms{nonrec}}$}}
-    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{r}
+    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\kappa}
       {\ms{L}^{\mb{Q}}_{\mb{e}}, \ms{R}^{\mb{Q}'}_{\mb{e}'}}}
     {\forall \lhyp{\ell_i}{A_i}^{\mb{q}_i}_{\epsilon_i} \in \ms{R}^{\mb{Q}'}_{\mb{e}'} .
       \haslb{\Gamma^{\mb{q}}_{\mb{e}}, x_i : A_i}{\epsilon_i}{t_i}{\ms{L}^{\mb{Q}}_{\mb{e}}}
     }
-    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\awhere{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
+    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\awhere{\kappa}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
       {\ms{L}^{\mb{Q}}_{\mb{e}}}}
   \\
   \prftree[r]{\rle{where$_{\ms{rec}}$}}
-  {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{r}
+  {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\kappa}
     {\ms{L}^{\mb{Q}}_{\mb{e}}, \ms{R}^{\mb{Q}'}_{\mb{e}'}}}
   {\forall \lhyp{\ell_i}{A_i}^{\mb{q}_i}_{\epsilon_i} \in \ms{R}^{\mb{Q}'}_{\mb{e}'} .
     \haslb{\Gamma^{\mb{q}}_{\mb{e}}, x_i : A_i}{\epsilon_i}{t_i}{
       \ms{L}^{\mb{Q}}_{\mb{e}}, \ms{R}^{\mb{Q}'}_{\mb{e}'}}
   }
-  {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\cwhere{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
+  {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\cwhere{\kappa}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
     {\ms{L}^{\mb{Q}}_{\mb{e}}}}
 \end{gather*}
 
-\TODO{this}
+\TODO{substitution exists (in its restrictive format); to avoid restrictions see
+\citet{ghalayini-24-ssa-densem-arxiv}}
 
-\subsection{Compiling Terms to SSA}
+\TODO{\emph{label substitution} exists too}
 
-\begin{grammar}
-  <\(r, s, t\)> ::= \(\tau\)
-    \;|\; \(\letstmt{x}{a}{t}\)
-    \;|\; \(\letstmt{(x, y)}{a}{t}\)
-    \;|\; \(\awhere{r}{L}\)
-    \;|\; \(\cwhere{r}{L}\)
-
-  <\(\tau\)> ::= \(\brb{\ell}{x}\)
-    \;|\; \(\casestmt{x}{y}{\tau}{z}{\tau'}\)
-
-  <\(a, b, c\)> ::=
-  \(x\)
-  \;|\; \(f\;x\)
-  \;|\; \(()\)
-  \;|\; \((x, y)\)
-  \;|\;  \(\linl{x}\)
-  \;|\; \(\linr{x}\)
-  \;|\; \(\labort{a}\)
-\end{grammar}
+\subsection{Compiling ANF to SSA}
 
 \begin{gather*}
   \tossa{x}{\ell} = \brb{\ell}{x} \qquad
@@ -2120,17 +2102,31 @@ cocartesian, it follows that we only need to check naturality and codiagonal.
 
 \TODO{this}
 
-\subsection{Refinement Theory}
+\TODO{note the output always has only structured control-flow!}
 
-\TODO{this?}
+\subsection{Compiling SSA to ANF}
 
-\subsection{Label Substitution}
+\TODO{label context-to-type packing, unpacking}
 
-\TODO{this?}
+\TODO{compiling terminators (easy)!}
+
+\TODO{compiling let-bindings (easy)!}
+
+\TODO{compiling non-recursive \ms{where}-bindings (medium)}
+
+\TODO{context-to-type packing, unpacking}
+
+\TODO{label-context appending, factorization}
+
+\TODO{compiling recursive \ms{where}-bindings (hard)}
 
 \subsection{Semantics}
 
-\TODO{this}
+\TODO{\emph{implied} semantics of SSA (derived from SSA to ANF)}
+
+\TODO{ANF to SSA is semantics preserving}
+
+\TODO{and so therefore the languages are equivalent, yay!}
 
 \section{Discussion and Related Work}
 
