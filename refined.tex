@@ -407,6 +407,43 @@ tools such as separation logic.
 
 \section{Background}
 
+SSA form is one of the most important compiler intermediate representations.
+Morally speaking, SSA is just a simple first-order imperative programming language.
+However, it has also been very difficult to study using the tools of semantics, because it has been designed to suit the needs of compiler writers rather than of semanticists.
+% In particular, it has four features which complicate it type-theoretically.
+
+Like other compiler IRs such as three-address code, SSA has a strong statement-expression distinction and unstructured control flow. As a result, programs must be organized hierarchically into atomic expressions, basic blocks, and control flow graphs. This complicates formulating type theories for the language, because substitution of values can change which variables are visible in each block in a nonlocal way. 
+
+SSA solves this problem by imposing the condition of \emph{unique dominance}: each use of a variable must be dominated (in the graph-theoretic sense) by a single assigment. This makes substitution work, but it is still difficult to interpret compositionally or type-theoretically.
+
+Moreover, in traditional three-address code programs, unique dominance is a difficult condition to achieve. This is because control flow graphs can merge, and hence a variable use can have multiple assignments as predecessors to it. To resolve this issue, SSA-form uses the notion of a \emph{$\phi$-node}, which is a special kind of statement which assigns different values to a variable depending on the past history of the execution. Obviously, this is a difficult notion to make sense of operationally. 
+
+\citet{ghalayini-24-ssa-densem-arxiv} combine a variety of ideas from
+the literature to resolve all of these issues.
+
+1. They weaken the statement-expression distinction make a richer notion of substitution feasible.
+
+2. They use the observation that dominance forms a tree, to give a regionalized version of SSA in which the dominance structure is syntactically evident and scoping can then be made lexical.
+
+3. They replace $\phi$-nodes by equipping basic blocks with arguments, so that they behave like a set of first-order procedures tail-calling each other.
+
+With these changes, it is possible to give a language which is equi-expressive with SSA, but which can be given a standard type-theoretic formulation. Furthermore, they go on to give a categorical axiomatization of this language, as a kind of premonoidal catogory equipped with additional structure to model iteration/looping (Elgot structure). They give their language an equational theory, and show that the language forms an initial model of these axioms.
+
+This is useful, because we now know what semantic structure is necessary to model SSA. Furthermore, any type theory which can be interpreted in these models can be viewed as an alternate presentation of SSA, which gives us wide latitude to formulate new, equivalent syntaxes to SSA.
+
+Our motivation is to extend the equational theory of \cite{ghalayini-24-ssa-densem-arxiv} in two ways. First, we want a richer notion of substitution, which is compatible with substituting effectful terms for values, and hence will let us support a richer notion of program transformation. Second, we also want to replace the equational theory with a refinement theory, which permits replacing any term with a term with a subset of the original term's behaviours.
+
+Because terms are morphisms in a categorical semantics, it is natural to model refinement by working in a poset-enriched category. By making the hom-sets partial orders, we now have the semantic structure needed to model the refinement partial order. Now, if we can find a syntax which forms an initial model of these enriched categories, we will be able to conclude that we have fully characterized what refinement of SSA programs means. 
+
+It turns out to be unwieldy to reuse the syntax of \cite{ghalayini-24-ssa-densem-arxiv}, because while they weaken the statement-expression distinction, they do not eliminate it. This makes it unwieldy to reason about control flow, and greatly complicated their completenenss proof.
+
+We make use of the freedom afforded by knowing what we want the axiomatization to be, by developing a new syntax for SSA which is fully expression-oriented, and which no longer makes any distinction between statements and expressions. This makes formulating the syntactic refinement relation much easier, and also makes connecting the syntax and the categorical semantics  much simpler. 
+
+To confirm that we are actually working with SSA, we also give a inter-translation between these two syntaxes, and show that it is semantics-preserving. 
+
+
+
+
 \begin{itemize}
   \item What is SSA, syntax of SSA
   \item Simplified syntax, \citet{ghalayini-24-ssa-densem-arxiv}
@@ -1856,8 +1893,8 @@ cocartesian, it follows that we only need to check naturality and codiagonal.
     \;|\; \(\letstmt{x}{a}{t}\)
     \;|\; \(\letstmt{(x, y)}{a}{t}\)
     \alt \(\casestmt{a}{x}{s}{y}{t}\)
-    \;|\; \(\loopstmt{a}{\ell}{x}{t}\)
-    \alt \(\awhere{r}{L}\)
+%    \;|\; \(\loopstmt{a}{\ell}{x}{t}\)
+    \;|\; \(\awhere{r}{L}\)
     \;|\; \(\cwhere{r}{L}\)
 
   <\(L\)> ::= \(\cdot\) \;|\; \(L, \wbranch{\ell}{x}{A}\)
@@ -1910,14 +1947,14 @@ cocartesian, it follows that we only need to check naturality and codiagonal.
     {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{s}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
     {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, y : B}{\epsilon}{t}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
     {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\casestmt{a}{x}{s}{y}{t}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
-  \\
-  \prftree[r]{\rle{loop}}
-    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A}}
-    {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{t}
-      {\ms{L}^{\qbc{\mb{Q}}{0}}_{\mb{e}}}, \lhyp{\ell}{A}^{\mb{q}_l, 0}_\epsilon}
-    {\einf{\epsilon}}
-    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\loopstmt{a}{\ell}{x}{t}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+%  \\
+%  \prftree[r]{\rle{loop}}
+%    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+%    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{a}{A}}
+%    {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{t}
+%      {\ms{L}^{\qbc{\mb{Q}}{0}}_{\mb{e}}}, \lhyp{\ell}{A}^{\mb{q}_l, 0}_\epsilon}
+%    {\einf{\epsilon}}
+%    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\loopstmt{a}{\ell}{x}{t}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
   \\
   \prftree[r]{\rle{where$_{\ms{nonrec}}$}}
     {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{r}
