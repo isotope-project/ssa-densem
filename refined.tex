@@ -650,19 +650,10 @@ expressions can consist of
     $B$, we return it, otherwise, we re-evaluate the loop with $x$ having the new value of type $A$
   \end{itemize}
 \end{itemize}
-We will equip \subiterssa{} with a type-and-effect system, with every expression having as
-\emph{effect} an element of a bounded meet-semilattice $\mc{E}$. We will represent pure expressions
-as having the bottom effect $\bot$, whereas expressions with effect $\top$ have ``arbitrary''
-effect. Our grammar of types consists of:
-\begin{itemize}
-  \item \emph{Base types} $X \in \mc{X}$
-  \item \emph{Tensor products} of types $A \otimes B$, and a \emph{unit type} $\mb{1}$; we write
-  this as a tensor product rather than a cartesian product to emphasize that $A$ or $B$ may be
-  substructural
-  \item \emph{Coproducts} $A + B$, and an \emph{empty type} $\mb{0}$.
-\end{itemize}
-We assume every \emph{instruction} $f \in \mc{I}$ is equipped with a \emph{source type} $A$, a
-\emph{target type} $B$, and an \emph{effect} $e \in \mc{E}$.
+
+
+We will equip \subiterssa{} with a substructural type-and-effect system.
+The overal judgement is of the form $\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}$. This says that in context $\Gamma$ with \emph{usage} $\mb{q}$, the expression $a$ has type $A$ and \emph{effects} $\epsilon$. However, before we can define this judgment, we need to explain what we mean by usage, and what the allowed effects are. 
 
 \begin{figure}
   \begin{grammar}
@@ -670,6 +661,8 @@ We assume every \emph{instruction} $f \in \mc{I}$ is equipped with a \emph{sourc
     \(X\)
     \;|\; \(A \otimes B\)
     \;|\; \(\mathbf{1}\)
+    \;|\; \(A + B\)
+    \;|\; \(\mathbf{0}\)
 
     <\(a, b, c\)> ::=
     \(x\)
@@ -697,23 +690,19 @@ We assume every \emph{instruction} $f \in \mc{I}$ is equipped with a \emph{sourc
   \label{fig:subiterssa-syntax}
 \end{figure}
 
-Our type system will need to track how often individual variables are used to be able to properly
-reason about rewrites involving substructural effects. While we could use a natural number as
-multiplicity for this purpose, the number of times a variable is used may be control-flow dependent
-(consider, for example, a variable used in only one branch of a case-statement, or in a loop), and
-so, instead of dealing with sets of potential usages, we instead keep track of a \emph{quantity}
-drawn from an abstract lattice mirroring the basic usage patterns described above. In particular, a
-variable can be used
+\subsubsection{Usage}
+Our type system needs to track how often individual variables are used  to
+reason about rewrites involving substructural effects. Inspired by substructural logic, which distinguishes linear (exactly once), afficne (at most once), and relevant (at least once), we introduce a join semilattice of \emph{quantities} to model these usages. The primitive quantities are:
 \begin{itemize}
-  \item Zero ($\zeroq$) times
-  \item Exactly one ($\oneq$) times
-  \item Multiple ($\cpyq$) times, here including one time, i.e., \emph{at least once}
+  \item $\zeroq$ -- corresponding to being used zero times
+  \item $\oneq$ -- corresponding to being used exactly once
+  \item $\cpyq$ -- corresponding to being used multiple ($\geq 1$) times
 \end{itemize}
 This forms a partial order $\{\zeroq, \oneq \leq \cpyq\}$. To be able to make this into a proper
 analysis, we simply complete this order into a join-semilattice by adding elements
 \begin{itemize}
-  \item $\zeroq \sqcup \oneq = \delq$, corresponding to being used \emph{at most once}
-  \item $\zeroq \sqcup \cpyq = \topq$, corresponding to being used any number of times
+  \item $\zeroq \sqcup \oneq$ -- written $\delq$, corresponding to being used at most once
+  \item $\zeroq \sqcup \cpyq$ -- written $\topq$, corresponding to being used any number of times
 \end{itemize}
 We will call the set $Q^0 = \{\zeroq, \oneq, \cpyq, \delq, \topq\}$ the \emph{extended} set of
 quantities, and $Q = \{\oneq, \cpyq, \delq, \topq\}$ the set of (\emph{nonzero}) quantities. We note
@@ -727,7 +716,7 @@ sugar
   \Gamma^{\mb{q}}, x : A =  (\Gamma, x : A)^{\mb{q}, \topq}
 \end{equation}
 Since we will need to track the usage of variables anyways, it requires only minimal additional
-complexity to add support for substructural types (which are types which can \emph{only} be used a
+complexity to add support for substructural types (which are types whose elements can \emph{only} be used a
 certain number of times) in as well. In particular, assuming that every base type $X \in \mc{X}$ is
 equipped with a \emph{linearity} $\alquant(X) \in Q$, we can define the linearity of a type $A$
 inductively as follows:
@@ -746,17 +735,26 @@ We can further define the linearity of a context $\Gamma$ by induction as follow
 \end{equation}
 In particular, note that the linearity of an unused variable is always unrestricted.
 %
-The final piece of data we will need to construct our type theory is how effects interact with each
-other, and with themselves. In particular, we need to know:
+
+\subsubsection{Effects}
+Our language of effects is a a bounded (has a maximum element $\top$ and minimum element $\bot$) meet-semilattice $\mc{E}$. We will represent pure expressions
+as having the bottom effect $\bot$, whereas expressions with effect $\top$ have ``arbitrary''
+effect, and expressions with effect $\epsilon \sqcap \epsilon'$
+have both effects $\epsilon$ and $\epsilon'$.
+
+\TODO{Explain what polarities are and move them into the definition too.}
+
+Hwoever, since we want to rewrite effectful programs in addition to classifying them, it is not enough to know simply what set of effects a program might have, but we also need to know how effects interact with each
+other. In particular, we need to know:
 \begin{itemize}
+  \item What \emph{multiplicity} each effect has, and in particular, whether a given effect
+  $\epsilon$ is \emph{duplicable}, \emph{fusable}, \emph{introducable}, or \emph{eliminable}.
   \item Which effects $\epsilon$ are \emph{left-movers} (i.e. can be moved before) or
   \emph{right-movers} (i.e. can be moved after) other effects $\eta$
   \item Which effects are \emph{iterable}, i.e., stable under loops. In particular, all iterable
   effects must have nontermination as a \emph{subeffect}.
-  \item What \emph{multiplicity} each effect has, and in particular, whether a given effect
-  $\epsilon$ is \emph{duplicable}, \emph{fusable}, \emph{introducable}, or \emph{eliminable}.
 \end{itemize}
-We can represent the latter simply assigning each effect a \emph{pair} of quantities $\alquant^+(e),
+We can represent multiplicity by assigning each effect a \emph{pair} of quantities $\alquant^+(e),
 \alquant^-(e) \in Q$, such that
 \begin{itemize}
   \item An effect can be deleted if $\delq \leq \alquant^+(e)$, and introduced if $\delq \leq
@@ -780,6 +778,40 @@ effects, and a directed commutativity relation, we arrive at the following defin
     \item $\epsilon \rightmove^- \eta \iff \epsilon \leftmove \eta$
   \end{itemize}
 \end{definition}
+
+
+Our grammar of types consists of:
+\begin{itemize}
+  \item \emph{Base types} $X \in \mc{X}$
+  \item \emph{Tensor products} of types $A \otimes B$, and a \emph{unit type} $\mb{1}$; we write
+  this as a tensor product rather than a cartesian product to emphasize that $A$ or $B$ may be
+  substructural
+  \item \emph{Coproducts} $A + B$, and an \emph{empty type} $\mb{0}$.
+\end{itemize}
+We assume every \emph{instruction} $f \in \mc{I}$ is equipped with a \emph{source type} $A$, a
+\emph{target type} $B$, and an \emph{effect} $e \in \mc{E}$.
+
+
+We can now give the typing rules for \subiterssa{} in Figure~\ref{fig:subiterssa-typing}. We type
+variables with the \brle{var} rule, which states that a variable $x$ has type $A$ in the context
+$\Gamma^{\mb{q}}$ if $\Gamma$ weakens to the singleton context $x: A^\oneq$, i.e., if $x$ has
+nonzero quantity and all other variables are affine. Applications, pairs, let-bindings,
+destructuring let-bindings, and injections are all typed in the usual manner, with context-splitting
+used to split the context between different fragments of the expression. The \brle{case} rule is
+similarly standard, except both the left branch $a$ and right branch $b$ of a case-statement share
+the same resource vector $\mb{q}_l$ since exactly one of them will be executed.
+
+The \brle{iter} rule, on the other hand, is a little bit more complicated: we split the context into
+a component $\mb{q}_r$ for the initial value and a component $\mb{q}_l$ for the body. The initial
+value is then evaluated and passed in as an additional parameter of type $A$ to the body. We require
+that the body's context has unrestricted quantity since the loop may execute any number of times;
+while one could argue that we should only require the body's context to have quantity $\cpyq$ (since
+the loop body is guaranteed to execute at least once, as long as $a$ terminates), this would make
+our semantics more complicated, and such variables can be passed in as arguments to the loop body.
+Our final requirement is that the effect of a loop must be iterative, i.e., stable under infinite
+repetitions.
+
+
 
 We now have all the pieces we need to define a \subiterssa{}-\emph{signature}.
 
@@ -898,25 +930,6 @@ $\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}$ as follows:
   \Description{}
   \label{fig:subiterssa-typing}
 \end{figure}
-
-We can now give the typing rules for \subiterssa{} in Figure~\ref{fig:subiterssa-typing}. We type
-variables with the \brle{var} rule, which states that a variable $x$ has type $A$ in the context
-$\Gamma^{\mb{q}}$ if $\Gamma$ weakens to the singleton context $x: A^\oneq$, i.e., if $x$ has
-nonzero quantity and all other variables are affine. Applications, pairs, let-bindings,
-destructuring let-bindings, and injections are all typed in the usual manner, with context-splitting
-used to split the context between different fragments of the expression. The \brle{case} rule is
-similarly standard, except both the left branch $a$ and right branch $b$ of a case-statement share
-the same resource vector $\mb{q}_l$ since exactly one of them will be executed.
-
-The \brle{iter} rule, on the other hand, is a little bit more complicated: we split the context into
-a component $\mb{q}_r$ for the initial value and a component $\mb{q}_l$ for the body. The initial
-value is then evaluated and passed in as an additional parameter of type $A$ to the body. We require
-that the body's context has unrestricted quantity since the loop may execute any number of times;
-while one could argue that we should only require the body's context to have quantity $\cpyq$ (since
-the loop body is guaranteed to execute at least once, as long as $a$ terminates), this would make
-our semantics more complicated, and such variables can be passed in as arguments to the loop body.
-Our final requirement is that the effect of a loop must be iterative, i.e., stable under infinite
-repetitions.
 
 \subsection{Syntactic Metatheory}
 
