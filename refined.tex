@@ -653,7 +653,7 @@ expressions can consist of
 
 
 We will equip \subiterssa{} with a substructural type-and-effect system.
-The overal judgement is of the form $\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}$. This says that in context $\Gamma$ with \emph{usage} $\mb{q}$, the expression $a$ has type $A$ and \emph{effects} $\epsilon$. However, before we can define this judgment, we need to explain what we mean by usage, and what the allowed effects are. 
+The overal judgement is of the form $\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}$. This says that in context $\Gamma$ with \emph{variable quantities} $\mb{q}$, the expression $a$ has type $A$ and \emph{effects} $\epsilon$. However, before we can define this judgment, we need to explain what we mean by usage, and what the allowed effects are. 
 
 \begin{figure}
   \begin{grammar}
@@ -690,7 +690,7 @@ The overal judgement is of the form $\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}$. T
   \label{fig:subiterssa-syntax}
 \end{figure}
 
-\subsubsection{Usage}
+\subsubsection{Variable Quantities}
 Our type system needs to track how often individual variables are used  to
 reason about rewrites involving substructural effects. Inspired by substructural logic, which distinguishes linear (exactly once), afficne (at most once), and relevant (at least once), we introduce a join semilattice of \emph{quantities} to model these usages. The primitive quantities are:
 \begin{itemize}
@@ -737,48 +737,90 @@ In particular, note that the linearity of an unused variable is always unrestric
 %
 
 \subsubsection{Effects}
-Our language of effects is a a bounded (has a maximum element $\top$ and minimum element $\bot$) meet-semilattice $\mc{E}$. We will represent pure expressions
+Our language of effects is a bounded\footnote{has a maximum element $\top$ and minimum element $\bot$} join-semilattice $\mc{E}$. We will represent pure expressions
 as having the bottom effect $\bot$, whereas expressions with effect $\top$ have ``arbitrary''
-effect, and expressions with effect $\epsilon \sqcap \epsilon'$
+effect, and expressions with effect $\epsilon \sqcup \epsilon'$
 have both effects $\epsilon$ and $\epsilon'$.
 
-\TODO{Explain what polarities are and move them into the definition too.}
 
-Hwoever, since we want to rewrite effectful programs in addition to classifying them, it is not enough to know simply what set of effects a program might have, but we also need to know how effects interact with each
+
+However, since we want to rewrite effectful programs in addition to classifying them, it is not enough to know simply what set of effects a program might have, but we also need to know how effects interact with each
 other. In particular, we need to know:
-\begin{itemize}
+\begin{enumerate}
+  \item Which effects are \emph{iterable}, i.e., stable under loops. % In particular, all iterable  effects must have nontermination as a \emph{subeffect}.
   \item What \emph{multiplicity} each effect has, and in particular, whether a given effect
   $\epsilon$ is \emph{duplicable}, \emph{fusable}, \emph{introducable}, or \emph{eliminable}.
   \item Which effects $\epsilon$ are \emph{left-movers} (i.e. can be moved before) or
   \emph{right-movers} (i.e. can be moved after) other effects $\eta$
-  \item Which effects are \emph{iterable}, i.e., stable under loops. In particular, all iterable
-  effects must have nontermination as a \emph{subeffect}.
-\end{itemize}
-We can represent multiplicity by assigning each effect a \emph{pair} of quantities $\alquant^+(e),
-\alquant^-(e) \in Q$, such that
+\end{enumerate}
+
+First, not all effects are stable under arbitrary iteration. For example, a
+pure, total computation iterated infinitely often can now exhibit the
+effect of nontermination. Indeed, any total effect (such as reading or
+writing from a location) repeated infinitely often can gain the
+nontermination effect. To model stability, we are going to require that there is an
+upwards-closed subset $\mc{E}^\infty \subseteq \mc{E}$ of
+\emph{iterative effects}. The intuition behinds the upwards-closed
+requirement is that once nontermination is in the effect $\epsilon$,
+then it will continue to be present in any supereffect.
+
+Second, to represent multiplicity, we are going to take advantage of
+the fact that we have already introduced a notion of quantitity into
+our type system.  However, unlike in pure linear type systems, we are
+interested in refinement (a directed notion) rather than pure
+equations.  So, we need to break apart a structural property like
+contraction into a pair of directed properties of duplicability and
+fusability (which are contraction in each direction of
+refinement). Likewise weakening factors into the pair of directed
+weakening properties of eliminability and introducability.
+
+Because of this, we represent multiplicity by assigning each effect a \emph{pair} of quantities
+$\alquant^+(e), \alquant^-(e) \in Q$, such that
 \begin{itemize}
-  \item An effect can be deleted if $\delq \leq \alquant^+(e)$, and introduced if $\delq \leq
+  \item An effect can be eliminated if $\delq \leq \alquant^+(e)$, and introduced if $\delq \leq
   \alquant^-(e)$
   \item An effect can be duplicated if $\cpyq \leq \alquant^+(e)$, and fused if $\cpyq \leq
   \alquant^-(e)$
 \end{itemize}
 To be compatible with our notion of sub-effect, such a map should be \emph{antitone} and have
-$\alquant^p(\bot) = \topq$ for $p \in \{+, -\}$. Combined with an upward-closed set of iterative
-effects, and a directed commutativity relation, we arrive at the following definition for an
-\emph{effect system}:
-\begin{definition}[Effect system]
-  We define an \emph{effect system} $\mc{E}$ to be a bounded partial order of effects $\mc{E}$
-  equipped with an upwards closed subset $\mc{E}^\infty$ of \emph{iterative effects} containing
-  $\top$ and a \emph{directed commutativity relation} $\rightmove$ such that, for all effects
-  $\epsilon$, $\bot \rightmove \epsilon$ and $\epsilon \rightmove \bot$. We write:
+the property that $\alquant^p(\bot) = \topq$ for $p \in \{+, -\}$ (i.e., pure computations can
+be used as often as you like).
+
+Third, when actually rewriting programs with effects, we need to know which effectful terms
+can be moved past one another. For example, reading from memory and writing I/O cannot interfere
+with each other and hence can be reordered. To model this, we introduce a \emph{directed
+  commutativity relation} $\rightmove \subseteq \mc{E} \times \mc{E}$. This is intended to
+mean that if $\epsilon \rightmove \epsilon'$, then a computation performing $\epsilon$-effects
+can be moved past a computation performing $\epsilon'$-effects without introducing new
+behaviour. We require that $\bot \rightmove \epsilon$ and $\epsilon \rightmove \bot$, to
+ensure that pure computations can be moved freely, and we also require that the relation
+in antitone, to model that decreasing the number of effects never loses rewrites. 
+
+As notational abbreviations, we write:
   \begin{itemize}
     \item $\epsilon \leftmove \eta \iff \eta \rightmove \epsilon$
     \item $\epsilon \slides \eta \iff \epsilon \rightmove \eta \land \epsilon \leftmove \eta$
     \item $\epsilon \rightmove^+ \eta \iff \epsilon \rightmove \eta$
     \item $\epsilon \rightmove^- \eta \iff \epsilon \leftmove \eta$
   \end{itemize}
+
+ 
+Putting all this together, we arrive at the following definition for an
+\emph{effect system}:
+\begin{definition}[Effect system]
+  We define an \emph{effect system} $\mc{E}$ to be a bounded join-semilattice of effects $\mc{E}$
+  equipped with:
+  \begin{itemize}
+  \item an upwards closed subset $\mc{E}^\infty$ of \emph{iterative effects} containing $\top$, and
+  \item a pair of antitone maps $\alquant^+, \alquant^- : \mc{E} \to Q$ which map $\bot$ to $\topq$,
+  \item a \emph{directed commutativity relation} $\rightmove \subseteq \mc{E} \times \mc{E}$,
+  which is an antitone relation   such that, for all effects
+  $\epsilon$, $\bot \rightmove \epsilon$ and $\epsilon \rightmove \bot$. 
+  \end{itemize}
+
 \end{definition}
 
+\TODO{Add a bit of bridge text here.}
 
 Our grammar of types consists of:
 \begin{itemize}
@@ -788,30 +830,6 @@ Our grammar of types consists of:
   substructural
   \item \emph{Coproducts} $A + B$, and an \emph{empty type} $\mb{0}$.
 \end{itemize}
-We assume every \emph{instruction} $f \in \mc{I}$ is equipped with a \emph{source type} $A$, a
-\emph{target type} $B$, and an \emph{effect} $e \in \mc{E}$.
-
-
-We can now give the typing rules for \subiterssa{} in Figure~\ref{fig:subiterssa-typing}. We type
-variables with the \brle{var} rule, which states that a variable $x$ has type $A$ in the context
-$\Gamma^{\mb{q}}$ if $\Gamma$ weakens to the singleton context $x: A^\oneq$, i.e., if $x$ has
-nonzero quantity and all other variables are affine. Applications, pairs, let-bindings,
-destructuring let-bindings, and injections are all typed in the usual manner, with context-splitting
-used to split the context between different fragments of the expression. The \brle{case} rule is
-similarly standard, except both the left branch $a$ and right branch $b$ of a case-statement share
-the same resource vector $\mb{q}_l$ since exactly one of them will be executed.
-
-The \brle{iter} rule, on the other hand, is a little bit more complicated: we split the context into
-a component $\mb{q}_r$ for the initial value and a component $\mb{q}_l$ for the body. The initial
-value is then evaluated and passed in as an additional parameter of type $A$ to the body. We require
-that the body's context has unrestricted quantity since the loop may execute any number of times;
-while one could argue that we should only require the body's context to have quantity $\cpyq$ (since
-the loop body is guaranteed to execute at least once, as long as $a$ terminates), this would make
-our semantics more complicated, and such variables can be passed in as arguments to the loop body.
-Our final requirement is that the effect of a loop must be iterative, i.e., stable under infinite
-repetitions.
-
-
 
 We now have all the pieces we need to define a \subiterssa{}-\emph{signature}.
 
@@ -825,8 +843,6 @@ We now have all the pieces we need to define a \subiterssa{}-\emph{signature}.
   such that we associate:
   \begin{itemize}
     \item Every base type $X$ type to a \emph{quantity} $\ms{q}(X) \in \{1, \delq, \cpyq, \topq\}$.
-    \item Every effect $e$ to a \emph{quantity} $\ms{q}(e) \in \{1, \delq, \cpyq, \topq\}$, such
-    that the map $\ms{q}$ is antitone and $\ms{q}(\bot) = \topq$
     \item Every instruction to a \emph{source type} $\ms{src}(f) = A$, a \emph{target type}
     $\ms{trg}(f) = B$, and an \emph{effect} $\ms{eff}(f) = e$ (where types are given by the grammar
     in Figure~\ref{fig:subiterssa-syntax}).
@@ -834,6 +850,10 @@ We now have all the pieces we need to define a \subiterssa{}-\emph{signature}.
 \end{definition}
 All the following definitions in this section will be with respect to an arbitrary
 \subiterssa{}-signature $\mc{S}$. 
+
+
+
+
 
 We begin by defining weakening $\cwk{\Gamma^{\mb{q}}}{\Delta^{\mb{q}'}}$ of contexts as follows:
 \begin{gather*}
@@ -868,6 +888,27 @@ $\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}$ as follows:
     {\qsp{\Gamma, x : A}{(\mb{q}, q)}{(\mb{q}_l, \zeroq)}{(\mb{q}_r, q)}}
 \end{gather*}
 \TODO{some text explaining context splitting}
+
+
+We can now give the typing rules for \subiterssa{} in Figure~\ref{fig:subiterssa-typing}. We type
+variables with the \brle{var} rule, which states that a variable $x$ has type $A$ in the context
+$\Gamma^{\mb{q}}$ if $\Gamma$ weakens to the singleton context $x: A^\oneq$, i.e., if $x$ has
+nonzero quantity and all other variables are affine. Applications, pairs, let-bindings,
+destructuring let-bindings, and injections are all typed in the usual manner, with context-splitting
+used to split the context between different fragments of the expression. The \brle{case} rule is
+similarly standard, except both the left branch $a$ and right branch $b$ of a case-statement share
+the same resource vector $\mb{q}_l$ since exactly one of them will be executed.
+
+The \brle{iter} rule, on the other hand, is a little bit more complicated: we split the context into
+a component $\mb{q}_r$ for the initial value and a component $\mb{q}_l$ for the body. The initial
+value is then evaluated and passed in as an additional parameter of type $A$ to the body. We require
+that the body's context has unrestricted quantity since the loop may execute any number of times;
+while one could argue that we should only require the body's context to have quantity $\cpyq$ (since
+the loop body is guaranteed to execute at least once, as long as $a$ terminates), this would make
+our semantics more complicated, and such variables can be passed in as arguments to the loop body.
+Our final requirement is that the effect of a loop must be iterative, i.e., stable under infinite
+repetitions.
+
 
 \begin{figure}
   \begin{gather*}
