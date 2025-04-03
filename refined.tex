@@ -650,9 +650,18 @@ expressions can consist of
   \end{itemize}
 \end{itemize}
 
-
-We will equip \subiterssa{} with a substructural type-and-effect system.
-The overal judgement is of the form $\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}$. This says that in context $\Gamma$ with \emph{variable quantities} $\mb{q}$, the expression $a$ has type $A$ and \emph{effects} $\epsilon$. However, before we can define this judgment, we need to explain what we mean by usage, and what the allowed effects are. 
+We will equip \subiterssa{} with a substructural type-and-effect system. To allow us to support both destructuring let-bindings and case-statements, our grammar of types will consist of:
+\begin{itemize}
+  \item \emph{Base types} $X \in \mc{X}$
+  \item \emph{Tensor products} of types $A \otimes B$, and a \emph{unit type} $\mb{1}$; we write
+  this as a tensor product rather than a cartesian product to emphasize that $A$ or $B$ may be
+  substructural
+  \item \emph{Coproducts} $A + B$, and an \emph{empty type} $\mb{0}$.
+\end{itemize}
+The primary judgement of our type system is of the form $\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}$.
+This says that in context $\Gamma$ with \emph{variable quantities} $\mb{q}$, the expression $a$ has
+type $A$ and \emph{effects} $\epsilon$. However, before we can define this judgment, we need to
+explain what we mean by usage, and what the allowed effects are. 
 
 \begin{figure}
   \begin{grammar}
@@ -732,14 +741,57 @@ We can further define the linearity of a context $\Gamma$ by induction as follow
 \end{equation}
 In particular, note that the linearity of an unused variable is always unrestricted.
 %
+We will enforce our quantity restrictions through the means of \emph{weakening} and \emph{splitting}
+judgements, which will determine how variables may be left unused or apportioned between
+sub-contexts, respectively. In particular, the judgement $\cwk{\Gamma^{\mb{q}}}{\Delta^{\mb{q}'}}$,
+pronounced ``$\Gamma^{\mb{q}}$ weakens $\Delta^{\mb{q'}}$," is defined as follows:
+\begin{gather*}
+  \prftree[r]{\rle{nil}}{\cwk{\cdot}{\cdot}} \qquad 
+  \prftree[r]{\rle{cons}}
+    {\cwk{\Gamma^{\mb{q}}}{\Delta^{\mb{q}'}}}
+    {q' \sqcap \alquant(A) \leq q \sqcap \alquant(A)}
+    {\cwk{\Gamma^{\mb{q}}, x : A^q}
+         {\Delta^{\mb{q}'}, x : A^{q'}}} \qquad
+  \prftree[r]{\rle{skip}}
+    {\cwk{\Gamma^{\mb{q}}}{\Delta^{\mb{q}'}}}
+    {\zeroq \leq q \sqcap \alquant(A)}
+    {\cwk{\Gamma^{\mb{q}}, x : A^q}{\Delta}^{\mb{q}'}}
+\end{gather*}
+\emph{Affinity} is encoded in the condition $\zeroq \leq q \sqcap \alquant(A)$ in the rule
+\brle{split}; which ensures that only affine variables may be discarded. On the other hand, the rule
+\brle{cons} states that we may replace a variable quantity $q$ with another quantity $q'$ which
+allows \emph{less} usages \emph{with respect to that variable's quantity}: for example, for an
+affine variable, the quantities $\cpyq$ allows \emph{less} usages than the quantity $\delq$, since
+only the latter allows deletion, but copying is never possible. This clearly induces a
+\emph{preorder} on contexts, with two contexts equivalent if their component variables can be used
+the same way.
+
+We may then go on to define \emph{context splitting} $\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}$ as
+follows:
+\begin{gather*}
+  \prftree[r]{\rle{nil}}
+    {\qsp{\cdot}{\cdot}{\cdot}{\cdot}} \qquad
+  \prftree[r]{\rle{both}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\cpyq \leq q \sqcap \alquant(A)}
+    {\qsp{\Gamma, x : A}{(\mb{q}, q)}{(\mb{q}_l, q)}{(\mb{q}_r, q)}}
+    \\
+  \prftree[r]{\rle{left}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\qsp{\Gamma, x : A}{(\mb{q}, q)}{(\mb{q}_l, q)}{(\mb{q}_r, \zeroq)}} \qquad
+  \prftree[r]{\rle{right}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\qsp{\Gamma, x : A}{(\mb{q}, q)}{(\mb{q}_l, \zeroq)}{(\mb{q}_r, q)}}
+\end{gather*}
+The rules \brle{left} and \brle{right} allow us to use a variable, regardless of quantity, in either
+the choice of subexpression, whereas the rule \brle{both} states that for a variable to be usable in
+two seperate subexpressions, it must be relevant.
 
 \subsubsection{Effects}
 Our language of effects is a bounded\footnote{has a maximum element $\top$ and minimum element $\bot$} join-semilattice $\mc{E}$. We will represent pure expressions
 as having the bottom effect $\bot$, whereas expressions with effect $\top$ have ``arbitrary''
 effect, and expressions with effect $\epsilon \sqcup \epsilon'$
 have both effects $\epsilon$ and $\epsilon'$.
-
-
 
 However, since we want to rewrite effectful programs in addition to classifying them, it is not enough to know simply what set of effects a program might have, but we also need to know how effects interact with each
 other. In particular, we need to know:
@@ -817,19 +869,9 @@ Putting all this together, we arrive at the following definition for an
 
 \end{definition}
 
-\TODO{Add a bit of bridge text here.}
+\subsubsection{Typing rules}
 
-Our grammar of types consists of:
-\begin{itemize}
-  \item \emph{Base types} $X \in \mc{X}$
-  \item \emph{Tensor products} of types $A \otimes B$, and a \emph{unit type} $\mb{1}$; we write
-  this as a tensor product rather than a cartesian product to emphasize that $A$ or $B$ may be
-  substructural
-  \item \emph{Coproducts} $A + B$, and an \emph{empty type} $\mb{0}$.
-\end{itemize}
-
-We now have all the pieces we need to define a \subiterssa{}-\emph{signature}.
-
+We now have all the pieces we need to define a \subiterssa{}-\emph{signature}:
 \begin{definition}[\subiterssa-signature]
   A \subiterssa signature $\mc{S} = (\mc{X}, \mc{I}, \mc{E})$ consists of:
   \begin{itemize}
@@ -848,37 +890,42 @@ We now have all the pieces we need to define a \subiterssa{}-\emph{signature}.
 All the following definitions in this section will be with respect to an arbitrary
 \subiterssa{}-signature $\mc{S}$. 
 
-We begin by defining weakening $\cwk{\Gamma^{\mb{q}}}{\Delta^{\mb{q}'}}$ of contexts as follows:
-\begin{gather*}
-  \prftree[r]{\rle{nil}}{\cwk{\cdot}{\cdot}} \qquad 
-  \prftree[r]{\rle{cons}}
-    {\cwk{\Gamma^{\mb{q}}}{\Delta^{\mb{q}'}}}
-    {q' \leq q}
-    {\cwk{\Gamma^{\mb{q}}, x : A^q}
-         {\Delta^{\mb{q}'}, x : A^{q'}}} \qquad
-  \prftree[r]{\rle{skip}}
-    {\cwk{\Gamma^{\mb{q}}}{\Delta^{\mb{q}'}}}
-    {\zeroq \leq q \sqcap \alquant(A)}
-    {\cwk{\Gamma^{\mb{q}}, x : A^q}{\Delta}^{\mb{q}'}}
-\end{gather*}
-It is easy to see that this induces a partial order on annotated contexts. We can then go on to
-define context splitting $\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}$ as follows:
-\begin{gather*}
-  \prftree[r]{\rle{nil}}
-    {\qsp{\cdot}{\cdot}{\cdot}{\cdot}} \qquad
-  \prftree[r]{\rle{both}}
-    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-    {\cpyq \leq q \sqcap \alquant(A)}
-    {\qsp{\Gamma, x : A}{(\mb{q}, q)}{(\mb{q}_l, q)}{(\mb{q}_r, q)}}
-    \\
-  \prftree[r]{\rle{left}}
-    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-    {\qsp{\Gamma, x : A}{(\mb{q}, q)}{(\mb{q}_l, q)}{(\mb{q}_r, \zeroq)}} \qquad
-  \prftree[r]{\rle{right}}
-    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-    {\qsp{\Gamma, x : A}{(\mb{q}, q)}{(\mb{q}_l, \zeroq)}{(\mb{q}_r, q)}}
-\end{gather*}
-\TODO{some text explaining context splitting}
+We can now give the typing rules for \subiterssa{} in Figure~\ref{fig:subiterssa-typing}. Our rules
+are for the most part syntax directed, with one rule for each production in our grammar. In
+particular,
+\begin{itemize}
+  \item We type variables with the \brle{var} rule, which states that a variable $x$ has type $A$ in
+  the context $\Gamma^{\mb{q}}$ if $\Gamma^{\mb{q}}$ weakens to the singleton context $x: A^\oneq$,
+  i.e., if $x$ has nonzero quantity and all other (unused) variables are affine. Since accessing a
+  variable is a pure operation, we may assign the resulting derivation an arbitraty effect
+  $\epsilon$
+  \item To type a let-binding $\letexpr{x}{a}{e}$ in $\Gamma^{\mb{q}}$ with \brle{let$_1$} with
+  effect $\epsilon$, we must:
+  \begin{itemize}
+    \item Split the context into a left-component $\mb{q}_l$ and a right-component
+    $\mb{q}_r$, such that:
+    \item $a$ is well-typed and has effect $\epsilon$ in the \emph{right} component
+    $\Gamma^{\mb{q}_r}$; in general, we put bindings on the right to make our semantics a little bit
+    easier to define. $\Gamma^{\mb{q}_l}$ plus an unrestricted parameter $x: A^\top$.
+  \end{itemize}
+  \item \brle{case} and \brle{let$_2$} are the same, except that \brle{let$_2$}'s body requires two
+  parameters (one for each component of the tensor product), while both branches of a case-statement
+  share the \emph{same} left-component $\Gamma^{\mb{q}_l}$ (since exactly one branch is executed.)
+  \item \brle{unit} is well-typed and pure (and therefore can be assigned an arbitrary effect
+  $\epsilon$) in any context composed solely of affine variables, i.e. satisfying
+  $\cwk{\Gamma^{\mb{q}}}{\cdot}$.
+  \item \brle{pair} allows us to type pairs in the obvious manner by splitting the context between
+  the left and right component of the pair.
+  \item Finally, the \brle{iter} rule is a little bit more complicated: we split the context into a
+  component $\mb{q}_r$ for the initial value and a component $\mb{q}_l$ for the body. The initial
+  value is then evaluated and passed in as an additional parameter of type $A$ to the body. We
+  require that the body's context has unrestricted quantity since the loop may execute any number of
+  times; while one could argue that we should only require the body's context to have quantity
+  $\cpyq$ (since the loop body is guaranteed to execute at least once, as long as $a$ terminates),
+  this would make our semantics more complicated, and such variables can be passed in as arguments
+  to the loop body. Our final requirement is that the effect of a loop must be iterative, i.e.,
+  stable under infinite repetitions.
+\end{itemize}
 
 \begin{figure}
   \begin{gather*}
@@ -942,29 +989,10 @@ define context splitting $\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}$ as follows:
   \label{fig:subiterssa-typing}
 \end{figure}
 
-We can now give the typing rules for \subiterssa{} in Figure~\ref{fig:subiterssa-typing}. We type
-variables with the \brle{var} rule, which states that a variable $x$ has type $A$ in the context
-$\Gamma^{\mb{q}}$ if $\Gamma$ weakens to the singleton context $x: A^\oneq$, i.e., if $x$ has
-nonzero quantity and all other variables are affine. Applications, pairs, let-bindings,
-destructuring let-bindings, and injections are all typed in the usual manner, with context-splitting
-used to split the context between different fragments of the expression. The \brle{case} rule is
-similarly standard, except both the left branch $a$ and right branch $b$ of a case-statement share
-the same resource vector $\mb{q}_l$ since exactly one of them will be executed.
-
-The \brle{iter} rule, on the other hand, is a little bit more complicated: we split the context into
-a component $\mb{q}_r$ for the initial value and a component $\mb{q}_l$ for the body. The initial
-value is then evaluated and passed in as an additional parameter of type $A$ to the body. We require
-that the body's context has unrestricted quantity since the loop may execute any number of times;
-while one could argue that we should only require the body's context to have quantity $\cpyq$ (since
-the loop body is guaranteed to execute at least once, as long as $a$ terminates), this would make
-our semantics more complicated, and such variables can be passed in as arguments to the loop body.
-Our final requirement is that the effect of a loop must be iterative, i.e., stable under infinite
-repetitions.
-
 \subsection{Syntactic Metatheory}
 
-\TODO{now, we begin with basic metatheory; weakening as a sanity check}
-
+As a basic sanity check for our calculus, we can verify that it satisfies \emph{weakening}, stated
+as follows:
 \begin{lemma}[name=Weakening, restate=synmonwk]
   The following rule is admissible:
   \begin{equation*}
@@ -975,28 +1003,51 @@ repetitions.
   \end{equation*}
 \end{lemma}
 
-\TODO{the main point is \emph{substitution}; so we define one here}
+We now attempt to define what substitution looks like in the substructural, effectful context. We
+begin by defining a typing judgement $\issubst{\Gamma^{\mb{q}}}{\epsilon}{\sigma}{\Delta^{\mb{q}'}}$
+for substitutions (viewed as a duplicate-fre list of mappings $x \mapsto a$ from variables to
+terms), with rules in Figure~\ref{fig:subiterssa-subst}. This may be read as ``$\sigma$ takes the
+context $\Gamma^{\mb{q}}$ to the context $\Delta^{\mb{q}'}$ with effect $\epsilon$.'' Our rules may be interpreted as follows:
+\begin{itemize}
+  \item \brle{nil} simply states that the empty substitution $\cdot$ takes any affine context
+  $\Gamma^{\mb{q}}$ to the empty context $\cdot$; this is equivalent to the observation that any
+  well-typed term in the empty context is also well-typed in any affine context.
+  \item Our \brle{zero} rule is a bit unusual, but required as a consequence of the fact that we
+  allow unused variables to appear in our contexts. It states that if a variable $x : A^0$ is
+  unused, then we can map it to an arbitrary (potentially even ill-typed) term $a$; this makes sense
+  because, since $x$ will never appear in well-typed terms, $a$ will never appear in their
+  substitutions, and therefore does not need to be restricted. our contexts.
+  \item \brle{cons}: to type a substitution $\sigma, x: A^q$ where $x$ may be used...
+  \TODO{split context}
+  \TODO{commutative effects}
+\end{itemize}
 
-\begin{gather*}
-  \prftree[r]{\rle{nil}}{\cwk{\Gamma^{\mb{q}}}{\cdot}}
-                             {\issubst{\Gamma^{\mb{q}}}{\epsilon}{\cdot}{\cdot}} \qquad 
-  \prftree[r]{\rle{zero}}
-    {\issubst{\Gamma^{\mb{q}}}{\epsilon}{\sigma}{\Delta}}
-    {\issubst{\Gamma^{\mb{q}}}{\epsilon}{\sigma, x \mapsto a}{\Delta^{\mb{q}'}, x : A^0}}
-  \\
-  \prftree[r]{\rle{cons}}
-    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-    {\issubst{\Gamma^{\mb{q_l}}}{\epsilon_l}{\sigma}{\Delta^{\mb{q}}}}
-    {\hasty{\Gamma^{\mb{q}_r}}{\epsilon_r}{a}{A}}
-    {q \leq \alquant(\Gamma^{\mb{q}_r})}
-    {\epsilon_l \slides \epsilon_r}
-    {\epsilon_l, \epsilon_r \leq \epsilon}
-    {\issubst{\Gamma^{\mb{q}}}{\epsilon}{\sigma, x \mapsto a}
-    {\Delta^{\mb{q}'}, x : A^q}}
-\end{gather*}
-
-\TODO{syntactic substitution defined here}
-
+\begin{figure}
+  \begin{gather*}
+    \prftree[r]{\rle{nil}}{\cwk{\Gamma^{\mb{q}}}{\cdot}}
+                              {\issubst{\Gamma^{\mb{q}}}{\epsilon}{\cdot}{\cdot}} \qquad 
+    \prftree[r]{\rle{zero}}
+      {\issubst{\Gamma^{\mb{q}}}{\epsilon}{\sigma}{\Delta}}
+      {\issubst{\Gamma^{\mb{q}}}{\epsilon}{\sigma, x \mapsto a}{\Delta^{\mb{q}'}, x : A^0}}
+    \\
+    \prftree[r]{\rle{cons}}
+      {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+      {\issubst{\Gamma^{\mb{q_l}}}{\epsilon_l}{\sigma}{\Delta^{\mb{q}}}}
+      {\hasty{\Gamma^{\mb{q}_r}}{\epsilon_r}{a}{A}}
+      {q \leq \alquant(\Gamma^{\mb{q}_r})}
+      {\epsilon_l \slides \epsilon_r}
+      {\epsilon_l, \epsilon_r \leq \epsilon}
+      {\issubst{\Gamma^{\mb{q}}}{\epsilon}{\sigma, x \mapsto a}
+      {\Delta^{\mb{q}'}, x : A^q}}
+  \end{gather*}
+  \caption{Substitution rules for \subiterssa{}}
+  \Description{}
+  \label{fig:subiterssa-subst}
+\end{figure}
+We denote capture-avoiding substitution of $a$ by $\sigma$ as $[\sigma]a$; we leave the definition
+to the appendix. %
+\TODO{define this?} %
+We can now state the substitution lemma for our calculus as follows:
 \begin{lemma}[name=Substitution, restate=synmonsubst]
   The following rule is admissible:
   \begin{equation*}
@@ -1008,6 +1059,8 @@ repetitions.
 \end{lemma}
 
 \subsection{Refinement Theory}
+
+We can now develop our syntactic theory of refinement
 
 \TODO{now we have a syntax which is ``sane'' (weakening + substitution); and we want to develop our
 refinement theory}
