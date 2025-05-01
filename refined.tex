@@ -1007,19 +1007,26 @@ We now attempt to define what substitution looks like in the substructural, effe
 begin by defining a typing judgement $\issubst{\Gamma^{\mb{q}}}{\epsilon}{\sigma}{\Delta^{\mb{q}'}}$
 for substitutions (viewed as a duplicate-fre list of mappings $x \mapsto a$ from variables to
 terms), with rules in Figure~\ref{fig:subiterssa-subst}. This may be read as ``$\sigma$ takes the
-context $\Gamma^{\mb{q}}$ to the context $\Delta^{\mb{q}'}$ with effect $\epsilon$.'' Our rules may be interpreted as follows:
+context $\Gamma^{\mb{q}}$ to the context $\Delta^{\mb{q}'}$ with effect $\epsilon$.'' Our rules may
+be interpreted as follows:
 \begin{itemize}
   \item \brle{nil} simply states that the empty substitution $\cdot$ takes any affine context
   $\Gamma^{\mb{q}}$ to the empty context $\cdot$; this is equivalent to the observation that any
-  well-typed term in the empty context is also well-typed in any affine context.
+  well-typed term in the empty context is also well-typed in any affine context. We allow an
+  arbitrary effect $\epsilon$ here, since the empty substitution is always pure.
   \item Our \brle{zero} rule is a bit unusual, but required as a consequence of the fact that we
   allow unused variables to appear in our contexts. It states that if a variable $x : A^0$ is
   unused, then we can map it to an arbitrary (potentially even ill-typed) term $a$; this makes sense
   because, since $x$ will never appear in well-typed terms, $a$ will never appear in their
-  substitutions, and therefore does not need to be restricted. our contexts.
-  \item \brle{cons}: to type a substitution $\sigma, x: A^q$ where $x$ may be used...
-  \TODO{split context}
-  \TODO{commutative effects}
+  substitutions, and therefore does not need to be restricted. our contexts. We leave the effect of
+  $\sigma$ unchanged.
+  \item \brle{cons}: to type a substitution $\sigma, x \mapsto a$ taking  $\Gamma^{\mb{q}}$ to
+  $\Delta^{\mb{q}'}, x: A^q$ with effect $\epsilon$, we split the input context into a context
+  $\Gamma^{\mb{q}_l}$, used to type $\sigma$ with effect $\epsilon_l \leq \epsilon$, and
+  $\Gamma^{\mb{q}_r}$, used to type $a$ with effect $\epsilon_r \leq \epsilon$. We additionally
+  require that $\Gamma^{\mb{q}_r}$ can be used with quantity $q$; i.e., is relevant if $q$ is
+  relevant and affine if $q$ is affine. Finally, we require that the effect of $\sigma$
+  ($\epsilon_l$) and the effect of $a$ ($\epsilon_r$) commute.
 \end{itemize}
 
 \begin{figure}
@@ -1043,11 +1050,9 @@ context $\Gamma^{\mb{q}}$ to the context $\Delta^{\mb{q}'}$ with effect $\epsilo
   \caption{Substitution rules for \subiterssa{}}
   \Description{}
   \label{fig:subiterssa-subst}
-\end{figure}
-We denote capture-avoiding substitution of $a$ by $\sigma$ as $[\sigma]a$; we leave the definition
-to the appendix. %
-\TODO{define this?} %
-We can now state the substitution lemma for our calculus as follows:
+\end{figure}%
+We denote capture-avoiding substitution of $a$ by $\sigma$ as $[\sigma]a$ We can now state the
+substitution lemma for our calculus as follows:
 \begin{lemma}[name=Substitution, restate=synmonsubst]
   The following rule is admissible:
   \begin{equation*}
@@ -1060,15 +1065,23 @@ We can now state the substitution lemma for our calculus as follows:
 
 \subsection{Refinement Theory}
 
-We can now develop our syntactic theory of refinement
-
-\TODO{now we have a syntax which is ``sane'' (weakening + substitution); and we want to develop our
-refinement theory}
-
-\TODO{we will start with a base theory $\mc{R}$ of refinements, and compute its closure}
-
-\TODO{refinement is a partial order, so we need reflexivity and transitivity}
-
+Now that we have some basic metatheoretic results, we can attempt to develop our refinement
+relation. We write our refinement judgement as
+\begin{equation*}
+  \tmle{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A}
+\end{equation*}
+which we will read as ``$a$ is refined by $b$ in the context $\Gamma^{\mb{q}}$ modulo rewrites
+$\mc{R}$.'' Here $\mc{R}$ is a set of rewrites of the form $\tmle{\Gamma^{\mb{q}}}{}{a}{b}{A}$; we
+will generally assume that $\mc{R}$ is closed under pure substitution, i.e. that the following rule
+is admissible
+\begin{equation*}
+  \prftree[r]{}
+    {\issubst{\Gamma^{\mb{q}}}{\bot}{\sigma}{\Delta^{\mb{q}'}}}
+    {(\tmle{\Delta^{\mb{q}'}}{}{a}{b}{A}) \in \mc{R}}
+    {(\tmle{\Gamma^{\mb{q}}}{}{[\sigma]a}{[\sigma]b}{A}) \in \mc{R}} 
+\end{equation*}
+We want our refinement relation to contain $\mc{R}$; furthermore, we want it to induce a partial
+order on terms in context. We hence postulate the following rules:
 \begin{gather*}
   \prftree[r]{\rle{base}}
     {(\tmle{\Gamma^{\mb{q}}}{}{a}{b}{A}) \in \mc{R}}
@@ -1082,17 +1095,14 @@ refinement theory}
     {\tmle{\Gamma^{\mb{q}}}{\mc{R}}{b}{c}{A}}
     {\tmle{\Gamma^{\mb{q}}}{\mc{R}}{a}{c}{A}}
 \end{gather*}
-
-\TODO{this of course induces an equivalence relation}
-
+Note in particular that this allows us to define equivalence of terms as follows:
 \begin{equation*}
   \tmeq{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A}
   \iff \tmle{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A} 
   \land \tmle{\Gamma^{\mb{q}}}{\mc{R}}{b}{a}{A}
 \end{equation*}
-
-\TODO{we also want our resulting relation to be a \emph{congruence}, i.e.}
-
+We would also like our refinement relation to be a \emph{congruence} w.r.t. our term formers, which
+we achieve using the following rules:
 \begin{gather*}
   \prftree[r]{\rle{var}}
     {\cwk{\Gamma^{\mb{q}}}{x : A^q_\epsilon}}
@@ -1531,7 +1541,11 @@ We use this to state the following lemma:
 
 \section{Semantics}
 
-\TODO{and now, we give all this a semantics...}
+In this section, we give a categorical semantics for the \subiterssa{} calculus, which we will later
+prove our refinement theory is complete with respect to in Section~\ref{ssec:completeness}. Since we
+are studying \emph{refinements}, rather than equations, we need some kind of way to order the
+morphisms in our categorical models. We hence introduce the notion of a \emph{poset-enriched
+category} as follows:
 
 \begin{definition}[Poset-Enriched Category]
   We define a \emph{poset-enriched category}, sometimes called a \emph{2-poset}, to be a category
@@ -1544,6 +1558,11 @@ We use this to state the following lemma:
   poset-enriched category by giving each hom-set the discrete order, with functors between ordinary
   categories now valid functors between their corresponding enrichments.
 \end{definition}
+
+We then introduce the notion of a \emph{(symmetric) premonoidal category}, which can be thought of
+like a symmetric monoidal category in which the sliding rule does not necessarily hold. We may
+extend the standard concept in the literature to the poset-enriched setting by requiring the left
+and right tensor functors to additionally be poset-enriched functors.
 
 \begin{definition}[Symmetric Premonoidal Category]
   We define a \emph{binoidal category} to be a category $\mc{C}$ equipped with a binary operation
@@ -2066,6 +2085,8 @@ Probably the simplest model we can give of our language is \emph{undefined behav
 \TODO{this}
 
 \subsection{Completeness}
+
+\label{ssec:completeness}
 
 \TODO{and now we show our model indeed rules all concrete models}
 
