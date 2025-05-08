@@ -102,6 +102,10 @@
 \newcommand{\liter}[3]{\ms{iter}\;#1\;\{ \linr{#2} \lto #3 \}}
 \newcommand{\einf}[1]{#1 \in \mc{E}^\infty}
 
+\newcommand{\ncaseexpr}[3]{\ms{case}_{#1}\;#2\;\{#3\}}
+\newcommand{\splitexpr}[3]{\ms{split}_{#1; #2}(#3)}
+\newcommand{\webranch}[3]{#1(#2) \lto #3}
+
 % Judgements
 \newcommand{\qsp}[4]{#1 \vdash #2 = #3 + #4}
 \newcommand{\qwk}[4]{#1 \vdash #2 \geq #3 + #4}
@@ -112,7 +116,7 @@
 \newcommand{\bhyp}[2]{#1 : #2}
 \newcommand{\lhyp}[2]{#1(#2)}
 \newcommand{\rle}[1]{{\scriptsize\textsf{#1}}}
-\newcommand{\qbc}[2]{#1 , #2}
+\newcommand{\qbc}[2]{(#1) , #2}
 
 \newcommand{\hasty}[4]{#1 \vdash_{#2} #3: {#4}}
 \newcommand{\haslb}[4]{#1 \vdash_{#2} #3 \rhd #4}
@@ -139,9 +143,14 @@
 \newcommand{\brle}[1]{{\textsf{#1}}}
 
 \newcommand{\tossa}[2]{\ms{SSA}(#1 \Rightarrow #2)}
+\newcommand{\ssalet}[3]{\ms{SSA}_{\ms{let}}(#1, #2, #3)}
 \newcommand{\toanf}[1]{\ms{ANF}(#1)}
 \newcommand{\anflet}[3]{\ms{ANF}_{\ms{let}}(#1, #2, #3)}
 \newcommand{\toterm}[1]{\ms{Term}(#1)}
+\newcommand{\etoty}[1]{[#1]}
+\newcommand{\ctoty}[1]{[#1]}
+\newcommand{\ltoty}[2]{[#1]}
+\newcommand{\dltoty}[2]{[#1; #2]}
 
 % Denotational semantics
 \newcommand{\dnt}[1]{\llbracket{#1}\rrbracket}
@@ -989,6 +998,166 @@ particular,
   \label{fig:subiterssa-typing}
 \end{figure}
 
+\subsection{SSA}
+
+
+\TODO{we now study the syntax of SSA, which is as follows}
+
+\begin{grammar}
+  <\(o\)> ::= \(x\)
+    \;|\; \(f\;x\)
+    \;|\; \(()\)
+    \;|\; \((x, y)\)
+    \;|\;  \(\linl{x}\)
+    \;|\; \(\linr{x}\)
+    \;|\; \(\labort{x}\)
+
+  <\(r, s, t\)> ::= \(\kappa\)
+    \;|\; \(\letstmt{x}{o}{t}\)
+    \;|\; \(\letstmt{(x, y)}{o}{t}\)
+
+  <\(\kappa\)> ::= \(\tau\) \;|\; \(\awhere{\kappa}{L}\) \;|\; \(\cwhere{\kappa}{L}\)
+
+  <\(\tau\)> ::= \(\brb{\ell}{o}\)
+    \;|\; \(\casestmt{o}{y}{\tau}{z}{\tau'}\)
+  <\(L\)> ::= \(\cdot\) \;|\; \(L, \wbranch{\ell}{x}{A}\)
+
+  <\(\ms{L}\)> ::= \(\cdot\) \;|\; \(\ms{L}, \lhyp{\ell}{A}\)
+
+  <\(\mb{Q}\)> ::= \(\cdot\) \;|\; \(\mb{Q}; \mb{q}\)
+\end{grammar}
+
+\TODO{we've got label contexts, which of course have their own fun form of weakening... think hard
+about polarity here}
+ 
+\begin{gather*}
+  \prftree[r]{\rle{nil}}{\lwk{\cdot}{\cdot}} \qquad 
+  \prftree[r]{\rle{cons}}
+    {\lwk{\ms{L}^{\mb{Q}}_{\mb{E}}}{\ms{K}^{\mb{Q}}_{\mb{E}}}}
+    {\mb{q}' \leq \mb{q}}
+    {\epsilon' \leq \epsilon}
+    {\lwk{\ms{L}^{\mb{Q}}_{\mb{e}}, \lhyp{\ell}{A}^{\mb{q}}_{\epsilon}}
+    {\ms{K}^{\mb{Q}}_{\mb{e}}, \lhyp{\ell}{A}^{\mb{q}'}_{\epsilon'}}} \qquad
+  \prftree[r]{\rle{skip}}
+    {\lwk{\ms{L}^{\mb{Q}}_{\mb{E}}}{\ms{K}^{\mb{Q}}_{\mb{E}}}}
+    {\lwk{\ms{L}^{\mb{Q}}_{\mb{E}}}{\ms{K}^{\mb{Q}}_{\mb{E}}, \lhyp{\ell}{A}^{\mb{q}}_{\epsilon}}}
+\end{gather*}
+
+\TODO{we've got typing rules}
+
+\begin{gather*}
+  \prftree[r]{\rle{let$_1$}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{o}{A}}
+    {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{t}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\letstmt{x}{o}{t}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+  \\
+  \prftree[r]{\rle{let$_2$}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{o}{A \otimes B}}
+    {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A, y : B}{\epsilon}{t}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\letstmt{(x, y)}{o}{t}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+  \\
+  \prftree[r]{\rle{br}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\bot}{a}{A}}
+    {\lwk{\lhyp{\ell}{A}_\epsilon^{\mb{q}_l}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\brb{\ell}{a}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+  \\
+  \prftree[r]{\rle{case}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\bot}{o}{A + B}}
+    {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{\tau_l}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+    {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, y : B}{\epsilon}{\tau_r}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\casestmt{o}{x}{\tau_l}{y}{\tau_r}}
+                                               {\ms{L}^{\mb{Q}}_{\mb{e}}}}
+  \\
+  \prftree[r]{\rle{where$_{\ms{nonrec}}$}}
+    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\kappa}
+      {\ms{L}^{\mb{Q}}_{\mb{e}}, \ms{R}^{\mb{Q}'}_{\mb{e}'}}}
+    {\forall \lhyp{\ell_i}{A_i}^{\mb{q}_i}_{\epsilon_i} \in \ms{R}^{\mb{Q}'}_{\mb{e}'} .
+      \haslb{\Gamma^{\mb{q}}_{\mb{e}}, x_i : A_i}{\epsilon_i}{t_i}{\ms{L}^{\mb{Q}}_{\mb{e}}}
+    }
+    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\awhere{\kappa}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
+      {\ms{L}^{\mb{Q}}_{\mb{e}}}}
+  \\
+  \prftree[r]{\rle{where$_{\ms{rec}}$}}
+  {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\kappa}
+    {\ms{L}^{\mb{Q}}_{\mb{e}}, \ms{R}^{\mb{Q}'}_{\mb{e}'}}}
+  {\einf{\epsilon}}
+  {\forall \lhyp{\ell_i}{A_i}^{\mb{q}_i}_{\epsilon_i} \in \ms{R}^{\mb{Q}'}_{\mb{e}'} .
+    \haslb{\Gamma^{\mb{q}}_{\mb{e}}, x_i : A_i}{\epsilon_i}{t_i}{
+      \ms{L}^{\mb{Q}}_{\mb{e}}, \ms{R}^{\mb{Q}'}_{\mb{e}'}}
+  }
+  {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\cwhere{\kappa}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
+    {\ms{L}^{\mb{Q}}_{\mb{e}}}}
+\end{gather*}
+
+\begin{align*}
+  \tossa{e}{\ell} &:= \ssalet{x}{e}{\brb{\ell}{x}} \\
+  \ssalet{x}{y}{r} &:= \letexpr{x}{y}{r} \\
+  \ssalet{x}{f\;a}{r} &:= \ssalet{y}{a}{\letexpr{x}{f\;y}{r}} \\
+  \ssalet{x}{\letexpr{y}{a}{b}}{r} &= \ssalet{y}{a}{\ssalet{x}{b}{r}} \\
+  \ssalet{x}{()}{r} &:= \letexpr{x}{()}{r} \\
+  \ssalet{x}{(a, b)}{r} &:= \ssalet{y}{a}{\ssalet{z}{b}{\letstmt{x}{(y, z)}}{r}} \\
+  \ssalet{x}{\letexpr{(y, z)}{a}{b}}{r} &:= \ssalet{w}{a}{\letexpr{(y, z)}{w}{\ssalet{x}{b}{r}}}\\
+  \ssalet{x}{\linl{a}}{r} &:= \ssalet{y}{a}{\letexpr{x}{\linl{y}}{r}} \\
+  \ssalet{x}{\linr{a}}{r} &:= \ssalet{y}{a}{\letexpr{x}{\linr{y}}{r}} \\
+  \ssalet{x}{\caseexpr{a}{y}{b}{z}{c}}{r} &:= \awhere{(\awhere
+    { \ssalet{w}{a}{\casestmt{w}{y}{\brb{\ell_l}{y}}{z}{\brb{\ell_r}{z}}} \\ & \qquad}
+    {
+      \\ & \qquad \qquad \wbranch{\ell_l}{y}{\tossa{b}{\ell_o}}, 
+      \\ & \qquad \qquad \wbranch{\ell_r}{z}{\tossa{c}{\ell_o}}}
+     \\ & \qquad ) }{ \wbranch{\ell_o}{x}{r}} \\
+  \ssalet{x}{\labort{a}}{r} &:= \ssalet{y}{a}{\letexpr{x}{\labort{y}}{r}} \\
+  \ssalet{x}{\liter{a}{y}{b}}{r} & := 
+    \cwhere{\tossa{a}{\ell_r}}{ 
+        \\ & \qquad \wbranch{\ell_o}{x}{r}, 
+        \\ & \qquad \wbranch{\ell_r}{y}{\ssalet{z}{b}
+          {\casestmt{z}{w}{\brb{\ell_o}{w}}{u}{\brb{\ell_r}{u}}}}}
+\end{align*}
+
+\begin{gather*}
+  \etoty{A^q} = \begin{cases}
+    A             & \text{if } q \neq 0 \\
+    \mb{1}        & \text{if } q = 0
+  \end{cases}
+  \\
+  \ctoty{\cdot} := \mb{1} \qquad \ctoty{\Gamma^{\mb{q}}, x : A^q} 
+    := \ctoty{\Gamma^{\mb{q}}} \otimes \etoty{A^q}
+  \\
+  \ltoty{\cdot} := \mb{0} \qquad
+  \ltoty{\ms{L}^{\mb{Q}}_{\mb{e}}, \lhyp{\ell}{A}^{\mb{q}}_{\epsilon}}
+    := \ms{L}^{\mb{Q}}_{\mb{e}} + A
+  \\
+  \dltoty{\Gamma}{\cdot} := \mb{0} \qquad
+  \dltoty{\Gamma}{\ms{L}^{\mb{Q}}_{\mb{e}}, \lhyp{\ell}{A}^{\mb{q}}_{\epsilon}}
+    := \dltoty{\Gamma}{\ms{L}^{\mb{Q}}_{\mb{e}}} + (\ctoty{\Gamma^{\mb{q}}} \otimes A)
+    = \dltoty{\Gamma}{\ms{L}^{\mb{Q}}_{\mb{e}}} + \ctoty{\Gamma^{\mb{q}}, - : A}
+\end{gather*}
+
+\begin{align*}
+  \ncaseexpr{\cdot}{a}{\cdot} &:= \labort{a} \\
+  \ncaseexpr{\ms{L}^{\mb{Q}}_{\mb{e}}, \lhyp{\ell}{A}^{\mb{q}}_{\epsilon}}{a}{
+      L, \webranch{\ell}{x}{b}
+    }
+    &:= \caseexpr{a}{y}{\ncaseexpr{\ms{L}^{\mb{Q}}_{\mb{e}}}{y}{L}}{x}{b} 
+\end{align*}
+
+\begin{align*}
+  \splitexpr{\ms{L}^{\mb{Q}}_{\mb{e}}}{\cdot}{a} & := \linl{a} \\
+  \splitexpr{\ms{L}^{\mb{Q}}_{\mb{e}}}{\ms{R}^{\mb{Q}'}_{\mb{e}'}, 
+        \lhyp{\ell}{A}^{\mb{q}}_{\epsilon}}{a}
+    &:= \caseexpr{a}{x}{
+      \caseexpr{\splitexpr{\ms{L}^{\mb{Q}}_{\mb{e}}}{\ms{R}^{\mb{Q}'}_{\mb{e}'}}{x}}
+        {z}{\linl{z}}
+        {w}{\linr{\linl{w}}
+    }  \\ & \qquad \qquad \quad
+    }{w}{\linr{\linr{w}}} \\
+\end{align*}
+
+\TODO{compilation from SSA to expressions}
+
 \subsection{Syntactic Metatheory}
 
 As a basic sanity check for our calculus, we can verify that it satisfies \emph{weakening}, stated
@@ -1562,6 +1731,27 @@ We use this to state the following lemma:
 
 \section{Semantics}
 
+\begin{itemize}
+  \item Tell story backwards, since we have a lot of bits. Why are all the bits here?
+  \item Want to \emph{model} our programming language with our categorical structures
+  \item Premonoidal categories were introduced to model sequencing and binding in first-order
+  imperative languages.
+  \item They let us model the notion of values and (possibly effectful) expressions, and how to
+  substitute values for variables
+  \item An imperative language has more features than just sequencing, however
+  \item We additionally need \emph{control-flow}: branching and looping
+  \item To model branching, we need coproducts
+  \item To model looping, we use iteration, via an Elgot structure
+  \item This is enough structure to model SSA (c.f. \citet{ghalayini-24-ssa-densem-arxiv})
+  \item But we want to do \emph{more} in this paper
+  \item First, we want to be able to have a fine-grained categorization of effects beyond just
+        values and expressions, so that we can study substitution for effectful expressions.
+  \item In general, substituting effectful expressions gives rise to \emph{refinements}, rather than
+        \emph{equations}, so we need to be able to model refinement
+  \item This is why we work in a \emph{poset-enriched} version of the above, because instead of
+  hom-sets, we get hom-posets, which let us compare morphisms via refinement
+\end{itemize}
+
 In this section, we give a categorical semantics for the \subiterssa{} calculus, which we will later
 prove our refinement theory is complete with respect to in Section~\ref{ssec:completeness}. Since we
 are studying \emph{refinements}, rather than equations, we need some kind of way to order the
@@ -1579,6 +1769,9 @@ category} as follows:
   poset-enriched category by giving each hom-set the discrete order, with functors between ordinary
   categories now valid functors between their corresponding enrichments.
 \end{definition}
+
+Now that we have a natural notion of \emph{order} on morphisms, we can use this to represent program
+refinement as follows: if $f \leq g$, then $g$ is a refinement of $f$.
 
 We then introduce the notion of a \emph{(symmetric) premonoidal category}, which can be thought of
 like a symmetric monoidal category in which the sliding rule does not necessarily hold. We may
@@ -1817,18 +2010,9 @@ cocartesian, it follows that we only need to check naturality and codiagonal.
 \end{definition}
 
 \begin{equation*}
-  \dnt{A^q} = \begin{cases}
-    \dnt{A} & \text{if } q \neq 0 \\
-    I       & \text{if } q = 0
-  \end{cases} \qquad
-  !_{A^q} = \begin{cases}
-    !_A & \text{if } q \neq 0 \\
-    \ms{id}_I & \text{if } q = 0
-  \end{cases} \qquad
-  \Delta_{A^q} = \begin{cases}
-    \dmor{A} & \text{if } q \neq 0 \\
-    \lambda^{-1} & \text{if } q = 0
-  \end{cases}
+  \dnt{A^q} = \dnt{\etoty{A^q}} \qquad
+  !_{A^q} = !_{\etoty{A^q}} \qquad
+  \Delta_{A^q} = \Delta_{\etoty{A^q}}
 \end{equation*}
 
 \begin{gather*}
@@ -2091,10 +2275,6 @@ Probably the simplest model we can give of our language is \emph{undefined behav
 
 \TODO{this}
 
-\subsection{Poison and Freeze}
-
-\TODO{this}
-
 \subsection{Separation Logic}
 
 \TODO{this}
@@ -2129,174 +2309,6 @@ Probably the simplest model we can give of our language is \emph{undefined behav
   and hence that $\mc{S}_{\mc{R}}$ is the initial object in the category of $\mc{S}$-models
   validating $\mc{R}$.
 \end{theorem}
-
-\section{SSA}
-
-\subsection{ANF}
-
-\TODO{now we want to start studying the SSA transformation, we start with ANF}
-
-\begin{grammar}
-  <\(a, b, c\)> ::=
-    \(o\)
-    \;|\; \(\letexpr{x}{o}{b}\)
-    \;|\; \(\letexpr{(x, y)}{o}{b}\)
-    \;|\; \(\caseexpr{o}{x}{a}{y}{b}\)
-    \;|\; \(\liter{o}{x}{b}\)
-
-  <\(o, p, q\)> ::=
-  \(x\)
-  \;|\; \(f\;o\)
-  \;|\; \(()\)
-  \;|\; \((o, p)\)
-  \;|\;  \(\linl{o}\)
-  \;|\; \(\linr{o}\)
-  \;|\; \(\labort{o}\)
-\end{grammar}
-
-\TODO{this is a subset of SSA; we have a simple transformation algorithm}
-
-\TODO{this transformation algorithm gives us an equivalent expression according to the equational
-theory}
-
-\subsection{SSA Syntax}
-
-\TODO{we now study the syntax of SSA, which is as follows}
-
-\begin{grammar}
-  <\(r, s, t\)> ::= \(\kappa\)
-    \;|\; \(\letstmt{x}{o}{t}\)
-    \;|\; \(\letstmt{(x, y)}{o}{t}\)
-
-  <\(\kappa\)> ::= \(\tau\) \;|\; \(\awhere{\kappa}{L}\) \;|\; \(\cwhere{\kappa}{L}\)
-
-  <\(\tau\)> ::= \(\brb{\ell}{o}\)
-    \;|\; \(\casestmt{o}{y}{\tau}{z}{\tau'}\)
-
-  <\(o, p, q\)> ::=
-  \(x\)
-  \;|\; \(f\;o\)
-  \;|\; \(()\)
-  \;|\; \((o, p)\)
-  \;|\;  \(\linl{o}\)
-  \;|\; \(\linr{o}\)
-  \;|\; \(\labort{o}\)
-
-  <\(L\)> ::= \(\cdot\) \;|\; \(L, \wbranch{\ell}{x}{A}\)
-
-  <\(\ms{L}\)> ::= \(\cdot\) \;|\; \(\ms{L}, \lhyp{\ell}{A}\)
-
-  <\(\mb{Q}\)> ::= \(\cdot\) \;|\; \(\mb{Q}; \mb{q}\)
-\end{grammar}
-
-\TODO{we've got label contexts, which of course have their own fun form of weakening}
-
-\begin{gather*}
-  \qbc{\cdot}{q} = \cdot \qquad
-  \qbc{\mb{Q}; \mb{q}}{q} = \qbc{\mb{Q}}{q}; (\mb{q}, q)
-\end{gather*}
- 
-\begin{gather*}
-  \prftree[r]{\rle{nil}}{\lwk{\cdot}{\cdot}} \qquad 
-  \prftree[r]{\rle{cons}}
-    {\lwk{\ms{L}^{\mb{Q}}_{\mb{E}}}{\ms{K}^{\mb{Q}}_{\mb{E}}}}
-    {\mb{q}' \leq \mb{q}}
-    {\epsilon \leq \epsilon'}
-    {\lwk{\ms{L}^{\mb{Q}}_{\mb{e}}, \lhyp{\ell}{A}^{\mb{q}}_{\epsilon}}
-    {\ms{K}^{\mb{Q}}_{\mb{e}}, \lhyp{\ell}{A}^{\mb{q}'}_{\epsilon'}}} \qquad
-  \prftree[r]{\rle{skip}}
-    {\lwk{\ms{L}^{\mb{Q}}_{\mb{E}}}{\ms{K}^{\mb{Q}}_{\mb{E}}}}
-    {\lwk{\ms{L}^{\mb{Q}}_{\mb{E}}}{\ms{K}^{\mb{Q}}_{\mb{E}}, \lhyp{\ell}{A}^{\mb{q}}_{\epsilon}}}
-\end{gather*}
-
-\TODO{we've got typing rules}
-
-\begin{gather*}
-  \prftree[r]{\rle{let$_1$}}
-    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{o}{A}}
-    {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{t}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
-    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\letstmt{x}{o}{t}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
-  \\
-  \prftree[r]{\rle{let$_2$}}
-    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{o}{A \otimes B}}
-    {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A, y : B}{\epsilon}{t}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
-    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\letstmt{(x, y)}{o}{t}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
-  \\
-  \prftree[r]{\rle{br}}
-    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\bot}{a}{A}}
-    {\lwk{\lhyp{\ell}{A}_\epsilon^{\mb{q}_l}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
-    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\brb{\ell}{a}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
-  \\
-  \prftree[r]{\rle{case}}
-    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{o}{A + B}}
-    {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{\tau_l}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
-    {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, y : B}{\epsilon}{\tau_r}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
-    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\casestmt{o}{x}{\tau_l}{y}{\tau_r}}
-                                               {\ms{L}^{\mb{Q}}_{\mb{e}}}}
-  \\
-  \prftree[r]{\rle{where$_{\ms{nonrec}}$}}
-    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\kappa}
-      {\ms{L}^{\mb{Q}}_{\mb{e}}, \ms{R}^{\mb{Q}'}_{\mb{e}'}}}
-    {\forall \lhyp{\ell_i}{A_i}^{\mb{q}_i}_{\epsilon_i} \in \ms{R}^{\mb{Q}'}_{\mb{e}'} .
-      \haslb{\Gamma^{\mb{q}}_{\mb{e}}, x_i : A_i}{\epsilon_i}{t_i}{\ms{L}^{\mb{Q}}_{\mb{e}}}
-    }
-    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\awhere{\kappa}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
-      {\ms{L}^{\mb{Q}}_{\mb{e}}}}
-  \\
-  \prftree[r]{\rle{where$_{\ms{rec}}$}}
-  {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\kappa}
-    {\ms{L}^{\mb{Q}}_{\mb{e}}, \ms{R}^{\mb{Q}'}_{\mb{e}'}}}
-  {\forall \lhyp{\ell_i}{A_i}^{\mb{q}_i}_{\epsilon_i} \in \ms{R}^{\mb{Q}'}_{\mb{e}'} .
-    \haslb{\Gamma^{\mb{q}}_{\mb{e}}, x_i : A_i}{\epsilon_i}{t_i}{
-      \ms{L}^{\mb{Q}}_{\mb{e}}, \ms{R}^{\mb{Q}'}_{\mb{e}'}}
-  }
-  {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\cwhere{\kappa}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
-    {\ms{L}^{\mb{Q}}_{\mb{e}}}}
-\end{gather*}
-
-\TODO{substitution exists (in its restrictive format); to avoid restrictions see
-\citet{ghalayini-24-ssa-densem-arxiv}}
-
-\TODO{\emph{label substitution} exists too}
-
-\subsection{Compiling ANF to SSA}
-
-\begin{gather*}
-  \tossa{x}{\ell} = \brb{\ell}{x} \qquad
-  \tossa{f\;a}{\ell} = \letstmt{x}{a}{\brb{\ell}{f\;x}} \\
-\end{gather*}
-
-\TODO{this}
-
-\TODO{note the output always has only structured control-flow!}
-
-\subsection{Compiling SSA to ANF}
-
-\TODO{label context-to-type packing, unpacking}
-
-\TODO{compiling terminators (easy)!}
-
-\TODO{compiling let-bindings (easy)!}
-
-\TODO{compiling non-recursive \ms{where}-bindings (medium)}
-
-\TODO{context-to-type packing, unpacking}
-
-\TODO{label-context appending, factorization}
-
-\TODO{compiling recursive \ms{where}-bindings (hard)}
-
-\subsection{Semantics}
-
-\TODO{\emph{implied} semantics of SSA (derived from SSA to ANF)}
-
-\TODO{ANF to SSA is semantics preserving}
-
-\TODO{and so therefore the languages are equivalent, yay!}
 
 \section{Discussion and Related Work}
 
