@@ -261,7 +261,7 @@
 \orcid{0000-0003-2838-5865}
 
 \begin{abstract}
-  \TODO{this}
+  \TODO{write the abstract}
 \end{abstract}
 
 \begin{CCSXML}
@@ -299,378 +299,31 @@
 
 \maketitle
 
-\TODO{paper structure:}
-\begin{enumerate}
-  \item Basic narrative
-  \item Term syntax with iteration; much like an RVSDG \cite{rvsdg}
-  \item Equational theory
-  \item Semantics + completeness; diagrams \emph{are} an RVSDG
-  \item Concrete models:
-  \begin{itemize}
-    \item Partial functions
-    \item Undefined behaviour + freeze + heap $=$ toy single-threaded C
-    \item Sequentially-consistent concurrency via traces
-    \item Release-acquire weak memory
-    \item Should have an exotic, non-monadic model w/ iteration...
-    \item Note about exotic models \emph{without} iteration: Hilbert spaces and game semantics
-  \end{itemize}
-  \item SSA syntax with structured control-flow
-  \item Lowering unstructured to structured
-  \item Lowering to terms
-  \item Appendix:
-  \begin{itemize}
-    \item Complete calculus for premonoidal categories
-    \item Basic blocks?
-    \item Complete calculus for distributive premonoidal categories
-    \item Acyclic SSA
-    \item Notes about making effects into a lattice?
-    \item Notes about alias analysis?
-  \end{itemize}
-\end{enumerate}
-
 \section{Introduction}
 
-\emph{Static single-assignment}, or \emph{SSA}, is the backbone of modern compiler pipelines for
-imperative languages, and yet borrows its core idea from functional programming. By ensuring that
-every variable's value can be traced back to a single assignment (which may still be executed
-multiple times, hence \emph{static}), we can always look up a variable's definition regardless of
-where in a program it is used, and hence perform algebraic reasoning in the presence of complex,
-unstructured control-flow. In particular, this means that SSA ensures that variables bound to pure
-expressions can always be replaced by their definitions without altering semantics, a property known
-as \emph{referential transparency}.
+\TODO{we want to study SSA with refinement and effects; so we need+get linearity}
 
-Recent work by \citet{ghalayini-24-ssa-densem-arxiv} leverages this insight to develop an equational
-theory of SSA by combining the validity of pure substitution with standard equations for
-control-flow, treating all impure expressions opaquely. They then proceed to give a categorical
-model for their equational theory, with respect to which their equational theory is both sound and
-complete. Their equational theory is rich enough to formalize a wide variety of program
-transformations and optimizations, such as the B\"ohm-Jacopini theorem \cite{bohm-jacopini},
-independently of the underlying model of computation.
+\section{SSA}
 
-However, real-world compiler optimizations must often reason about operations that are not purely
-functional. This becomes essential when fundamental operations, such as addition and division, can
-exhibit impurity due to undefined behavior, which intermediate representations often leverage to
-increase optimization opportunities. 
+\TODO{recall syntax with BBA / $\phi$-nodes}
 
-For example, consider an operation like \ms{div}, which exhibits \emph{undefined behavior} in both C
-and LLVM if we divide by zero. Let's say we have a program like $\letexpr{x}{\ms{div}\;y\;z}{e}$,
-where the optimizer cannot deduce whether $z$ is nonzero; since $\ms{div}\;y\;z$ may exhibit UB, it
-is \emph{impure}, and hence, in general, this program is \emph{not} equivalent to
-$[\ms{div}\;y\;z/x]e$; for example, if $z = 0$ and $e = ()$, $\letexpr{x}{\ms{div}\;y\;z}{e}$ always
-exhibits UB, whereas $[\ms{div}\;y\;z/x]e \equiv ()$ simply does nothing!
+\TODO{where-blocks and dominance}
 
-It turns out, however, that it is always safe to rewrite $\letexpr{x}{\ms{div}\;y\;z}{e}$ to
-$[\ms{div}\;y\;z/x]e$, since
-\begin{itemize}
-  \item If $z$ is zero, then $\letexpr{x}{\ms{div}\;y\;z}{e}$ has UB, so we can rewrite it to
-  anything we want!
-  \item Otherwise, $\ms{div}\;y\;z$ is pure, so substitution is unconditionally valid
-\end{itemize}
-This is an example of a \emph{refinement}, we can safely rewrite $\letexpr{x}{\ms{div}\;y\;z}{e}
-\tref [\ms{div}\;y\;z/x]e$, since the right-hand always side has fewer behaviors than the left-hand
-side. This is \emph{not} an equation though: it is obviously not safe to optimize
-$[\ms{div}\;y\;z/x]e \tref \letexpr{x}{\ms{div}\;y\;z}{e}$ in the general case, since, for example,
-if $e = ()$, then we might \emph{introduce} UB by adding a $\ms{div}\;y\;z$ to the program, whereas
-previously there was none! We say such a refinement is \emph{strict}.
+\TODO{this system is bad for metatheory: ANF substitution restrictions, lots of syntactic
+categories}
 
-By shifting from an equational to a \emph{refinement} theory, we develop a structured way to reason
-about transformations that preserve correctness in a directed sense. Our approach extends
-\citet{ghalayini-24-ssa-densem-arxiv} by replacing pure substitution with a more general notion of
-\emph{directed substitution}, which accounts for the asymmetric behavior of impure operations while
-preserving the rest of the equational framework. This requires a principled classification of
-effects along two axes: (1) their \emph{multiplicity}, which determines whether introducing,
-eliminating, duplicating, or fusing occurrences of an operation constitutes a refinement; and (2)
-their \emph{commutativity}, distinguishing effects that can be safely reordered forward
-(\emph{right-movers}) from those that can be pushed backward (\emph{left-movers}). For instance, UB
-is a \emph{right-mover}, since delaying UB is always safe; on the other hand, every \emph{other}
-effect is a left-mover \emph{with respect to UB}.
+\TODO{so we'll introduce an equivalent but simpler syntax (we promise it's equivalent)}
 
-By integrating directed substitution with a structured treatment of iteration, we construct a sound
-and complete refinement theory for \emph{poset-enriched} models of SSA. As an added bonus, our
-treatment of multiplicity allows us to handle substructural types with minimal additional effort,
-expanding the scope of our theory to allow us to reason about more sophisticated program analysis
-tools such as separation logic.
+\section{Expression Language}
 
-\subsection{Contributions}
+\subsection{Syntax and Typing Rules}
 
-\begin{itemize}
-  \item First, we extend the type-theoretic presentation of SSA given in
-  \citet{ghalayini-24-ssa-densem-arxiv} to support tracking variable multiplicity and iteration
-  in expressions, and give a refinement theory (i.e., a directed equational theory) for this language. 
-  \item We then give a categorical semantics for this type theory in terms of poset-enriched
-  distributive Elgot categories. We show that any denotational model with this categorical structure
-  is also a model of SSA. This shows that all of the refinements we give are sound with respect to
-  the categorical structure.
-  \item We give a notion of morphisms between models of SSA, and construct the initial model in this
-  category by quotienting the syntax of our expressions, showing that our refinement theory is
-  \emph{complete}: any equation which holds in \emph{all} models of SSA can be derived from it.
-  \item We proceed to use our semantics to model a variety of increasingly complex effects
-  exhibiting refinements, including undefined behavior, memory accesses, and weak memory models. In
-  the process, we give a streamlined way of constructing models from monads in the category of
-  partial orders.
-  \item Finally, we show how our notion of morphisms between models allows us to study more complex
-  program analysis techniques, such as separation logic, and prove them sound, inspired by
-  \citet{mellies-ftrs}.
-\end{itemize}
-
-\section{Background}
-
-SSA form is one of the most important compiler intermediate representations.
-Morally speaking, SSA is just a simple first-order imperative programming language.
-However, it has also been very difficult to study using the tools of semantics, because it has been designed to suit the needs of compiler writers rather than of semanticists.
-% In particular, it has four features which complicate it type-theoretically.
-
-Like other compiler IRs such as three-address code, SSA has a strong statement-expression distinction and unstructured control flow. As a result, programs must be organized hierarchically into atomic expressions, basic blocks, and control flow graphs. This complicates formulating type theories for the language, because substitution of values can change which variables are visible in each block in a nonlocal way. 
-
-SSA solves this problem by imposing the condition of \emph{unique dominance}: each use of a variable must be dominated (in the graph-theoretic sense) by a single assigment. This makes substitution work, but it is still difficult to interpret compositionally or type-theoretically.
-
-Moreover, in traditional three-address code programs, unique dominance is a difficult condition to achieve. This is because control flow graphs can merge, and hence a variable use can have multiple assignments as predecessors to it. To resolve this issue, SSA-form uses the notion of a \emph{$\phi$-node}, which is a special kind of statement which assigns different values to a variable depending on the past history of the execution. Obviously, this is a difficult notion to make sense of operationally. 
-
-\citet{ghalayini-24-ssa-densem-arxiv} combine a variety of ideas from
-the literature to resolve all of these issues.
-
-1. They weaken the statement-expression distinction make a richer notion of substitution feasible.
-
-2. They use the observation that dominance forms a tree, to give a regionalized version of SSA in which the dominance structure is syntactically evident and scoping can then be made lexical.
-
-3. They replace $\phi$-nodes by equipping basic blocks with arguments, so that they behave like a set of first-order procedures tail-calling each other.
-
-With these changes, it is possible to give a language which is equi-expressive with SSA, but which can be given a standard type-theoretic formulation. Furthermore, they go on to give a categorical axiomatization of this language, as a kind of premonoidal catogory equipped with additional structure to model iteration/looping (Elgot structure). They give their language an equational theory, and show that the language forms an initial model of these axioms.
-
-This is useful, because we now know what semantic structure is necessary to model SSA. Furthermore, any type theory which can be interpreted in these models can be viewed as an alternate presentation of SSA, which gives us wide latitude to formulate new, equivalent syntaxes to SSA.
-
-Our motivation is to extend the equational theory of \cite{ghalayini-24-ssa-densem-arxiv} in two ways. First, we want a richer notion of substitution, which is compatible with substituting effectful terms for values, and hence will let us support a richer notion of program transformation. Second, we also want to replace the equational theory with a refinement theory, which permits replacing any term with a term with a subset of the original term's behaviours.
-
-Because terms are morphisms in a categorical semantics, it is natural to model refinement by working in a poset-enriched category. By making the hom-sets partial orders, we now have the semantic structure needed to model the refinement partial order. Now, if we can find a syntax which forms an initial model of these enriched categories, we will be able to conclude that we have fully characterized what refinement of SSA programs means. 
-
-It turns out to be unwieldy to reuse the syntax of \cite{ghalayini-24-ssa-densem-arxiv}, because while they weaken the statement-expression distinction, they do not eliminate it. This makes it unwieldy to reason about control flow, and greatly complicated their completenenss proof.
-
-We make use of the freedom afforded by knowing what we want the axiomatization to be, by developing a new syntax for SSA which is fully expression-oriented, and which no longer makes any distinction between statements and expressions. This makes formulating the syntactic refinement relation much easier, and also makes connecting the syntax and the categorical semantics  much simpler. 
-
-To confirm that we are actually working with SSA, we also give a inter-translation between these two syntaxes, and show that it is semantics-preserving. 
-
-
-
-
-\begin{itemize}
-  \item What is SSA, syntax of SSA
-  \item Simplified syntax, \citet{ghalayini-24-ssa-densem-arxiv}
-  \item Some examples of effects, table of effects
-\end{itemize}
-
-% \begin{figure}
-%   \begin{subfigure}{0.4\textwidth}
-%     \begin{lstlisting}[language=C]
-%       int fact(int n) {
-%         int acc = 1;
-%         for (int i = 1; i <= n; i++) {
-%           acc *= i;
-%         }
-%         return acc;
-%       }
-%     \end{lstlisting}
-%     \vspace{2.5em}
-%   \end{subfigure}%
-%   \begin{subfigure}{0.2\textwidth}
-%     $\hspace{2em} \implies \hspace{2em}$
-%     \vspace{7em}
-%   \end{subfigure}%
-%   \begin{subfigure}{0.35\textwidth}
-%     \begin{lstlisting}[language=C]
-%       int fact(int n) {
-%         int acc = 1;
-%         int i = 1;
-%         goto head;
-%       head:
-%         if (i <= n) return acc;
-%         goto body;
-%       body:
-%         acc = acc * i;
-%         i = i + 1;
-%         goto head;
-%       }
-%     \end{lstlisting}
-%   \end{subfigure}
-%   \caption{A C program compiled to three-address code}
-%   \Description{A C program compiled to three-address code}
-% \end{figure}
-
-% \begin{figure}
-%   \begin{subfigure}{0.4\textwidth}
-%     \begin{lstlisting}[language=C]
-%       int fact(int n) {
-%         int acc = 1;
-%         int i = 1;
-%         goto head;
-%       head:
-%         if (i <= n) return acc;
-%         goto body;
-%       body:
-%         acc = acc * i;
-%         i = i + 1;
-%         goto head;
-%       }
-%     \end{lstlisting}
-%   \end{subfigure}%
-%   \begin{subfigure}{0.2\textwidth}
-%     $\hspace{1em} \implies \hspace{2em}$
-%     \vspace{7em}
-%   \end{subfigure}%
-%   \begin{subfigure}{0.35\textwidth}
-%     \begin{lstlisting}[language=C]
-%       int fact(int n) {
-%         acc0 = 1;
-%         i0 = 1;
-%         goto head(i0, acc0);
-%       head(i1, acc1):
-%         if (i1 <= n) return acc1;
-%         goto body(i1, acc1);
-%       body(i2, acc2):
-%         acc3 = acc2 * i;
-%         i3 = i2 + 1;
-%         goto head(acc3, i3);
-%       }
-%     \end{lstlisting}
-%   \end{subfigure}
-%   \caption{A program in three-address code converted to SSA}
-%   \Description{A program in three-address code converted to SSA}
-% \end{figure}
-
-% \begin{figure}
-%   \begin{center}
-%   \begin{tabular}{ c | c c c c }
-%     Effect & Fusable & Duplicable & Eliminable & Introducable \\
-%     \hline
-%     Nothing ($\bot$)                    & \cmark & \cmark & \cmark & \cmark \\
-%     Undefined behavior ($\ms{UB}$)      & \cmark & \cmark & \cmark & \xmark \\
-%     Nondeterminism ($\ms{ND}$)          & \cmark & \xmark & \cmark & \cmark \\
-%     Exception ($\ms{Ex}$)               & \cmark & \cmark & \xmark & \xmark \\
-%     Nontermination ($\ms{Part}$)        & \cmark & \cmark & \xmark & \xmark \\
-%     Probability ($\ms{Prob}$)           & \xmark & \xmark & \cmark & \cmark \\
-%     Concurrent read ($\ms{Rd}$)         & \cmark & \xmark & \cmark & \cmark \\
-%     Concurrent write ($\ms{Wr}$)        & \cmark & \xmark & \xmark & \xmark \\
-%     Concurrent fence ($\ms{Bar}$)       & \cmark & \cmark & \xmark & \cmark \\
-%     Sequential read ($\ms{Rd}_s$)       & \cmark & \cmark & \cmark & \cmark \\
-%     Sequential write ($\ms{Wr}_s$)      & \cmark & \cmark & \xmark & \xmark \\
-%     Memory ($\ms{Mem}$)                 & \xmark & \xmark & \xmark & \xmark \\
-%     External IO ($\ms{IO}$)             & \xmark & \xmark & \xmark & \xmark \\
-%   \end{tabular}
-%   \TODO{consider whether reads/writes can be UB}
-%   \end{center}
-%   \caption{Classification of some common effects}
-%   \Description{Classification of some common effects}
-%   \label{fig:effect-classification}
-% \end{figure}
-
-% \begin{figure}
-%   \begin{center}
-%   \begin{tabular}{ c | c c c c c c c c c c c }
-%     & $\bot$ & $\ms{UB}$ & $\ms{ND}$ & $\ms{Ex}$ & $\ms{Part}$ 
-%     & $\ms{Rd}$ & $\ms{Wr}$ & $\ms{Bar}$ & $\ms{Mem}$ & $\ms{IO}$ & $\top$ \\
-%     \hline
-%     $\bot$ 
-%     & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ \\
-%     $\ms{UB}$
-%     & $\pm$ & $\pm$ & $\pm$ & $+$ & $+$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $+$ & $+$ \\
-%     $\ms{ND}$
-%     & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$  & $\pm$ & $\pm$  & $\pm$ & $\pm$ & $\pm$ \\
-%     $\ms{Ex}$
-%     & $\pm$ & $-$ & $\pm$ & $0$ & $0$ & $\pm$ & $0$ & $\pm$ & $0$ & $0$ & $0$ \\
-%     $\ms{Part}$
-%     & $\pm$ & $-$ & $\pm$ & $0$ & $\pm$ & $\pm$ & $0$ & $\pm$ & $0$ & $0$ & $0$ \\
-%     $\ms{Rd}$
-%     & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $0$ & $+$ & $0$ & $\pm$ & $0$ \\
-%     $\ms{Wr}$
-%     & $\pm$ & $\pm$ & $\pm$ & $0$ & $0$ & $0$ & $0$ & $0$ & $0$ & $\pm$ & $0$ \\
-%     $\ms{Bar}$
-%     & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $-$ & $0$ & $0$ & $0$ & $\pm$ & $0$ \\
-%     $\ms{Mem}$
-%     & $\pm$ & $\pm$ & $\pm$ & $0$ & $0$ & $0$ & $0$ & $0$ & $0$ & $\pm$ & $0$ \\
-%     $\ms{IO}$
-%     & $\pm$ & $-$ & $\pm$ & $0$ & $0$ & $\pm$ & $\pm$ & $\pm$ & $\pm$ & $0$ & $0$ \\
-%     $\top$
-%     & $\pm$ & $-$ & $\pm$ & $0$ & $0$ & $0$ & $0$ & $0$ & $0$ & $0$ & $0$ \\
-%   \end{tabular}
-%   \end{center}
-%   \TODO{consider whether reads/writes can be UB}
-%   \caption{Commutativity of some common effects}
-%   \Description{Commutativity of some common effects}
-%   \label{fig:effect-comm}
-% \end{figure}
-
-% We might want to consider in what cases such impure rewrites \emph{are} valid. Let's consider some
-% simple programs! We obviously have $(\ms{div}\;y\;z, \ms{div}\;y\;z) \tref
-% \letexpr{x}{\ms{div}\;y\;z}{(x, x)}$, in other words, UB is a \emph{fusable} effect. We previously
-% deduced that $\letexpr{x}{\ms{div}\;y\;z}{(x, x)} \tref (\ms{div}\;y\;z, \ms{div}\;y\;z)$ (by
-% choosing $e = (x, x)$), so UB is also \emph{duplicable}. An effect which is both duplicable and
-% fusable is called \emph{copyable}, following \citet{fuhrmann-direct-1999}. An example of an effect
-% which is fusable, but not duplicable, is nondeterminism: the refinement $(\ms{nondet},
-% \ms{nondet}) \tref \letexpr{x}{\ms{nondet}}{(x, x)}$ is not an equation since the right-hand side
-% will only evaluate to pairs $(x, x)$ with equal components, whereas the right-hand side can
-% evaluate to arbitrary pairs $(x, y)$.
-
-% Similarly, we have already seen that $\letexpr{x}{\ms{div}\;y\;z}{()} \tref ()$, so UB is
-% \emph{eliminable}. On the other hand, we would hope that UB is not \emph{introducable}, and indeed,
-% in general, we have $() \not\tref \letexpr{x}{\ms{div}\;y\;z}{()}$.
-
-% Unlike UB, nondeterminism is both introducable and eliminable, since $\letexpr{x}{\ms{nondet}}{()}
-% \teqv ()$. Following \citet{fuhrmann-direct-1999}, we say an effect which is both introducable and
-% eliminable is \emph{discardable}. The fact that UB is copyable and eliminable, but not discardable,
-% while nondeterminism is fusable and discardable, but not copyable, is one of the core differences
-% between undefined and unspecified behavior.
-
-% The next thing we want to find out is whether our effect \emph{commutes} with other effects
-% Consider the expression $(e, x)$, where $x \notin \ms{fv}(e)$. We have that
-% $$\letexpr{x}{\ms{div}\;y\;z}{(e, x)} \tref (e, \ms{div}\;y\;z)$$
-% regardless of $e$; in other words, UB is a \emph{right-mover}.
-% On the other hand, 
-% $$(e, \ms{div}\;y\;z) \tref \letexpr{x}{\ms{div}\;y\;z}{(e, x)}$$ only when execution is guaranteed
-% to continue after evaluating $e$, so this rules out effects like nontermination or exceptions, but
-% effects like nondeterminism or memory access are fine. That is, UB is a \emph{left-mover} with
-% respect to nondeterminism and memory access, but not in general. Since it is both a left and right
-% mover w.r.t. these effects, we say UB \emph{commutes} with them. It turns out that effect $e$ is a
-% right-mover w.r.t. effect $e'$ if and only if effect $e'$ is a left-mover w.r.t. effect $e$. We can
-% also ask whether an effect commutes with \emph{itself}, in which case we say it is
-% \emph{commutative}. If an effect commutes with all other effects, it is \emph{central}.
-
-\section{Type Theory}
-
-
-\subsection{Syntax}
-
-In this section, we introduce the \subiterssa{} expression language, which we will later use to
-build up our SSA formalism. \subiterssa{} is, at first glance, a standard first-order language with
-branching and iteration, with a grammar (given in Figure~\ref{fig:subiterssa-syntax})  parametrized
-by a set of \emph{base types} $\mc{X}$ and a set of \emph{instructions} $\mc{I}$. In particular,
-expressions can consist of
-\begin{itemize}
-  \item \emph{Variables} $x, y, z$
-  \item \emph{Applications} $f\;a$, consisting of instructions $f \in \mc{I}$ applied to an
-  expression $a$
-  \item \emph{Let-bindings} $\letexpr{x}{a}{b}$ and \emph{destructuring let-bindings} $\letexpr{(x,
-  y)}{a}{b}$
-  \item \emph{Case-expressions} $\caseexpr{e}{x}{a}{y}{b}$, representing branching control-flow
-  \item \emph{Iteration-expressions} $\liter{a}{x}{b}$ representing a variant of
-  \emph{tail-controlled loop}, which:
-  \begin{itemize}
-    \item Evaluates an initial value $a : A$
-    \item Evaluates the loop body $b : B + A$ with $x = a$; if the loop evaluates to a value of type
-    $B$, we return it, otherwise, we re-evaluate the loop with $x$ having the new value of type $A$
-  \end{itemize}
-\end{itemize}
-
-We will equip \subiterssa{} with a substructural type-and-effect system. To allow us to support both destructuring let-bindings and case-statements, our grammar of types will consist of:
-\begin{itemize}
-  \item \emph{Base types} $X \in \mc{X}$
-  \item \emph{Tensor products} of types $A \otimes B$, and a \emph{unit type} $\mb{1}$; we write
-  this as a tensor product rather than a cartesian product to emphasize that $A$ or $B$ may be
-  substructural
-  \item \emph{Coproducts} $A + B$, and an \emph{empty type} $\mb{0}$.
-\end{itemize}
-The primary judgement of our type system is of the form $\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}$.
-This says that in context $\Gamma$ with \emph{variable quantities} $\mb{q}$, the expression $a$ has
-type $A$ and \emph{effects} $\epsilon$. However, before we can define this judgment, we need to
-explain what we mean by usage, and what the allowed effects are. 
+In this section, we introduce and give typing rules for the \subiterssa{} expression language, which
+has grammar given in Figure~\ref{fig:subiterssa-syntax}. \subiterssa{} is, at first glance, a
+standard first-order language with branching and iteration, designed to be a functional analogue of
+the standard \textsc{While} language. We will begin by going over each production rule. For the rest
+of this section, we assume a fixed set of \emph{base types} $\mc{X}$ and a set of
+\emph{instructions} $\mc{I}$. 
 
 \begin{figure}
   \begin{grammar}
@@ -700,10 +353,42 @@ explain what we mean by usage, and what the allowed effects are.
 
     <\(\mb{q}\)> ::= \(\cdot\) \;|\; \(\mb{q}, q\)
   \end{grammar}
-  \caption{Syntax for \subiterssa}
-  \Description{Syntax for our calculus}
+  \caption{Syntax for \subiterssa{} types, expressions, quantities, and contexts.} \Description{}
   \label{fig:subiterssa-syntax}
 \end{figure}
+
+We will equip \subiterssa{} with a substructural type-and-effect system. To allow us to support both
+destructuring let-bindings and case-statements, our grammar of types $A, B, C$ will consist of:
+\begin{itemize}
+  \item \emph{Base types} $X \in \mc{X}$
+  \item \emph{Tensor products} of types $A \otimes B$, and a \emph{unit type} $\mb{1}$; we write
+  this as a tensor product rather than a cartesian product to emphasize that $A$ or $B$ may be
+  substructural
+  \item \emph{Coproducts} $A + B$, and an \emph{empty type} $\mb{0}$.
+\end{itemize}
+
+Expressions $a, b, c$ can consist of
+\begin{itemize}
+  \item \emph{Variables} $x, y, z$
+  \item \emph{Applications} $f\;a$, consisting of instructions $f \in \mc{I}$ applied to an
+  expression $a$
+  \item \emph{Let-bindings} $\letexpr{x}{a}{b}$ and \emph{destructuring let-bindings} $\letexpr{(x,
+  y)}{a}{b}$
+  \item \emph{Case-expressions} $\caseexpr{e}{x}{a}{y}{b}$, representing branching control-flow
+  \item \emph{Iteration-expressions} $\liter{a}{x}{b}$ representing a variant of
+  \emph{tail-controlled loop}, which:
+  \begin{itemize}
+    \item Evaluates an initial value $a : A$
+    \item Evaluates the loop body $b : B + A$ with $x = a$; if the loop evaluates to a value of type
+    $B$, we return it, otherwise, we re-evaluate the loop with $x$ having the new value of type $A$
+  \end{itemize}
+\end{itemize}
+
+The primary judgement of our type system is of the form $\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}$.
+This says that in context $\Gamma$ with \emph{variable quantities} $\mb{q}$, the expression $a$ has
+type $A$ and \emph{effects} $\epsilon$. However, before we can define this judgment, we need to
+explain what we mean by usage, and what the allowed effects are. 
+
 
 \subsubsection{Variable Quantities}
 Our type system needs to track how often individual variables are used  to
@@ -721,7 +406,15 @@ analysis, we simply complete this order into a join-semilattice by adding elemen
 \end{itemize}
 We will call the set $Q^0 = \{\zeroq, \oneq, \cpyq, \delq, \topq\}$ the \emph{extended} set of
 quantities, and $Q = \{\oneq, \cpyq, \delq, \topq\}$ the set of (\emph{nonzero}) quantities. We note
-in particular that $Q$ forms a lattice, with $\cpyq \sqcap \delq = 1$. Our contexts will then simply
+in particular that $Q$ forms a lattice, with $\cpyq \sqcap \delq = 1$. We will in general define the
+\emph{product} of quantities $q, q' \in Q^0$ as follows:
+\begin{equation}
+  q * q' = \begin{cases}
+    0 & \text{if } q = 0 \text{ or } q' = 0 \\
+    q \sqcap q' & \text{if } q, q' \in Q
+  \end{cases}
+\end{equation}
+Our contexts will then simply
 consist of a list $\Gamma$ of variables typed $x : A$ along with a list of quantities $q$ of equal
 length $\mb{q}$, which we will write as $\Gamma^{\mb{q}}$. This may equivalently be viewed as a list
 of variables $x : A^q$ each annotated with a quantity, and, in particular, we will define syntax
@@ -758,22 +451,21 @@ pronounced ``$\Gamma^{\mb{q}}$ weakens $\Delta^{\mb{q'}}$," is defined as follow
   \prftree[r]{\rle{nil}}{\cwk{\cdot}{\cdot}} \qquad 
   \prftree[r]{\rle{cons}}
     {\cwk{\Gamma^{\mb{q}}}{\Delta^{\mb{q}'}}}
-    {q' \sqcap \alquant(A) \leq q \sqcap \alquant(A)}
+    {q' * \alquant(A) \leq q * \alquant(A)}
     {\cwk{\Gamma^{\mb{q}}, x : A^q}
          {\Delta^{\mb{q}'}, x : A^{q'}}} \qquad
   \prftree[r]{\rle{skip}}
     {\cwk{\Gamma^{\mb{q}}}{\Delta^{\mb{q}'}}}
-    {\zeroq \leq q \sqcap \alquant(A)}
+    {\zeroq \leq q * \alquant(A)}
     {\cwk{\Gamma^{\mb{q}}, x : A^q}{\Delta}^{\mb{q}'}}
 \end{gather*}
-\emph{Affinity} is encoded in the condition $\zeroq \leq q \sqcap \alquant(A)$ in the rule
-\brle{split}; which ensures that only affine variables may be discarded. On the other hand, the rule
-\brle{cons} states that we may replace a variable quantity $q$ with another quantity $q'$ which
-allows \emph{less} usages \emph{with respect to that variable's quantity}: for example, for an
-affine variable, the quantities $\cpyq$ allows \emph{less} usages than the quantity $\delq$, since
-only the latter allows deletion, but copying is never possible. This clearly induces a
-\emph{preorder} on contexts, with two contexts equivalent if their component variables can be used
-the same way.
+\emph{Affinity} is encoded in the condition $\zeroq \leq q * \alquant(A)$ in the rule \brle{split};
+which ensures that only affine variables may be discarded. On the other hand, the rule \brle{cons}
+states that we may replace a variable quantity $q$ with another quantity $q'$ which allows
+\emph{less} usages \emph{with respect to that variable's quantity}: for example, for an affine
+variable, the quantities $\cpyq$ allows \emph{less} usages than the quantity $\delq$, since only the
+latter allows deletion, but copying is never possible. This clearly induces a \emph{preorder} on
+contexts, with two contexts equivalent if their component variables can be used the same way.
 
 We may then go on to define \emph{context splitting} $\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}$ as
 follows:
@@ -797,43 +489,41 @@ the choice of subexpression, whereas the rule \brle{both} states that for a vari
 two seperate subexpressions, it must be relevant.
 
 \subsubsection{Effects}
-Our language of effects is a bounded\footnote{has a maximum element $\top$ and minimum element $\bot$} join-semilattice $\mc{E}$. We will represent pure expressions
-as having the bottom effect $\bot$, whereas expressions with effect $\top$ have ``arbitrary''
-effect, and expressions with effect $\epsilon \sqcup \epsilon'$
-have both effects $\epsilon$ and $\epsilon'$.
+Our language of effects is a bounded\footnote{has a maximum element $\top$ and minimum element
+$\bot$} join-semilattice $\mc{E}$. We will represent pure expressions as having the bottom effect
+$\bot$, whereas expressions with effect $\top$ have ``arbitrary'' effect, and expressions with
+effect $\epsilon \sqcup \epsilon'$ have both effects $\epsilon$ and $\epsilon'$.
 
-However, since we want to rewrite effectful programs in addition to classifying them, it is not enough to know simply what set of effects a program might have, but we also need to know how effects interact with each
-other. In particular, we need to know:
+However, since we want to rewrite effectful programs in addition to classifying them, it is not
+enough to know simply what set of effects a program might have, but we also need to know how effects
+interact with each other. In particular, we need to know:
 \begin{enumerate}
-  \item Which effects are \emph{iterable}, i.e., stable under loops. % In particular, all iterable  effects must have nontermination as a \emph{subeffect}.
+  \item Which effects are \emph{iterable}, i.e., stable under loops. 
+  % In particular, all iterable  effects must have nontermination as a \emph{subeffect}.
   \item What \emph{multiplicity} each effect has, and in particular, whether a given effect
   $\epsilon$ is \emph{duplicable}, \emph{fusable}, \emph{introducable}, or \emph{eliminable}.
   \item Which effects $\epsilon$ are \emph{left-movers} (i.e. can be moved before) or
   \emph{right-movers} (i.e. can be moved after) other effects $\eta$
 \end{enumerate}
 
-First, not all effects are stable under arbitrary iteration. For example, a
-pure, total computation iterated infinitely often can now exhibit the
-effect of nontermination. Indeed, any total effect (such as reading or
-writing from a location) repeated infinitely often can gain the
-nontermination effect. To model stability, we are going to require that there is an
-upwards-closed subset $\mc{E}^\infty \subseteq \mc{E}$ of
-\emph{iterative effects}. The intuition behinds the upwards-closed
-requirement is that once nontermination is in the effect $\epsilon$,
-then it will continue to be present in any supereffect.
+First, not all effects are stable under arbitrary iteration. For example, a pure, total computation
+iterated infinitely often can now exhibit the effect of nontermination. Indeed, any total effect
+(such as reading or writing from a location) repeated infinitely often can gain the nontermination
+effect. To model stability, we are going to require that there is an upwards-closed subset
+$\mc{E}^\infty \subseteq \mc{E}$ of \emph{iterative effects}. The intuition behinds the
+upwards-closed requirement is that once nontermination is in the effect $\epsilon$, then it will
+continue to be present in any supereffect.
 
-Second, to represent multiplicity, we are going to take advantage of
-the fact that we have already introduced a notion of quantitity into
-our type system.  However, unlike in pure linear type systems, we are
-interested in refinement (a directed notion) rather than pure
-equations.  So, we need to break apart a structural property like
-contraction into a pair of directed properties of duplicability and
-fusability (which are contraction in each direction of
-refinement). Likewise weakening factors into the pair of directed
-weakening properties of eliminability and introducability.
+Second, to represent multiplicity, we are going to take advantage of the fact that we have already
+introduced a notion of quantitity into our type system.  However, unlike in pure linear type
+systems, we are interested in refinement (a directed notion) rather than pure equations.  So, we
+need to break apart a structural property like contraction into a pair of directed properties of
+duplicability and fusability (which are contraction in each direction of refinement). Likewise
+weakening factors into the pair of directed weakening properties of eliminability and
+introducability.
 
-Because of this, we represent multiplicity by assigning each effect a \emph{pair} of quantities
-$\alquant^+(e), \alquant^-(e) \in Q$, such that
+Because of this, we represent multiplicity by assigning a \emph{pair} of quantities $\alquant^+(e),
+\alquant^-(e) \in Q$ to each effect, such that
 \begin{itemize}
   \item An effect can be eliminated if $\delq \leq \alquant^+(e)$, and introduced if $\delq \leq
   \alquant^-(e)$
@@ -844,25 +534,24 @@ To be compatible with our notion of sub-effect, such a map should be \emph{antit
 the property that $\alquant^p(\bot) = \topq$ for $p \in \{+, -\}$ (i.e., pure computations can
 be used as often as you like).
 
-Third, when actually rewriting programs with effects, we need to know which effectful terms
-can be moved past one another. For example, reading from memory and writing I/O cannot interfere
-with each other and hence can be reordered. To model this, we introduce a \emph{directed
-  commutativity relation} $\rightmove \subseteq \mc{E} \times \mc{E}$. This is intended to
-mean that if $\epsilon \rightmove \epsilon'$, then a computation performing $\epsilon$-effects
-can be moved past a computation performing $\epsilon'$-effects without introducing new
-behaviour. We require that $\bot \rightmove \epsilon$ and $\epsilon \rightmove \bot$, to
-ensure that pure computations can be moved freely, and we also require that the relation
-in antitone, to model that decreasing the number of effects never loses rewrites. 
+Third, when actually rewriting programs with effects, we need to know which effectful terms can be
+moved past one another. For example, reading from memory and writing I/O cannot interfere with each
+other and hence can be reordered. To model this, we introduce a \emph{directed commutativity
+relation} $\rightmove \subseteq \mc{E} \times \mc{E}$. This is intended to mean that if $\epsilon
+\rightmove \epsilon'$, then a computation performing $\epsilon$-effects can be moved past a
+computation performing $\epsilon'$-effects without introducing new behaviour. We require that $\bot
+\rightmove \epsilon$ and $\epsilon \rightmove \bot$, to ensure that pure computations can be moved
+freely, and we also require that the relation in antitone, to model that decreasing the number of
+effects never loses rewrites. 
 
 As notational abbreviations, we write:
-  \begin{itemize}
-    \item $\epsilon \leftmove \eta \iff \eta \rightmove \epsilon$
-    \item $\epsilon \slides \eta \iff \epsilon \rightmove \eta \land \epsilon \leftmove \eta$
-    \item $\epsilon \rightmove^+ \eta \iff \epsilon \rightmove \eta$
-    \item $\epsilon \rightmove^- \eta \iff \epsilon \leftmove \eta$
-  \end{itemize}
+\begin{itemize}
+  \item $\epsilon \leftmove \eta \iff \eta \rightmove \epsilon$
+  \item $\epsilon \slides \eta \iff \epsilon \rightmove \eta \land \epsilon \leftmove \eta$
+  \item $\epsilon \rightmove^+ \eta \iff \epsilon \rightmove \eta$
+  \item $\epsilon \rightmove^- \eta \iff \epsilon \leftmove \eta$
+\end{itemize}
 
- 
 Putting all this together, we arrive at the following definition for an
 \emph{effect system}:
 \begin{definition}[Effect system]
@@ -877,6 +566,7 @@ Putting all this together, we arrive at the following definition for an
   \end{itemize}
 
 \end{definition}
+
 
 \subsubsection{Typing rules}
 
@@ -998,166 +688,6 @@ particular,
   \label{fig:subiterssa-typing}
 \end{figure}
 
-\subsection{SSA}
-
-
-\TODO{we now study the syntax of SSA, which is as follows}
-
-\begin{grammar}
-  <\(o\)> ::= \(x\)
-    \;|\; \(f\;x\)
-    \;|\; \(()\)
-    \;|\; \((x, y)\)
-    \;|\;  \(\linl{x}\)
-    \;|\; \(\linr{x}\)
-    \;|\; \(\labort{x}\)
-
-  <\(r, s, t\)> ::= \(\kappa\)
-    \;|\; \(\letstmt{x}{o}{t}\)
-    \;|\; \(\letstmt{(x, y)}{o}{t}\)
-
-  <\(\kappa\)> ::= \(\tau\) \;|\; \(\awhere{\kappa}{L}\) \;|\; \(\cwhere{\kappa}{L}\)
-
-  <\(\tau\)> ::= \(\brb{\ell}{o}\)
-    \;|\; \(\casestmt{o}{y}{\tau}{z}{\tau'}\)
-  <\(L\)> ::= \(\cdot\) \;|\; \(L, \wbranch{\ell}{x}{A}\)
-
-  <\(\ms{L}\)> ::= \(\cdot\) \;|\; \(\ms{L}, \lhyp{\ell}{A}\)
-
-  <\(\mb{Q}\)> ::= \(\cdot\) \;|\; \(\mb{Q}; \mb{q}\)
-\end{grammar}
-
-\TODO{we've got label contexts, which of course have their own fun form of weakening... think hard
-about polarity here}
- 
-\begin{gather*}
-  \prftree[r]{\rle{nil}}{\lwk{\cdot}{\cdot}} \qquad 
-  \prftree[r]{\rle{cons}}
-    {\lwk{\ms{L}^{\mb{Q}}_{\mb{E}}}{\ms{K}^{\mb{Q}}_{\mb{E}}}}
-    {\mb{q}' \leq \mb{q}}
-    {\epsilon' \leq \epsilon}
-    {\lwk{\ms{L}^{\mb{Q}}_{\mb{e}}, \lhyp{\ell}{A}^{\mb{q}}_{\epsilon}}
-    {\ms{K}^{\mb{Q}}_{\mb{e}}, \lhyp{\ell}{A}^{\mb{q}'}_{\epsilon'}}} \qquad
-  \prftree[r]{\rle{skip}}
-    {\lwk{\ms{L}^{\mb{Q}}_{\mb{E}}}{\ms{K}^{\mb{Q}}_{\mb{E}}}}
-    {\lwk{\ms{L}^{\mb{Q}}_{\mb{E}}}{\ms{K}^{\mb{Q}}_{\mb{E}}, \lhyp{\ell}{A}^{\mb{q}}_{\epsilon}}}
-\end{gather*}
-
-\TODO{we've got typing rules}
-
-\begin{gather*}
-  \prftree[r]{\rle{let$_1$}}
-    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{o}{A}}
-    {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{t}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
-    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\letstmt{x}{o}{t}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
-  \\
-  \prftree[r]{\rle{let$_2$}}
-    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{o}{A \otimes B}}
-    {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A, y : B}{\epsilon}{t}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
-    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\letstmt{(x, y)}{o}{t}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
-  \\
-  \prftree[r]{\rle{br}}
-    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\bot}{a}{A}}
-    {\lwk{\lhyp{\ell}{A}_\epsilon^{\mb{q}_l}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
-    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\brb{\ell}{a}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
-  \\
-  \prftree[r]{\rle{case}}
-    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\bot}{o}{A + B}}
-    {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{\tau_l}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
-    {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, y : B}{\epsilon}{\tau_r}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
-    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\casestmt{o}{x}{\tau_l}{y}{\tau_r}}
-                                               {\ms{L}^{\mb{Q}}_{\mb{e}}}}
-  \\
-  \prftree[r]{\rle{where$_{\ms{nonrec}}$}}
-    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\kappa}
-      {\ms{L}^{\mb{Q}}_{\mb{e}}, \ms{R}^{\mb{Q}'}_{\mb{e}'}}}
-    {\forall \lhyp{\ell_i}{A_i}^{\mb{q}_i}_{\epsilon_i} \in \ms{R}^{\mb{Q}'}_{\mb{e}'} .
-      \haslb{\Gamma^{\mb{q}}_{\mb{e}}, x_i : A_i}{\epsilon_i}{t_i}{\ms{L}^{\mb{Q}}_{\mb{e}}}
-    }
-    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\awhere{\kappa}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
-      {\ms{L}^{\mb{Q}}_{\mb{e}}}}
-  \\
-  \prftree[r]{\rle{where$_{\ms{rec}}$}}
-  {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\kappa}
-    {\ms{L}^{\mb{Q}}_{\mb{e}}, \ms{R}^{\mb{Q}'}_{\mb{e}'}}}
-  {\einf{\epsilon}}
-  {\forall \lhyp{\ell_i}{A_i}^{\mb{q}_i}_{\epsilon_i} \in \ms{R}^{\mb{Q}'}_{\mb{e}'} .
-    \haslb{\Gamma^{\mb{q}}_{\mb{e}}, x_i : A_i}{\epsilon_i}{t_i}{
-      \ms{L}^{\mb{Q}}_{\mb{e}}, \ms{R}^{\mb{Q}'}_{\mb{e}'}}
-  }
-  {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\cwhere{\kappa}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
-    {\ms{L}^{\mb{Q}}_{\mb{e}}}}
-\end{gather*}
-
-\begin{align*}
-  \tossa{e}{\ell} &:= \ssalet{x}{e}{\brb{\ell}{x}} \\
-  \ssalet{x}{y}{r} &:= \letexpr{x}{y}{r} \\
-  \ssalet{x}{f\;a}{r} &:= \ssalet{y}{a}{\letexpr{x}{f\;y}{r}} \\
-  \ssalet{x}{\letexpr{y}{a}{b}}{r} &= \ssalet{y}{a}{\ssalet{x}{b}{r}} \\
-  \ssalet{x}{()}{r} &:= \letexpr{x}{()}{r} \\
-  \ssalet{x}{(a, b)}{r} &:= \ssalet{y}{a}{\ssalet{z}{b}{\letstmt{x}{(y, z)}}{r}} \\
-  \ssalet{x}{\letexpr{(y, z)}{a}{b}}{r} &:= \ssalet{w}{a}{\letexpr{(y, z)}{w}{\ssalet{x}{b}{r}}}\\
-  \ssalet{x}{\linl{a}}{r} &:= \ssalet{y}{a}{\letexpr{x}{\linl{y}}{r}} \\
-  \ssalet{x}{\linr{a}}{r} &:= \ssalet{y}{a}{\letexpr{x}{\linr{y}}{r}} \\
-  \ssalet{x}{\caseexpr{a}{y}{b}{z}{c}}{r} &:= \awhere{(\awhere
-    { \ssalet{w}{a}{\casestmt{w}{y}{\brb{\ell_l}{y}}{z}{\brb{\ell_r}{z}}} \\ & \qquad}
-    {
-      \\ & \qquad \qquad \wbranch{\ell_l}{y}{\tossa{b}{\ell_o}}, 
-      \\ & \qquad \qquad \wbranch{\ell_r}{z}{\tossa{c}{\ell_o}}}
-     \\ & \qquad ) }{ \wbranch{\ell_o}{x}{r}} \\
-  \ssalet{x}{\labort{a}}{r} &:= \ssalet{y}{a}{\letexpr{x}{\labort{y}}{r}} \\
-  \ssalet{x}{\liter{a}{y}{b}}{r} & := 
-    \cwhere{\tossa{a}{\ell_r}}{ 
-        \\ & \qquad \wbranch{\ell_o}{x}{r}, 
-        \\ & \qquad \wbranch{\ell_r}{y}{\ssalet{z}{b}
-          {\casestmt{z}{w}{\brb{\ell_o}{w}}{u}{\brb{\ell_r}{u}}}}}
-\end{align*}
-
-\begin{gather*}
-  \etoty{A^q} = \begin{cases}
-    A             & \text{if } q \neq 0 \\
-    \mb{1}        & \text{if } q = 0
-  \end{cases}
-  \\
-  \ctoty{\cdot} := \mb{1} \qquad \ctoty{\Gamma^{\mb{q}}, x : A^q} 
-    := \ctoty{\Gamma^{\mb{q}}} \otimes \etoty{A^q}
-  \\
-  \ltoty{\cdot} := \mb{0} \qquad
-  \ltoty{\ms{L}^{\mb{Q}}_{\mb{e}}, \lhyp{\ell}{A}^{\mb{q}}_{\epsilon}}
-    := \ms{L}^{\mb{Q}}_{\mb{e}} + A
-  \\
-  \dltoty{\Gamma}{\cdot} := \mb{0} \qquad
-  \dltoty{\Gamma}{\ms{L}^{\mb{Q}}_{\mb{e}}, \lhyp{\ell}{A}^{\mb{q}}_{\epsilon}}
-    := \dltoty{\Gamma}{\ms{L}^{\mb{Q}}_{\mb{e}}} + (\ctoty{\Gamma^{\mb{q}}} \otimes A)
-    = \dltoty{\Gamma}{\ms{L}^{\mb{Q}}_{\mb{e}}} + \ctoty{\Gamma^{\mb{q}}, - : A}
-\end{gather*}
-
-\begin{align*}
-  \ncaseexpr{\cdot}{a}{\cdot} &:= \labort{a} \\
-  \ncaseexpr{\ms{L}^{\mb{Q}}_{\mb{e}}, \lhyp{\ell}{A}^{\mb{q}}_{\epsilon}}{a}{
-      L, \webranch{\ell}{x}{b}
-    }
-    &:= \caseexpr{a}{y}{\ncaseexpr{\ms{L}^{\mb{Q}}_{\mb{e}}}{y}{L}}{x}{b} 
-\end{align*}
-
-\begin{align*}
-  \splitexpr{\ms{L}^{\mb{Q}}_{\mb{e}}}{\cdot}{a} & := \linl{a} \\
-  \splitexpr{\ms{L}^{\mb{Q}}_{\mb{e}}}{\ms{R}^{\mb{Q}'}_{\mb{e}'}, 
-        \lhyp{\ell}{A}^{\mb{q}}_{\epsilon}}{a}
-    &:= \caseexpr{a}{x}{
-      \caseexpr{\splitexpr{\ms{L}^{\mb{Q}}_{\mb{e}}}{\ms{R}^{\mb{Q}'}_{\mb{e}'}}{x}}
-        {z}{\linl{z}}
-        {w}{\linr{\linl{w}}
-    }  \\ & \qquad \qquad \quad
-    }{w}{\linr{\linr{w}}} \\
-\end{align*}
-
-\TODO{compilation from SSA to expressions}
-
 \subsection{Syntactic Metatheory}
 
 As a basic sanity check for our calculus, we can verify that it satisfies \emph{weakening}, stated
@@ -1233,6 +763,7 @@ substitution lemma for our calculus as follows:
 \end{lemma}
 
 \subsection{Refinement Theory}
+
 
 Now that we have some basic metatheoretic results, we can attempt to develop our refinement
 relation. We write our refinement judgement as
@@ -1639,690 +1170,36 @@ infinitely many $\epsilon$ if $\epsilon$ is iterative}
   \label{fig:reduction-rules}
 \end{figure}
 
-\TODO{We note that this is monotonic in $\mc{R}$}
 
-\TODO{so we define}
-
-We use this to define
-\begin{equation*}
-  \tmle{\Gamma^{\mb{q}}}{}{a}{b}{A}
-  \iff
-  \tmle{\Gamma^{\mb{q}}}{\varnothing}{a}{b}{A}
-\end{equation*}
-
-\TODO{we define the theory of $\mc{R}$}
-
-\begin{equation*}
-  \thsubmon{\mc{R}} 
-  = \{(\Gamma^{\mb{q}}, A, a, b) \mid \tmle{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A}\}
-\end{equation*}
-
-\TODO{we note that}
-
-\begin{itemize}
-  \item $\{
-    (\Gamma^{\mb{q}}, A, a, a) \mid \hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}
-  \} \subseteq \thsubmon{\mc{R}}$
-  \item $\mc{R} \subseteq \mc{R}' \implies \thsubmon{\mc{R}} \subseteq \thsubmon{\mc{R}'}$
-  \item $\mc{R} \subseteq \thsubmon{\mc{R}}$
-  \item $\thsubmon{\thsubmon{\mc{R}}} = \thsubmon{\mc{R}}$
-  \item $\thsubmon{\mc{R} \cap \mc{R}'} = \thsubmon{\mc{R}} \cap \thsubmon{\mc{R}'}$
-\end{itemize}
-
-\TODO{and if $\mc{R}$ is closed under weakening/substitution so is $\thsubmon{\mc{R}}$}
-
-\subsection{Translation}
-
-\TODO{now we want to syntactically translate between models}
-
-\TODO{we do it with this stuff}
-
-\begin{definition}[\subiterssa-signature morphism]
-  We define a morphism $T: \mc{S} \to \mc{S}'$ between two \subiterssa-signatures $\mc{S} = (\mc{X},
-  \mc{I}, \mc{E})$ and $\mc{S}' = (\mc{X}', \mc{I}', \mc{E}')$ to be given by
-  \begin{itemize}
-    \item An action on base types $T_{\ms{base}} : \mc{X} \to \ms{Ty}(\mc{X}')$ such that
-    $\alquant{A} \leq \alquant{T A}$, which can be extended to a types and contexts in the obvious
-    manner
-    \item A monotonic action on effects $T_{\ms{eff}} : \mc{E} \to \mc{E}'$ such that
-    $T_{\ms{eff}}(\mc{E}^\infty) \subseteq {\mc{E}^\infty}'$.
-    \item An action on instructions $T_{\ms{op}} : \mc{I}_\epsilon(A, B) \to
-    \mc{I}_{T\;\epsilon}(T\;A, T\;B)$
-  \end{itemize}
-  We say that, given a morphism $T : \mc{S} \to \mc{S}'$,
-  \begin{itemize}
-    \item $T$ is \emph{strict} if, for all effects $\epsilon, \eta$, we have:
-    \begin{itemize}
-      \item $\alquant{\epsilon} \leq \alquant{T\;\epsilon}$
-      \item $\epsilon \rightmove \eta \implies T\;\epsilon \rightmove T\;\eta$
-    \end{itemize} 
-    This property holds for the identity and is preserved by composition, and therefore forms a wide
-    subcategory.
-    \item $T$ sends $\mc{R}$ to $\mc{R}'$ if, for all $(\tmle{\Gamma^{\mb{q}}}{}{a}{b}{A})
-    \in \mc{R}$, we have $\tmle{(T\;\Gamma)^{\mb{q}}}{\mc{R}'}{T\;a}{T\;b}{T\;A}$. In
-    particular, we vacuously have that $T$ sends $\mc{R} = \varnothing$ to every $\mc{R}'$.
-  \end{itemize}
-  We define composition and the identity morphism in the obvious manner, giving us the structure of
-  a category. We say 
-\end{definition}
-
-We use this to define an action on terms by induction:
-\begin{gather*}
-  T\;x = x \qquad T\;(f\;a) = (T\;f)\;(T\;a) \qquad T\;() = () \qquad T\;(a, b) = (T\;a, T\;b) \\
-  T\;(\letexpr{x}{a}{e}) = \letexpr{x}{T\;a}{T\;e} \qquad
-  T\;(\letexpr{(x, y)}{a}{e}) = \letexpr{(x, y)}{T\;a}{T\;e} \\
-  T\;(\linr{a}) = \linr{T\;a} \qquad T\;(\linl{a}) = \linl{T\;a} \qquad
-  T\;(\labort{a}) = \labort{T\;a} \\
-  T\;(\caseexpr{e}{x}{a}{y}{b}) = \caseexpr{T\;e}{x}{T\;a}{y}{T\;b} \\
-  T\;(\liter{a}{x}{b}) = \liter{T\;a}{x}{T\;b}
-\end{gather*}
-
-We use this to state the following lemma:
-\begin{lemma}[Syntactic translation]
-  Given a morphism $T: \mc{S} \to \mc{S}'$, we have that
-  \begin{itemize}
-    \item $\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A} 
-      \implies \hasty{(T\;\Gamma)^{\mb{q}}}{T\;\epsilon}{T\;a}{T\;A}$
-    \item If $T$ is strict and sends $\mc{R}$ to $\mc{R}'$, then
-    $\tmle{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A}
-      \implies \tmle{(T\;\Gamma)^{\mb{q}}}{\mc{R}'}{T\;a}{T\;b}{T\;A}$
-  \end{itemize}
-\end{lemma}
+\TODO{refinement theory}
 
 \section{Semantics}
 
-\begin{itemize}
-  \item Tell story backwards, since we have a lot of bits. Why are all the bits here?
-  \item Want to \emph{model} our programming language with our categorical structures
-  \item Premonoidal categories were introduced to model sequencing and binding in first-order
-  imperative languages.
-  \item They let us model the notion of values and (possibly effectful) expressions, and how to
-  substitute values for variables
-  \item An imperative language has more features than just sequencing, however
-  \item We additionally need \emph{control-flow}: branching and looping
-  \item To model branching, we need coproducts
-  \item To model looping, we use iteration, via an Elgot structure
-  \item This is enough structure to model SSA (c.f. \citet{ghalayini-24-ssa-densem-arxiv})
-  \item But we want to do \emph{more} in this paper
-  \item First, we want to be able to have a fine-grained categorization of effects beyond just
-        values and expressions, so that we can study substitution for effectful expressions.
-  \item In general, substituting effectful expressions gives rise to \emph{refinements}, rather than
-        \emph{equations}, so we need to be able to model refinement
-  \item This is why we work in a \emph{poset-enriched} version of the above, because instead of
-  hom-sets, we get hom-posets, which let us compare morphisms via refinement
-\end{itemize}
+\TODO{denotational structure}
 
-In this section, we give a categorical semantics for the \subiterssa{} calculus, which we will later
-prove our refinement theory is complete with respect to in Section~\ref{ssec:completeness}. Since we
-are studying \emph{refinements}, rather than equations, we need some kind of way to order the
-morphisms in our categorical models. We hence introduce the notion of a \emph{poset-enriched
-category} as follows:
+\TODO{semantics}
 
-\begin{definition}[Poset-Enriched Category]
-  We define a \emph{poset-enriched category}, sometimes called a \emph{2-poset}, to be a category
-  $\mc{C}$ where every hom-set $\mc{C}(A, B)$ is equipped with a partial order $\leq$ such that
-  $\leq$ is compatible with composition: $f \leq f'$ and $g \leq g'$ implies $f;g \leq f';g'$. A
-  functor $F$ between poset-enriched categories $\mc{C}, \mc{D}$ is then just a functor between the
-  underlying categories $F : \mc{C} \to \mc{D}$ whose action on hom-sets is monotone.
+\TODO{soundness}
 
-  In particular, we note that every category $\mc{C}$ can be equipped with the structure of a
-  poset-enriched category by giving each hom-set the discrete order, with functors between ordinary
-  categories now valid functors between their corresponding enrichments.
-\end{definition}
+\TODO{completeness}
 
-Now that we have a natural notion of \emph{order} on morphisms, we can use this to represent program
-refinement as follows: if $f \leq g$, then $g$ is a refinement of $f$.
+\section{SSA Typing and Semantics}
 
-We then introduce the notion of a \emph{(symmetric) premonoidal category}, which can be thought of
-like a symmetric monoidal category in which the sliding rule does not necessarily hold. We may
-extend the standard concept in the literature to the poset-enriched setting by requiring the left
-and right tensor functors to additionally be poset-enriched functors.
+\TODO{typing rules go brr}
 
-\begin{definition}[Symmetric Premonoidal Category]
-  We define a \emph{binoidal category} to be a category $\mc{C}$ equipped with a binary operation
-  $\otimes : |\mc{C}| \times |\mc{C}| \to |\mc{C}|$ on the objects of $\mc{C}$ and, for each $A, B
-  \in |\mc{C}|$, functors $A \otimes -, - \otimes B : \mc{C} \to \mc{C}$. We say a morphism $f : A
-  \to A'$ in a binoidal category is \emph{central} if, for all $g : B \to B'$, it satisfies
-  \emph{sliding}:
-  $$
-  f \otimes B ; A' \otimes g = A \otimes g ; f \otimes B' \qquad
-  B \otimes f ; g \otimes A' = g \otimes A ; B' \otimes f
-  $$
-  in which case we may write these morphisms as $f \otimes g : A \otimes B \to A' \otimes B'$ and $g
-  \otimes f : B \otimes A \to B' \otimes A'$ respectively. A binoidal category is
-  \emph{poset-enriched} if the underlying category is poset-enriched, and the left and right tensor
-  functors are poset-enriched functors.
-  
-  A \emph{premonoidal category} is, then, a
-  binoidal category equipped with:
-  \begin{itemize}
-    \item An \emph{identity} object $I \in |\mc{C}|$
-    \item For each triple of objects $A, B, C \in |\mc{C}|$, a central, natural isomorphism
-    $\alpha_{A, B, C} : (A \otimes B) \otimes C \to A \otimes (B \otimes C)$, the \emph{associator}
-    \item For each object $A$, central, natural isomorphisms $\lambda_A : A \otimes I \to A$ and
-    $\rho_A : I \otimes A \to A$, the \emph{left} and \emph{right unitors}
-  \end{itemize}
-  satisfying the \emph{triangle} and \emph{pentagon identity}
-  $$
-  \alpha_{A, I, B} ; A \otimes \lambda_B = \rho_A \otimes B \qquad
-  \alpha_{A \otimes B, C, D} ; \alpha_{A, B, C \otimes D}
-  = \alpha_{A, B, C} \otimes D ; \alpha_{A, B \otimes C, D} ; A \otimes \alpha_{A, B, C}
-  $$
-  We say a premonoidal category is \emph{symmetric} if it is also equipped with a central, natural
-  involution $\sigma_{A, B} : A \otimes B \to B \otimes A$, the \textit{symmetry}, satisfying the
-  \emph{hexagon identity}
-  $$
-  \alpha_{A, B, C} ; \sigma_{A, B \otimes C} ; \alpha_{B, C, A}
-  = \sigma_{A, B} \otimes C ; \alpha_{B, A, C} ; B \otimes \sigma_{A, C}
-  $$
-  We say a premonoidal category is \emph{monoidal} if every morphism is central.
-\end{definition}
-One important theorem about premonoidal categories is \emph{coherence}:
-\begin{theorem}
-  The subcategory $\mc{A}$ generated by associators, unitors, and their tensor products is an
-  equivalence relation, i.e., for all $A, B : |\mc{A}|$, if
-  $f, g : A \to B$ can be constructed using only identity, composition, associators, unitors, and
-  their tensor products, then:
-  \begin{enumerate}[label=(\alph*)]
-    \item $f = g$
-    \item $f, g$ are isomorphisms in $\mc{A}$
-  \end{enumerate}
-  \label{thm:monoidal-coherence}
-\end{theorem}
-In particular, as a syntactic convenience, we will often simply write ``$\alpha$" for the (unique)
-morphism between objects $A$ and $B$, when it exists, satisfying the requirements of
-Theorem~\ref{thm:monoidal-coherence}. For example, given $f : A \to B \otimes ((C \otimes I)
-\otimes D)$ and $g : ((B \otimes (I \otimes C)) \otimes D) \to E$, we have
-$$
-f;\alpha;g := 
-  f ; 
-  B \otimes (\lambda_C \otimes D) ; 
-  \alpha_{B, C, D}^{-1} ; 
-  (B \otimes \rho_C^{-1}) \otimes D ;
-  g 
-$$
+\TODO{denotational semantics}
 
-\TODO{note on string diagrams?}
+\TODO{by completeness, $\subseteq$ expressions}
 
-\begin{multline*}
-  \sigma^{\ms{mid}}_{A, B, C, D} := 
-  \alpha_{A \otimes (B \otimes C) \otimes D}
-  ; A \otimes \sigma_{B, C} \otimes D
-  ; \alpha_{(A \otimes C) \otimes (B \otimes A)}
-  \\ : (A \otimes B) \otimes (C \otimes D) \to (A \otimes C) \otimes (B \otimes D)
-\end{multline*}
-
-\begin{definition}[Effectful category]
-  An effectful category $\mc{C}$ over an effect system $\mc{E}$ consists of a symmetric premonoidal
-  poset-enriched category $\mc{C}$ equipped with a  monotonic mapping from $\epsilon \in \mc{E}$ to
-  wide (symmetric premonoidal) subcategories $\mc{C}_\epsilon \subseteq \mc{E}$ such that, given
-  $\epsilon, \eta \in \mc{E}$, $f \in \mc{C}_\epsilon(A, B)$, and $g \in \mc{C}_\eta(A', B')$, 
-  \begin{itemize}
-    \item $\epsilon \rightmove \eta \implies f \ltimes g \leq f \rtimes g$
-    \item $\epsilon \leftmove \eta \implies f \ltimes g \geq f \rtimes g$
-  \end{itemize}
-  % An effectful category is \emph{meet-preserving} if (wherever the meet $\epsilon \sqcap \eta$
-  % exists) $\mc{C}_{\epsilon \sqcap \eta} = \mc{C}_\epsilon \cap \mc{C}_\eta$; every effect system
-  % over $\mc{E}$ can be extended in the obvious unique way to a meet-preserving effect system over
-  % the free join-semilattice generated by $\mc{E}$.
-\end{definition}
-
-In particular, if $\epsilon \slides \eta$ then $\mc{C}_\epsilon \cap \mc{C}_\eta$ is a central
-subcategory of $\mc{C}_\epsilon$ and $\mc{C}_\eta$. It follows that $\mc{C}_\bot$ is a central
-subcategory of every $\mc{C}_\epsilon$.
-
-\TODO{Freyd categories}
-
-\begin{definition}[Distributive Category]
-  We say a premonoidal category is \emph{distributive} if:
-  \begin{itemize}
-    \item It is equipped with chosen coproducts $A + B$ such that the injections $\iota_l, \iota_r$
-    are central
-    \item The obvious morphism $\delta : (A \otimes B) + (A \otimes C) \to A \otimes (B + C)$ is an
-    isomorphism.
-  \end{itemize}
-\end{definition}
-
-\begin{definition}[Distributive effectful category]
-  We say an effectful category is \emph{distributive} if:
-  \begin{itemize}
-    \item The underlying premonoidal category is distributive
-    \item Each $\mc{C}_\epsilon$ contains all injections $\iota_l, \iota_r$ and is closed under
-    coproducts $[f, g]$, and so in particular is co-cartesian
-  \end{itemize}
-\end{definition}
-
-\begin{definition}[Conway Iteration Operator]
-  Let $\mc{C}$ be a category with chosen coproducts. We say $\mc{C}$ is \emph{pre-iterative} if it
-  is equipped with a fixpoint operator $(-)^\dagger : \mc{C}(A, B + A) \to \mc{C}(A, B)$ satisfying
-  \begin{itemize}
-    \item \emph{Monotonicity}: $f \leq g \implies f^\dagger \leq g^\dagger$
-    \item \emph{Fixpoint}: $f ; [\ms{id}, f^\dagger] = f$
-  \end{itemize}
-  We say $(-)^\dagger$ is a \emph{Conway iteration operator} if it additionally satisfies
-  \begin{itemize}
-    \item \emph{Naturality:} given $f : A \to B + A$ and $g : B \to C$, we have
-      $
-      (f;g + \ms{id})^\dagger = f^\dagger;g : A \to C
-      $
-    \item \emph{Dinaturality:} given morphisms $g : A \to B + C$ and $h : C \to B + A$, we have that
-      $
-      (g ; [\iota_l, h])^\dagger = g ; [\ms{id}_B, (h ; [\iota_l, g])^\dagger]
-      $
-    \item \emph{Codiagonal:} given $f : A \to (B + A) + A$, we have
-      $
-      (f^\dagger)^\dagger = (f;[\ms{id}, \iota_r])^\dagger : A \to B
-      $
-  \end{itemize}
-  If $\mc{C}$ is distributive, we say this operator is \emph{strong} if
-  $$
-  \forall f: A \to B + A, (C \otimes f ; \delta^{-1})^\dagger = C \otimes f^\dagger
-  $$
-  Given a wide subcategory $\mc{K} \subseteq \mc{C}$, we say $\mc{C}$ is \emph{$\mc{K}^+$-uniform}
-  if, for all $h : A \to_{\mc{K}} B$, $f : B \to C + B$, and $g : A \to C + A$, we have that
-  $$
-  h ; f \leq g ; C + h \implies h ; f^\dagger \leq g^\dagger 
-  $$
-  and \emph{$\mc{K}^-$-uniform} if
-  $$
-  h ; f \geq g ; C + h \implies h ; f^\dagger \geq g^\dagger 
-  $$
-  We say it is \emph{$\mc{K}$-uniform} if it is both $\mc{K}^+$- and $\mc{K}^-$-uniform, which
-  implies in particular that
-  $$
-  h ; f = g ; C + h \implies h ; f^\dagger = g^\dagger 
-  $$
-\end{definition}
-
-\begin{definition}[Elgot category]
-  We say a distributive effectful category $\mc{C}$ is \emph{Elgot} if it has an iterative effect
-  system and is equipped with a strong Conway iteration operator, such that, for all effects
-  $\epsilon, \eta$ where $\epsilon \in \mc{E}^\infty$,
-  \begin{itemize}
-    \item The wide subcategory $\mc{C}_\epsilon$ is closed under iteration
-    \item if $\epsilon \rightmove^p \eta$, then $\mc{C}_\epsilon$ is $\mc{C}_\eta^p$-uniform.
-  \end{itemize}
-\end{definition}
-
-We note the following useful proposition
-\begin{proposition}
-  If $(-)^\dagger$ is an iteration operator which satisfies naturality and codiagonal and is
-  $\mc{K}$-uniform for $\mc{K}$ cocartesian, then it also satisfies dinaturality.
-\end{proposition}
-\begin{proof}
-  See Lemma 31 of \citet{goncharov-18-guarded-traced}
-\end{proof}
-In particular, since every Elgot category is $\mc{C}_\bot$-uniform and all $\mc{C}_\epsilon$ are
-cocartesian, it follows that we only need to check naturality and codiagonal.
-
-\begin{definition}[\subiterssa-model]
-  A \subiterssa-model $\mc{M} = (\mc{C}, (\cdot)^\dagger, \dnt{\cdot}, \dmor{}, \tmor{})$ of a
-  \subiterssa-signature $\mc{S} = (\mc{X}, \mc{I}, \mc{E})$ is composed of:
-  \begin{itemize}
-    \item An effectful Elgot category ($\mc{C}$, $(\cdot)^\dagger$) over $(\mc{E},
-    \mc{E}^\infty)$
-    \item For each base type $X \in \mc{X}$, an object $\dnt{X} \in |\mc{C}|$, equipped with
-    \begin{itemize}
-      \item For $X$ affine, a \emph{discard morphism} $\tmor{X} : \mc{C}_\bot(\dnt{X}, I)$
-      \item For $X$ relevant, a \emph{diagonal morphism} $\dmor{X} : \mc{C}_\bot(\dnt{X}, \dnt{X}
-      \otimes \dnt{X})$
-    \end{itemize}
-    \item For each function $f : \ms{Inst}(\mc{S})_\epsilon(A, B)$, a morphism $\dnt{f} :
-    \mc{C}_\epsilon(\dnt{A}, \dnt{B})$
-  \end{itemize}
-  such that, for all $A, B \in |\mc{S}|$, $f : \mc{C}_\epsilon(\dnt{A}, \dnt{B})$ we have
-  \begin{itemize}
-    \item If $A$ relevant, 
-      $\dmor{A} ; \dmor{A} \otimes \dnt{A} ; \alpha = \dmor{A} ; \dnt{A} \otimes \dmor{A}$
-    \item If $\zeroq \leq \alquant^+(\epsilon)$ and $A, B$ affine, $f ; !_B \leq !_A$
-    \item If $\zeroq \leq \alquant^+(\epsilon)$ and $A$ relevant, $B$ affine, 
-      $\dmor{A} ; (f ; !_B) \otimes \dnt{A} \leq \rho^{-1}$
-    \item If $\cpyq \leq \alquant^+(\epsilon)$ and $A, B$ relevant, 
-    $f ; \dmor{B} \leq \dmor{A} ; f \ltimes f = \dmor{A} ; f \rtimes f$
-    \item If $\zeroq \leq \alquant^-(\epsilon)$ and $A, B$ affine, $f ; !_B \geq !_A$
-    \item If $\zeroq \leq \alquant^-(\epsilon)$ and $A$ relevant, $B$ affine, 
-      $\dmor{A} ; (f ; !_B) \otimes \dnt{A} \geq \rho^{-1}$
-    \item If $\cpyq \leq \alquant^-(\epsilon)$ and $A, B$ relevant, 
-    $f ; \dmor{B} \geq \dmor{A} ; f \ltimes f = \dmor{A} ; f \rtimes f$
-  \end{itemize}
-  where
-  \begin{itemize}
-    \item $\dnt{\mb{1}} = I$
-    \item $\dnt{A \otimes B} = \dnt{A} \otimes \dnt{B}$
-    \item $!_{\mb{1}} = \ms{id}_I$
-    \item $\Delta_{\mb{1}} = \lambda^{-1} = \rho^{-1}$
-    \item For $A, B$ affine, $!_{A \otimes B} = !_A \otimes !_B ; \lambda$
-    \item For $A, B$ relevant, 
-    $\Delta_{A \otimes B} 
-      = \dmor{A} \otimes \dmor{B}
-      ; \sigma^{\ms{mid}}
-    $
-    \item $\dnt{\mb{0}} = \mb{0}$
-    \item $\dnt{A + B} = \dnt{A} + \dnt{B}$
-    \item $!_{\mb{0}} = 0_{I}$
-    \item $\Delta_{\mb{0}} = 0_{0 + 0}$
-    \item For $A, B$ affine, $!_{A + B} = [!_A, !_B]$
-    \item For $A, B$ relevant, 
-    $\Delta_{A + B} 
-      = [\dmor{A} ; \iota_l \otimes \iota_l, \dmor{B} ; \iota_r \otimes \iota_r]
-    $
-  \end{itemize}
-\end{definition}
-
-\begin{equation*}
-  \dnt{A^q} = \dnt{\etoty{A^q}} \qquad
-  !_{A^q} = !_{\etoty{A^q}} \qquad
-  \Delta_{A^q} = \Delta_{\etoty{A^q}}
-\end{equation*}
-
-\begin{gather*}
-  \boxed{\dnt{\Gamma^{\mb{q}}} : |\mc{C}|} \\
-  \dnt{\cdot} = I
-  \qquad \dnt{\Gamma^{\mb{q}}, x : A^q_\epsilon} 
-          = \dnt{\Gamma^{\mb{q}}} \otimes \dnt{A^q}
-\end{gather*}
-
-
-\begin{gather*}
-  \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{\linl{a}}{A + B}}
-  = \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}} ; \iota_l \qquad
-  \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{\linr{b}}{A + B}}
-  = \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{b}{B}} ; \iota_r \\
-  \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{\labort{a}}{A}}
-  = \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{\mb{0}}} ; 0_A
-\end{gather*}
-
-\begin{gather*}
-  \boxed{\dnt{\cwk{\Gamma^{\mb{q}}}{\Delta^{\mb{q}'}_{\mb{e}'}}} 
-    : \mc{C}_\bot(\dnt{\Gamma^{\mb{q}}}, \dnt{\Delta^{\mb{q}'}_{\mb{e}'}})} \\
-  \dnt{\cwk{\cdot}{\cdot}} = \ms{id}_I \qquad
-  \dnt{\cwk{\Gamma^{\mb{q}}, x : A^q_\epsilon}{\Delta^{\mb{q}'}_{\mb{e}'}}}
-    = \dnt{\Gamma^{\mb{q}}} \otimes !_{A^q}
-    ; \lambda
-    ; \dnt{\cwk{\Gamma^{\mb{q}}}{\Delta^{\mb{q}'}_{\mb{e}'}}} \\
-  \dnt{\cwk{\Gamma^{\mb{q}}, x : A^q_\epsilon}
-            {\Delta^{\mb{q}'}_{\mb{e}'}, x : A^{q'}_{\epsilon'}}}
-    = \dnt{\cwk{\Gamma^{\mb{q}}}{\Delta^{\mb{q}'}_{\mb{e}'}}} \otimes \begin{cases}
-      \ms{id}_{\dnt{A}} & \text{if } q, q' \neq 0 \\
-      !_{A^q} & \text{otherwise} \\
-    \end{cases}
-\end{gather*}
-
-\begin{gather*}
-  \boxed{\dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}} 
-    : \mc{C}_\bot(\dnt{\Gamma^{\mb{q}}}, 
-      \dnt{\Gamma^{\mb{q}_l}_{\mb{e}_l}} \otimes \dnt{\Gamma^{\mb{q}_r}_{\mb{e}_r}})} 
-  \\
-  \dnt{\qsp{\cdot}{\cdot}{\cdot}{\cdot}} = \rho^{-1}
-  \\
-  \dnt{\qsp{\Gamma, x : A}{(\mb{q}, q)}{(\mb{q}_l, q_l)}{(\mb{q}_r, q_r)}}
-  = \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}} \otimes
-  \begin{cases}
-    !_{A^q} ; \rho^{-1} & \text{if } q_l = q_r = 0 \text{ else} \\
-    \lambda^{-1} & \text{if } q_l = 0 \text{ else} \\
-    \rho^{-1} & \text{if } q_r = 0 \text{ else} \\
-    \Delta_A & \text{otherwise}
-  \end{cases} ; \sigma^{\ms{mid}}
-\end{gather*}
-
-\begin{gather*}
-  \boxed{\dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}} 
-    : \mc{C}_\epsilon(\dnt{\Gamma^{\mb{q}}}, \dnt{A})} \\
-  \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{x}{A}} 
-    = \dnt{\cwk{\Gamma^{\mb{q}}}{x : A^\oneq_\epsilon}}
-  \qquad
-  \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{f\;a}{B}} 
-    = \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}} ; \dnt{f} \\
-  \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{\letexpr{x}{a}{b}}{B}} 
-    = \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-    ; \dnt{\Gamma^{\mb{q}_l}} 
-      \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A}}
-    ; \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{b}{B}}
-  \\
-  \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{()}{\mb{1}}}
-    = \dnt{\cwk{\Gamma^{\mb{q}}}{\cdot}}
-  \\
-  \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{(a, b)}{A \otimes B}}
-    = \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-    ; \dnt{\hasty{\Gamma^{\mb{q}_l}}{\epsilon}{a}{A}}
-    \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{b}{B}}
-\end{gather*}
-\begin{align*}
-  \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{\letexpr{(x, y)}{a}{c}}{C}}
-  = & \; \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-    ; \dnt{\Gamma^{\mb{q}_l}}
-    \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A \otimes B}}
-  \\ & 
-  ; \alpha_{\Gamma^{\mb{q}_r} \otimes A \otimes B}
-  ; \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A, y : B}{\epsilon}{c}{C}} \\
-\end{align*}
-
-\begin{align*}
-  \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{\caseexpr{e}{x}{a}{y}{b}}{C}}
-  =& \; 
-  \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-  ; \dnt{\Gamma^{\mb{q}_l}} 
-  \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{e}{A + B}}
-  ; \delta^{-1} \\ & 
-  ; [
-    \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{a}{C}},
-    \dnt{\hasty{\Gamma^{\mb{q}_l}, y : B}{\epsilon}{b}{C}}
-  ]
-\end{align*}
-
-
-\begin{align*}
-  &\dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{\liter{a}{x}{b}}{B}} \\
-  &= 
-  \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-  ; \dnt{\Gamma^{\mb{q}_l}}
-    \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A}} \\ & \quad 
-  ; (\dnt{\qsp{\Gamma}{\mb{q}_l}{\mb{q}_l}{\mb{q}_l}} \otimes \dnt{A} 
-  ; \alpha
-  ; \dnt{\Gamma^{\mb{q}_l}} 
-    \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}, x : A}{\epsilon}{b}{B + A}}
-  ; \delta^{-1})^\dagger
-  ; \dnt{\cwk{\Gamma^{\mb{q}_l}}{\cdot}} \otimes \dnt{B}
-  ; \rho
-\end{align*}
-
-\subsection{Semantic Metatheory}
-
-\TODO{and we prove the semantics is compatible with our metatheory}
-
-\begin{lemma}[Semantic Weakening]
-  Given $\cwk{\Gamma'^{\mb{q}'}_{\mb{e}'}}{\Gamma^{\mb{q}}}$ and
-  $\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}$, we have
-  \begin{equation*}
-    \dnt{\hasty{\Gamma'^{\mb{q}'}_{\mb{e}'}}{\epsilon}{a}{A}}
-    = \dnt{\cwk{\Gamma'^{\mb{q}'}_{\mb{e}'}}{\Gamma^{\mb{q}}}}
-    ; \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}}
-  \end{equation*}
-\end{lemma}
-
-\TODO{fix}
-% \begin{gather*}
-%   \boxed{\dnt{\issubst{\Gamma^{\mb{q}}}{\epsilon}{\sigma}{\Delta^{\mb{q}'}}}
-%     : \mc{C}_\epsilon(\dnt{\Gamma^{\mb{q}}}, \dnt{\Delta^{\mb{q}'})} \\
-%   \dnt{\issubst{\cdot}{\epsilon}{\cdot}{\cdot}} = \ms{id}_I
-%   \\
-%   \dnt{\issubst{\sigma, x \mapsto a}{\epsilon}{\Gamma^{\mb{q}}}{\Delta^{\mb{q}'}, x : A^q}}
-%   = \begin{cases}
-%     \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}} 
-%     ; \dnt{\issubst{\sigma}{\epsilon}{\Gamma^{\mb{q}_l}_{\mb{e}_l}}{\Delta^{\mb{q}'}}}
-%     \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A}}
-%     \text{ if } q \neq 0 \\
-%     \dnt{\issubst{\sigma}{\epsilon}{\Gamma^{\mb{q}}}{\Delta^{\mb{q}'}}}
-%     ; \lambda^{-1} \text{ otherwise}
-%   \end{cases}
-% \end{gather*}
-
-\TODO{fix}
-% \begin{lemma}[Semantic Substitution]
-%   Given 
-%   $\hasty{\Delta^{\mb{q}'}_{\mb{e}'}}{\eta}{a}{A}$ and 
-%   $\issubst{\sigma}{\Gamma^{\mb{q}}}{\Delta^{\mb{q}'}_{\mb{e}'}}$, we have
-%   \begin{itemize}
-%     \item If $\csubst{\sigma}{\Gamma^{\mb{q}}}{\Delta^{\mb{q}'}_{\mb{e}'}}{\eta}{+}$, then
-%     $
-%     \dnt{\issubst{\sigma}{\Gamma^{\mb{q}}}{\Delta^{\mb{q}'}_{\mb{e}'}}}
-%     ; \dnt{\hasty{\Delta^{\mb{q}'}_{\mb{e}'}}{\eta}{a}{A}}
-%     \leq \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{[\sigma]a}{A}}
-%     $
-%     \item If $\csubst{\sigma}{\Gamma^{\mb{q}}}{\Delta^{\mb{q}'}_{\mb{e}'}}{\eta}{-}$, then
-%     $
-%     \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{[\sigma]a}{A}}
-%     \leq \dnt{\issubst{\sigma}{\Gamma^{\mb{q}}}{\Delta^{\mb{q}'}_{\mb{e}'}}}
-%     ; \dnt{\hasty{\Delta^{\mb{q}'}_{\mb{e}'}}{\eta}{a}{A}}
-%     $
-%   \end{itemize}
-%   In particular, if 
-%   $\csubst{\sigma}{\Gamma^{\mb{q}}}{\Delta^{\mb{q}'}_{\mb{e}'}}{\eta}{\pm}$, then
-%   $
-%   \dnt{\issubst{\sigma}{\Gamma^{\mb{q}}}{\Delta^{\mb{q}'}_{\mb{e}'}}}
-%   ; \dnt{\hasty{\Delta^{\mb{q}'}_{\mb{e}'}}{\eta}{a}{A}}
-%   = \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{[\sigma]a}{A}}
-%   $
-% \end{lemma}
-
-\TODO{and our equational theory}
-
-\begin{definition}
-  We say a model $\mc{M}$ \emph{validates} a typed refinement family $\mc{R}$, written $\mc{M}
-  \models \mc{R}$, if
-  $
-  \forall (\tmle{\Gamma^{\mb{q}}}{}{a}{b}{A}) \in \mc{E}
-  $, we have, whenever both sides are well-typed, that
-  $
-  \dnt{\hasty{\Gamma}{\epsilon}{a}{A}} \leq \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}
-  $
-\end{definition}
-
-\begin{theorem}[name=Soundness, restate=soundnessiter]
-  For any model $\mc{M}$, $\mc{M} \models \mc{R} \iff \mc{M} \models \thsubiter{\mc{R}}$. In
-  particular,
-  \begin{itemize}
-    \item If $\mc{M} \models \mc{R}$, given $\tmle{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A}$, we
-    have $\dnt{\hasty{\Gamma}{\epsilon}{a}{A}}_{\mc{M}} =
-    \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}_{\mc{M}}$
-    \item In particular, for any model, if $\tmle{\Gamma^{\mb{q}}}{}{a}{b}{A}$, we have
-    $\dnt{\hasty{\Gamma}{\epsilon}{a}{A}} = \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}$
-  \end{itemize}
-\end{theorem}
-
-\TODO{directed uniformity lore...}
-
-
-\subsection{Translation}
-
-\TODO{and semantics should respect translation, too!}
-
-\begin{definition}[Strict Elgot functor]
-  Given effectful Elgot categories $\mc{C}, \mc{C}'$, a strict symmetric monoidal functor $F :
-  \mc{C} \to \mc{C}'$ is a strict Elgot functor if:
-  \begin{itemize}
-    \item It preserves chosen coproducts, i.e. $F(A + B) = F(A) + F(B)$, $F(\iota_l) = \iota_l$,
-    $F(\iota_r) = \iota_r$.
-    \item It commutes with the fixpoint operator, i.e. $F(f^\dagger) = F(f)^\dagger$
-    \item If $\mc{C}_\epsilon$ is $p$-uniform w.r.t. $\mc{C}_\eta$, then $F(\mc{C}_\epsilon)$ is
-    $p$-uniform w.r.t. $F(\mc{C}_\eta)$
-  \end{itemize}
-\end{definition}
-
-\begin{definition}[\subiterssa-model morphism]
-  Given \subiterssa-signatures $\mc{S}, \mc{S}'$ models
-  $\mc{M} = (\mc{C}, (\cdot)^\dagger, \dnt{\cdot}, \dmor{}, \tmor{})$ of $\mc{S}$ and $\mc{M}' =
-  (\mc{C}', (\cdot)^\dagger, \dnt{\cdot}, \dmor{}, \tmor{})$ of $\mc{S}'$, respectively, we define
-  a morphism from $\mc{M}$ to $\mc{M}'$ to be given by a pair $(T, F)$ where
-  \begin{itemize}
-    \item $T: \mc{S} \to \mc{S}'$ is a \subiterssa-signature morphism
-    \item $F: \mc{C} \to \mc{C}'$ is a strict Elgot functor
-    \item For all base types $X$, $F(\dnt{X}_{\mc{M}}) = \dnt{T\;A}_{\mc{M}'}$
-    \item $F(\dmor{A}) = \dmor{T\;A}$
-    \item $F(\tmor{A}) = \tmor{T\;A}$
-  \end{itemize}
-  For each $\mc{S}$, we define the subcategory of $\mc{S}$-models to have as objects models $\mc{M}$
-  of $\mc{S}$ and morphisms of the form $(\ms{id}, F)$, which we will just write as $F$. We may then
-  define the full subcategory of $\mc{S}$-models validating $\mc{R}$ to have as objects models
-  $\mc{M} \models \mc{R}$.
-\end{definition}
-
-\begin{lemma}[Semantic Translation]
-  Given a \subiterssa-model morphism $(T, F) : \mc{M} \to \mc{M}'$ and
-  $\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}$, we have that
-  \begin{equation*}
-    \dnt{\hasty{(T\;\Gamma)^{\mb{q}}_{T\;\mb{e}}}{T\;\epsilon}{T\;a}{T\;A}}_{\mc{M}'} = 
-    F(\dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}}_{\mc{M}})
-  \end{equation*}
-\end{lemma}
+\TODO{by translation, expressions $\subseteq$}
 
 \section{Concrete Models}
 
-The simplest way to obtain a \subiterssa{}-model is to take an Elgot monad in the category of sets,
-and enrich it in posets by simply giving every hom-set the discrete order. More generally, every
-model of \citet{ghalayini-24-ssa-densem-arxiv}'s language is a \subiterssa{}-model as well. To study
-refinement, however, we want to look at some concrete models equipped with a nontrivial refinement
-structure. Probably the simplest such models, by analogy, are the Elgot monads in the \emph{category
-of partial orders} $\ms{Pos}$, which we define as follows.
+\TODO{UB and printing}
 
-\TODO{now we give some concrete models}
+\TODO{separation logic}
 
-\TODO{this}
-
-\subsection{Undefined Behavior}
-
-Probably the simplest model we can give of our language is \emph{undefined behavior}
-
-\TODO{this}
-
-\subsection{Separation Logic}
-
-\TODO{this}
-
-\subsection{Release-Acquire Weak Memory}
-
-\TODO{including a particularly nasty one}
-
-\TODO{this}
-
-\subsection{Completeness}
-
-\label{ssec:completeness}
-
-\TODO{and now we show our model indeed rules all concrete models}
-
-\TODO{this}
-
-\begin{theorem}[name=Completeness, restate=completenessiter]
-  We have that
-  $$
-  \tmle{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A}
-  \iff \forall \mc{M} \models \mc{R},
-  \dnt{\hasty{\Gamma}{\epsilon}{a}{A}}_{\mc{M}} \leq \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}_{\mc{M}}
-  $$
-  and in particular that
-  $$
-  \tmle{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A}
-  \iff \dnt{\hasty{\Gamma}{\epsilon}{a}{A}}_{\mc{S}_{\mc{R}}} 
-  \leq \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}_{\mc{S}_{\mc{R}}} 
-  $$
-  and hence that $\mc{S}_{\mc{R}}$ is the initial object in the category of $\mc{S}$-models
-  validating $\mc{R}$.
-\end{theorem}
-
-\section{Discussion and Related Work}
-
-\TODO{and then we do related work}
-
-\citet{goncharov-metalang-21}
-
-\TODO{this}
-
-\TODO{freeze is like UB but central; domain theory lore goes here}
-
-\TODO{future work: remainders}
-
-\TODO{future work: guarded iteration}
+\TODO{Release-Acquire Weak Memory}
 
 \subsection*{Acknowledgements}
 
@@ -2336,300 +1213,6 @@ agreement no. 101002277).
 \clearpage 
 
 \appendix
-
-\section{Proofs}
-
-\subsection{Syntactic Metatheory}
-
-We begin by stating the following lemmas:
-\begin{lemma}
-  \begin{itemize}
-    \item 
-  \end{itemize}
-\end{lemma}
-\begin{proof}
-\end{proof}
-
-\synmonwk*
-
-\begin{proof}
-  \;\TODO{link formalization...}
-\end{proof}
-
-\synmonsubst*
-
-\begin{proof}
-  This proof is by induction over \subiterssa derivations; the proof for \submonssa and \subdistssa
-  is the same except that irrelevant cases are omitted.
-
-  \TODO{this}
-\end{proof}
-
-\TODO{weakening congruence}
-
-\TODO{substitution congruence}
-
-\subsection{Semantic Metatheory}
-
-\TODO{this}
-
-\subsection{Soundness}
-
-\soundnessiter*
-
-\begin{proof}
-  \;\TODO{this}
-\end{proof}
-
-\subsection{Completeness}
-
-\completenessiter*
-
-\begin{proof}
-  \;\TODO{this}
-\end{proof}
-
-\section{Poset-Enriched Effectful Categories}
-
-\subsection{Syntax}
-
-\begin{grammar}
-  <\(A, B, C\)> ::= 
-  \(X\)
-  \;|\; \(A \otimes B\)
-  \;|\; \(\mathbf{1}\)
-
-  <\(a, b, c\)> ::=
-  \(x\)
-  \;|\; \(f\;a\)
-  \;|\; \(\letexpr{x}{a}{b}\)
-  \;|\; \(()\)
-  \;|\; \((a, b)\)
-  \;|\; \(\letexpr{(x, y)}{a}{b}\)
-  
-  <\(q\)> ::= \(\zeroq\) | \(\oneq\) | \(\cpyq\) | \(\delq\) | \(\topq\)
-
-  <\(\Gamma\)> ::= \(\cdot\) \;|\; \(\Gamma, x : A\)
-
-  <\(\mb{q}\)> ::= \(\cdot\) \;|\; \(\mb{q}, q\)
-
-  <\(\mb{e}\)> ::= \(\cdot\) \;|\; \(\mb{e}, \epsilon\)
-\end{grammar}
-
-
-\TODO{this}
-
-\subsection{Semantics}
-
-\begin{definition}[\submonssa-model]
-  A \submonssa-model $\mc{M} = (\mc{C}, \dnt{\cdot}, \dmor{}, \tmor{})$ of a \submonssa-signature
-  $\mc{S} = (\mc{X}, \mc{I}, \mc{E})$ is given by
-  \begin{itemize}
-    \item An effectful category $\mc{C}$ over $\mc{E}$
-    \item For each base type $X \in \ms{Base}(\mc{S})$, an object $\dnt{X} \in |\mc{C}|$, equipped
-    with
-    \begin{itemize}
-      \item For $X$ affine, a \emph{discard morphism} $\tmor{X} : \mc{C}_\bot(\dnt{X}, I)$
-      \item For $X$ relevant, a \emph{diagonal morphism} $\dmor{X} : \mc{C}_\bot(\dnt{X}, \dnt{X}
-      \otimes \dnt{X})$
-    \end{itemize}
-    \item For each function $f : \ms{Inst}(\mc{S})_\epsilon(A, B)$, a morphism $\dnt{f} :
-    \mc{C}_\epsilon(\dnt{A}, \dnt{B})$
-  \end{itemize}
-  such that, for all $A, B \in |\mc{S}|$, $f : \mc{C}_\epsilon(\dnt{A}, \dnt{B})$ we have
-  \begin{itemize}
-    \item If $A$ relevant, 
-      $\dmor{A} ; \dmor{A} \otimes \dnt{A} ; \alpha = \dmor{A} ; \dnt{A} \otimes \dmor{A}$
-    \item If $\zeroq \leq \alquant^+(\epsilon)$ and $A, B$ affine, $f ; !_B \leq !_A$
-    \item If $\zeroq \leq \alquant^+(\epsilon)$ and $A$ relevant, $B$ affine, 
-      $\dmor{A} ; (f ; !_B) \otimes \dnt{A} \leq \rho^{-1}$
-    \item If $\cpyq \leq \alquant^+(\epsilon)$ and $A, B$ relevant, 
-    $f ; \dmor{B} \leq \dmor{A} ; f \ltimes f = \dmor{A} ; f \rtimes f$
-    \item If $\zeroq \leq \alquant^-(\epsilon)$ and $A, B$ affine, $f ; !_B \geq !_A$
-    \item If $\zeroq \leq \alquant^-(\epsilon)$ and $A$ relevant, $B$ affine, 
-      $\dmor{A} ; (f ; !_B) \otimes \dnt{A} \geq \rho^{-1}$
-    \item If $\cpyq \leq \alquant^-(\epsilon)$ and $A, B$ relevant, 
-    $f ; \dmor{B} \geq \dmor{A} ; f \ltimes f = \dmor{A} ; f \rtimes f$
-  \end{itemize}
-  where
-  \begin{itemize}
-    \item $\dnt{\mb{1}} = I$
-    \item $\dnt{A \otimes B} = \dnt{A} \otimes \dnt{B}$
-    \item $!_{\mb{1}} = \ms{id}_I$
-    \item $\Delta_{\mb{1}} = \lambda^{-1} = \rho^{-1}$
-    \item For $A, B$ affine, $!_{A \otimes B} = !_A \otimes !_B ; \lambda$
-    \item For $A, B$ relevant, 
-    $\Delta_{A \otimes B} 
-      = \dmor{A} \otimes \dmor{B}
-      ; \sigma^{\ms{mid}}
-    $
-  \end{itemize}
-\end{definition}
-
-\TODO{per-term, same as above}
-
-\begin{theorem}[name=Soundness]
-  For any model $\mc{M}$, $\mc{M} \models \mc{R} \iff \mc{M} \models \thsubmon{\mc{R}}$. In
-  particular,
-  \begin{itemize}
-    \item If $\mc{M} \models \mc{R}$, given $\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}$, we
-    have $\dnt{\hasty{\Gamma}{\epsilon}{a}{A}}_{\mc{M}} =
-    \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}_{\mc{M}}$
-    \item In particular, for any model, if $\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{}{a}{b}{A}$, we have
-    $\dnt{\hasty{\Gamma}{\epsilon}{a}{A}} = \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}$
-  \end{itemize}
-\end{theorem}
-
-\TODO{definition...}
-
-\TODO{subcategory lore}
-
-\begin{theorem}[name=Completeness]
-  We have that
-  $$
-  \tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}
-  \iff \forall \mc{M} \models \mc{R},
-  \dnt{\hasty{\Gamma}{\epsilon}{a}{A}}_{\mc{M}} \leq \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}_{\mc{M}}
-  $$
-  and in particular that
-  $$
-  \tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}
-  \iff \dnt{\hasty{\Gamma}{\epsilon}{a}{A}}_{\mc{S}_{\mc{R}}} 
-  \leq \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}_{\mc{S}_{\mc{R}}} 
-  $$
-\end{theorem}
-
-In particular,
-\begin{itemize}
-  \item The category $\mc{S}_{\mc{R}}$ is the initial object in the full subcategory of
-  \submonssa-models of $\mc{S}$ validating $\mc{R}$
-  \item The category $\mc{S}_\varnothing$, which we will write as simply $\mc{S}$, is the initial
-  object in the category of \submonssa-models of $\mc{S}$.
-\end{itemize}
-
-\TODO{this}
-
-\section{Distributive Effectful Categories}
-
-\subsection{Syntax}
-
-\begin{grammar}
-  <\(A, B, C\)> ::= 
-  \(X\)
-  \;|\; \(A \otimes B\)
-  \;|\; \(\mathbf{1}\)
-  \;|\; \(A + B\)
-  \;|\; \(\mathbf{0}\)
-
-  <\(a, b, c\)> ::=
-  \(x\)
-  \alt \(f\;a\)
-  \;|\; \(\letexpr{x}{a}{b}\)
-  \;|\; \(()\)
-  \;|\; \((a, b)\)
-  \;|\; \(\letexpr{(x, y)}{a}{b}\)
-  \alt  \(\linl{a}\)
-  \;|\; \(\linr{b}\)
-  \;|\; \(\caseexpr{a}{x}{b}{y}{c}\)
-  \;|\; \(\labort{a}\)
-\end{grammar}
-
-\TODO{this}
-
-\subsection{Semantics}
-
-\begin{definition}[\subdistssa-model]
-  A \subdistssa-model $\mc{M} = (\mc{C}, \dnt{\cdot}, \dmor{}, \tmor{})$ of a \subdistssa-signature
-  $\mc{S}$ over $\mc{E}$ is a \submonssa-model such that
-  \begin{itemize}
-    \item $\mc{C}$ is a distributive category
-    \item $\mc{C}$ has chosen binary coproducts $A + B$, as well as an initial object $\mb{0}$
-    \item Each $\mc{C}_\epsilon$ is closed under the coproducts $+$ and contains all injections,
-    distributors, and initial morphisms (and therefore, in particular, inherits the structure of a
-    distributive category from $\mc{C}$)
-  \end{itemize}
-  where we extend the definitions of $\dnt{\cdot}$, $\dmor{}$, and $\tmor{}$ as follows
-  \begin{itemize}
-    \item $\dnt{\mb{0}} = \mb{0}$
-    \item $\dnt{A + B} = \dnt{A} + \dnt{B}$
-    \item $!_{\mb{0}} = 0_{I}$
-    \item $\Delta_{\mb{0}} = 0_{0 + 0}$
-    \item For $A, B$ affine, $!_{A + B} = [!_A, !_B]$
-    \item For $A, B$ relevant, 
-    $\Delta_{A + B} 
-      = [\dmor{A} ; \iota_l \otimes \iota_l, \dmor{B} ; \iota_r \otimes \iota_r]
-    $
-  \end{itemize}
-\end{definition}
-
-\TODO{per-term, same as above}
-
-\begin{theorem}[name=Soundness, restate=soundnessdist]
-  For any model $\mc{M}$, $\mc{M} \models \mc{R} \iff \mc{M} \models \thsubdist{\mc{R}}$. In
-  particular,
-  \begin{itemize}
-    \item If $\mc{M} \models \mc{R}$, given $\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}$, we
-    have $\dnt{\hasty{\Gamma}{\epsilon}{a}{A}}_{\mc{M}} =
-    \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}_{\mc{M}}$
-    \item In particular, for any model, if $\tmle{\Gamma^{\mb{q}}_{\mb{e}}}{}{a}{b}{A}$, we have
-    $\dnt{\hasty{\Gamma}{\epsilon}{a}{A}} = \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}$
-  \end{itemize}
-\end{theorem}
-
-\TODO{definition...}
-
-\TODO{subcategory lore}
-
-\begin{theorem}[name=Completeness, restate=completenessdist]
-  We have that
-  $$
-  \tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}
-  \iff \forall \mc{M} \models \mc{R},
-  \dnt{\hasty{\Gamma}{\epsilon}{a}{A}}_{\mc{M}} \leq \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}_{\mc{M}}
-  $$
-  and in particular that
-  $$
-  \tmle{\Gamma^{\mb{q}}_{\mb{e}}}{\mc{R}}{a}{b}{A}
-  \iff \dnt{\hasty{\Gamma}{\epsilon}{a}{A}}_{\mc{S}_{\mc{R}}} 
-  \leq \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}_{\mc{S}_{\mc{R}}} 
-  $$
-\end{theorem}
-
-In particular,
-\begin{itemize}
-  \item The category $\mc{S}_{\mc{R}}$ is the initial object in the full subcategory of
-  \subdistssa-models of $\mc{S}$ validating $\mc{R}$
-  \item The category $\mc{S}_\varnothing$, which we will write as simply $\mc{S}$, is the initial
-  object in the category of \subdistssa-models of $\mc{S}$.
-\end{itemize}
-
-\section{Acyclic SSA}
-
-\subsection{Syntax}
-
-\begin{grammar}
-  <\(r, s, t\)> ::= \(\brb{\ell}{a}\)
-    \;|\; \(\letstmt{x}{a}{t}\)
-    \;|\; \(\letstmt{(x, y)}{a}{t}\)
-    \;|\; \(\casestmt{a}{x}{s}{y}{t}\)
-    \;|\; \(\where{r}{L}\)
-
-  <\(L\)> ::= \(\cdot\) \;|\; \(L, \wbranch{\ell}{x}{A}\)
-
-  <\(\ms{L}\)> ::= \(\cdot\) \;|\; \(\ms{L}, \lhyp{\ell}{A}\)
-
-  <\(\mb{Q}\)> ::= \(\cdot\) \;|\; \(\mb{Q}, \mb{q}\)
-\end{grammar}
-
-\TODO{this}
-
-\subsection{Refinement Theory}
-
-\TODO{this}
-
-\subsection{Semantics}
-
-\TODO{this}
 
 \end{document}
 \endinput
