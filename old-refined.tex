@@ -151,6 +151,7 @@
 \newcommand{\ctoty}[1]{[#1]}
 \newcommand{\ltoty}[2]{[#1]}
 \newcommand{\dltoty}[2]{[#1; #2]}
+\newcommand{\zeroqv}[1]{#1^\uparrow}
 
 % Denotational semantics
 \newcommand{\dnt}[1]{\llbracket{#1}\rrbracket}
@@ -1044,19 +1045,25 @@ about polarity here}
     {\lwk{\ms{L}^{\mb{Q}}_{\mb{E}}}{\ms{K}^{\mb{Q}}_{\mb{E}}, \lhyp{\ell}{A}^{\mb{q}}_{\epsilon}}}
 \end{gather*}
 
+\begin{equation*}
+  \zeroqv{\cdot} = \cdot \qquad
+  \zeroqv{(\mb{Q}; \mb{q})} = \zeroqv{\mb{Q}} ; (\mb{q}, 0)
+\end{equation*}
+
 \TODO{we've got typing rules}
 
 \begin{gather*}
   \prftree[r]{\rle{let$_1$}}
     {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
     {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{o}{A}}
-    {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{t}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+    {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{t}{\ms{L}^{\zeroqv{\mb{Q}}}_{\mb{e}}}}
     {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\letstmt{x}{o}{t}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
   \\
   \prftree[r]{\rle{let$_2$}}
     {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
     {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{o}{A \otimes B}}
-    {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A, y : B}{\epsilon}{t}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+    {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A, y : B}{\epsilon}{t}
+      {\ms{L}^{\zeroqv{(\zeroqv{\mb{Q}})}}}_{\mb{e}}}
     {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\letstmt{(x, y)}{o}{t}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
   \\
   \prftree[r]{\rle{br}}
@@ -1068,8 +1075,8 @@ about polarity here}
   \prftree[r]{\rle{case}}
     {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
     {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\bot}{o}{A + B}}
-    {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{\tau_l}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
-    {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, y : B}{\epsilon}{\tau_r}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+    {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{\tau_l}{\ms{L}^{\zeroqv{\mb{Q}}}_{\mb{e}}}}
+    {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, y : B}{\epsilon}{\tau_r}{\ms{L}^{\zeroqv{\mb{Q}}}_{\mb{e}}}}
     {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\casestmt{o}{x}{\tau_l}{y}{\tau_r}}
                                                {\ms{L}^{\mb{Q}}_{\mb{e}}}}
   \\

@@ -186,13 +186,9 @@
 \newcommand{\bufloc}[1]{\overline{#1}}
 
 % Branding
-\newcommand{\submonssa}{\(\lambda_{\leq\otimes}\)}
-\newcommand{\subdistssa}{\(\lambda_{\ms{dist}}\)}
-\newcommand{\subiterssa}{\(\lambda_{\ms{iter}}\)}
+\newcommand{\subiterexp}{\(\lambda_{\ms{iter}}\)}
 \newcommand{\isotopessa}{\(\lambda_{\ms{SSA}}\)}
-\newcommand{\thsubmon}[1]{\ms{Th}_{\leq\otimes}(#1)}
-\newcommand{\thsubdist}[1]{\ms{Th}_{\ms{dist}}(#1)}
-\newcommand{\thsubiter}[1]{\ms{Th}_{\ms{iter}}(#1)}
+\newcommand{\thsubiter}[1]{\ms{Th}(#1)}
 
 % Formalization pointers
 \newcommand{\formalizedas}[1]{Formalized as \texttt{#1}}
@@ -309,6 +305,44 @@
 
 \TODO{where-blocks and dominance}
 
+\begin{figure}
+  \begin{grammar}
+    <\(o\)> ::= \(x\)
+      \;|\; \(f\;x\)
+      \;|\; \(()\)
+      \;|\; \((x, y)\)
+      \;|\;  \(\linl{x}\)
+      \;|\; \(\linr{x}\)
+      \;|\; \(\labort{x}\)
+
+    <\(r, s, t\)> ::= \(\kappa\)
+      \;|\; \(\letstmt{x}{o}{t}\)
+      \;|\; \(\letstmt{(x, y)}{o}{t}\)
+
+    <\(\kappa\)> ::= \(\tau\) \;|\; \(\awhere{\kappa}{L}\) \;|\; \(\cwhere{\kappa}{L}\)
+
+    <\(\tau\)> ::= \(\brb{\ell}{o}\)
+      \;|\; \(\casestmt{o}{y}{\tau}{z}{\tau'}\)
+
+    <\(L\)> ::= \(\cdot\) \;|\; \(L, \wbranch{\ell}{x}{A}\)
+  \end{grammar}
+  \caption{Grammar for \isotopessa{} programs.}
+  \Description{}
+  \label{fig:ssa-syntax}
+\end{figure}
+
+\begin{figure}
+  \begin{lstlisting}[language=C++]
+    struct BasicBlock {
+      vector<Instruction> instructions;             // unary/binary let-bindings
+      Terminator terminator;                        // LHS of where-block
+      map<Label, (Argument, BasicBlock)> children;  // RHS of where-block
+    }
+  \end{lstlisting}
+  \caption{Data encoded by the grammar in Figure \ref{fig:ssa-syntax}}
+  \Description{}
+\end{figure}
+
 \TODO{this system is bad for metatheory: ANF substitution restrictions, lots of syntactic
 categories}
 
@@ -318,8 +352,8 @@ categories}
 
 \subsection{Syntax and Typing Rules}
 
-In this section, we introduce and give typing rules for the \subiterssa{} expression language, which
-has grammar given in Figure~\ref{fig:subiterssa-syntax}. \subiterssa{} is, at first glance, a
+In this section, we introduce and give typing rules for the \subiterexp{} expression language, which
+has grammar given in Figure~\ref{fig:expr-syntax}. \subiterexp{} is, at first glance, a
 standard first-order language with branching and iteration, designed to be a functional analogue of
 the standard \textsc{While} language. We will begin by going over each production rule. For the rest
 of this section, we assume a fixed set of \emph{base types} $\mc{X}$ and a set of
@@ -353,11 +387,11 @@ of this section, we assume a fixed set of \emph{base types} $\mc{X}$ and a set o
 
     <\(\mb{q}\)> ::= \(\cdot\) \;|\; \(\mb{q}, q\)
   \end{grammar}
-  \caption{Syntax for \subiterssa{} types, expressions, quantities, and contexts.} \Description{}
-  \label{fig:subiterssa-syntax}
+  \caption{Syntax for \subiterexp{} types, expressions, quantities, and contexts.} \Description{}
+  \label{fig:expr-syntax}
 \end{figure}
 
-We will equip \subiterssa{} with a substructural type-and-effect system. To allow us to support both
+We will equip \subiterexp{} with a substructural type-and-effect system. To allow us to support both
 destructuring let-bindings and case-statements, our grammar of types $A, B, C$ will consist of:
 \begin{itemize}
   \item \emph{Base types} $X \in \mc{X}$
@@ -391,8 +425,10 @@ explain what we mean by usage, and what the allowed effects are.
 
 
 \subsubsection{Variable Quantities}
-Our type system needs to track how often individual variables are used  to
-reason about rewrites involving substructural effects. Inspired by substructural logic, which distinguishes linear (exactly once), afficne (at most once), and relevant (at least once), we introduce a join semilattice of \emph{quantities} to model these usages. The primitive quantities are:
+Our type system needs to track how often individual variables are used  to reason about rewrites
+involving substructural effects. Inspired by substructural logic, which distinguishes linear
+(exactly once), afficne (at most once), and relevant (at least once), we introduce a join
+semilattice of \emph{quantities} to model these usages. The primitive quantities are:
 \begin{itemize}
   \item $\zeroq$ -- corresponding to being used zero times
   \item $\oneq$ -- corresponding to being used exactly once
@@ -570,9 +606,9 @@ Putting all this together, we arrive at the following definition for an
 
 \subsubsection{Typing rules}
 
-We now have all the pieces we need to define a \subiterssa{}-\emph{signature}:
-\begin{definition}[\subiterssa-signature]
-  A \subiterssa signature $\mc{S} = (\mc{X}, \mc{I}, \mc{E})$ consists of:
+We now have all the pieces we need to define a \subiterexp{}-\emph{signature}:
+\begin{definition}[\subiterexp-signature]
+  A \subiterexp signature $\mc{S} = (\mc{X}, \mc{I}, \mc{E})$ consists of:
   \begin{itemize}
     \item A set of \emph{base types} $X \in \mc{X}$
     \item A set of \emph{instructions} $f \in \mc{I}$
@@ -583,13 +619,13 @@ We now have all the pieces we need to define a \subiterssa{}-\emph{signature}:
     \item Every base type $X$ type to a \emph{quantity} $\ms{q}(X) \in \{1, \delq, \cpyq, \topq\}$.
     \item Every instruction to a \emph{source type} $\ms{src}(f) = A$, a \emph{target type}
     $\ms{trg}(f) = B$, and an \emph{effect} $\ms{eff}(f) = e$ (where types are given by the grammar
-    in Figure~\ref{fig:subiterssa-syntax}).
+    in Figure~\ref{fig:expr-syntax}).
   \end{itemize}
 \end{definition}
 All the following definitions in this section will be with respect to an arbitrary
-\subiterssa{}-signature $\mc{S}$. 
+\subiterexp{}-signature $\mc{S}$. 
 
-We can now give the typing rules for \subiterssa{} in Figure~\ref{fig:subiterssa-typing}. Our rules
+We can now give the typing rules for \subiterexp{} in Figure~\ref{fig:expr-typing}. Our rules
 are for the most part syntax directed, with one rule for each production in our grammar. In
 particular,
 \begin{itemize}
@@ -683,9 +719,9 @@ particular,
       {\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{b}{B + A}}
       {\hasty{\Gamma^{\mb{q}}}{\epsilon}{\liter{a}{x}{b}}{B}}
   \end{gather*}
-  \caption{Typing rules for \subiterssa{}}
+  \caption{Typing rules for \subiterexp{}}
   \Description{}
-  \label{fig:subiterssa-typing}
+  \label{fig:expr-typing}
 \end{figure}
 
 \subsection{Syntactic Metatheory}
@@ -705,7 +741,7 @@ as follows:
 We now attempt to define what substitution looks like in the substructural, effectful context. We
 begin by defining a typing judgement $\issubst{\Gamma^{\mb{q}}}{\epsilon}{\sigma}{\Delta^{\mb{q}'}}$
 for substitutions (viewed as a duplicate-fre list of mappings $x \mapsto a$ from variables to
-terms), with rules in Figure~\ref{fig:subiterssa-subst}. This may be read as ``$\sigma$ takes the
+terms), with rules in Figure~\ref{fig:expr-subst}. This may be read as ``$\sigma$ takes the
 context $\Gamma^{\mb{q}}$ to the context $\Delta^{\mb{q}'}$ with effect $\epsilon$.'' Our rules may
 be interpreted as follows:
 \begin{itemize}
@@ -746,9 +782,9 @@ be interpreted as follows:
       {\issubst{\Gamma^{\mb{q}}}{\epsilon}{\sigma, x \mapsto a}
       {\Delta^{\mb{q}'}, x : A^q}}
   \end{gather*}
-  \caption{Substitution rules for \subiterssa{}}
+  \caption{Substitution rules for \subiterexp{}}
   \Description{}
-  \label{fig:subiterssa-subst}
+  \label{fig:expr-subst}
 \end{figure}%
 We denote capture-avoiding substitution of $a$ by $\sigma$ as $[\sigma]a$ We can now state the
 substitution lemma for our calculus as follows:
@@ -780,17 +816,18 @@ is admissible
     {(\tmle{\Delta^{\mb{q}'}}{}{a}{b}{A}) \in \mc{R}}
     {(\tmle{\Gamma^{\mb{q}}}{}{[\sigma]a}{[\sigma]b}{A}) \in \mc{R}} 
 \end{equation*}
-Our goal is to construct a refinement relation $\tref$ at every context
+Our goal is to construct a refinement relation $\tref$ at every context and type
 satisfying the following properties: 
 \begin{enumerate}
   \item $\tref$ contains $\mc{R}$
   \item $\tref$ is a \emph{congruence} with respect to our term formers, and in particular is a
   partial order
-  \item $\tref$ abstracts away irrelevant syntactic details, e.g. associativity of let-bindings.
+  \item $\tref$ abstracts away the associativity of let-bindings.
   \label{item:abstracts-syntax}
-  \item $\tref$ expresses the \emph{computational} properties of our language constructs, e.g.
-  reduction of let-bindings and unrolling of fixpoints.
+  \item $\tref$ contains the $\beta$ and $\eta$-rules of our language constructs
   \label{item:does-computation}
+  \item $\tref$ encodes the properties of iteration
+  \label{item:does-iteration}
 \end{enumerate}
 The rules in Figure~\ref{fig:congruence-refinement} guarantee the first two properties. In
 particular, this also means that equivalence of terms, defined as follows, is also a congruence:
@@ -801,9 +838,34 @@ particular, this also means that equivalence of terms, defined as follows, is al
 \end{equation}
 To satisfy property \ref{item:abstracts-syntax}, we introduce a set of \emph{binding rules} in
 Figure~\ref{fig:binding-rules}, which are given as a set of equivalences governing the interaction
-of let-bindings and our other language constructs. We don't provide rules for every construct;
-for example, rules for pairs are notably omitted, since these can be derived from $\beta$-reduction
-and the other rules.
+of let-bindings and our other language constructs. We don't provide rules for every construct; for
+example, rules for pairs are notably omitted, since these can be derived from $\beta$-reduction.
+
+We proceed to give the $\beta$ and $\eta$ rules for our calculus in
+Figure~\ref{fig:reduction-rules}. These are all standard equations, except for
+\brle{let$_1$-$\beta^+$} and \brle{let$_1$-$\beta^-$}, which are \emph{directed}. In particular,
+\brle{let$_1$-$\beta^+$} says that $\beta$-reducing a let-binding is a \emph{refinement} if the
+bound value has an effect which is a right-mover w.r.t. the effect of the body and is used a number
+of times compatible with both the effect and the context it is typed in. \brle{let$_1$-$\beta^-$},
+on the other hand, says that factoring out a let-binding from a substitution is a refinement if the
+bound value has an effect which is a \emph{left-mover} w.r.t the effect of the body. In particular, 
+this means that the following more standard equation is \emph{derivable}:
+\begin{equation}
+  \prftree[r]{\rle{let$_1$-$\beta$}}
+  {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+  {\hasty{\Gamma^{\mb{q}_l}}{\epsilon}{a}{A}}
+  {\hasty{\Gamma^{\mb{q}_r}, x : A^q}{\eta}{b}{B}}
+  {\epsilon \slides \eta}
+  {q \leq \alquant(\Gamma^{\mb{q}_r}) \sqcap \alquant^p(\epsilon)}
+  {
+    \tmeq{\Gamma^{\mb{q}}}{\mc{R}}{\letexpr{x}{a}{b}}{[x/a]b}{B}
+  }
+\end{equation}
+which of course obviously holds for pure expressions with $\epsilon = \bot$.
+
+Finally, we give the rules for iteration in Figure~\ref{fig:iteration-rules}.
+
+\TODO{these correspond exactly to the axioms for a Conway iteration operator}
 
 \TODO{one issue is that our congruence rules are not \emph{continuous} w.r.t. to loops}
 
@@ -815,49 +877,12 @@ if I can't find a citation}
 \TODO{these are the \emph{uniformity} rules; since our rewrite rules are \emph{directed}, our
 uniformity rules will be as well, and we need one for both directions, i.e., }
 
-Given
-\begin{gather*}
-  {\qsp{\Gamma}{\mb{q}}{\mb{q}_c}{\mb{q}_r}} \qquad
-  {\qsp{\Gamma}{\mb{q}_c}{\mb{q}_l}{\mb{q}_m}} \qquad
-  \alquant(\Gamma^{\mb{q}_l}) = \top \qquad
-  \einf{\epsilon}
-  \\
-  \qquad {\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A}}
-  \qquad {\hasty{\Gamma^{\mb{q}_m}, x : A}{\eta}{s}{S}}
-  \qquad {\hasty{\Gamma^{\mb{q}_l}, y : S}{\epsilon}{b}{B + A}}
-  \qquad {\hasty{\Gamma^{\mb{q}_c}, x : A}{\epsilon}{b'}{B + A}}
-\end{gather*}
-
-\TODO{we have}
-
-\begin{gather*}
-  \prftree[r]{\rle{unif$^p$}}
-    {\eta \rightmove \epsilon}
-    {\tmlep{\Gamma^{\mb{q}_c}, x : A}{\mc{R}}
-      {\letexpr{y}{s}{b}}
-      {\caseexpr{b'}{x}{\linl{x}}{x}{\linr{s}}}{B + S}{p}}
-    {
-      \tmlep{\Gamma^{\mb{q}}}
-        {\mc{R}}
-        {\letexpr{x}{a}{\liter{s}{y}{b}}}
-        {\liter{a}{x}{b'}}
-        {B}
-        {p}
-    } \\
-\end{gather*}
 
 \TODO{note in particular that this means commuting with $\epsilon$ includes commuting with
 infinitely many $\epsilon$ if $\epsilon$ is iterative}
 
 \TODO{where, for each direction $p \in \{+, -\}$, we will write}
 
-\begin{equation*}
-  \tmlep{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A}{+}
-  \iff \tmle{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A}
-  \qquad
-  \tmlep{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A}{-}
-  \iff \tmle{\Gamma^{\mb{q}}}{\mc{R}}{b}{a}{A}
-\end{equation*}
 
 \begin{figure}
   \begin{gather*}
@@ -927,7 +952,7 @@ infinitely many $\epsilon$ if $\epsilon$ is iterative}
       {\tmle{\Gamma^{\mb{q}_l}, x : A}{\mc{R}}{b}{b'}{B + A}}
       {\tmle{\Gamma^{\mb{q}}}{\mc{R}}{\liter{a}{x}{b}}{\liter{a'}{x}{b'}}{B}}
   \end{gather*}
-  \caption{\subiterssa{} congruence rules}
+  \caption{\subiterexp{} congruence rules}
   \Description{}
   \label{fig:congruence-refinement}
 \end{figure}
@@ -994,36 +1019,6 @@ infinitely many $\epsilon$ if $\epsilon$ is iterative}
         {\caseexpr{e}{x}{\letexpr{z}{a}{d}}{y}{\letexpr{z}{b}{d}}}
         {D}
       } 
-      \\
-    \prftree[r]{\rle{let-abort}}
-      {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-      {\hasty{\Gamma^{\mb{q}_l}}{\mc{R}}{a}{\mb{0}}}
-      {\hasty{\Gamma^{\mb{q}_r}, x : A}{\mc{R}}{b}{B}}
-      {\tmeq{\Gamma^{\mb{q}}}{\mc{R}}
-        {\letexpr{x}{\labort{a}}{b}}
-        {\letexpr{y}{a}{\letexpr{x}{\labort{y}}{b}}}
-        {B}
-      } 
-      \\
-    \prftree[r]{\rle{let-iter}}
-      {
-      \prfStackPremises
-      {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_c}}
-      {\qsp{\Gamma}{\mb{q}_c}{\mb{q}_m}{\mb{q}_r}}
-      }
-      {
-      \prfStackPremises
-      {\alquant(\Gamma^{\mb{q}_l}) = \top}
-      {\alquant(\Gamma^{\mb{q}_m}) = \top}
-      }
-      {\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A}}
-      {\hasty{\Gamma^{\mb{q}_m}, x : A}{\epsilon}{b}{B + A}}
-      {\hasty{\Gamma^{\mb{q}_l}, y : B}{\epsilon}{c}{C}}
-      {\tmeq{\Gamma^{\mb{q}}}{\mc{R}}
-        {\letexpr{y}{\liter{a}{x}{b}}{c}}
-        {\liter{a'}{x}{\caseexpr{b}{y}{c}{z}{\linr{z}}}}
-        {C}
-      }
   \end{gather*}
   \begin{gather*}
     \prftree[r]{\rle{let$_2$-bind}}
@@ -1055,28 +1050,10 @@ infinitely many $\epsilon$ if $\epsilon$ is iterative}
       {\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{b}{B + A}}
       {\tmeq{\Gamma^{\mb{q}}}{\mc{R}}{\liter{a}{x}{b}}{\letexpr{y}{a}{\liter{y}{x}{b}}}{B}}
   \end{gather*}
-  \caption{Binding rules for \subiterssa{}}
+  \caption{Binding rules for \subiterexp{}}
   \Description{}
   \label{fig:binding-rules}
 \end{figure}
-
-% \begin{gather*}
-%   \prftree[r]{\rle{refl}}
-%     {\hasty{\Gamma^{\mb{q}}}{\mc{R}}{\epsilon}{a}{A}}
-%     {\tmeq{\Gamma^{\mb{q}}}{\mc{R}}{a}{a}{A}} \qquad
-%   \prftree[r]{\rle{trans}}
-%     {\tmeq{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A}}
-%     {\tmeq{\Gamma^{\mb{q}}}{\mc{R}}{b}{c}{A}}
-%     {\tmeq{\Gamma^{\mb{q}}}{\mc{R}}{a}{c}{A}}\qquad
-%   \prftree[r]{\rle{symm}}
-%     {\tmeq{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A}}
-%     {\tmeq{\Gamma^{\mb{q}}}{\mc{R}}{b}{a}{A}}
-% \end{gather*}
-
-\TODO{now we want some basic equations which always hold}
-
-\TODO{we start with re-associating data flow:}
-
 
 \begin{figure}
   \begin{gather*}
@@ -1088,14 +1065,14 @@ infinitely many $\epsilon$ if $\epsilon$ is iterative}
       {\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{\mb{0}}}
       {\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{b}{B}}
       {\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{b'}{B}}
-      {\tmeq{\Gamma^{\mb{q}}}{\mc{R}}{\letexpr{x}{\labort{a}}{b}}{\letexpr{x}{\labort{a}}{b'}}{B}}
-      \\
+      {
+        \tmeq{\Gamma^{\mb{q}}}{\mc{R}}{\letexpr{x}{\labort{a}}{b}}{\letexpr{x}{\labort{a}}{b'}}{B}
+      } \\
     \prftree[r]{\rle{let$_2$-$\eta$}}
       {\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A \otimes B}}
       {
         \tmeq{\Gamma^{\mb{q}}}{\mc{R}}{\letexpr{(x, y)}{a}{(x, y)}}{a}{A \otimes B}
-      }
-    \\
+      } \\
     \prftree[r]{\rle{let$_2$-$\beta$}}
       {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
       {\qsp{\Gamma}{\mb{q}_l}{\mb{q}_a}{\mb{q}_b}}
@@ -1134,6 +1111,51 @@ infinitely many $\epsilon$ if $\epsilon$ is iterative}
         {e}
         {A + B}
       } \\
+    \prftree[r]{\rle{let$_1$-$\beta^+$}}
+      {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+      {\hasty{\Gamma^{\mb{q}_l}}{\epsilon}{a}{A}}
+      {\hasty{\Gamma^{\mb{q}_r}, x : A^q}{\eta}{b}{B}}
+      {\epsilon \rightmove \eta}
+      {q \leq \alquant(\Gamma^{\mb{q}_r}) \sqcap \alquant^p(\epsilon)}
+      {
+        \tmle{\Gamma^{\mb{q}}}{\mc{R}}{\letexpr{x}{a}{b}}{[x/a]b}{B}
+      } \\
+    \prftree[r]{\rle{let$_1$-$\beta^-$}}
+      {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+      {\hasty{\Gamma^{\mb{q}_l}}{\epsilon}{a}{A}}
+      {\hasty{\Gamma^{\mb{q}_r}, x : A^q}{\eta}{b}{B}}
+      {\epsilon \leftmove \eta}
+      {q \leq \alquant(\Gamma^{\mb{q}_r}) \sqcap \alquant^p(\epsilon)}
+      {
+        \tmle{\Gamma^{\mb{q}}}{\mc{R}}{[x/a]b}{\letexpr{x}{a}{b}}{B}
+      }
+  \end{gather*}
+  \caption{Reduction rules for \subiterexp{}}
+  \Description{}
+  \label{fig:reduction-rules}
+\end{figure}
+
+\begin{figure}
+  \begin{gather*}
+    \prftree[r]{\rle{let-iter}}
+      {
+      \prfStackPremises
+      {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_c}}
+      {\qsp{\Gamma}{\mb{q}_c}{\mb{q}_m}{\mb{q}_r}}
+      }
+      {
+      \prfStackPremises
+      {\alquant(\Gamma^{\mb{q}_l}) = \top}
+      {\alquant(\Gamma^{\mb{q}_m}) = \top}
+      }
+      {\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A}}
+      {\hasty{\Gamma^{\mb{q}_m}, x : A}{\epsilon}{b}{B + A}}
+      {\hasty{\Gamma^{\mb{q}_l}, y : B}{\epsilon}{c}{C}}
+      {\tmeq{\Gamma^{\mb{q}}}{\mc{R}}
+        {\letexpr{y}{\liter{a}{x}{b}}{c}}
+        {\liter{a}{x}{\caseexpr{b}{y}{c}{z}{\linr{z}}}}
+        {C}
+      } \\
     \prftree[r]{\rle{iter-$\beta$}}
       {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
       {\alquant(\Gamma^{\mb{q}_l}) = \top}
@@ -1152,22 +1174,35 @@ infinitely many $\epsilon$ if $\epsilon$ is iterative}
       {\hasty{\Gamma^{\mb{q}_l}, y : A}{\epsilon}{b}{(B + A) + A}}
       {\tmeq
         {\Gamma^{\mb{q}}}{\mc{R}}{\liter{a}{x}{\liter{x}{y}{b}}}
-        {\liter{a}{y}{\caseexpr{b}{x}{x}{y}{\linr{y}}}}{B}}
+        {\liter{a}{y}{\caseexpr{b}{x}{x}{y}{\linr{y}}}}{B}} \\
   \end{gather*}
   \begin{gather*}
-    \prftree[r]{\rle{let$_1$-$\beta^p$}}
-      {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-      {\hasty{\Gamma^{\mb{q}_l}}{\epsilon}{a}{A}}
-      {\hasty{\Gamma^{\mb{q}_r}, x : A^q}{\eta}{b}{B}}
-      {\epsilon \rightmove^p \eta}
-      {q \leq \alquant(\Gamma^{\mb{q}_r}) \sqcap \alquant^p(\epsilon)}
+    \prftree[r]{\rle{unif$^p$}}
+      {\eta \rightmove \epsilon}
+      {\tmlep{\Gamma^{\mb{q}_c}, x : A}{\mc{R}}
+        {\letexpr{y}{s}{b}}
+        {\caseexpr{b'}{x}{\linl{x}}{x}{\linr{s}}}{B + S}{p}}
       {
-        \tmlep{\Gamma^{\mb{q}}}{\mc{R}}{\letexpr{x}{a}{b}}{[x/a]b}{B}{p}
-      }
+        \tmlep{\Gamma^{\mb{q}}}
+          {\mc{R}}
+          {\letexpr{x}{a}{\liter{s}{y}{b}}}
+          {\liter{a}{x}{b'}}
+          {B}
+          {p}
+      } \\
+    \text{where} \qquad {\qsp{\Gamma}{\mb{q}}{\mb{q}_c}{\mb{q}_r}} \qquad
+    {\qsp{\Gamma}{\mb{q}_c}{\mb{q}_l}{\mb{q}_m}} \qquad
+    \alquant(\Gamma^{\mb{q}_l}) = \top \qquad
+    \einf{\epsilon}
+    \\
+    \qquad {\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A}}
+    \qquad {\hasty{\Gamma^{\mb{q}_m}, x : A}{\eta}{s}{S}}
+    \qquad {\hasty{\Gamma^{\mb{q}_l}, y : S}{\epsilon}{b}{B + A}}
+    \qquad {\hasty{\Gamma^{\mb{q}_c}, x : A}{\epsilon}{b'}{B + A}}
   \end{gather*}
-  \caption{Reduction rules for \subiterssa{}}
+  \caption{Iteration rules for \subiterexp{}}
   \Description{}
-  \label{fig:reduction-rules}
+  \label{fig:iteration-rules}
 \end{figure}
 
 
