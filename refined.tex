@@ -843,13 +843,19 @@ example, rules for pairs are notably omitted, since these can be derived from $\
 
 We proceed to give the $\beta$ and $\eta$ rules for our calculus in
 Figure~\ref{fig:reduction-rules}. These are all standard equations, except for
-\brle{let$_1$-$\beta^+$} and \brle{let$_1$-$\beta^-$}, which are \emph{directed}. In particular,
-\brle{let$_1$-$\beta^+$} says that $\beta$-reducing a let-binding is a \emph{refinement} if the
-bound value has an effect which is a right-mover w.r.t. the effect of the body and is used a number
-of times compatible with both the effect and the context it is typed in. \brle{let$_1$-$\beta^-$},
-on the other hand, says that factoring out a let-binding from a substitution is a refinement if the
-bound value has an effect which is a \emph{left-mover} w.r.t the effect of the body. In particular, 
-this means that the following more standard equation is \emph{derivable}:
+\brle{let$_1$-$\beta^+$} and \brle{let$_1$-$\beta^-$} (which we write as a single rule
+\brle{let$_1$-$\beta^p$}), which are \emph{directed}. We begin by defining,
+\begin{equation*}
+  \tmlep{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A}{+} \iff \tmeq{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A} \qquad
+  \tmlep{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A}{-} \iff \tmeq{\Gamma^{\mb{q}}}{\mc{R}}{b}{a}{A}
+\end{equation*}
+In particular, \brle{let$_1$-$\beta^+$} says
+that $\beta$-reducing a let-binding is a \emph{refinement} if the bound value has an effect which is
+a right-mover w.r.t. the effect of the body and is used a number of times compatible with both the
+effect and the context it is typed in. \brle{let$_1$-$\beta^-$}, on the other hand, says that
+factoring out a let-binding from a substitution is a refinement if the bound value has an effect
+which is a \emph{left-mover} w.r.t the effect of the body. In particular, this means that the
+following more standard equation is \emph{derivable}:
 \begin{equation}
   \prftree[r]{\rle{let$_1$-$\beta$}}
   {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
@@ -863,25 +869,19 @@ this means that the following more standard equation is \emph{derivable}:
 \end{equation}
 which of course obviously holds for pure expressions with $\epsilon = \bot$.
 
-Finally, we give the rules for iteration in Figure~\ref{fig:iteration-rules}.
-
-\TODO{these correspond exactly to the axioms for a Conway iteration operator}
-
-\TODO{one issue is that our congruence rules are not \emph{continuous} w.r.t. to loops}
-
-\TODO{there is no finite axiomatization of the theory of loops due to Milner trauma, remove this
-if I can't find a citation}
-
-\TODO{so we need an axiom schema; an infinite family of commutativity axioms for loops}
-
-\TODO{these are the \emph{uniformity} rules; since our rewrite rules are \emph{directed}, our
-uniformity rules will be as well, and we need one for both directions, i.e., }
+Finally, we give the rules for iteration in Figure~\ref{fig:iteration-rules}. These correspond
+roughly to the properties of a Conway iteration operator; in particular, we require our iteration
+operator to satisfy:
+\begin{itemize}
+  \item \emph{Fixpoint}: the rule \brle{iter-$\beta$} \todo{rest}
+  \item \emph{Naturality}: \todo{this}
+  \item \emph{Dinaturality}: \todo{this}
+  \item \emph{Uniformity}: \todo{this}
+\end{itemize}
 
 
 \TODO{note in particular that this means commuting with $\epsilon$ includes commuting with
 infinitely many $\epsilon$ if $\epsilon$ is iterative}
-
-\TODO{where, for each direction $p \in \{+, -\}$, we will write}
 
 
 \begin{figure}
@@ -1111,23 +1111,14 @@ infinitely many $\epsilon$ if $\epsilon$ is iterative}
         {e}
         {A + B}
       } \\
-    \prftree[r]{\rle{let$_1$-$\beta^+$}}
+    \prftree[r]{\rle{let$_1$-$\beta^p$}}
       {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
       {\hasty{\Gamma^{\mb{q}_l}}{\epsilon}{a}{A}}
       {\hasty{\Gamma^{\mb{q}_r}, x : A^q}{\eta}{b}{B}}
       {\epsilon \rightmove \eta}
       {q \leq \alquant(\Gamma^{\mb{q}_r}) \sqcap \alquant^p(\epsilon)}
       {
-        \tmle{\Gamma^{\mb{q}}}{\mc{R}}{\letexpr{x}{a}{b}}{[x/a]b}{B}
-      } \\
-    \prftree[r]{\rle{let$_1$-$\beta^-$}}
-      {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-      {\hasty{\Gamma^{\mb{q}_l}}{\epsilon}{a}{A}}
-      {\hasty{\Gamma^{\mb{q}_r}, x : A^q}{\eta}{b}{B}}
-      {\epsilon \leftmove \eta}
-      {q \leq \alquant(\Gamma^{\mb{q}_r}) \sqcap \alquant^p(\epsilon)}
-      {
-        \tmle{\Gamma^{\mb{q}}}{\mc{R}}{[x/a]b}{\letexpr{x}{a}{b}}{B}
+        \tmlep{\Gamma^{\mb{q}}}{\mc{R}}{\letexpr{x}{a}{b}}{[x/a]b}{B}{p}
       }
   \end{gather*}
   \caption{Reduction rules for \subiterexp{}}
@@ -1137,6 +1128,16 @@ infinitely many $\epsilon$ if $\epsilon$ is iterative}
 
 \begin{figure}
   \begin{gather*}
+    \prftree[r]{\rle{iter-$\beta$}}
+      {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+      {\alquant(\Gamma^{\mb{q}_l}) = \top}
+      {\einf{\epsilon}}
+      {\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A}}
+      {\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{b}{B + A}}
+      {\tmeq
+        {\Gamma^{\mb{q}}}{\mc{R}}{\liter{a}{x}{b}}
+        {\letexpr{x}{a}{\caseexpr{b}{y}{y}{z}{\liter{z}{x}{b}}}}{B}}
+    \\
     \prftree[r]{\rle{let-iter}}
       {
       \prfStackPremises
@@ -1156,16 +1157,6 @@ infinitely many $\epsilon$ if $\epsilon$ is iterative}
         {\liter{a}{x}{\caseexpr{b}{y}{c}{z}{\linr{z}}}}
         {C}
       } \\
-    \prftree[r]{\rle{iter-$\beta$}}
-      {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-      {\alquant(\Gamma^{\mb{q}_l}) = \top}
-      {\einf{\epsilon}}
-      {\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A}}
-      {\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{b}{B + A}}
-      {\tmeq
-        {\Gamma^{\mb{q}}}{\mc{R}}{\liter{a}{x}{b}}
-        {\letexpr{x}{a}{\caseexpr{b}{y}{y}{z}{\liter{z}{x}{b}}}}{B}}
-    \\
     \prftree[r]{\rle{codiag}}
       {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
       {\alquant(\Gamma^{\mb{q}_l}) = \top}
