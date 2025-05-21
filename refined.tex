@@ -807,7 +807,21 @@ relation. We write our refinement judgement as
   \tmle{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A}
 \end{equation*}
 which we will read as ``$a$ is refined by $b$ in the context $\Gamma^{\mb{q}}$ modulo rewrites
-$\mc{R}$.'' Here $\mc{R}$ is a set of rewrites of the form $\tmle{\Gamma^{\mb{q}}}{}{a}{b}{A}$; we
+$\mc{R}$.'' Equivalence of terms is derived from this refinement relation in the usual manner;
+namely, by defining
+\begin{equation}
+  \tmeq{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A}
+  \iff \tmle{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A} 
+  \land \tmle{\Gamma^{\mb{q}}}{\mc{R}}{b}{a}{A}
+\end{equation}
+For brevity when introducing pairs of rules with opposite polarity, we also introduce
+the following notation
+\begin{equation*}
+  \tmlep{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A}{+} \iff \tmle{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A} \qquad
+  \tmlep{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A}{-} \iff \tmle{\Gamma^{\mb{q}}}{\mc{R}}{b}{a}{A}
+\end{equation*}
+
+Here $\mc{R}$ is a set of rewrites of the form $\tmle{\Gamma^{\mb{q}}}{}{a}{b}{A}$; we
 will generally assume that $\mc{R}$ is closed under pure substitution, i.e. that the following rule
 is admissible
 \begin{equation*}
@@ -822,6 +836,7 @@ satisfying the following properties:
   \item $\tref$ contains $\mc{R}$
   \item $\tref$ is a \emph{congruence} with respect to our term formers, and in particular is a
   partial order
+  \label{item:is-congruence}
   \item $\tref$ abstracts away the associativity of let-bindings.
   \label{item:abstracts-syntax}
   \item $\tref$ contains the $\beta$ and $\eta$-rules of our language constructs
@@ -830,26 +845,20 @@ satisfying the following properties:
   \label{item:does-iteration}
 \end{enumerate}
 The rules in Figure~\ref{fig:congruence-refinement} guarantee the first two properties. In
-particular, this also means that equivalence of terms, defined as follows, is also a congruence:
-\begin{equation}
-  \tmeq{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A}
-  \iff \tmle{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A} 
-  \land \tmle{\Gamma^{\mb{q}}}{\mc{R}}{b}{a}{A}
-\end{equation}
+particular, property~\ref{item:is-congruence}, also means that equivalence of terms $\approx$ is a
+congruence.
+
 To satisfy property \ref{item:abstracts-syntax}, we introduce a set of \emph{binding rules} in
-Figure~\ref{fig:binding-rules}, which are given as a set of equivalences governing the interaction
-of let-bindings and our other language constructs. We don't provide rules for every construct; for
-example, rules for pairs are notably omitted, since these can be derived from $\beta$-reduction.
+Figure~\ref{fig:binding-rules}. The conclusions of these rules are \emph{equivalences} of the form
+$\tmeq{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A}$, rather than refinements; we could also express this by
+providing one rule for each direction of the equivalence. We don't need to provide rules for every
+construct; for example, binding rules for pairs and injections are notably omitted, since these can
+be derived from $\beta$-reduction.
 
 We proceed to give the $\beta$ and $\eta$ rules for our calculus in
 Figure~\ref{fig:reduction-rules}. These are all standard equations, except for
 \brle{let$_1$-$\beta^+$} and \brle{let$_1$-$\beta^-$} (which we write as a single rule
-\brle{let$_1$-$\beta^p$}), which are \emph{directed}. We begin by defining,
-\begin{equation*}
-  \tmlep{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A}{+} \iff \tmeq{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A} \qquad
-  \tmlep{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A}{-} \iff \tmeq{\Gamma^{\mb{q}}}{\mc{R}}{b}{a}{A}
-\end{equation*}
-In particular, \brle{let$_1$-$\beta^+$} says
+\brle{let$_1$-$\beta^p$}), which are \emph{directed}. In particular, \brle{let$_1$-$\beta^+$} says
 that $\beta$-reducing a let-binding is a \emph{refinement} if the bound value has an effect which is
 a right-mover w.r.t. the effect of the body and is used a number of times compatible with both the
 effect and the context it is typed in. \brle{let$_1$-$\beta^-$}, on the other hand, says that
@@ -862,27 +871,35 @@ following more standard equation is \emph{derivable}:
   {\hasty{\Gamma^{\mb{q}_l}}{\epsilon}{a}{A}}
   {\hasty{\Gamma^{\mb{q}_r}, x : A^q}{\eta}{b}{B}}
   {\epsilon \slides \eta}
-  {q \leq \alquant(\Gamma^{\mb{q}_r}) \sqcap \alquant^p(\epsilon)}
+  {q \leq \alquant(\Gamma^{\mb{q}_r}) \sqcap \alquant(\epsilon)}
   {
     \tmeq{\Gamma^{\mb{q}}}{\mc{R}}{\letexpr{x}{a}{b}}{[x/a]b}{B}
   }
 \end{equation}
-which of course obviously holds for pure expressions with $\epsilon = \bot$.
+which of course obviously holds for pure expressions with $\epsilon = \bot$, as we would normally
+expect in an effectful language.
 
-Finally, we give the rules for iteration in Figure~\ref{fig:iteration-rules}. These correspond
-roughly to the properties of a Conway iteration operator; in particular, we require our iteration
-operator to satisfy:
+The last thing that remains is to treat iteration. Our first requirement is that the iteration is a
+fixpoint, which we express using the rule \brle{iter-$\beta$}. This simply means that iterating $b$
+with initial value $a$ is the same as evaluating $a$, evaluating $b$ with the resulting value, and
+then either (on the left branch) returning the result or (on the right branch) iterating $b$ with
+the result as initial value. We will furthermore require a few well-behavedness properties; namely:
 \begin{itemize}
-  \item \emph{Fixpoint}: the rule \brle{iter-$\beta$} \todo{rest}
-  \item \emph{Naturality}: \todo{this}
-  \item \emph{Dinaturality}: \todo{this}
-  \item \emph{Uniformity}: \todo{this}
+  \item \emph{Naturality}, expressed by the rule \brle{let-iter}, which states that iterating $b$
+  with initial value $a$ and then executing $c$ is the same as iterating $b$ followed by $c$ on the
+  exit branch with initial value $a$; in other words, we can ``move'' statements out of the exit
+  branch.
+  \item \emph{Codiagonal}, expressed by the rule \brle{codiag}, which states that the nested
+  iteration of $b$ with initial value $a$ is the same as iterating $b$ with its recursive branches
+  fused.
 \end{itemize}
-
-
-\TODO{note in particular that this means commuting with $\epsilon$ includes commuting with
-infinitely many $\epsilon$ if $\epsilon$ is iterative}
-
+Finally, we require our iteration operator to satisfy \emph{uniformity}, as expressed by the rules
+\brle{unif$^p$}. Intuitively, what uniformity states is that if an operation $a$ commutes with a
+loop body $b$, then it also commutes with the iteration of $b$, i.e., infinitely many copies of $b$.
+The statement of the rule is just a little bit more general, in that it allows us to change $a$
+followed by $b$ into a separate program $b'$ followed by $a$. Like the $\beta$-rules for
+let-bindings, this rule is \emph{directed}, which simply means that we handle the case of whether
+the commutativity is a refinement or anti-refinement rather than just an equivalence.
 
 \begin{figure}
   \begin{gather*}
@@ -1195,9 +1212,6 @@ infinitely many $\epsilon$ if $\epsilon$ is iterative}
   \Description{}
   \label{fig:iteration-rules}
 \end{figure}
-
-
-\TODO{refinement theory}
 
 \section{Semantics}
 
