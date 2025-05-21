@@ -801,70 +801,79 @@ substitution lemma for our calculus as follows:
 \subsection{Refinement Theory}
 
 
-Now that we have some basic metatheoretic results, we can attempt to develop our refinement
-relation. We write our refinement judgement as
+Now that we have established basic metatheoretic properties, we define our core notion of
+refinement. The judgment
 \begin{equation*}
   \tmle{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A}
 \end{equation*}
-which we will read as ``$a$ is refined by $b$ in the context $\Gamma^{\mb{q}}$ modulo rewrites
-$\mc{R}$.'' Equivalence of terms is derived from this refinement relation in the usual manner;
-namely, by defining
+is read as: ``term $a$ is refined by $b$ in the context $\Gamma^{\mb{q}}$, modulo rewrites
+$\mc{R}$.'' Intuitively, this expresses that $b$ is at least as defined or deterministic as $a$,
+possibly after applying known rewrites in $\mc{R}$. We define equivalence of terms as mutual
+refinement:
 \begin{equation}
   \tmeq{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A}
   \iff \tmle{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A} 
   \land \tmle{\Gamma^{\mb{q}}}{\mc{R}}{b}{a}{A}
 \end{equation}
-For brevity when introducing pairs of rules with opposite polarity, we also introduce
-the following notation
+For notational convenience when stating directed rules, we also introduce polarity-marked notation
+for the refinement relation as follows:
 \begin{equation*}
   \tmlep{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A}{+} \iff \tmle{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A} \qquad
   \tmlep{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A}{-} \iff \tmle{\Gamma^{\mb{q}}}{\mc{R}}{b}{a}{A}
 \end{equation*}
 
-Here $\mc{R}$ is a set of rewrites of the form $\tmle{\Gamma^{\mb{q}}}{}{a}{b}{A}$; we
-will generally assume that $\mc{R}$ is closed under pure substitution, i.e. that the following rule
-is admissible
+The rewrite set $\mc{R}$ consists of judgments of the form $\tmle{\Gamma^{\mb{q}}}{}{a}{b}{A}$
+closed under pure substitution. That is, given a pure substitution $\sigma$, we have that
 \begin{equation*}
   \prftree[r]{}
     {\issubst{\Gamma^{\mb{q}}}{\bot}{\sigma}{\Delta^{\mb{q}'}}}
     {(\tmle{\Delta^{\mb{q}'}}{}{a}{b}{A}) \in \mc{R}}
     {(\tmle{\Gamma^{\mb{q}}}{}{[\sigma]a}{[\sigma]b}{A}) \in \mc{R}} 
 \end{equation*}
-Our goal is to construct a refinement relation $\tref$ at every context and type
-satisfying the following properties: 
+Our goal is to construct a refinement relation $\tref$ at every context and type satisfying the
+following properties: 
 \begin{enumerate}
-  \item $\tref$ contains $\mc{R}$
-  \item $\tref$ is a \emph{congruence} with respect to our term formers, and in particular is a
-  partial order
+  \item \textbf{Inclusion of $\mc{R}$:} all given rewrites are valid refinements.
+  \label{item:includes-rewrites}
+  \item \textbf{Congruence:} $\tref$ is closed under term formers and is a partial order.
   \label{item:is-congruence}
-  \item $\tref$ abstracts away the associativity of let-bindings.
+  \item \textbf{Let-normalization:} $\tref$ abstracts away syntactic associativity of let-bindings.
   \label{item:abstracts-syntax}
-  \item $\tref$ contains the $\beta$ and $\eta$-rules of our language constructs
+  \item \textbf{Computational content:} $\tref$ validates the $\beta$- and $\eta$-laws of the
+  language.
   \label{item:does-computation}
-  \item $\tref$ encodes the properties of iteration
+  \item \textbf{Iteration semantics:} $\tref$ captures fixpoint and control-flow behavior of
+  iteration.
   \label{item:does-iteration}
 \end{enumerate}
-The rules in Figure~\ref{fig:congruence-refinement} guarantee the first two properties. In
-particular, property~\ref{item:is-congruence}, also means that equivalence of terms $\approx$ is a
-congruence.
+he congruence rules (Figure~\ref{fig:congruence-refinement}) ensure properties
+\ref{item:includes-rewrites} and \ref{item:is-congruence}. We note that
+property~\ref{fig:congruence-refinement} implies that the induced equivalence $\approx$ is a
+congruence as well.
 
-To satisfy property \ref{item:abstracts-syntax}, we introduce a set of \emph{binding rules} in
-Figure~\ref{fig:binding-rules}. The conclusions of these rules are \emph{equivalences} of the form
-$\tmeq{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A}$, rather than refinements; we could also express this by
-providing one rule for each direction of the equivalence. We don't need to provide rules for every
-construct; for example, binding rules for pairs and injections are notably omitted, since these can
-be derived from $\beta$-reduction.
+To satisfy property~\ref{item:abstracts-syntax}, we introduce the binding rules
+(Figure~\ref{fig:binding-rules}), which are stated as equivalences. These rules express syntactic
+equivalences up to reassociation and let-floating. For instance, nested let-bindings are rearranged
+to a canonical form. We do not require binding rules for every construct—rules for pairs and sums,
+for example, can be derived via $\beta$-reduction.
 
-We proceed to give the $\beta$ and $\eta$ rules for our calculus in
-Figure~\ref{fig:reduction-rules}. These are all standard equations, except for
-\brle{let$_1$-$\beta^+$} and \brle{let$_1$-$\beta^-$} (which we write as a single rule
-\brle{let$_1$-$\beta^p$}), which are \emph{directed}. In particular, \brle{let$_1$-$\beta^+$} says
-that $\beta$-reducing a let-binding is a \emph{refinement} if the bound value has an effect which is
-a right-mover w.r.t. the effect of the body and is used a number of times compatible with both the
-effect and the context it is typed in. \brle{let$_1$-$\beta^-$}, on the other hand, says that
-factoring out a let-binding from a substitution is a refinement if the bound value has an effect
-which is a \emph{left-mover} w.r.t the effect of the body. In particular, this means that the
-following more standard equation is \emph{derivable}:
+Property~\ref{item:does-computation} is addressed via the reduction rules
+(Figure~\ref{fig:reduction-rules}). Most of these are standard $\beta$- and $\eta$-equivalences.
+However, the rule \textsf{let$_1$-$\beta^p$} is \emph{directional}: it expresses that
+$\letexpr{x}{a}{b}$ refines $[x/a]b$ when the effect $\epsilon$ of $a$ is a right-mover with respect
+to the effect $\eta$ of $b$, and when $x$ is used in a way compatible with $\epsilon$ and the
+context. We also require that the context $\Gamma^{\mb{q}_r}$ used to type $a$ has a linearity
+compatible with the usage of $x$ in $b$, as well as with the effect $\epsilon$ (for example, since
+printing is linear, if $a$ performs printing then $x$ must be used linearly in $b$ even if $b$ is
+pure). The reverse direction is permitted only under the dual (left-mover) condition. Thus, the
+usual $\beta$-equation:
+\[
+\tmeq{\Gamma^{\mb{q}}}{\mc{R}}{\letexpr{x}{a}{b}}{[x/a]b}{B}
+\]
+is derivable under sufficient purity assumptions, and in particular always holds when $\epsilon =
+\bot$.
+
+In particular, this means that the following more standard typing rule is \emph{derivable}:
 \begin{equation}
   \prftree[r]{\rle{let$_1$-$\beta$}}
   {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
@@ -876,8 +885,10 @@ following more standard equation is \emph{derivable}:
     \tmeq{\Gamma^{\mb{q}}}{\mc{R}}{\letexpr{x}{a}{b}}{[x/a]b}{B}
   }
 \end{equation}
-which of course obviously holds for pure expressions with $\epsilon = \bot$, as we would normally
-expect in an effectful language.
+In particular, this obviously holds for pure expressions with $\epsilon = \bot$ (modulo linearity of
+$\Gamma^{\mb{q}_r}$), as we would normally expect in an effectful language.
+
+\TODO{smooth rest}
 
 The last thing that remains is to treat iteration. Our first requirement is that the iteration is a
 fixpoint, which we express using the rule \brle{iter-$\beta$}. This simply means that iterating $b$
