@@ -134,6 +134,7 @@
 \newcommand{\lbsubst}[4]{#1 \vdash #2: #3 \rightsquigarrow #4}
 \newcommand{\teqv}{\approx}
 \newcommand{\tref}{\twoheadrightarrow}
+\newcommand{\antitref}{\twoheadleftarrow}
 \newcommand{\tmle}[5]{#1 \vdash_{#2} #3 \tref #4 : {#5}}
 \newcommand{\tmlep}[6]{#1 \vdash_{#2} #3 \tref^{#6} #4 : {#5}}
 \newcommand{\tmeq}[5]{#1 \vdash_{#2} #3 \teqv #4 : {#5}}
@@ -888,29 +889,51 @@ In particular, this means that the following more standard typing rule is \emph{
 In particular, this obviously holds for pure expressions with $\epsilon = \bot$ (modulo linearity of
 $\Gamma^{\mb{q}_r}$), as we would normally expect in an effectful language.
 
-\TODO{smooth rest}
+The last thing that remains is to treat iteration. Our rules for iteration are based on the
+properties of a Conway iteration operator as given in
+\citet{coinductive-resumption-levy-goncharov-19}. In particular, we require our operator to satisfy
+the following properties:
+%
+\paragraph{Fixpoint} behavior is encoded by the rule \textsf{iter-$\beta$}, which expresses that
+iteration behaves as a least fixpoint. That is, $\liter{a}{x}{b}$ evaluates to $a$, then to
+$b[a/x]$, and depending on the result of $b$, either exits with a value in the left branch or
+continues recursively with a value in the right branch. This unfolds the iteration into a case
+split:
+\[
+\liter{a}{x}{b} \quad \equiv \quad \letexpr{x}{a}{\caseexpr{b}{y}{y}{z}{\liter{z}{x}{b}}}
+\]
+capturing precisely one unfolding of the loop. This gives rise to an inductive account of iteration
+semantics that meshes naturally with refinement.
+%
+\paragraph{Naturality}, expressed by the rule \textsf{let-iter}, states that sequencing a
+computation $c$ after a loop can be interchanged with sequencing $c$ inside the loop’s exit branch.
+This enables reasoning about program structure independent of surface syntax and supports
+loop-invariant motion of subsequent code.
+%
+\paragraph{Codiagonality}, via the rule \textsf{codiag}, states that nested iterations of the same
+body can be collapsed into a single iteration by fusing their recursive branches. Operationally,
+this justifies flattening nested loops into one with a more complex continuation, and algebraically
+it reflects that iteration is a monoid in the Kleisli category.
+%
+\paragraph{Uniformity}, via the rule \textsf{unif$^p$}, allows us to effectively commute effectful
+operations with a loop body; in particular, if a command $s$ commutes with the loop body $b$, then
+it also commutes with the full iteration of $b$. More precisely, if we can transform
+\[
+\letexpr{y}{s}{b} \quad \tref \quad \caseexpr{b'}{x}{\linl{x}}{x}{\linr{s}}
+\]
+for some $b'$, then we can ``move'' $s$ across the loop:
+\[
+\letexpr{x}{a}{\liter{s}{y}{b}} \quad \tref \quad \liter{a}{x}{b'}
+\]
+Likewise, if
+\[
+\letexpr{y}{s}{b} \quad \antitref \quad \caseexpr{b'}{x}{\linl{x}}{x}{\linr{s}}
+\]
+then we can move $s$ backwards ``from infinity'' as follows:
+\[
+\letexpr{x}{a}{\liter{s}{y}{b}} \quad \antitref \quad \liter{a}{x}{b'}
+\]
 
-The last thing that remains is to treat iteration. Our first requirement is that the iteration is a
-fixpoint, which we express using the rule \brle{iter-$\beta$}. This simply means that iterating $b$
-with initial value $a$ is the same as evaluating $a$, evaluating $b$ with the resulting value, and
-then either (on the left branch) returning the result or (on the right branch) iterating $b$ with
-the result as initial value. We will furthermore require a few well-behavedness properties; namely:
-\begin{itemize}
-  \item \emph{Naturality}, expressed by the rule \brle{let-iter}, which states that iterating $b$
-  with initial value $a$ and then executing $c$ is the same as iterating $b$ followed by $c$ on the
-  exit branch with initial value $a$; in other words, we can ``move'' statements out of the exit
-  branch.
-  \item \emph{Codiagonal}, expressed by the rule \brle{codiag}, which states that the nested
-  iteration of $b$ with initial value $a$ is the same as iterating $b$ with its recursive branches
-  fused.
-\end{itemize}
-Finally, we require our iteration operator to satisfy \emph{uniformity}, as expressed by the rules
-\brle{unif$^p$}. Intuitively, what uniformity states is that if an operation $a$ commutes with a
-loop body $b$, then it also commutes with the iteration of $b$, i.e., infinitely many copies of $b$.
-The statement of the rule is just a little bit more general, in that it allows us to change $a$
-followed by $b$ into a separate program $b'$ followed by $a$. Like the $\beta$-rules for
-let-bindings, this rule is \emph{directed}, which simply means that we handle the case of whether
-the commutativity is a refinement or anti-refinement rather than just an equivalence.
 
 \begin{figure}
   \begin{gather*}
