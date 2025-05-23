@@ -302,6 +302,30 @@
 
 \section{SSA}
 
+Probably the most basic intermediate representation is \emph{register-transfer level (RTL)} code,
+often referred to as \emph{3 address code} since most instructions are of the form $x = f(y, z)$.
+RTL is essentially a straightforward generalization of assembly language, in which it is assumed
+that the machine has an infinite, rather than finite, number of registers, from which $x, y$ and $z$
+in the above expression are drawn.  While it is possible to view an RTL program as a sequence of
+instructions and labels, it is often fruitful to break it down into higher level components for
+analysis. In particular, we may define a \emph{basic block} to be a sequence of straight-line code
+in which every instruction has a unique predecessor and successor; a basic block then ends with a
+\emph{terminator} instruction, which may branch to other basic blocks. The basic blocks, and the
+jumps between them, form the nodes and edges of that program's \emph{control-flow graph}.
+
+The SSA intermediate representation can, at first glance, be viewed as the subset of RTL programs
+satisfying the \emph{static single assignment}, or \emph{SSA}, property, which states that every
+variable has precisely one definition. It is often straightforward to convert RTL programs into
+equivalent programs satisfying the SSA property by simply converting successive updates to a
+variable $x$ into distinct definitions $x_0, x_1, x_2$. Unfortunately, this approach breaks down
+when the value of a variable depends on control-flow; consider, for example, the variable $x$ in
+Figure~\ref{fig:rtl-example}, whose value depends on which branch of the if-statement is
+taken. To remedy this, the traditional solution is to introduce \emph{$\phi$-nodes}, whose value
+depends on the previous block in our control-flow trace; for example, the final value of $x$, $x_3$,
+is given as $x_1$ if we come from the true branch, and $x_2$ otherwise, in
+Figure~\ref{fig:ssa-example}.
+
+
 \TODO{recall syntax with BBA / $\phi$-nodes}
 
 \TODO{where-blocks and dominance}
@@ -836,20 +860,21 @@ following properties:
 \begin{enumerate}
   \item \textbf{Inclusion of $\mc{R}$:} all given rewrites are valid refinements.
   \label{item:includes-rewrites}
-  \item \textbf{Congruence:} $\tref$ is closed under term formers and is a partial order.
+  \item \textbf{Congruence:} $\tref$ is closed under term formers and is a preorder.
   \label{item:is-congruence}
   \item \textbf{Let-normalization:} $\tref$ abstracts away syntactic associativity of let-bindings.
   \label{item:abstracts-syntax}
-  \item \textbf{Computational content:} $\tref$ validates the $\beta$- and $\eta$-laws of the
-  language.
+  \item \textbf{Universal properties:} $\tref$ validates the $\beta$- and $\eta$-laws of the
+  language; this ensures that our tensor product $\otimes$ and our coproduct $+$ satisfy the
+  relevant universal properties.
   \label{item:does-computation}
   \item \textbf{Iteration semantics:} $\tref$ captures fixpoint and control-flow behavior of
   iteration.
   \label{item:does-iteration}
 \end{enumerate}
-he congruence rules (Figure~\ref{fig:congruence-refinement}) ensure properties
+The congruence rules (Figure~\ref{fig:congruence-refinement}) ensure properties
 \ref{item:includes-rewrites} and \ref{item:is-congruence}. We note that
-property~\ref{fig:congruence-refinement} implies that the induced equivalence $\approx$ is a
+property~\ref{item:is-congruence} implies that the induced equivalence $\approx$ is a
 congruence as well.
 
 To satisfy property~\ref{item:abstracts-syntax}, we introduce the binding rules
@@ -912,8 +937,7 @@ loop-invariant motion of subsequent code.
 %
 \paragraph{Codiagonality}, via the rule \textsf{codiag}, states that nested iterations of the same
 body can be collapsed into a single iteration by fusing their recursive branches. Operationally,
-this justifies flattening nested loops into one with a more complex continuation, and algebraically
-it reflects that iteration is a monoid in the Kleisli category.
+this justifies flattening nested loops into one with a more complex continuation.
 %
 \paragraph{Uniformity}, via the rule \textsf{unif$^p$}, allows us to effectively commute effectful
 operations with a loop body; in particular, if a command $s$ commutes with the loop body $b$, then
