@@ -914,10 +914,10 @@ In particular, this means that the following more standard typing rule is \emph{
 In particular, this obviously holds for pure expressions with $\epsilon = \bot$ (modulo linearity of
 $\Gamma^{\mb{q}_r}$), as we would normally expect in an effectful language.
 
-The last thing that remains is to treat iteration. Our rules for iteration are based on the
-properties of a Conway iteration operator as given in
-\citet{coinductive-resumption-levy-goncharov-19}. In particular, we require our operator to satisfy
-the following properties:
+The last thing that remains is to treat iteration. Our rules for iteration, given in
+Figure~\ref{fig:iteration-rules}, are based on the properties of a Conway iteration operator as
+given in \citet{coinductive-resumption-levy-goncharov-19}. In particular, we require our operator to
+satisfy the following properties:
 %
 \paragraph{Fixpoint} behavior is encoded by the rule \textsf{iter-$\beta$}, which expresses that
 iteration behaves as a least fixpoint. That is, $\liter{a}{x}{b}$ evaluates to $a$, then to
@@ -930,33 +930,35 @@ split:
 capturing precisely one unfolding of the loop. This gives rise to an inductive account of iteration
 semantics that meshes naturally with refinement.
 %
-\paragraph{Naturality}, expressed by the rule \textsf{let-iter}, states that sequencing a
+\paragraph{Naturality,} expressed by the rule \textsf{let-iter}, states that sequencing a
 computation $c$ after a loop can be interchanged with sequencing $c$ inside the loop’s exit branch.
 This enables reasoning about program structure independent of surface syntax and supports
 loop-invariant motion of subsequent code.
 %
-\paragraph{Codiagonality}, via the rule \textsf{codiag}, states that nested iterations of the same
+\paragraph{Codiagonality,} via the rule \textsf{codiag}, states that nested iterations of the same
 body can be collapsed into a single iteration by fusing their recursive branches. Operationally,
 this justifies flattening nested loops into one with a more complex continuation.
 %
-\paragraph{Uniformity}, via the rule \textsf{unif$^p$}, allows us to effectively commute effectful
-operations with a loop body; in particular, if a command $s$ commutes with the loop body $b$, then
-it also commutes with the full iteration of $b$. More precisely, if we can transform
-\[
-\letexpr{y}{s}{b} \quad \tref \quad \caseexpr{b'}{x}{\linl{x}}{x}{\linr{s}}
-\]
-for some $b'$, then we can ``move'' $s$ across the loop:
-\[
-\letexpr{x}{a}{\liter{s}{y}{b}} \quad \tref \quad \liter{a}{x}{b'}
-\]
-Likewise, if
-\[
-\letexpr{y}{s}{b} \quad \antitref \quad \caseexpr{b'}{x}{\linl{x}}{x}{\linr{s}}
-\]
-then we can move $s$ backwards ``from infinity'' as follows:
-\[
-\letexpr{x}{a}{\liter{s}{y}{b}} \quad \antitref \quad \liter{a}{x}{b'}
-\]
+\paragraph{Uniformity,} via the rule \textsf{unif$^p$}, allows us to effectively commute effectful
+operations with a loop body. In terms of control-flow graphs, ...
+
+% ; in particular, if a command $s$ commutes with the loop body $b$, then
+% it also commutes with the full iteration of $b$. More precisely, if we can transform
+% \[
+% \letexpr{y}{s}{b} \quad \tref \quad \caseexpr{b'}{x}{\linl{x}}{x}{\linr{s}}
+% \]
+% for some $b'$, then we can ``move'' $s$ across the loop:
+% \[
+% \letexpr{x}{a}{\liter{s}{y}{b}} \quad \tref \quad \liter{a}{x}{b'}
+% \]
+% Likewise, if
+% \[
+% \letexpr{y}{s}{b} \quad \antitref \quad \caseexpr{b'}{x}{\linl{x}}{x}{\linr{s}}
+% \]
+% then we can move $s$ backwards ``from infinity'' as follows:
+% \[
+% \letexpr{x}{a}{\liter{s}{y}{b}} \quad \antitref \quad \liter{a}{x}{b'}
+% \]
 
 
 \begin{figure}
@@ -1269,6 +1271,35 @@ then we can move $s$ backwards ``from infinity'' as follows:
   \caption{Iteration rules for \subiterexp{}}
   \Description{}
   \label{fig:iteration-rules}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \begin{tikzpicture}
+      \node[] (A) at (0, 2) {$A$};
+      \node[box] (s) at (0, 0.75) {s};
+      \node[box=2/0/2/0] (b) at (0, -0.75) {\quad b \quad};
+      \node[] (B) at (-0.325, -2) {$B$};
+      \node[] (C) at (0.325, -2) {$C$};
+      \node[] (r) at (1.75, -0.3) {$\tref$};
+      \node[] (A2) at (3.5, 2) {$A$};
+      \node[box=2/0/2/0] (b2) at (3.5, 0.75) {\quad b' \quad};
+      \node[box] (s2) at (3.85, -0.75) {s};
+      \node[] (B2) at (3.175, -2) {$B$};
+      \node[] (C2) at (3.83, -2) {$C$};
+      \wires{ 
+        A = { south = s.north },
+        s = { south = b.north },
+        b = { south.1 = B.north, south.2 = C.north },
+        A2 = { south = b2.north },
+        b2 = { south.1 = B2.north, south.2 = s2.north },
+        s2 = { south = C2.north },
+      }{}
+    \end{tikzpicture}
+  \TODO{draw other diagram}
+  \caption{Control-flow graphs for the uniformity rule in Figure~\ref{fig:iteration-rules}}
+  \Description{}
+  \label{fig:unif-cfg}\
 \end{figure}
 
 \section{Semantics}
