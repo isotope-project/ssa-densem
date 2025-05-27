@@ -825,6 +825,7 @@ substitution lemma for our calculus as follows:
 
 \subsection{Refinement Theory}
 
+\label{ssec:refinement-theory}
 
 Now that we have established basic metatheoretic properties, we define our core notion of
 refinement. The judgment
@@ -940,8 +941,10 @@ body can be collapsed into a single iteration by fusing their recursive branches
 this justifies flattening nested loops into one with a more complex continuation.
 %
 \paragraph{Uniformity,} via the rule \textsf{unif$^p$}, allows us to effectively commute effectful
-operations with a loop body. In terms of control-flow graphs, ...
+operations with a loop body. In terms of control-flow graphs,
+\TODO{this; reference Figure~\ref{fig:unif-cfg}}
 
+% Text version:
 % ; in particular, if a command $s$ commutes with the loop body $b$, then
 % it also commutes with the full iteration of $b$. More precisely, if we can transform
 % \[
@@ -959,7 +962,6 @@ operations with a loop body. In terms of control-flow graphs, ...
 % \[
 % \letexpr{x}{a}{\liter{s}{y}{b}} \quad \antitref \quad \liter{a}{x}{b'}
 % \]
-
 
 \begin{figure}
   \begin{gather*}
@@ -1299,12 +1301,134 @@ operations with a loop body. In terms of control-flow graphs, ...
   \TODO{draw other diagram}
   \caption{Control-flow graphs for the uniformity rule in Figure~\ref{fig:iteration-rules}}
   \Description{}
-  \label{fig:unif-cfg}\
+  \label{fig:unif-cfg}
 \end{figure}
 
 \section{Semantics}
 
-\TODO{denotational structure}
+In this section, we will work towards a categorical semantics for \subiterexp{}, which we will later
+prove to be sound and complete w.r.t. the refinement theory in Section~\ref{ssec:refinement-theory}.
+Our goal is to model our programming language with our categorical structures; thus, we want to
+require only structures which correspond closely to the basic type-formers of \subiterexp{}, such
+that the $\beta$ and $\eta$ rules for those type formers correspond to universal properties.
+
+As is standard in categorical semantics, we will want to model the denotation of a judgement
+$\dnt{\hasty{\Gamma}{\epsilon}{a}{A}}$ as a morphism $\dnt{\Gamma} \to \dnt{A}$, with contexts and
+types both modeled by objects. Equivalent programs should then have equal denotations, and the
+semantics of programs should be composition w.r.t. their denotations.
+
+To define our mapping from programs to morphisms, we must start by defining the notion of a
+\emph{premonoidal category}, which was introduced in \todo{this} to model sequencing and binding in
+first-order imperative languages.
+
+\begin{definition}[Symmetric Premonoidal Category]
+  We define a \emph{binoidal category} to be a category $\mc{C}$ equipped with a binary operation
+  $\otimes : |\mc{C}| \times |\mc{C}| \to |\mc{C}|$ on the objects of $\mc{C}$ and, for each $A, B
+  \in |\mc{C}|$, functors $A \otimes -, - \otimes B : \mc{C} \to \mc{C}$. We say a morphism $f : A
+  \to A'$ in a binoidal category is \emph{central} if, for all $g : B \to B'$, it satisfies
+  \emph{sliding}:
+  $$
+  f \otimes B ; A' \otimes g = A \otimes g ; f \otimes B' \qquad
+  B \otimes f ; g \otimes A' = g \otimes A ; B' \otimes f
+  $$
+  in which case we may write these morphisms as $f \otimes g : A \otimes B \to A' \otimes B'$ and $g
+  \otimes f : B \otimes A \to B' \otimes A'$ respectively. A binoidal category is
+  \emph{poset-enriched} if the underlying category is poset-enriched, and the left and right tensor
+  functors are poset-enriched functors.
+  
+  A \emph{premonoidal category} is, then, a
+  binoidal category equipped with:
+  \begin{itemize}
+    \item An \emph{identity} object $I \in |\mc{C}|$
+    \item For each triple of objects $A, B, C \in |\mc{C}|$, a central, natural isomorphism
+    $\alpha_{A, B, C} : (A \otimes B) \otimes C \to A \otimes (B \otimes C)$, the \emph{associator}
+    \item For each object $A$, central, natural isomorphisms $\lambda_A : A \otimes I \to A$ and
+    $\rho_A : I \otimes A \to A$, the \emph{left} and \emph{right unitors}
+  \end{itemize}
+  satisfying the \emph{triangle} and \emph{pentagon identity}
+  $$
+  \alpha_{A, I, B} ; A \otimes \lambda_B = \rho_A \otimes B \qquad
+  \alpha_{A \otimes B, C, D} ; \alpha_{A, B, C \otimes D}
+  = \alpha_{A, B, C} \otimes D ; \alpha_{A, B \otimes C, D} ; A \otimes \alpha_{A, B, C}
+  $$
+  We say a premonoidal category is \emph{symmetric} if it is also equipped with a central, natural
+  involution $\sigma_{A, B} : A \otimes B \to B \otimes A$, the \textit{symmetry}, satisfying the
+  \emph{hexagon identity}
+  $$
+  \alpha_{A, B, C} ; \sigma_{A, B \otimes C} ; \alpha_{B, C, A}
+  = \sigma_{A, B} \otimes C ; \alpha_{B, A, C} ; B \otimes \sigma_{A, C}
+  $$
+  We say a premonoidal category is \emph{monoidal} if every morphism is central.
+\end{definition}
+
+\TODO{give semantics of types here, or leave it to the end?}
+
+We can use the tensor unit $I$ and tensor product $\otimes$ to give a denotation for the unit type
+and product types respectively. We can further model contexts as tensors of their components, i.e.,
+we take
+$$
+\dnt{\mb{1}} = I \qquad
+\dnt{A \otimes B} = \dnt{A} \otimes \dnt{B} \qquad
+\dnt{\cdot} = I \qquad
+\dnt{\Gamma, x : A} = \dnt{\Gamma} \otimes \dnt{A}
+$$
+
+Unfortunately, premonoidal structure is not quite enough to model all the features we need in our language. Specifically, we need to:
+\begin{itemize}
+  \item Handle variables which are unused, or used multiple times (when the type's linearity allows this)
+  \item Handle \emph{control-flow}: branching and looping.
+\end{itemize}
+
+For the latter, we can represent branching control-flow using coproducts. We require, however, that
+our coproducts interact nicely with the premonoidal structure; that is, we want
+\emph{distributivity}:
+
+\begin{definition}[Distributive Category]
+  We say a premonoidal category is \emph{distributive} if:
+  \begin{itemize}
+    \item It is equipped with chosen coproducts $A + B$ such that the injections $\iota_l, \iota_r$
+    are central
+    \item The obvious morphism $\delta : (A \otimes B) + (A \otimes C) \to A \otimes (B + C)$ is an
+    isomorphism.
+  \end{itemize}
+\end{definition}
+
+To model looping, we need to introduce a fixpoint operator, which we do by requiring the existence of a \emph{Conway iteration operator} as follows:
+\begin{definition}[Conway Iteration Operator]
+  Let $\mc{C}$ be a category with chosen coproducts. We say $\mc{C}$ is \emph{pre-iterative} if it
+  is equipped with a fixpoint operator $(-)^\dagger : \mc{C}(A, B + A) \to \mc{C}(A, B)$ satisfying
+  \begin{itemize}
+    \item \emph{Fixpoint}: $f ; [\ms{id}, f^\dagger] = f$
+  \end{itemize}
+  We say $(-)^\dagger$ is a \emph{Conway iteration operator} if it additionally satisfies
+  \begin{itemize}
+    \item \emph{Naturality:} given $f : A \to B + A$ and $g : B \to C$, we have
+      $
+      (f;g + \ms{id})^\dagger = f^\dagger;g : A \to C
+      $
+    \item \emph{Dinaturality:} given morphisms $g : A \to B + C$ and $h : C \to B + A$, we have that
+      $
+      (g ; [\iota_l, h])^\dagger = g ; [\ms{id}_B, (h ; [\iota_l, g])^\dagger]
+      $
+    \item \emph{Codiagonal:} given $f : A \to (B + A) + A$, we have
+      $
+      (f^\dagger)^\dagger = (f;[\ms{id}, \iota_r])^\dagger : A \to B
+      $
+  \end{itemize}
+\end{definition}
+We'd like our Conway iteration operator to play nicely with our premonoidal structure; in particular, we require our Conway iteration operator to be \emph{strong}, defined as follows:
+\begin{definition}[Strong Conway Iteration Operator]
+  If $\mc{C}$ is distributive, we say an iteration operator $(\cdot)^\dagger$ is \emph{strong} if
+  $$
+  \forall f: A \to B + A, (C \otimes f ; \delta^{-1})^\dagger = C \otimes f^\dagger
+  $$
+\end{definition}
+
+\TODO{poset-enrichment}
+
+\TODO{effectful structure}
+
+\TODO{duplicate-delete structure}
 
 \TODO{semantics}
 
