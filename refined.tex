@@ -1308,14 +1308,61 @@ operations with a loop body. In terms of control-flow graphs,
 
 In this section, we will work towards a categorical semantics for \subiterexp{}, which we will later
 prove to be sound and complete w.r.t. the refinement theory in Section~\ref{ssec:refinement-theory}.
-Our goal is to model our programming language with our categorical structures; thus, we want to
-require only structures which correspond closely to the basic type-formers of \subiterexp{}, such
-that the $\beta$ and $\eta$ rules for those type formers correspond to universal properties.
+More precisely, fixing a category $\mc{C}$, we wish to map types $A$ and contexts $\Gamma^{\mb{q}}$
+to objects $\dnt{A}$ and $\dnt{\Gamma^{\mb{q}}}$ respectively, and then take the semantics
+$\dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}}$ of a well-typed term to be a morphism
+$\mc{C}(\dnt{\Gamma^{\mb{q}}}, \dnt{A})$.
 
-As is standard in categorical semantics, we will want to model the denotation of a judgement
-$\dnt{\hasty{\Gamma}{\epsilon}{a}{A}}$ as a morphism $\dnt{\Gamma} \to \dnt{A}$, with contexts and
-types both modeled by objects. Equivalent programs should then have equal denotations, and the
-semantics of programs should be composition w.r.t. their denotations.
+A good categorical semantics is one in which the semantics of a term is constructed in a
+straightforward, compositional manner from the semantics of its subterms. Furthermore, we would like
+the equational properties of our term formers to correspond closely to the universal properties of
+the categorical structure used to interpret them. Thus, our goal is to pick categorical structures
+which correspond, as closely as possible, one-to-one to the features of \subiterexp{}. In
+particular, we need to model:
+\begin{itemize}
+  \item \emph{Refinement}, which we will do using \emph{poset-enrichment}
+  \item \emph{Sequencing} and \emph{binding}, which we will do using the structure of a
+  \emph{premonoidal category}
+  \item \emph{Branching}, which we will do using \emph{coproducts}
+  \item \emph{Iteration}, which we will do using a \emph{Conway operator}
+  \item \emph{Effects}, which we will do by introducing the new notion of a \emph{substructural
+  effectful category}
+\end{itemize}
+To maintain compositionality and coherence, we must additionally require that these structures to
+play nicely with each other. Hence, we will also require our category to satisfy
+\begin{itemize}
+  \item \emph{Distributivty}, which ensures the premonoidal and coproduct structures are compatible
+  \item \emph{Strength}, which ensures the Conway operator is compatible with the premonoidal
+  structure
+  \item \emph{(Directed) Uniformity}, which ensures the Conway operator is compatible with our
+  effect and refinement systems.
+\end{itemize}
+
+\TODO{fuse these trains of thought, or re-order}
+
+\emph{Soundness} w.r.t. equivalence is easy enough to state: we want, given
+$\tmeq{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A}$, $\dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}} =
+\dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{b}{A}}$. However, we would also like to interpret our
+refinement relation $\tref$. To do so, we will generalize our setting slightly to consider
+\emph{poset-enriched} categories, in which our hom-sets are partially ordered. In particular, we
+define:
+\begin{definition}[Poset-enriched category]
+  A category $\mc{C}$ is \emph{poset-enriched} if each hom-set $\mc{C}(A, B)$ is equipped with a
+  partial order which is compatible with composition, i.e., which satisfies
+  $$
+  \forall f \leq f' \in \mc{C}(A, B) . \forall g \leq g' \in \mc{C}(B, C) . (f ; g) \leq (f' ; g')
+  $$
+  A poset-enriched functor between categories $\mc{C}$, $\mc{D}$ is then simply a functor whose
+  action on morphisms is monotonic.
+\end{definition}
+Requiring $\mc{C}$ to be a poset-enriched category does not in fact rob us of any generality, since
+\emph{all} categories are poset-enriched under the identity ordering on hom-sets. We can now quite
+naturally intepret soundness of refinement as follows: given
+$\tmle{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A}$, we require that
+$\dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}} \leq \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{b}{A}}$.
+Soundness of equivalence follows directly from antisymmetry of partial orders.
+
+\TODO{segue and rewrite below}
 
 To define our mapping from programs to morphisms, we must start by defining the notion of a
 \emph{premonoidal category}, which was introduced in \todo{this} to model sequencing and binding in
@@ -1332,9 +1379,7 @@ first-order imperative languages.
   B \otimes f ; g \otimes A' = g \otimes A ; B' \otimes f
   $$
   in which case we may write these morphisms as $f \otimes g : A \otimes B \to A' \otimes B'$ and $g
-  \otimes f : B \otimes A \to B' \otimes A'$ respectively. A binoidal category is
-  \emph{poset-enriched} if the underlying category is poset-enriched, and the left and right tensor
-  functors are poset-enriched functors.
+  \otimes f : B \otimes A \to B' \otimes A'$ respectively.
   
   A \emph{premonoidal category} is, then, a
   binoidal category equipped with:
@@ -1416,7 +1461,8 @@ To model looping, we need to introduce a fixpoint operator, which we do by requi
       $
   \end{itemize}
 \end{definition}
-We'd like our Conway iteration operator to play nicely with our premonoidal structure; in particular, we require our Conway iteration operator to be \emph{strong}, defined as follows:
+We'd like our Conway iteration operator to play nicely with our premonoidal structure; in
+particular, we require our Conway iteration operator to be \emph{strong}, defined as follows:
 \begin{definition}[Strong Conway Iteration Operator]
   If $\mc{C}$ is distributive, we say an iteration operator $(\cdot)^\dagger$ is \emph{strong} if
   $$
