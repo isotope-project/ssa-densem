@@ -1337,13 +1337,11 @@ play nicely with each other. Hence, we will also require our category to satisfy
   \item \emph{(Directed) Uniformity}, which ensures the Conway operator is compatible with our
   effect and refinement systems.
 \end{itemize}
-
-\TODO{fuse these trains of thought, or re-order}
-
-\emph{Soundness} w.r.t. equivalence is easy enough to state: we want, given
-$\tmeq{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A}$, $\dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}} =
-\dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{b}{A}}$. However, we would also like to interpret our
-refinement relation $\tref$. To do so, we will generalize our setting slightly to consider
+Our representation of refinement is intimately connected to the soundness theorem for our refinement
+relation $\tref$. In particular, \emph{soundness} w.r.t. equivalence is easy enough to state: we
+want, given $\tmeq{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A}$,
+$\dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}} = \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{b}{A}}$. On
+the other hand, to interpret $\tref$, we must generalize our setting slightly to consider
 \emph{poset-enriched} categories, in which our hom-sets are partially ordered. In particular, we
 define:
 \begin{definition}[Poset-enriched category]
@@ -1362,12 +1360,33 @@ $\tmle{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A}$, we require that
 $\dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}} \leq \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{b}{A}}$.
 Soundness of equivalence follows directly from antisymmetry of partial orders.
 
-\TODO{segue and rewrite below}
+Premonoidal categories were introduced in \citet{power-premonoidal-97} to model side-effectful
+computations with first-order binding. A premonoidal category can be viewed as a generalization of a
+monoidal category, in which \emph{sliding} does not necessarily hold; i.e., we have that, in
+general,
+$$
+(f \otimes \ms{id}) ; (\ms{id} \otimes g) \neq
+(\ms{id} \otimes g) ; (f \otimes \ms{id})
+$$
+To better understand this in terms of programming language semantics, we remark that a premonoidal
+category may also be viewed as a generalization of the Moggi's \cite{moggi-91-monad} monadic
+semantics: if we consider a strong monad over a Cartesian category, then the Kleisli category is
+premonoidal with the Cartesian product in the underlying category as tensor product. The Kleisli
+category is monoidal, i.e. satisfies sliding, specifically when the underlying monad is
+\emph{commutative}, such as the option monad or reader monad; i.e., precisely when the sequencing of
+side-effects does not matter. We need to generalize monoidal categories to premonoidal categories
+precisely to support monads for which sequencing does matter, such as printing or state. For
+example, given a function $\ms{print}: \ms{str} \to ()$,
+$$
+(\ms{print} \otimes \ms{id}) ; (\ms{id} \otimes \ms{print}) \neq
+(\ms{id} \otimes \ms{print}) ; (\ms{print} \otimes \ms{id}) 
+$$
+and input $(\mathtt{"hello"}, \mathtt{"world"})$, the left-hand side will print $\mathtt{hello
+world}$, while the right-hand side will print $\mathtt{world hello}$. Note that the sequencing in
+the induced premonoidal category corresponds precisely to the bind of the underlying monad.
 
-To define our mapping from programs to morphisms, we must start by defining the notion of a
-\emph{premonoidal category}, which was introduced in \todo{this} to model sequencing and binding in
-first-order imperative languages.
-
+We give a precise definition of a premonoidal category, adapted to the poset-enriched setting,
+below:
 \begin{definition}[Symmetric Premonoidal Category]
   We define a \emph{binoidal category} to be a category $\mc{C}$ equipped with a binary operation
   $\otimes : |\mc{C}| \times |\mc{C}| \to |\mc{C}|$ on the objects of $\mc{C}$ and, for each $A, B
@@ -1379,7 +1398,8 @@ first-order imperative languages.
   B \otimes f ; g \otimes A' = g \otimes A ; B' \otimes f
   $$
   in which case we may write these morphisms as $f \otimes g : A \otimes B \to A' \otimes B'$ and $g
-  \otimes f : B \otimes A \to B' \otimes A'$ respectively.
+  \otimes f : B \otimes A \to B' \otimes A'$ respectively. In the poset-enriched setting, we also
+  assume that the left and right tensor functors are poset-enriched, i.e. monotonic on morphisms.
   
   A \emph{premonoidal category} is, then, a
   binoidal category equipped with:
@@ -1406,27 +1426,9 @@ first-order imperative languages.
   We say a premonoidal category is \emph{monoidal} if every morphism is central.
 \end{definition}
 
-\TODO{give semantics of types here, or leave it to the end?}
-
-We can use the tensor unit $I$ and tensor product $\otimes$ to give a denotation for the unit type
-and product types respectively. We can further model contexts as tensors of their components, i.e.,
-we take
-$$
-\dnt{\mb{1}} = I \qquad
-\dnt{A \otimes B} = \dnt{A} \otimes \dnt{B} \qquad
-\dnt{\cdot} = I \qquad
-\dnt{\Gamma, x : A} = \dnt{\Gamma} \otimes \dnt{A}
-$$
-
-Unfortunately, premonoidal structure is not quite enough to model all the features we need in our language. Specifically, we need to:
-\begin{itemize}
-  \item Handle variables which are unused, or used multiple times (when the type's linearity allows this)
-  \item Handle \emph{control-flow}: branching and looping.
-\end{itemize}
-
-For the latter, we can represent branching control-flow using coproducts. We require, however, that
-our coproducts interact nicely with the premonoidal structure; that is, we want
-\emph{distributivity}:
+\TODO{for branching with coproducts, we can represent case, $1 + 1$ for if; but we want our coproducts to be
+distributive, which allows us to interpret the rule for cases where variables can be used in either
+branch}
 
 \begin{definition}[Distributive Category]
   We say a premonoidal category is \emph{distributive} if:
@@ -1437,6 +1439,8 @@ our coproducts interact nicely with the premonoidal structure; that is, we want
     isomorphism.
   \end{itemize}
 \end{definition}
+
+\TODO{for iteration, introduce Conway operator; point back to refinement rules}
 
 To model looping, we need to introduce a fixpoint operator, which we do by requiring the existence of a \emph{Conway iteration operator} as follows:
 \begin{definition}[Conway Iteration Operator]
@@ -1470,27 +1474,41 @@ particular, we require our Conway iteration operator to be \emph{strong}, define
   $$
 \end{definition}
 
-\TODO{poset-enrichment}
+\TODO{give higher-order presentation (i.e. ML or Haskell code), rules are obvious bro trust me}
+
+\TODO{note that a refinement rule for dinaturality is missing; that is because it is derivable given
+uniformity}
+
+\TODO{we need it to be \emph{strong} again for variable scoping purposes; look at the ML}
 
 \TODO{effectful structure}
 
-\TODO{duplicate-delete structure}
+\TODO{uniformity}
 
-\TODO{semantics}
+\TODO{models}
 
-\TODO{soundness}
+\TODO{semantics; sentence per rule}
+
+\TODO{coherence; weakening}
+
+\TODO{soundness of substitution}
+
+\TODO{soundness (statement)}
 
 \TODO{completeness}
 
 \section{SSA Typing and Semantics}
 
-\TODO{typing rules go brr}
+\TODO{introduce judgement and label contexts}
+
+\TODO{typing rules go brr; explain where rec/nonrec; nonrec can always be promoted to rec at an
+iterative effect}
 
 \TODO{denotational semantics}
 
 \TODO{by completeness, $\subseteq$ expressions}
 
-\TODO{by translation, expressions $\subseteq$}
+\TODO{by translation, expressions $\subseteq$; translation procedure goes to appendix}
 
 \section{Concrete Models}
 
@@ -1499,6 +1517,10 @@ particular, we require our Conway iteration operator to be \emph{strong}, define
 \TODO{separation logic}
 
 \TODO{Release-Acquire Weak Memory}
+
+\section{Discussion and Related Work}
+
+\TODO{this}
 
 \subsection*{Acknowledgements}
 
