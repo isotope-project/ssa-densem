@@ -1509,12 +1509,13 @@ This corresponds exactly to the notion of a \emph{pre-iterative category} given 
   $f ; [\ms{id}, f^\dagger] = f$
 \end{definition}
 Our goal is to have our fixpoint operator's properties correspond precisely to drawing a loop in a
-control-flow graph, as in Figure~\ref{fix:fixpoint-diagram}. In particular, we should be able to
-reconfigure such diagrams up to isotopy (i.e., moving boxes and wires around without changing
-connectivity) without changing the meaning of our program. To be able to do so soundly, we will need
-to introduce some additional equations, which correspond to the graphical transformations in
-Figure~\ref{fig:conway-diagram}; a fixpoint satisfying these equations is called a \emph{Conway
-iteration operator}, as defined below:
+control-flow graph, as in the left-hand side of Figure~\ref{fig:fixpoint-string-diagram}, which
+corresponds to $f^\dagger$. In particular, we should be able to reconfigure such diagrams up to
+isotopy (i.e., moving boxes and wires around without changing connectivity) without changing the
+meaning of our program. To be able to do so soundly, we will need to introduce some additional
+equations, which correspond to the graphical transformations in
+Figure~\ref{fig:elgot-ax-string-diagrams}; a fixpoint satisfying these equations is called a
+\emph{Conway iteration operator}, as defined below:
 \begin{definition}[Conway Iteration Operator]
   Given a pre-iterative category $\mc{C}$, we say $(-)^\dagger$ is a \emph{Conway iteration
   operator} if it additionally satisfies
@@ -1534,25 +1535,178 @@ iteration operator}, as defined below:
   \end{itemize}
 \end{definition}
 
-\TODO{actually a REDO: note that a refinement rule for dinaturality is missing; that is because it
-is derivable given uniformity}
+\begin{figure}
+  \begin{subfigure}{0.5\textwidth}
+    \centering
+    \begin{tikzpicture}
+      \node[] (A) at (0, 2) {$A$};
+      \node[box=1/0/2/0] (f) at (0, 0) {\quad f \quad};
+      \node[] (B) at (0, -2) {$B$};
+      \node[dot] (codiag) at (0, 0.75) {};
+      \coordinate[] (C) at (1.2, 0) {};
+      \coordinate[] (cup) at (0.75, -1) {};
+      \coordinate[] (cap) at (0.75, 1) {};
+      \node[] (eq) at (1.8, 0) {=};
+      \node[] (Ad) at (3.6, 2) {$A$};
+      \node[box=1/0/2/0] (fd1) at (3.4, 1) {\quad f \quad};
+      \node[dot] (codiagd1) at (3.8, 0.25) {};
+      \node[box=1/0/2/0] (fd2) at (3.8, -0.5) {\quad f \quad};
+      \node[dot] (codiagd2) at (3.4, -1.25) {};
+      \node[] (Bd) at (3.6, -2) {$B$};
+      \coordinate[] (cupd) at (4.5, -1.25) {};
+      \coordinate[] (capd) at (4.5, 0.5) {};
+      \wires{
+        A         = { south = codiag.north },
+        f         = { south.1 = B, south.2 = cup.west },
+        codiag    = { south = f.north, east = cap.west },
+        C         = { south = cup.east, north = cap.east },
+        Ad        = { south = fd1.north },
+        fd1       = { south.1 = codiagd2.west, south.2 = codiagd1.north },
+        codiagd1  = { south = fd2.north },
+        fd2       = { south.1 = codiagd2.north, south.2 = cupd.west },
+        codiagd2  = { south = Bd.north },
+        cupd      = { east = capd.east },
+        capd      = { west = codiagd1.east }, 
+      }{}
+    \end{tikzpicture}
+    \caption{Fixpoint}
+    \label{fig:fixpoint-string-diagram}
+  \end{subfigure}%
+  \begin{subfigure}{0.5\textwidth}
+    \centering
+    \begin{tikzpicture}
+      \node[] (A) at (0, 2) {$A$};
+      \node[box=1/0/2/0] (f) at (0, 0.5) {\quad f \quad};
+      \node[box] (g) at (-0.25, -0.5) {g};
+      \node[] (B) at (0, -2) {$B$};
+      \node[dot] (codiag) at (0, 1.25) {};
+      \coordinate[] (C) at (1.2, 0) {};
+      \coordinate[] (cup) at (0.75, -1) {};
+      \coordinate[] (cap) at (0.75, 1.5) {};
+      \coordinate[] (box0) at (1.5, 1.65) {};
+      \coordinate[label={[font=\small, text=gray]below:$(f;g + A)^\dagger$}] 
+                    (box1) at (1.5, -1.2) {};
+      \coordinate[] (box2) at (-1, -1.2) {};
+      \coordinate[] (box3) at (-1, 1.65) {};
+      \draw [gray, dashed] (box0) -- (box1);
+      \draw [gray, dashed] (box1) -- (box2);
+      \draw [gray, dashed] (box2) -- (box3);
+      \draw [gray, dashed] (box3) -- (box0);
+      \node[] (eq) at (1.8, 0) {=};
+      \node[] (A2) at (3.6, 2) {$A$};
+      \node[box=1/0/2/0] (f2) at (3.6, 0.5) {\quad f \quad};
+      \node[box] (g2) at (3.35, -1) {g};
+      \node[] (B2) at (3.6, -2) {$B$};
+      \node[dot] (codiag2) at (3.6, 1) {};
+      \coordinate[] (cup2) at (4.15, -0.2) {};
+      \coordinate[] (cap2) at (4.15, 1.25) {};
+      \coordinate[] (box02) at (4.8, 1.5) {};
+      \coordinate[label={[font=\small, text=gray]below:$f^\dagger$}] 
+                    (box12) at (4.8, -0.4) {};
+      \coordinate[] (box22) at (2.6, -0.4) {};
+      \coordinate[] (box32) at (2.6, 1.5) {};
+      \draw [gray, dashed] (box02) -- (box12);
+      \draw [gray, dashed] (box12) -- (box22);
+      \draw [gray, dashed] (box22) -- (box32);
+      \draw [gray, dashed] (box32) -- (box02);
+      \wires{
+        A         = { south = codiag.north },
+        f         = { south.1 = g.north, south.2 = cup.west },
+        g         = { south = B.north },
+        codiag    = { south = f.north, east = cap.west },
+        C         = { south = cup.east, north = cap.east },
+        A2         = { south = codiag2.north },
+        f2         = { south.1 = g2.north, south.2 = cup2.west },
+        g2         = { south = B2.north },
+        codiag2    = { south = f2.north, east = cap2.west },
+        cup2       = { east = cap2.east },
+        cap2       = { west = codiag2.east },
+      }{}
+    \end{tikzpicture}
+    \caption{Naturality}
+  \end{subfigure}
+  \begin{subfigure}{0.5\textwidth}
+    \centering
+    \begin{tikzpicture}
+      \node[] (A) at (0, 2) {$A$};
+      \node[box=1/0/3/0] (f) at (0, 0) {\quad f \quad};
+      \node[] (B) at (0, -2) {$B$};
+      \node[dot] (codiag) at (0, 0.75) {};
+      \coordinate[] (C) at (1.2, 0) {};
+      \coordinate[] (cup) at (0.75, -1) {};
+      \coordinate[] (cap) at (0.75, 1) {};
+      \node[dot] (codiag2) at (0.225, -0.75) {};
+      \node[] (eq) at (1.8, 0) {=};
+      \node[] (Ad) at (3.6, 2) {$A$};
+      \node[box=1/0/3/0] (fd) at (3.6, 0) {\quad f \quad};
+      \node[] (Bd) at (3.6, -2) {$B$};
+      \node[dot] (codiagd) at (3.6, 1.25) {};
+      \node[dot] (codiagd2) at (3.6, 0.75) {};
+      \coordinate[] (Cd) at (4.8, 0) {};
+      \coordinate[] (cupd) at (4.35, -1.25) {};
+      \coordinate[] (capd) at (4.35, 1.25) {};
+      \coordinate[] (cupd2) at (4.25, -0.75) {};
+      \coordinate[] (capd2) at (4.25, 0.75) {};
+      \wires{
+        A         = { south = codiag.north },
+        f         = { south.1 = B, south.2 = codiag2.west, south.3 = codiag2.east },
+        codiag2   = { south = cup.west },
+        codiag    = { south = f.north, east = cap.west },
+        C         = { south = cup.east, north = cap.east },
+        Ad        = { south = codiagd.north },
+        codiagd   = { south = codiagd2.north, east = capd.west },
+        codiagd2  = { south = fd.north, east = capd2.west },
+        fd        = { south.1 = Bd, south.2 = cupd.west, south.3 = cupd2.west },
+        cupd      = { east = capd.east },
+        cupd2     = { east = capd2.east },
+      }{}
+    \end{tikzpicture}
+    \caption{Codiagonal}
+  \end{subfigure}%
+  \begin{subfigure}{0.5\textwidth}
+    \centering
+    \begin{tikzpicture}
+      \node[] (A) at (0, 2) {$A$};
+      \node[box] (g) at (0, 1.25) {g};
+      \node[box=1/0/2/0] (f) at (0, 0.25) {\quad f \quad};
+      \node[] (B) at (0, -2) {$B$};
+      \node[dot] (codiag) at (0, 0.75) {};
+      \coordinate[] (C) at (1.2, 0) {};
+      \coordinate[] (cup) at (0.75, -1.5) {};
+      \coordinate[] (cap) at (0.75, 1) {};
+      \node[box] (g2) at (0.5, -0.75) {g};
+      \node[] (eq) at (1.8, 0) {=};
+      \node[] (Ad) at (3.6, 2) {$A$};
+      \node[box] (gd) at (3.6, 0.5) {g};
+      \node[box=1/0/2/0] (fd) at (3.6, -0.5) {\quad f \quad};
+      \node[] (Bd) at (3.6, -2) {$B$};
+      \node[dot] (codiagd) at (3.6, 1) {};
+      \coordinate[] (Cd) at (4.8, 0) {};
+      \coordinate[] (cupd) at (4.35, -1.5) {};
+      \coordinate[] (capd) at (4.35, 1.5) {};
+      \wires{
+        A         = { south = g.north },
+        g         = { south = codiag.north },
+        f         = { south.1 = B, south.2 = g2.north },
+        g2        = { south = cup.west },
+        codiag    = { south = f.north, east = cap.west },
+        C         = { south = cup.east, north = cap.east },
+        Ad        = { south = codiagd.north },
+        codiagd   = { south = gd.north, east = capd.west },
+        gd        = { south = fd.north },
+        fd        = { south.1 = Bd, south.2 = cupd.west },
+        cupd      = { east = capd.east },
+      }{}
+    \end{tikzpicture}
+    \caption{Dinaturality}
+  \end{subfigure}
+  \caption{Representations of the Conway iteration axioms as string diagrams}
+  \label{fig:elgot-ax-string-diagrams}
+  \Description{Representations of the Conway iteration axioms as string diagrams}
+\end{figure}
 
-Naturality and codiagonal correspond directly to our rules \todo{naturality rule} and
-\todo{codiagonal rule} respectively, whereas dinaturality corresponds to the program equivalence
-\begin{lstlisting}[language=Haskell]
-  iterate (\ a -> case g a of 
-      Left b -> Left b
-      Right c -> h c 
-    ) a
-  ===
-  case g a of
-    Left b -> b
-    Right c -> iterate (\ c -> case h c of
-      Left b -> Left b
-      Right a -> g a
-      )
-\end{lstlisting}
-and is derivable.
+In particular, we note that naturality and codiagonal correspond directly to our rules
+\brle{let-iter} and \brle{codiag} respectively; we will later see that dinaturality is derivable.
 
 \TODO{explanation of strength in terms of captured variables; look at ML/Haskell again?}
 
