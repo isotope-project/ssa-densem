@@ -71,6 +71,7 @@
 % Math fonts
 \newcommand{\mc}[1]{\ensuremath{\mathcal{#1}}}
 \newcommand{\mb}[1]{\ensuremath{\mathbf{#1}}}
+\newcommand{\mbb}[1]{\ensuremath{\mathbb{#1}}}
 \newcommand{\ms}[1]{\ensuremath{\mathsf{#1}}}
 
 % Math
@@ -325,7 +326,6 @@ depends on the previous block in our control-flow trace; for example, the final 
 is given as $x_1$ if we come from the true branch, and $x_2$ otherwise, in
 Figure~\ref{fig:ssa-example}.
 
-
 \TODO{recall syntax with BBA / $\phi$-nodes}
 
 \TODO{where-blocks and dominance}
@@ -376,6 +376,10 @@ categories}
 \section{Expression Language}
 
 \subsection{Syntax and Typing Rules}
+
+\TODO{the \citet{bohm-jacopini} theorem says that to represent all control-flow, we need sequencing,
+branching, and looping; so let's build a language around these three structured control-flow
+primitves}
 
 In this section, we introduce and give typing rules for the \subiterexp{} expression language, which
 has grammar given in Figure~\ref{fig:expr-syntax}. \subiterexp{} is, at first glance, a
@@ -1318,15 +1322,13 @@ straightforward, compositional manner from the semantics of its subterms. Furthe
 the equational properties of our term formers to correspond closely to the universal properties of
 the categorical structure used to interpret them. Thus, our goal is to pick categorical structures
 which correspond, as closely as possible, one-to-one to the features of \subiterexp{}. In
-particular, we need to model:
+particular, we need to find categorical structures to model our three primary structured
+control-flow constructs, which are:
 \begin{itemize}
-  \item \emph{Refinement}, which we will do using \emph{poset-enrichment}
   \item \emph{Sequencing} and \emph{binding}, which we will do using the structure of a
   \emph{premonoidal category}
   \item \emph{Branching}, which we will do using \emph{coproducts}
   \item \emph{Iteration}, which we will do using a \emph{Conway operator}
-  \item \emph{Effects}, which we will do by introducing the new notion of a \emph{substructural
-  effectful category}
 \end{itemize}
 To maintain compositionality and coherence, we must additionally require that these structures to
 play nicely with each other. Hence, we will also require our category to satisfy
@@ -1336,6 +1338,12 @@ play nicely with each other. Hence, we will also require our category to satisfy
   structure
   \item \emph{(Directed) Uniformity}, which ensures the Conway operator is compatible with our
   effect and refinement systems.
+\end{itemize}
+Finally, we'll need to model the features of our type theory; particularly:
+\begin{itemize}
+  \item \emph{Refinement}, which we will do using \emph{poset-enrichment}
+  \item \emph{Effects}, which we will do by introducing the new notion of a \emph{substructural
+  effectful category}
 \end{itemize}
 Our representation of refinement is intimately connected to the soundness theorem for our refinement
 relation $\tref$. In particular, \emph{soundness} w.r.t. equivalence is easy enough to state: we
@@ -1360,10 +1368,11 @@ $\tmle{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A}$, we require that
 $\dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}} \leq \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{b}{A}}$.
 Soundness of equivalence follows directly from antisymmetry of partial orders.
 
-Premonoidal categories were introduced in \citet{power-premonoidal-97} to model side-effectful
-computations with first-order binding. A premonoidal category can be viewed as a generalization of a
-monoidal category, in which \emph{sliding} does not necessarily hold; i.e., we have that, in
-general,
+We can now proceed to give poset-enriched versions of the models for our three control-flow
+primitives, namely, seqencing, branching, and iteration. Premonoidal categories were introduced in
+\citet{power-premonoidal-97} to model side-effectful, sequential computations with first-order
+binding. A premonoidal category can be viewed as a generalization of a monoidal category, in which
+\emph{sliding} does not necessarily hold; i.e., we have that, in general,
 $$
 (f \otimes \ms{id}) ; (\ms{id} \otimes g) \neq
 (\ms{id} \otimes g) ; (f \otimes \ms{id})
@@ -1423,13 +1432,28 @@ below:
   \alpha_{A, B, C} ; \sigma_{A, B \otimes C} ; \alpha_{B, C, A}
   = \sigma_{A, B} \otimes C ; \alpha_{B, A, C} ; B \otimes \sigma_{A, C}
   $$
-  We say a premonoidal category is \emph{monoidal} if every morphism is central.
 \end{definition}
+This gives us a nice alternate characterization of (poset-enriched) monoidal categories as well:
+\begin{definition}[(Symmetric) Monoidal Category]
+  We say a (symmetric) premonoidal category is \emph{(symmetric) monoidal} if every morphism is
+  central.
+\end{definition}
+We model branching control-flow using the coproduct $A + B$ as a primitive, whose definition is
+unchanged in the poset-enriched setting. Given morphisms $f : A \to C$ and $g : B \to C$, their
+coproduct $[f, g] : A + B \to C$ quite naturally models a case-statement which executes $f$ given an
+$A$ and executes $g$ given a $B$. We can implement a more traditional if-statement as a
+case-statement on the object $\mb{2} = I + I$.
 
-\TODO{for branching with coproducts, we can represent case, $1 + 1$ for if; but we want our coproducts to be
-distributive, which allows us to interpret the rule for cases where variables can be used in either
-branch}
-
+Coproducts on their own, however, cannot interpret variables captured by the branches of a
+case-statement. For example, given $x : \mbb{Z}$, $y : \mbb{Z} + \ms{str}$, consider the following
+expression:
+$$
+\caseexpr{y}{y}{\ms{print}(\texttt{"add: "}, x + y)}{y}{\ms{print}(y, x)}
+$$
+While our input context corresponds to the object $\mbb{Z} \otimes (\mbb{Z} + \ms{str})$, we need to
+somehow get to $(\mbb{Z} \otimes \mbb{Z}) + (\mbb{Z} \otimes \ms{str})$ to be able to evaluate our
+branches. Categorically, what we require is that our coproduct is \emph{distributive} over our
+tensor product; we define a \emph{distributive category} for which this is the case as follows:
 \begin{definition}[Distributive Category]
   We say a premonoidal category is \emph{distributive} if:
   \begin{itemize}
@@ -1440,16 +1464,41 @@ branch}
   \end{itemize}
 \end{definition}
 
-\TODO{for iteration, introduce Conway operator; point back to refinement rules}
-
-To model looping, we need to introduce a fixpoint operator, which we do by requiring the existence of a \emph{Conway iteration operator} as follows:
-\begin{definition}[Conway Iteration Operator]
+The last control-flow construct we need to model is looping. A loop with input $A$ will either exit
+with output $B$ or recurse with a new input $A$. Consequently, since we model branching control-flow
+using coproducts, the \emph{body} of a loop will look like a morphism $A \to B + A$. Therefore, a
+natural way to model iteration is to posit the existence of a fixpoint operator $(\cdot)^\dagger$
+taking morphisms $f: A \to B + A$ to their fixpoints $f^\dagger: A \to B$. $f^\dagger$ being the
+fixpoint of the body $f$ means that executing $f^\dagger$ on an input $A$ is the same as executing
+$f$ on an input $A$ and,
+\begin{itemize}
+  \item If we get an output $B$, return it
+  \item If we get an output $A$, feed it as an input to $f^\dagger$ and return the resulting $B$
+\end{itemize}
+Indeed, in a functional language supporting higher-order functions such as ML or Haskell, we might
+write 
+\begin{lstlisting}[language=Haskell]
+  iterate :: (A -> B + A) -> A -> B
+  iterate f a = case f a of
+    Left b -> b
+    Right a -> iterate f a
+\end{lstlisting}
+This corresponds exactly to the notion of a \emph{pre-iterative category} given below:
+\begin{definition}[Pre-iterative Category]
   Let $\mc{C}$ be a category with chosen coproducts. We say $\mc{C}$ is \emph{pre-iterative} if it
   is equipped with a fixpoint operator $(-)^\dagger : \mc{C}(A, B + A) \to \mc{C}(A, B)$ satisfying
-  \begin{itemize}
-    \item \emph{Fixpoint}: $f ; [\ms{id}, f^\dagger] = f$
-  \end{itemize}
-  We say $(-)^\dagger$ is a \emph{Conway iteration operator} if it additionally satisfies
+  $f ; [\ms{id}, f^\dagger] = f$
+\end{definition}
+Our goal is to have our fixpoint operator's properties correspond precisely to drawing a loop in a
+control-flow graph, as in Figure~\ref{fix:fixpoint-diagram}. In particular, we should be able to
+reconfigure such diagrams up to isotopy (i.e., moving boxes and wires around without changing
+connectivity) without changing the meaning of our program. To be able to do so soundly, we will need
+to introduce some additional equations, which correspond to the graphical transformations in
+Figure~\ref{fig:conway-diagram}; a fixpoint satisfying these equations is called a \emph{Conway
+iteration operator}, as defined below:
+\begin{definition}[Conway Iteration Operator]
+  Given a pre-iterative category $\mc{C}$, we say $(-)^\dagger$ is a \emph{Conway iteration
+  operator} if it additionally satisfies
   \begin{itemize}
     \item \emph{Naturality:} given $f : A \to B + A$ and $g : B \to C$, we have
       $
@@ -1465,8 +1514,31 @@ To model looping, we need to introduce a fixpoint operator, which we do by requi
       $
   \end{itemize}
 \end{definition}
-We'd like our Conway iteration operator to play nicely with our premonoidal structure; in
-particular, we require our Conway iteration operator to be \emph{strong}, defined as follows:
+
+\TODO{actually a REDO: note that a refinement rule for dinaturality is missing; that is because it
+is derivable given uniformity}
+
+Naturality and codiagonal correspond directly to our rules \todo{naturality rule} and
+\todo{codiagonal rule} respectively, whereas dinaturality corresponds to the program equivalence
+\begin{lstlisting}[language=Haskell]
+  iterate (\ a -> case g a of 
+      Left b -> Left b
+      Right c -> h c 
+    ) a
+  ===
+  case g a of
+    Left b -> b
+    Right c -> iterate (\ c -> case h c of
+      Left b -> Left b
+      Right a -> g a
+      )
+\end{lstlisting}
+and is derivable.
+
+\TODO{explanation of strength in terms of captured variables; look at ML/Haskell again?}
+
+We'd further like for our Conway iteration operator to play nicely with our premonoidal structure;
+in particular, we require our Conway iteration operator to be \emph{strong}, defined as follows:
 \begin{definition}[Strong Conway Iteration Operator]
   If $\mc{C}$ is distributive, we say an iteration operator $(\cdot)^\dagger$ is \emph{strong} if
   $$
@@ -1474,28 +1546,147 @@ particular, we require our Conway iteration operator to be \emph{strong}, define
   $$
 \end{definition}
 
-\TODO{give higher-order presentation (i.e. ML or Haskell code), rules are obvious bro trust me}
+\TODO{effectful categories; centrality and purity}
 
-\TODO{note that a refinement rule for dinaturality is missing; that is because it is derivable given
-uniformity}
+\TODO{uniformity w.r.t effect system; note on derivability of dinaturality}
 
-\TODO{we need it to be \emph{strong} again for variable scoping purposes; look at the ML}
+\TODO{\emph{general} models}
 
-\TODO{effectful structure}
-
-\TODO{uniformity}
-
-\TODO{models}
+\TODO{models form a category; notion of morphism is obvious, see appendix}
 
 \TODO{semantics; sentence per rule}
+
+\TODO{group the following bad boys into a figure:}
+
+\begin{equation*}
+  \dnt{A^q} = \dnt{\etoty{A^q}} \qquad
+  !_{A^q} = !_{\etoty{A^q}} \qquad
+  \Delta_{A^q} = \Delta_{\etoty{A^q}}
+\end{equation*}
+
+\begin{gather*}
+  \boxed{\dnt{\Gamma^{\mb{q}}} : |\mc{C}|} \\
+  \dnt{\cdot} = I
+  \qquad \dnt{\Gamma^{\mb{q}}, x : A^q_\epsilon} 
+          = \dnt{\Gamma^{\mb{q}}} \otimes \dnt{A^q}
+\end{gather*}
+
+
+\begin{gather*}
+  \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{\linl{a}}{A + B}}
+  = \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}} ; \iota_l \qquad
+  \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{\linr{b}}{A + B}}
+  = \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{b}{B}} ; \iota_r \\
+  \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{\labort{a}}{A}}
+  = \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{\mb{0}}} ; 0_A
+\end{gather*}
+
+\begin{gather*}
+  \boxed{\dnt{\cwk{\Gamma^{\mb{q}}}{\Delta^{\mb{q}'}_{\mb{e}'}}} 
+    : \mc{C}_\bot(\dnt{\Gamma^{\mb{q}}}, \dnt{\Delta^{\mb{q}'}_{\mb{e}'}})} \\
+  \dnt{\cwk{\cdot}{\cdot}} = \ms{id}_I \qquad
+  \dnt{\cwk{\Gamma^{\mb{q}}, x : A^q_\epsilon}{\Delta^{\mb{q}'}_{\mb{e}'}}}
+    = \dnt{\Gamma^{\mb{q}}} \otimes !_{A^q}
+    ; \lambda
+    ; \dnt{\cwk{\Gamma^{\mb{q}}}{\Delta^{\mb{q}'}_{\mb{e}'}}} \\
+  \dnt{\cwk{\Gamma^{\mb{q}}, x : A^q_\epsilon}
+            {\Delta^{\mb{q}'}_{\mb{e}'}, x : A^{q'}_{\epsilon'}}}
+    = \dnt{\cwk{\Gamma^{\mb{q}}}{\Delta^{\mb{q}'}_{\mb{e}'}}} \otimes \begin{cases}
+      \ms{id}_{\dnt{A}} & \text{if } q, q' \neq 0 \\
+      !_{A^q} & \text{otherwise} \\
+    \end{cases}
+\end{gather*}
+
+\begin{gather*}
+  \boxed{\dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}} 
+    : \mc{C}_\bot(\dnt{\Gamma^{\mb{q}}}, 
+      \dnt{\Gamma^{\mb{q}_l}_{\mb{e}_l}} \otimes \dnt{\Gamma^{\mb{q}_r}_{\mb{e}_r}})} 
+  \\
+  \dnt{\qsp{\cdot}{\cdot}{\cdot}{\cdot}} = \rho^{-1}
+  \\
+  \dnt{\qsp{\Gamma, x : A}{(\mb{q}, q)}{(\mb{q}_l, q_l)}{(\mb{q}_r, q_r)}}
+  = \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}} \otimes
+  \begin{cases}
+    !_{A^q} ; \rho^{-1} & \text{if } q_l = q_r = 0 \text{ else} \\
+    \lambda^{-1} & \text{if } q_l = 0 \text{ else} \\
+    \rho^{-1} & \text{if } q_r = 0 \text{ else} \\
+    \Delta_A & \text{otherwise}
+  \end{cases} ; \sigma^{\ms{mid}}
+\end{gather*}
+
+\begin{gather*}
+  \boxed{\dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}} 
+    : \mc{C}_\epsilon(\dnt{\Gamma^{\mb{q}}}, \dnt{A})} \\
+  \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{x}{A}} 
+    = \dnt{\cwk{\Gamma^{\mb{q}}}{x : A^\oneq_\epsilon}}
+  \qquad
+  \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{f\;a}{B}} 
+    = \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}} ; \dnt{f} \\
+  \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{\letexpr{x}{a}{b}}{B}} 
+    = \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    ; \dnt{\Gamma^{\mb{q}_l}} 
+      \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A}}
+    ; \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{b}{B}}
+  \\
+  \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{()}{\mb{1}}}
+    = \dnt{\cwk{\Gamma^{\mb{q}}}{\cdot}}
+  \\
+  \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{(a, b)}{A \otimes B}}
+    = \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    ; \dnt{\hasty{\Gamma^{\mb{q}_l}}{\epsilon}{a}{A}}
+    \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{b}{B}}
+\end{gather*}
+\begin{align*}
+  \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{\letexpr{(x, y)}{a}{c}}{C}}
+  = & \; \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    ; \dnt{\Gamma^{\mb{q}_l}}
+    \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A \otimes B}}
+  \\ & 
+  ; \alpha_{\Gamma^{\mb{q}_r} \otimes A \otimes B}
+  ; \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A, y : B}{\epsilon}{c}{C}} \\
+\end{align*}
+
+\begin{align*}
+  \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{\caseexpr{e}{x}{a}{y}{b}}{C}}
+  =& \; 
+  \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+  ; \dnt{\Gamma^{\mb{q}_l}} 
+  \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{e}{A + B}}
+  ; \delta^{-1} \\ & 
+  ; [
+    \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{a}{C}},
+    \dnt{\hasty{\Gamma^{\mb{q}_l}, y : B}{\epsilon}{b}{C}}
+  ]
+\end{align*}
+
+
+\begin{align*}
+  &\dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{\liter{a}{x}{b}}{B}} \\
+  &= 
+  \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+  ; \dnt{\Gamma^{\mb{q}_l}}
+    \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A}} \\ & \quad 
+  ; (\dnt{\qsp{\Gamma}{\mb{q}_l}{\mb{q}_l}{\mb{q}_l}} \otimes \dnt{A} 
+  ; \alpha
+  ; \dnt{\Gamma^{\mb{q}_l}} 
+    \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}, x : A}{\epsilon}{b}{B + A}}
+  ; \delta^{-1})^\dagger
+  ; \dnt{\cwk{\Gamma^{\mb{q}_l}}{\cdot}} \otimes \dnt{B}
+  ; \rho
+\end{align*}
 
 \TODO{coherence; weakening}
 
 \TODO{soundness of substitution}
 
+\TODO{wide subcategory of models \emph{w.r.t.} a specific refinement relation $\mc{R}$}
+
+\TODO{this forms a lattice, yo}
+
 \TODO{soundness (statement)}
 
-\TODO{completeness}
+\TODO{completeness, i.e., the syntactic model over $\mc{R}$ is initial in the subcategory of
+$\mc{R}$-models}
 
 \section{SSA Typing and Semantics}
 
@@ -1506,7 +1697,7 @@ iterative effect}
 
 \TODO{denotational semantics}
 
-\TODO{by completeness, $\subseteq$ expressions}
+\TODO{by completeness, $\subseteq$ expressions; this is like \citet{bohm-jacopini}}
 
 \TODO{by translation, expressions $\subseteq$; translation procedure goes to appendix}
 
