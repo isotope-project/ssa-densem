@@ -206,6 +206,7 @@
 \newcommand{\delq}{1^?}
 \newcommand{\cpyq}{\omega^+}
 \newcommand{\topq}{\omega}
+\newcommand{\zeroqv}[1]{#1^\uparrow}
 
 % Operators
 \newcommand{\pto}{\rightharpoonup}
@@ -946,7 +947,7 @@ this justifies flattening nested loops into one with a more complex continuation
 %
 \paragraph{Uniformity,} via the rule \textsf{unif$^p$}, allows us to effectively commute effectful
 operations with a loop body. In terms of control-flow graphs,
-\TODO{this; reference Figure~\ref{fig:unif-cfg}}
+\TODO{this; reference Figure~\ref{fig:unif-cfg}; merge with explanation of uniformity later}
 
 % Text version:
 % ; in particular, if a command $s$ commutes with the loop body $b$, then
@@ -1704,28 +1705,150 @@ Figure~\ref{fig:elgot-ax-string-diagrams}; a fixpoint satisfying these equations
   \label{fig:elgot-ax-string-diagrams}
   \Description{Representations of the Conway iteration axioms as string diagrams}
 \end{figure}
-
 In particular, we note that naturality and codiagonal correspond directly to our rules
 \brle{let-iter} and \brle{codiag} respectively; we will later see that dinaturality is derivable.
 
-\TODO{explanation of strength in terms of captured variables; look at ML/Haskell again?}
-
-We'd further like for our Conway iteration operator to play nicely with our premonoidal structure;
-in particular, we require our Conway iteration operator to be \emph{strong}, defined as follows:
+Just like for branching control-flow, we also require an additional condition to ensure that our
+iteration operator is compatible with our premonoidal structure. Specifically, we would like to be
+able to ``thread'' values through our loop bodies; i.e., the following two programs should be
+equivalent for \emph{pure} $c$:
+$$
+(\liter{a}{x}{b}, c) \approx \liter{(a, c)}{(x, y)}
+  {\caseexpr{b}{z}{\linl{(z, y)}}{z}{\linr{(z, y)}}}
+$$
+This corresponds to requiring our Conway iteration operator to be \emph{strong}, defined as follows:
 \begin{definition}[Strong Conway Iteration Operator]
   If $\mc{C}$ is distributive, we say an iteration operator $(\cdot)^\dagger$ is \emph{strong} if
   $$
   \forall f: A \to B + A, (C \otimes f ; \delta^{-1})^\dagger = C \otimes f^\dagger
   $$
 \end{definition}
+We've now got almost everything we need to model pure and arbitrarily effectful \subiterexp{}
+programs, but we still need to be able to perform a more fine-grained classification of effects. To
+do so, we introduce a generalization of the notion of an \emph{effectful category}, which in the
+literature (e.g. \cite{promonad}) only distinguishes between pure and arbitrarily effectful
+morphisms.
+\begin{definition}[Effectful category]
+  An effectful category $\mc{C}$ over an effect system $\mc{E}$ consists of a symmetric premonoidal
+  poset-enriched category $\mc{C}$ equipped with a  monotonic mapping from $\epsilon \in \mc{E}$ to
+  wide (symmetric premonoidal) subcategories $\mc{C}_\epsilon \subseteq \mc{E}$ such that, given
+  $\epsilon, \eta \in \mc{E}$, $f \in \mc{C}_\epsilon(A, B)$, and $g \in \mc{C}_\eta(A', B')$, 
+  \begin{itemize}
+    \item $\epsilon \rightmove \eta \implies f \ltimes g \leq f \rtimes g$
+    \item $\epsilon \leftmove \eta \implies f \ltimes g \geq f \rtimes g$
+  \end{itemize}
+  We call morphisms with effect $\bot$ \emph{pure}. We say an effectful category is
+  \emph{distributive} if the underlying premonoidal category is, and the injections are pure.
+\end{definition}
+The goal of allowing morphisms with compatible effects to commute is to allow proving substitution
+of effectful programs sound. Unfortunately, we don't have quite enough structure to allow
+substitution \emph{into} the body of a loop: while commutativity of $a$ and $b$ is enough to justify
+that
+$
+\letexpr{x}{a}{(b, x)} \approx (b, a)
+$
+proving that
+$
+\letexpr{x}{a}{\liter{b}{y}{c}} \approx \liter{b}{y}{\letexpr{x}{a}{c}}
+$
+for $x \notin \ms{fv}(b)$ requires us to be able to move a morphism \emph{into} the body of a loop.
+To be able to do that effectively, we need to introduce the concept of a \emph{\mc{K}-uniform
+iteration operator} as follows:
+\begin{definition}[Uniformity]
+  Given a wide subcategory $\mc{K} \subseteq \mc{C}$ of a category equipped with a Conway iteration
+  operator, we say $\mc{C}$ is \emph{$\mc{K}^+$-uniform} if, for all $h : A \to_{\mc{K}} B$, $f : B
+  \to C + B$, and $g : A \to C + A$, we have that
+  $$
+  h ; f \leq g ; C + h \implies h ; f^\dagger \leq g^\dagger 
+  $$
+  and \emph{$\mc{K}^-$-uniform} if
+  $$
+  h ; f \geq g ; C + h \implies h ; f^\dagger \geq g^\dagger 
+  $$
+  We say it is \emph{$\mc{K}$-uniform} if it is both $\mc{K}^+$- and $\mc{K}^-$-uniform, which
+  implies in particular that
+  $$
+  h ; f = g ; C + h \implies h ; f^\dagger = g^\dagger 
+  $$
+\end{definition}
+We briefly note the following useful fact:
+\begin{proposition}
+  If $(-)^\dagger$ is an iteration operator which satisfies naturality and codiagonal and is
+  $\mc{K}$-uniform for $\mc{K}$ cocartesian, then it also satisfies dinaturality.
+\end{proposition}
+\begin{proof}
+  See Lemma 31 of \citet{goncharov-18-guarded-traced}
+\end{proof}
 
-\TODO{effectful categories; centrality and purity}
+Requiring that substitution is compatible with loops is then equivalent to requiring that the
+subcategories of morphisms having commutative effects are uniform with respect to each other. We
+call this notion an (effectful) Elgot category:
+\begin{definition}[Elgot category]
+  We say a distributive effectful category $\mc{C}$ is \emph{Elgot} if it has an iterative effect
+  system and is equipped with a strong Conway iteration operator, such that, for all effects
+  $\epsilon, \eta$ where $\epsilon \in \mc{E}^\infty$,
+  \begin{itemize}
+    \item The wide subcategory $\mc{C}_\epsilon$ is closed under iteration  
+    \item If $\epsilon \rightmove^p \eta$, then $\mc{C}_\epsilon$ is $\mc{C}_\eta^p$-uniform.
+  \end{itemize}
+  In particular, we note that $\mc{C}$ and hence every $\mc{C}_\epsilon$ is $\mc{C}_\bot$-uniform.
+\end{definition}
+We now have all the ingredients we need to give a model for \subiterexp{}:
+\begin{definition}[\subiterexp-model]
+  A \subiterexp-model $\mc{M} = (\mc{C}, (\cdot)^\dagger, \dnt{\cdot}, \dmor{}, \tmor{})$ of a
+  \subiterexp-signature $\mc{S} = (\mc{X}, \mc{I}, \mc{E})$ is composed of:
+  \begin{itemize}
+    \item An effectful Elgot category ($\mc{C}$, $(\cdot)^\dagger$) over $(\mc{E},
+    \mc{E}^\infty)$
+    \item For each base type $X \in \mc{X}$, an object $\dnt{X} \in |\mc{C}|$, equipped with
+    \begin{itemize}
+      \item For $X$ affine, a \emph{discard morphism} $\tmor{X} : \mc{C}_\bot(\dnt{X}, I)$
+      \item For $X$ relevant, a \emph{diagonal morphism} $\dmor{X} : \mc{C}_\bot(\dnt{X}, \dnt{X}
+      \otimes \dnt{X})$
+    \end{itemize}
+    \item For each function $f : \ms{Inst}(\mc{S})_\epsilon(A, B)$, a morphism $\dnt{f} :
+    \mc{C}_\epsilon(\dnt{A}, \dnt{B})$
+  \end{itemize}
+  such that, for all $A, B \in |\mc{S}|$, $f : \mc{C}_\epsilon(\dnt{A}, \dnt{B})$ we have
+  \begin{itemize}
+    \item If $A$ relevant, 
+      $\dmor{A} ; \dmor{A} \otimes \dnt{A} ; \alpha = \dmor{A} ; \dnt{A} \otimes \dmor{A}$
+    \item If $\zeroq \leq \alquant^+(\epsilon)$ and $A, B$ affine, $f ; !_B \leq !_A$
+    \item If $\zeroq \leq \alquant^+(\epsilon)$ and $A$ relevant, $B$ affine, 
+      $\dmor{A} ; (f ; !_B) \otimes \dnt{A} \leq \rho^{-1}$
+    \item If $\cpyq \leq \alquant^+(\epsilon)$ and $A, B$ relevant, 
+    $f ; \dmor{B} \leq \dmor{A} ; f \ltimes f = \dmor{A} ; f \rtimes f$
+    \item If $\zeroq \leq \alquant^-(\epsilon)$ and $A, B$ affine, $f ; !_B \geq !_A$
+    \item If $\zeroq \leq \alquant^-(\epsilon)$ and $A$ relevant, $B$ affine, 
+      $\dmor{A} ; (f ; !_B) \otimes \dnt{A} \geq \rho^{-1}$
+    \item If $\cpyq \leq \alquant^-(\epsilon)$ and $A, B$ relevant, 
+    $f ; \dmor{B} \geq \dmor{A} ; f \ltimes f = \dmor{A} ; f \rtimes f$
+  \end{itemize}
+  where
+  \begin{itemize}
+    \item $\dnt{\mb{1}} = I$
+    \item $\dnt{A \otimes B} = \dnt{A} \otimes \dnt{B}$
+    \item $!_{\mb{1}} = \ms{id}_I$
+    \item $\Delta_{\mb{1}} = \lambda^{-1} = \rho^{-1}$
+    \item For $A, B$ affine, $!_{A \otimes B} = !_A \otimes !_B ; \lambda$
+    \item For $A, B$ relevant, 
+    $\Delta_{A \otimes B} 
+      = \dmor{A} \otimes \dmor{B}
+      ; \sigma^{\ms{mid}}
+    $
+    \item $\dnt{\mb{0}} = \mb{0}$
+    \item $\dnt{A + B} = \dnt{A} + \dnt{B}$
+    \item $!_{\mb{0}} = 0_{I}$
+    \item $\Delta_{\mb{0}} = 0_{0 + 0}$
+    \item For $A, B$ affine, $!_{A + B} = [!_A, !_B]$
+    \item For $A, B$ relevant, 
+    $\Delta_{A + B} 
+      = [\dmor{A} ; \iota_l \otimes \iota_l, \dmor{B} ; \iota_r \otimes \iota_r]
+    $
+  \end{itemize}
+\end{definition}
 
-\TODO{uniformity w.r.t effect system; note on derivability of dinaturality}
-
-\TODO{\emph{general} models}
-
-\TODO{models form a category; notion of morphism is obvious, see appendix}
+\TODO{text about the model?}
 
 \subsection{Semantics of \subiterexp{} Expressions}
 
@@ -1894,6 +2017,8 @@ in particular, we require our Conway iteration operator to be \emph{strong}, def
 
 \subsection{Soundness}
 
+\TODO{text}
+
 \begin{definition}
   We say a model $\mc{M}$ \emph{validates} a typed refinement family $\mc{R}$, written $\mc{M}
   \models \mc{R}$, if, for all
@@ -1906,16 +2031,15 @@ in particular, we require our Conway iteration operator to be \emph{strong}, def
   $
 \end{definition}
 
-\TODO{wide subcategory $\ms{Mod}(\mc{R}) \subseteq \ms{Mod}(\mc{S})$ of models \emph{w.r.t.} a
-specific refinement relation $\mc{R}$}
-
-\TODO{this forms a lattice, yo, with bottom element $\mc{R} = \varnothing$}
+\TODO{text}
 
 \begin{theorem}[Soundness]
   If $\mc{M} \models \mc{R}$, given $\tmle{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A}$, we have
   $\dnt{\hasty{\Gamma}{\epsilon}{a}{A}}_{\mc{M}} \leq \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}_{\mc{M}}$
   . In particular, this implies that $\mc{M} \models \mc{R} \iff \mc{M} \models \ms{Th}(\mc{R})$.
 \end{theorem}
+
+\TODO{text}
 
 \subsection{Syntactic Models and Completeness}
 
@@ -1936,17 +2060,93 @@ specific refinement relation $\mc{R}$}
   \end{enumerate}
 \end{theorem}
 
-\TODO{or, in more categorical language, $\ms{Tm}(\mc{R})$ is the initial object of
-$\ms{Mod}(\mc{R})$.}
-
 \section{SSA Typing and Semantics}
 
-\TODO{introduce judgement and label contexts}
+
+\TODO{we now study the syntax of SSA, which is as follows}
+
+\begin{grammar}
+  <\(\ms{L}\)> ::= \(\cdot\) \;|\; \(\ms{L}, \lhyp{\ell}{A}\)
+
+  <\(\mb{Q}\)> ::= \(\cdot\) \;|\; \(\mb{Q}; \mb{q}\)
+\end{grammar}
+
+\TODO{we've got label contexts, which of course have their own fun form of weakening... think hard
+about polarity here}
+ 
+\begin{gather*}
+  \prftree[r]{\rle{nil}}{\lwk{\cdot}{\cdot}} \qquad 
+  \prftree[r]{\rle{cons}}
+    {\lwk{\ms{L}^{\mb{Q}}_{\mb{E}}}{\ms{K}^{\mb{Q}}_{\mb{E}}}}
+    {\mb{q}' \leq \mb{q}}
+    {\epsilon' \leq \epsilon}
+    {\lwk{\ms{L}^{\mb{Q}}_{\mb{e}}, \lhyp{\ell}{A}^{\mb{q}}_{\epsilon}}
+    {\ms{K}^{\mb{Q}}_{\mb{e}}, \lhyp{\ell}{A}^{\mb{q}'}_{\epsilon'}}} \qquad
+  \prftree[r]{\rle{skip}}
+    {\lwk{\ms{L}^{\mb{Q}}_{\mb{E}}}{\ms{K}^{\mb{Q}}_{\mb{E}}}}
+    {\lwk{\ms{L}^{\mb{Q}}_{\mb{E}}}{\ms{K}^{\mb{Q}}_{\mb{E}}, \lhyp{\ell}{A}^{\mb{q}}_{\epsilon}}}
+\end{gather*}
+
+\begin{equation*}
+  \zeroqv{\cdot} = \cdot \qquad
+  \zeroqv{(\mb{Q}; \mb{q})} = \zeroqv{\mb{Q}} ; (\mb{q}, 0)
+\end{equation*}
+
+\TODO{we've got typing rules}
+
+\begin{gather*}
+  \prftree[r]{\rle{let$_1$}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{o}{A}}
+    {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{t}{\ms{L}^{\zeroqv{\mb{Q}}}_{\mb{e}}}}
+    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\letstmt{x}{o}{t}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+  \\
+  \prftree[r]{\rle{let$_2$}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{o}{A \otimes B}}
+    {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A, y : B}{\epsilon}{t}
+      {\ms{L}^{\zeroqv{(\zeroqv{\mb{Q}})}}}_{\mb{e}}}
+    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\letstmt{(x, y)}{o}{t}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+  \\
+  \prftree[r]{\rle{br}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\bot}{a}{A}}
+    {\lwk{\lhyp{\ell}{A}_\epsilon^{\mb{q}_l}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\brb{\ell}{a}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+  \\
+  \prftree[r]{\rle{case}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\bot}{o}{A + B}}
+    {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{\tau_l}{\ms{L}^{\zeroqv{\mb{Q}}}_{\mb{e}}}}
+    {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, y : B}{\epsilon}{\tau_r}{\ms{L}^{\zeroqv{\mb{Q}}}_{\mb{e}}}}
+    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\casestmt{o}{x}{\tau_l}{y}{\tau_r}}
+                                               {\ms{L}^{\mb{Q}}_{\mb{e}}}}
+  \\
+  \prftree[r]{\rle{where$_{\ms{nonrec}}$}}
+    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\kappa}
+      {\ms{L}^{\mb{Q}}_{\mb{e}}, \ms{R}^{\mb{Q}'}_{\mb{e}'}}}
+    {\forall \lhyp{\ell_i}{A_i}^{\mb{q}_i}_{\epsilon_i} \in \ms{R}^{\mb{Q}'}_{\mb{e}'} .
+      \haslb{\Gamma^{\mb{q}}_{\mb{e}}, x_i : A_i}{\epsilon_i}{t_i}{\ms{L}^{\mb{Q}}_{\mb{e}}}
+    }
+    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\awhere{\kappa}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
+      {\ms{L}^{\mb{Q}}_{\mb{e}}}}
+  \\
+  \prftree[r]{\rle{where$_{\ms{rec}}$}}
+  {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\kappa}
+    {\ms{L}^{\mb{Q}}_{\mb{e}}, \ms{R}^{\mb{Q}'}_{\mb{e}'}}}
+  {\einf{\epsilon}}
+  {\forall \lhyp{\ell_i}{A_i}^{\mb{q}_i}_{\epsilon_i} \in \ms{R}^{\mb{Q}'}_{\mb{e}'} .
+    \haslb{\Gamma^{\mb{q}}_{\mb{e}}, x_i : A_i}{\epsilon_i}{t_i}{
+      \ms{L}^{\mb{Q}}_{\mb{e}}, \ms{R}^{\mb{Q}'}_{\mb{e}'}}
+  }
+  {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\cwhere{\kappa}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
+    {\ms{L}^{\mb{Q}}_{\mb{e}}}}
+\end{gather*}
 
 \TODO{typing rules go brr; explain where rec/nonrec; nonrec can always be promoted to rec at an
 iterative effect}
 
-\TODO{denotational semantics}
+\TODO{denotational semantics of SSA}
 
 \TODO{by completeness, $\subseteq$ expressions; this is like \citet{bohm-jacopini}}
 
