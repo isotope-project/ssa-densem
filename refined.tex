@@ -1779,7 +1779,6 @@ We briefly note the following useful fact:
 \begin{proof}
   See Lemma 31 of \citet{goncharov-18-guarded-traced}
 \end{proof}
-
 Requiring that substitution is compatible with loops is then equivalent to requiring that the
 subcategories of morphisms having commutative effects are uniform with respect to each other. We
 call this notion an (effectful) Elgot category:
@@ -1793,7 +1792,12 @@ call this notion an (effectful) Elgot category:
   \end{itemize}
   In particular, we note that $\mc{C}$ and hence every $\mc{C}_\epsilon$ is $\mc{C}_\bot$-uniform.
 \end{definition}
-We now have all the ingredients we need to give a model for \subiterexp{}:
+The final piece of the puzzle is that we need a way to \emph{duplicate} variables of relevant type,
+as well as \emph{discard} variables of affine type. We'll supply families of morphisms $\Delta: A
+\to A \otimes A$, $!: A \to I$ for this purpose. We can then handle relevant and affine
+\emph{effects} by requiring that the appropriate morphism families are \emph{natural} w.r.t. the
+subcategory corresponding to that effect. Following this idea, we can now define a \subiterexp-model
+as follows: \subiterexp{}:
 \begin{definition}[\subiterexp-model]
   A \subiterexp-model $\mc{M} = (\mc{C}, (\cdot)^\dagger, \dnt{\cdot}, \dmor{}, \tmor{})$ of a
   \subiterexp-signature $\mc{S} = (\mc{X}, \mc{I}, \mc{E})$ is composed of:
@@ -1826,20 +1830,16 @@ We now have all the ingredients we need to give a model for \subiterexp{}:
   \end{itemize}
   where
   \begin{itemize}
-    \item $\dnt{\mb{1}} = I$
-    \item $\dnt{A \otimes B} = \dnt{A} \otimes \dnt{B}$
-    \item $!_{\mb{1}} = \ms{id}_I$
-    \item $\Delta_{\mb{1}} = \lambda^{-1} = \rho^{-1}$
+    \item $\dnt{\mb{1}} = I$, and $\dnt{A \otimes B} = \dnt{A} \otimes \dnt{B}$
+    \item $!_{\mb{1}} = \ms{id}_I$, and $\Delta_{\mb{1}} = \lambda^{-1} = \rho^{-1}$
     \item For $A, B$ affine, $!_{A \otimes B} = !_A \otimes !_B ; \lambda$
     \item For $A, B$ relevant, 
     $\Delta_{A \otimes B} 
       = \dmor{A} \otimes \dmor{B}
       ; \sigma^{\ms{mid}}
     $
-    \item $\dnt{\mb{0}} = \mb{0}$
-    \item $\dnt{A + B} = \dnt{A} + \dnt{B}$
-    \item $!_{\mb{0}} = 0_{I}$
-    \item $\Delta_{\mb{0}} = 0_{0 + 0}$
+    \item $\dnt{\mb{0}} = \mb{0}$, and $\dnt{A + B} = \dnt{A} + \dnt{B}$
+    \item $!_{\mb{0}} = 0_{I}$, and $\Delta_{\mb{0}} = 0_{0 + 0}$
     \item For $A, B$ affine, $!_{A + B} = [!_A, !_B]$
     \item For $A, B$ relevant, 
     $\Delta_{A + B} 
@@ -1847,37 +1847,22 @@ We now have all the ingredients we need to give a model for \subiterexp{}:
     $
   \end{itemize}
 \end{definition}
-
-\TODO{text about the model?}
-
-\subsection{Semantics of \subiterexp{} Expressions}
-
-\TODO{semantics; sentence per rule}
-
-\begin{equation*}
-  \dnt{A^q} = \dnt{\etoty{A^q}} \qquad
-  !_{A^q} = !_{\etoty{A^q}} \qquad
-  \Delta_{A^q} = \Delta_{\etoty{A^q}}
-\end{equation*}
-
+We will abuse notation slightly and extend $\dnt{\cdot}$ to quantity 
+annotated types $A^q$ by taking $\dnt{A^q} = \dnt{\etoty{A^q}}$; likewise, we define $!_{A^q} =
+!_{\etoty{A^q}}$ and $\Delta_{A^q} = \Delta_{\etoty{A^q}}$. As is standard, we proceed to
+define the semantics of an annotated context $\dnt{\Gamma^{\mb{q}}} : |\mc{C}|$ as the tensor
+product of the denotation of it's variables, i.e.,
 \begin{gather*}
-  \boxed{\dnt{\Gamma^{\mb{q}}} : |\mc{C}|} \\
   \dnt{\cdot} = I
   \qquad \dnt{\Gamma^{\mb{q}}, x : A^q_\epsilon} 
           = \dnt{\Gamma^{\mb{q}}} \otimes \dnt{A^q}
 \end{gather*}
+We can now define the semantics of our structural judgements, weakenings and context splitting, in
+Figure~\ref{fig:struct-sem}. In particular, weakenings simply discard unused variables (which are
+guaranteed to be of affine type), while context splitting duplicates variables used in both the left
+and right component contexts (which are guaranteed to be of relevant type).
 
 \begin{figure}
-
-  \begin{gather*}
-    \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{\linl{a}}{A + B}}
-    = \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}} ; \iota_l \qquad
-    \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{\linr{b}}{A + B}}
-    = \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{b}{B}} ; \iota_r \\
-    \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{\labort{a}}{A}}
-    = \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{\mb{0}}} ; 0_A
-  \end{gather*}
-
   \begin{gather*}
     \boxed{\dnt{\cwk{\Gamma^{\mb{q}}}{\Delta^{\mb{q}'}_{\mb{e}'}}} 
       : \mc{C}_\bot(\dnt{\Gamma^{\mb{q}}}, \dnt{\Delta^{\mb{q}'}_{\mb{e}'}})} \\
@@ -1912,7 +1897,35 @@ We now have all the ingredients we need to give a model for \subiterexp{}:
   \end{gather*}
   \caption{Denotational semantics for structural \subiterexp{} judgements}
   \Description{}
+  \label{fig:struct-sem}
 \end{figure}
+
+\subsection{Semantics of \subiterexp{} Expressions}
+
+We now give the semantics of each of our term formers in Figure~\ref{fig:expr-densem}. Each of them
+corresponds quite closely to the the underlying categorical structure. In particular,
+\begin{itemize}
+  \item \todo{variables are weakenings}
+  \item \todo{let-binding and pairs are sequencing}
+  \item \todo{units are discards}
+  \item \todo{case statements are the discriminator, and then the coproduct of the branches. we use
+  the distributor to pass variables in, as discussed.}
+  \item \todo{injections are just injections, and aborts are the zero morphism}
+  \item \todo{iteration expressions are the initial value followed by the fixpoint of the body;
+  again, we use the distributor to pass variables into the recursive branch}.
+\end{itemize}
+
+\TODO{ throughout, we use the notation $\dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}}$ to stand in
+  for what is actually an induction on derivations. but, this notation is in general justified by
+  \emph{coherence}: }
+
+\begin{lemma}[Coherence]
+  Given derivations $D$ for $\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}$ and $D'$ for
+  $\hasty{\Gamma^{\mb{q}}}{\epsilon'}{a}{A}$, we have $\dnt{D} = \dnt{D'}$
+\end{lemma}
+
+\TODO{ we also introduce the notation $\dnt{\hasty{\Gamma^{\mb{q}}}{}{a}{A}}$ since the effect
+  $\epsilon$ doesn't affect the denotation, either. }
 
 \begin{figure}
   \begin{gather*}
@@ -1929,13 +1942,13 @@ We now have all the ingredients we need to give a model for \subiterexp{}:
         \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A}}
       ; \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{b}{B}}
     \\
-    \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{()}{\mb{1}}}
-      = \dnt{\cwk{\Gamma^{\mb{q}}}{\cdot}}
-    \\
     \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{(a, b)}{A \otimes B}}
       = \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
       ; \dnt{\hasty{\Gamma^{\mb{q}_l}}{\epsilon}{a}{A}}
       \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{b}{B}}
+    \\
+    \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{()}{\mb{1}}}
+      = \dnt{\cwk{\Gamma^{\mb{q}}}{\cdot}}
   \end{gather*}
   \begin{align*}
     \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{\letexpr{(x, y)}{a}{c}}{C}}
@@ -1944,7 +1957,7 @@ We now have all the ingredients we need to give a model for \subiterexp{}:
       \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A \otimes B}}
     \\ & 
     ; \alpha_{\Gamma^{\mb{q}_r} \otimes A \otimes B}
-    ; \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A, y : B}{\epsilon}{c}{C}} \\
+    ; \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A, y : B}{\epsilon}{c}{C}}
   \end{align*}
   \begin{align*}
     \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{\caseexpr{e}{x}{a}{y}{b}}{C}}
@@ -1958,6 +1971,14 @@ We now have all the ingredients we need to give a model for \subiterexp{}:
       \dnt{\hasty{\Gamma^{\mb{q}_l}, y : B}{\epsilon}{b}{C}}
     ]
   \end{align*}
+  \begin{gather*}
+    \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{\linl{a}}{A + B}}
+    = \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}} ; \iota_l \qquad
+    \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{\linr{b}}{A + B}}
+    = \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{b}{B}} ; \iota_r \\
+    \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{\labort{a}}{A}}
+    = \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{\mb{0}}} ; 0_A
+  \end{gather*}
   \begin{align*}
     \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{\liter{a}{x}{b}}{B}}
     &= 
@@ -1976,16 +1997,10 @@ We now have all the ingredients we need to give a model for \subiterexp{}:
   \end{align*}
   \caption{Denotational semantics for \subiterexp{} expressions}
   \Description{}
+  \label{fig:expr-densem}
 \end{figure}
 
-\TODO{coherence text}
-
-\begin{lemma}[Coherence]
-  Given derivations $D$ for $\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}$ and $D'$ for
-  $\hasty{\Gamma^{\mb{q}}}{\epsilon'}{a}{A}$, we have $\dnt{D} = \dnt{D'}$
-\end{lemma}
-
-\TODO{therefore, $\dnt{\ms{stmt}}$ notation is justified, and non-effect notation is justified}
+\TODO{as a first sanity-check, our semantics satisfies \emph{weakening}, stated as follows}
 
 \begin{lemma}[Weakening]
   Given $\cwk{\Gamma^{\mb{q}}}{\Delta^{\mb{q}'}}$ and
