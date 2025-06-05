@@ -1324,7 +1324,7 @@ A good categorical semantics is one in which the semantics of a term is construc
 straightforward, compositional manner from the semantics of its subterms. Furthermore, we would like
 the equational properties of our term formers to correspond closely to the universal properties of
 the categorical structure used to interpret them. Thus, our goal is to pick categorical structures
-which correspond, as closely as possible, one-to-one to the features of \subiterexp{}. In
+which correspond  one-to-one to the features of \subiterexp{}. In
 particular, we need to find categorical structures to model our three primary structured
 control-flow constructs, which are:
 \begin{itemize}
@@ -1333,10 +1333,9 @@ control-flow constructs, which are:
   \item \emph{Branching}, which we will do using \emph{coproducts}
   \item \emph{Iteration}, which we will do using a \emph{Conway operator}
 \end{itemize}
-To maintain compositionality and coherence, we must additionally require that these structures to
-play nicely with each other. Hence, we will also require our category to satisfy
+To maintain compositionality, we must additionally require that these structures interact properly with each other. Hence, we will also require our category to satisfy
 \begin{itemize}
-  \item \emph{Distributivty}, which ensures the premonoidal and coproduct structures are compatible
+  \item \emph{Distributivity}, which ensures the premonoidal and coproduct structures are compatible
   \item \emph{Strength}, which ensures the Conway operator is compatible with the premonoidal
   structure
   \item \emph{(Directed) Uniformity}, which ensures the Conway operator is compatible with our
@@ -1348,13 +1347,14 @@ Finally, we'll need to model the features of our type theory; particularly:
   \item \emph{Effects}, which we will do by introducing the new notion of a \emph{substructural
   effectful category}
 \end{itemize}
-Our representation of refinement is intimately connected to the soundness theorem for our refinement
-relation $\tref$. In particular, \emph{soundness} w.r.t. equivalence is easy enough to state: we
-want, given $\tmeq{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A}$,
-$\dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}} = \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{b}{A}}$. On
-the other hand, to interpret $\tref$, we must generalize our setting slightly to consider
-\emph{poset-enriched} categories, in which our hom-sets are partially ordered. In particular, we
-define:
+
+In ordinary categorical semantics, we want syntactic equivalence to
+correspond to equality of morphisms: given $\tmeq{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A}$,
+$\dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}} = \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{b}{A}}$. 
+
+However, in our calculus, we do not only have a syntactic notion of equivalence, but we also have the order structure arising from refinement. Since terms correpond to morphisms, this means we need to be able to compare morphisms according to an order structure interpreting the refinement relation. Thus, to interpret $\tref$, we generalize from ordinary categories to 
+\emph{poset-enriched} categories, in which our hom-sets are partially ordered. In particular, we define:
+
 \begin{definition}[Poset-enriched category]
   A category $\mc{C}$ is \emph{poset-enriched} if each hom-set $\mc{C}(A, B)$ is equipped with a
   partial order which is compatible with composition, i.e., which satisfies
@@ -1364,12 +1364,14 @@ define:
   A poset-enriched functor between categories $\mc{C}$, $\mc{D}$ is then simply a functor whose
   action on morphisms is monotonic.
 \end{definition}
-Requiring $\mc{C}$ to be a poset-enriched category does not in fact rob us of any generality, since
-\emph{all} categories are poset-enriched under the identity ordering on hom-sets. We can now quite
+
+We can now quite
 naturally intepret soundness of refinement as follows: given
 $\tmle{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A}$, we require that
 $\dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}} \leq \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{b}{A}}$.
-Soundness of equivalence follows directly from antisymmetry of partial orders.
+Soundness of equivalence follows directly from antisymmetry of partial orders.\footnote{Requiring $\mc{C}$ to be a poset-enriched category does not in fact rob us of any generality, since
+\emph{all} categories are poset-enriched under the identity ordering on hom-sets.}
+
 
 We can now proceed to give poset-enriched versions of the models for our three control-flow
 primitives, namely, seqencing, branching, and iteration. Premonoidal categories were introduced in
@@ -1380,13 +1382,13 @@ $$
 (f \otimes \ms{id}) ; (\ms{id} \otimes g) \neq
 (\ms{id} \otimes g) ; (f \otimes \ms{id})
 $$
-To better understand this in terms of programming language semantics, we remark that a premonoidal
+To better understand this in terms of programming languages, a premonoidal
 category may also be viewed as a generalization of the Moggi's \cite{moggi-91-monad} monadic
 semantics: if we consider a strong monad over a Cartesian category, then the Kleisli category is
 premonoidal with the Cartesian product in the underlying category as tensor product. The Kleisli
-category is monoidal, i.e. satisfies sliding, specifically when the underlying monad is
-\emph{commutative}, such as the option monad or reader monad; i.e., precisely when the sequencing of
-side-effects does not matter. We need to generalize monoidal categories to premonoidal categories
+category satisfies sliding when the underlying monad is
+\emph{commutative}: when the sequencing of
+side-effects does not matter (e.g., the reader monad). We need to generalize monoidal categories to premonoidal categories
 precisely to support monads for which sequencing does matter, such as printing or state. For
 example, given a function $\ms{print}: \ms{str} \to ()$,
 $$
@@ -1501,12 +1503,12 @@ write
   iterate :: (A -> B + A) -> A -> B
   iterate f a = case f a of
     Left b -> b
-    Right a -> iterate f a
+    Right a' -> iterate f a'
 \end{lstlisting}
 This corresponds exactly to the notion of a \emph{pre-iterative category} given below:
 \begin{definition}[Pre-iterative Category]
   Let $\mc{C}$ be a category with chosen coproducts. We say $\mc{C}$ is \emph{pre-iterative} if it
-  is equipped with a fixpoint operator $(-)^\dagger : \mc{C}(A, B + A) \to \mc{C}(A, B)$ satisfying
+  is equipped with a fixpoint operator $(-)^\dagger : \mc{C}(A, B + A) \to \mc{C}(A, B)$ satisfying the loop unrolling equation
   $f ; [\ms{id}, f^\dagger] = f$
 \end{definition}
 Our goal is to have our fixpoint operator's properties correspond precisely to drawing a loop in a
@@ -1731,7 +1733,7 @@ morphisms.
 \begin{definition}[Effectful category]
   An effectful category $\mc{C}$ over an effect system $\mc{E}$ consists of a symmetric premonoidal
   poset-enriched category $\mc{C}$ equipped with a  monotonic mapping from $\epsilon \in \mc{E}$ to
-  wide (symmetric premonoidal) subcategories $\mc{C}_\epsilon \subseteq \mc{E}$ such that, given
+  wide\footnote{A \emph{wide} subcategory is one which has all of the objects of the original category.} (symmetric premonoidal) subcategories $\mc{C}_\epsilon \subseteq \mc{E}$ such that, given
   $\epsilon, \eta \in \mc{E}$, $f \in \mc{C}_\epsilon(A, B)$, and $g \in \mc{C}_\eta(A', B')$, 
   \begin{itemize}
     \item $\epsilon \rightmove \eta \implies f \ltimes g \leq f \rtimes g$
