@@ -2013,7 +2013,29 @@ corresponds quite closely to the the underlying categorical structure. In partic
 
 \subsection{Substitution}
 
-\TODO{semantics of substitution}
+\TODO{the semantics of substitutions is given pointwise; unused variables are discarded}
+
+\begin{figure}
+  \begin{gather*}
+    \boxed{\dnt{\issubst{\Gamma^{\mb{q}}}{\epsilon}{\sigma}{\Delta^{\mb{q}'}}}
+      : \mc{C}_\epsilon(\dnt{\Gamma^{\mb{q}}}, \dnt{\Delta^{\mb{q}'}})} \\
+    \dnt{\issubst{\cdot}{\epsilon}{\cdot}{\cdot}} = \ms{id}_I
+    \\
+    \dnt{\issubst{\sigma, x \mapsto a}{\epsilon}{\Gamma^{\mb{q}}}{\Delta^{\mb{q}'}, x : A^q}}
+    = \begin{cases}
+      \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}} 
+      ; \dnt{\issubst{\sigma}{\epsilon}{\Gamma^{\mb{q}_l}_{\mb{e}_l}}{\Delta^{\mb{q}'}}}
+      \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A}}
+      \text{ if } q \neq 0 \\
+      \dnt{\issubst{\sigma}{\epsilon}{\Gamma^{\mb{q}}}{\Delta^{\mb{q}'}}}
+      ; \lambda^{-1} \text{ otherwise}
+    \end{cases}
+  \end{gather*}
+  \caption{Semantics of \subiterexp{} substitutions}
+  \Description{}
+\end{figure}
+
+\TODO{soundness is the usual statement, but directed}
 
 \begin{theorem}[Soundness of Substitution]
   Given $\issubst{\Gamma^{\mb{q}}}{\eta}{\sigma}{\Delta^{\mb{q'}}}$ and
@@ -2032,7 +2054,7 @@ corresponds quite closely to the the underlying categorical structure. In partic
 
 \subsection{Soundness}
 
-\TODO{text}
+\TODO{introduce this}
 
 \begin{definition}
   We say a model $\mc{M}$ \emph{validates} a typed refinement family $\mc{R}$, written $\mc{M}
@@ -2046,7 +2068,7 @@ corresponds quite closely to the the underlying categorical structure. In partic
   $
 \end{definition}
 
-\TODO{text}
+\TODO{soundness means that if $\mc{M}$ models $\mc{R}$, it validates the whole theory of $\mc{R}$}
 
 \begin{theorem}[Soundness]
   If $\mc{M} \models \mc{R}$, given $\tmle{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A}$, we have
@@ -2054,11 +2076,14 @@ corresponds quite closely to the the underlying categorical structure. In partic
   . In particular, this implies that $\mc{M} \models \mc{R} \iff \mc{M} \models \ms{Th}(\mc{R})$.
 \end{theorem}
 
-\TODO{text}
-
 \subsection{Syntactic Models and Completeness}
 
-\TODO{define $\ms{Tm}(\mc{R})$}
+\TODO{define $\ms{Tm}(\mc{R})$; the syntactic model}
+
+\TODO{ can make $\ms{Tm}(\mc{R})$ into a \subiterexp{}-model; do we put this part into the appendix?
+  probably not since we need it for SSA }
+
+\TODO{this allows us to prove completeness as follows:}
 
 \begin{theorem}[Completeness]
   If $\dnt{\hasty{\Gamma}{}{a}{A}}_{\ms{Tm}(\mc{R})} \leq
@@ -2077,18 +2102,22 @@ corresponds quite closely to the the underlying categorical structure. In partic
 
 \section{SSA Typing and Semantics}
 
-
-\TODO{we now study the syntax of SSA, which is as follows}
+\TODO{annotated label contexts given by the following grammar}
 
 \begin{grammar}
   <\(\ms{L}\)> ::= \(\cdot\) \;|\; \(\ms{L}, \lhyp{\ell}{A}\)
 
   <\(\mb{Q}\)> ::= \(\cdot\) \;|\; \(\mb{Q}; \mb{q}\)
+
+  <\(\mb{e}\)> ::= \(\cdot\) \;|\; \(\mb{e}, \epsilon\)
 \end{grammar}
 
-\TODO{we've got label contexts, which of course have their own fun form of weakening... think hard
-about polarity here}
- 
+\TODO{label-weakening, labels also have an effect... or do we remove the effect stuff? this would
+also allow us to remove the distinction between where-rec and where-nonrec... but the effect stuff
+is nice...}
+
+\TODO{we note that \emph{each} label gets a quantity vector for the \emph{whole} input context}
+
 \begin{gather*}
   \prftree[r]{\rle{nil}}{\lwk{\cdot}{\cdot}} \qquad 
   \prftree[r]{\rle{cons}}
@@ -2102,66 +2131,69 @@ about polarity here}
     {\lwk{\ms{L}^{\mb{Q}}_{\mb{E}}}{\ms{K}^{\mb{Q}}_{\mb{E}}, \lhyp{\ell}{A}^{\mb{q}}_{\epsilon}}}
 \end{gather*}
 
+\TODO{label context upgrades, which add a zero for the top variable for each quantity vector}
+
 \begin{equation*}
   \zeroqv{\cdot} = \cdot \qquad
   \zeroqv{(\mb{Q}; \mb{q})} = \zeroqv{\mb{Q}} ; (\mb{q}, 0)
 \end{equation*}
 
-\TODO{we've got typing rules}
+\TODO{explain each typing rule here}
 
-\begin{gather*}
-  \prftree[r]{\rle{let$_1$}}
-    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{o}{A}}
-    {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{t}{\ms{L}^{\zeroqv{\mb{Q}}}_{\mb{e}}}}
-    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\letstmt{x}{o}{t}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
-  \\
-  \prftree[r]{\rle{let$_2$}}
-    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{o}{A \otimes B}}
-    {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A, y : B}{\epsilon}{t}
-      {\ms{L}^{\zeroqv{(\zeroqv{\mb{Q}})}}}_{\mb{e}}}
-    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\letstmt{(x, y)}{o}{t}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
-  \\
-  \prftree[r]{\rle{br}}
-    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\bot}{a}{A}}
-    {\lwk{\lhyp{\ell}{A}_\epsilon^{\mb{q}_l}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
-    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\brb{\ell}{a}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
-  \\
-  \prftree[r]{\rle{case}}
-    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-    {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\bot}{o}{A + B}}
-    {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{\tau_l}{\ms{L}^{\zeroqv{\mb{Q}}}_{\mb{e}}}}
-    {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, y : B}{\epsilon}{\tau_r}{\ms{L}^{\zeroqv{\mb{Q}}}_{\mb{e}}}}
-    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\casestmt{o}{x}{\tau_l}{y}{\tau_r}}
-                                               {\ms{L}^{\mb{Q}}_{\mb{e}}}}
-  \\
-  \prftree[r]{\rle{where$_{\ms{nonrec}}$}}
+\begin{figure}
+  \begin{gather*}
+    \prftree[r]{\rle{let$_1$}}
+      {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+      {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{o}{A}}
+      {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{t}{\ms{L}^{\zeroqv{\mb{Q}}}_{\mb{e}}}}
+      {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\letstmt{x}{o}{t}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+    \\
+    \prftree[r]{\rle{let$_2$}}
+      {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+      {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{o}{A \otimes B}}
+      {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A, y : B}{\epsilon}{t}
+        {\ms{L}^{\zeroqv{(\zeroqv{\mb{Q}})}}}_{\mb{e}}}
+      {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\letstmt{(x, y)}{o}{t}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+    \\
+    \prftree[r]{\rle{br}}
+      {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+      {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\bot}{a}{A}}
+      {\lwk{\lhyp{\ell}{A}_\epsilon^{\mb{q}_l}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+      {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\brb{\ell}{a}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+    \\
+    \prftree[r]{\rle{case}}
+      {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+      {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\bot}{o}{A + B}}
+      {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{\tau_l}{\ms{L}^{\zeroqv{\mb{Q}}}_{\mb{e}}}}
+      {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, y : B}{\epsilon}{\tau_r}{\ms{L}^{\zeroqv{\mb{Q}}}_{\mb{e}}}}
+      {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\casestmt{o}{x}{\tau_l}{y}{\tau_r}}
+                                                {\ms{L}^{\mb{Q}}_{\mb{e}}}}
+    \\
+    \prftree[r]{\rle{where$_{\ms{nonrec}}$}}
+      {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\kappa}
+        {\ms{L}^{\mb{Q}}_{\mb{e}}, \ms{R}^{\mb{Q}'}_{\mb{e}'}}}
+      {\forall \lhyp{\ell_i}{A_i}^{\mb{q}_i}_{\epsilon_i} \in \ms{R}^{\mb{Q}'}_{\mb{e}'} .
+        \haslb{\Gamma^{\mb{q}}_{\mb{e}}, x_i : A_i}{\epsilon_i}{t_i}{\ms{L}^{\mb{Q}}_{\mb{e}}}
+      }
+      {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\awhere{\kappa}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
+        {\ms{L}^{\mb{Q}}_{\mb{e}}}}
+    \\
+    \prftree[r]{\rle{where$_{\ms{rec}}$}}
     {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\kappa}
       {\ms{L}^{\mb{Q}}_{\mb{e}}, \ms{R}^{\mb{Q}'}_{\mb{e}'}}}
+    {\einf{\epsilon}}
     {\forall \lhyp{\ell_i}{A_i}^{\mb{q}_i}_{\epsilon_i} \in \ms{R}^{\mb{Q}'}_{\mb{e}'} .
-      \haslb{\Gamma^{\mb{q}}_{\mb{e}}, x_i : A_i}{\epsilon_i}{t_i}{\ms{L}^{\mb{Q}}_{\mb{e}}}
+      \haslb{\Gamma^{\mb{q}}_{\mb{e}}, x_i : A_i}{\epsilon_i}{t_i}{
+        \ms{L}^{\mb{Q}}_{\mb{e}}, \ms{R}^{\mb{Q}'}_{\mb{e}'}}
     }
-    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\awhere{\kappa}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
+    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\cwhere{\kappa}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
       {\ms{L}^{\mb{Q}}_{\mb{e}}}}
-  \\
-  \prftree[r]{\rle{where$_{\ms{rec}}$}}
-  {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\kappa}
-    {\ms{L}^{\mb{Q}}_{\mb{e}}, \ms{R}^{\mb{Q}'}_{\mb{e}'}}}
-  {\einf{\epsilon}}
-  {\forall \lhyp{\ell_i}{A_i}^{\mb{q}_i}_{\epsilon_i} \in \ms{R}^{\mb{Q}'}_{\mb{e}'} .
-    \haslb{\Gamma^{\mb{q}}_{\mb{e}}, x_i : A_i}{\epsilon_i}{t_i}{
-      \ms{L}^{\mb{Q}}_{\mb{e}}, \ms{R}^{\mb{Q}'}_{\mb{e}'}}
-  }
-  {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\cwhere{\kappa}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
-    {\ms{L}^{\mb{Q}}_{\mb{e}}}}
-\end{gather*}
+  \end{gather*}
+  \caption{Typing rules for \isotopessa{}}
+  \Description{}
+\end{figure}
 
-\TODO{typing rules go brr; explain where rec/nonrec; nonrec can always be promoted to rec at an
-iterative effect}
-
-\TODO{denotational semantics of SSA}
+\TODO{give denotational semantics of SSA below}
 
 \TODO{by completeness, $\subseteq$ expressions; this is like \citet{bohm-jacopini}}
 
@@ -2171,7 +2203,7 @@ iterative effect}
 
 \TODO{UB and printing}
 
-\TODO{separation logic}
+\TODO{$\implies$ separation logic \emph{if there is space}}
 
 \TODO{Release-Acquire Weak Memory}
 
