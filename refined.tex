@@ -1904,30 +1904,38 @@ and right component contexts (which are guaranteed to be of relevant type).
 
 \subsection{Semantics of \subiterexp{} Expressions}
 
-We now give the semantics of each of our term formers in Figure~\ref{fig:expr-densem}. Each of them
-corresponds quite closely to the the underlying categorical structure. In particular,
+We now give the semantics of each of our term formers in Figure~\ref{fig:expr-densem} by induction
+on derivations; we abuse syntax and write $\dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}}$ to denote
+the appropriate derivation/sub-derivation. Each of them corresponds quite closely to the the
+underlying categorical structure. In particular,
 \begin{itemize}
-  \item \todo{variables are weakenings}
-  \item \todo{let-binding and pairs are sequencing}
-  \item \todo{units are discards}
-  \item \todo{case statements are the discriminator, and then the coproduct of the branches. we use
-  the distributor to pass variables in, as discussed.}
-  \item \todo{injections are just injections, and aborts are the zero morphism}
-  \item \todo{iteration expressions are the initial value followed by the fixpoint of the body;
-  again, we use the distributor to pass variables into the recursive branch}.
+  \item We intepret a variable $x$ of type $A$ as the weakening $\cwk{\Gamma^{\mb{q}}}{x : A^1}$;
+  this discards all other variables from the input object.
+  \item Let-bindings and pairs are interpreted as sequencing, with, in the former case, the output
+  of the first term being passed as an input to the second. In both cases, we use context-splitting
+  to apportion the variables between the two terms.
+  \item Units are interpreted as the weakening $\cwk{\Gamma^{\mb{q}}}{\cdot}$, i.e., discarding all
+  variables.
+  \item Case statements are interpreted by passing the result of the discriminator into the
+  coproduct of the branches, after context-splitting to apportion the variables between the
+  discriminator and branches. We use the distributor to thread the variables into both branches of
+  the coproduct, as discussed.
+  \item Injections and $\ms{abort}$ are interpreted trivially as the injections and the zero
+  morphism respectively, post-composed with their argument.
+  \item To interpret iteration, after splitting the context, we interpret the initial value, and
+  then feed that into the fixpoint of the body (computed using the Conway iteration operator) along
+  with the remainder of the context.
 \end{itemize}
-
-\TODO{ throughout, we use the notation $\dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}}$ to stand in
-  for what is actually an induction on derivations. but, this notation is in general justified by
-  \emph{coherence}: }
-
+We will continue to use the $\dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}}$ notation, rather than
+writing out the denotation of a particular derivation, which we justify by noting that, by
+\emph{coherence}, two derivations of the same judgement have equal denotation:
 \begin{lemma}[Coherence]
   Given derivations $D$ for $\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}$ and $D'$ for
   $\hasty{\Gamma^{\mb{q}}}{\epsilon'}{a}{A}$, we have $\dnt{D} = \dnt{D'}$
 \end{lemma}
-
-\TODO{ we also introduce the notation $\dnt{\hasty{\Gamma^{\mb{q}}}{}{a}{A}}$ since the effect
-  $\epsilon$ doesn't affect the denotation, either. }
+In fact, we can go further and leave out the effect, writing $\dnt{\hasty{\Gamma^{\mb{q}}}{}{a}{A}}
+: \mc{C}(\dnt{\Gamma^{\mb{q}}}, \dnt{A})$, since this is also guaranteed not to affect the
+denotation.
 
 \begin{figure}
   \begin{gather*}
@@ -2002,8 +2010,9 @@ corresponds quite closely to the the underlying categorical structure. In partic
   \label{fig:expr-densem}
 \end{figure}
 
-\TODO{as a first sanity-check, our semantics satisfies \emph{weakening}, stated as follows}
 
+As a sanity check on our semantics, we can verify that it satisfies \emph{weakening} by a
+straightforward induction, stated as follows:
 \begin{lemma}[Weakening]
   Given $\cwk{\Gamma^{\mb{q}}}{\Delta^{\mb{q}'}}$ and
   $\hasty{\Delta^{\mb{q}'}}{\epsilon}{a}{A}$, we have that
