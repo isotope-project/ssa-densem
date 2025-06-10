@@ -2100,27 +2100,39 @@ validating our equational theory.
 
 \subsection{Syntactic Models and Completeness}
 
-\TODO{define $\ms{Tm}(\mc{R})$; the syntactic model}
-
-\TODO{ can make $\ms{Tm}(\mc{R})$ into a \subiterexp{}-model; do we put this part into the appendix?
-  probably not since we need it for SSA }
-
-\TODO{this allows us to prove completeness as follows:}
-
+We now wish to show that our equational theory is \emph{complete} w.r.t. our denotational semantics;
+that is, if some refinement holds for every $\mc{M} \models \mc{R}$, then this refinement is in fact
+contained in $\ms{Th}(\mc{R})$. We will do this by constructing an \emph{initial} model
+$\ms{Tm}(\mc{R})$, the \emph{syntactic model}, such that the following theorem holds:
 \begin{theorem}[Completeness]
   If $\dnt{\hasty{\Gamma}{}{a}{A}}_{\ms{Tm}(\mc{R})} \leq
   \dnt{\hasty{\Gamma}{}{b}{A}}_{\ms{Tm}(\mc{R})}$, then
   $
   \tmle{\Gamma}{\mc{R}}{a}{b}{A}
-  $. In particular, the following are equivalent:
-  \begin{enumerate}
-    \item $\dnt{\hasty{\Gamma}{}{a}{A}}_{\ms{Tm}(\mc{R})} \leq
-    \dnt{\hasty{\Gamma}{}{b}{A}}_{\ms{Tm}(\mc{R})}$
-    \item $\tmle{\Gamma}{\mc{R}}{a}{b}{A}$
-    \item $\forall \mc{M} \models \mc{R}, \dnt{\hasty{\Gamma}{}{a}{A}}_{\mc{M}} \leq
-    \dnt{\hasty{\Gamma}{}{b}{A}}_{\mc{M}}$
-  \end{enumerate}
+  $
 \end{theorem}
+It then follows from soundness and the existence of $\mc{Tm}(\mc{R})$ that
+$\tmle{\Gamma}{\mc{R}}{a}{b}{A}$ \emph{if and only if} for all models $\mc{M} \models \mc{R}$,
+$\dnt{\hasty{\Gamma}{}{a}{A}}_{\mc{M}} \leq \dnt{\hasty{\Gamma}{}{b}{A}}_{\mc{M}}$, as desired.
+
+As is standard in categorical semantics, our syntactic model $\ms{Tm}(\mc{R})$ will have types as
+objects, and terms with a single free variable as morphisms; we stratify our morphisms into
+effectful subcategories in the obvious manner:
+$$
+\ms{Tm}(\mc{R})_\epsilon(A, B) := \{(x, a) \mid \hasty{x : A^\top}{\epsilon}{a}{B}\}
+$$
+We will quotient $\ms{Tm}(\mc{R})$ by terms equivalence $\approx_{\mc{R}}$, as well as by renaming
+the free variable $x$. The identity morphism is simply given as $\ms{id}_A = (x, x)$, while
+composition is given not by substitution (since terms may be impure!) but rather by let-bindings as
+follows:
+$$
+(x, a) ; (y, b) := (x, (\letexpr{y}{a}{b}))
+$$
+We can equip $\ms{Tm}(\mc{R})$ with the structure of a poset-enriched
+category by using the refinement relation as a partial order; it is trivial to see that this is
+well-defined. The rest of the structure of a \subiterexp{}-model is given in the appendix.
+
+\TODO{describe how completeness is actually \emph{proved}, with packing / unpacking?}
 
 \section{SSA Typing and Semantics}
 
