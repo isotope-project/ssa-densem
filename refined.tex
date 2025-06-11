@@ -1287,17 +1287,32 @@ satisfies $\mc{R} \subseteq \ms{Th}(\mc{R})$, making it a closure operator.
 \begin{figure}
     \centering
     \begin{tikzpicture}
-      \node[] (A) at (0, 2) {$A$};
-      \node[box] (s) at (0, 0.75) {s};
-      \node[box=2/0/2/0] (b) at (0, -0.75) {\quad b \quad};
-      \node[] (B) at (-0.325, -2) {$B$};
-      \node[] (C) at (0.325, -2) {$C$};
-      \node[] (r) at (1.75, -0.3) {$\tref$};
-      \node[] (A2) at (3.5, 2) {$A$};
-      \node[box=2/0/2/0] (b2) at (3.5, 0.75) {\quad b' \quad};
-      \node[box] (s2) at (3.85, -0.75) {s};
-      \node[] (B2) at (3.175, -2) {$B$};
-      \node[] (C2) at (3.83, -2) {$C$};
+      \node[] (A) at (0, 1.5) {$A$};
+      \node[box] (s) at (0, 0.5625) {s};
+      \node[box=2/0/2/0] (b) at (0, -0.5625) {\quad b \quad};
+      \node[] (B) at (-0.3, -1.5) {$B$};
+      \node[] (C) at (0.3, -1.5) {$C$};
+      \node[] (r) at (1.3125, -0.225) {$\tref^p$};
+      \node[] (A2) at (2.625, 1.5) {$A$};
+      \node[box=2/0/2/0] (b2) at (2.625, 0.5625) {\quad b' \quad};
+      \node[box] (s2) at (2.8725, -0.5625) {s};
+      \node[] (B2) at (2.3, -1.5) {$B$};
+      \node[] (C2) at (2.8725, -1.5) {$C$};
+      \node[] (r) at (4.35, -0.225) {$\implies$};
+      \node[] (A3) at (5.8275, 1.5) {$A$};
+      \node[box] (s3) at (5.8275, 0.5625) {s};
+      \node[dot] (fix1) at (5.8275, 0) {};
+      \coordinate (cap1) at (6.75, -0.4) {};
+      \coordinate (cup1) at (6.75, -0.9) {};
+      \node[box=2/0/2/0] (b3) at (5.8275, -0.5625) {\quad b \quad};
+      \node[] (B3) at (5.8275, -1.5) {$B$};
+      \node[] (r2) at (7.14, -0.225) {$\tref^p$};
+      \node[] (A4) at (8.4525, 1.5) {$A$};
+      \node[dot] (fix2) at (8.4525, 0.3375) {};
+      \coordinate (cap2) at (9.375, -0.075) {};
+      \coordinate (cup2) at (9.375, -0.525) {};
+      \node[box=2/0/2/0] (b4) at (8.4525, -0.225) {\quad b' \quad};
+      \node[] (B4) at (8.4525, -1.5) {$B$};
       \wires{ 
         A = { south = s.north },
         s = { south = b.north },
@@ -1305,9 +1320,19 @@ satisfies $\mc{R} \subseteq \ms{Th}(\mc{R})$, making it a closure operator.
         A2 = { south = b2.north },
         b2 = { south.1 = B2.north, south.2 = s2.north },
         s2 = { south = C2.north },
+        A3 = { south = s3.north },
+        s3 = { south = fix1.north },
+        fix1 = { south = b3.north },
+        b3 = { south.1 = B3.north, south.2 = cup1.south },
+        cup1 = { north = cap1.south },
+        cap1 = { north = fix1.east },
+        A4 = { south = fix2.north },
+        fix2 = { south = b4.north },
+        b4 = { south.1 = B4.north, south.2 = cup2.south },
+        cup2 = { north = cap2.south },
+        cap2 = { north = fix2.east },
       }{}
     \end{tikzpicture}
-  \TODO{draw other diagram}
   \caption{Control-flow graphs for the uniformity rule in Figure~\ref{fig:iteration-rules}}
   \Description{}
   \label{fig:unif-cfg}
