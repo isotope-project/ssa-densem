@@ -112,7 +112,7 @@
 \newcommand{\qwk}[4]{#1 \vdash #2 \geq #3 + #4}
 \newcommand{\swk}[3]{#1 \mapsto #2 ; #3}
 \newcommand{\cwk}[2]{#1 \mapsto #2}
-\newcommand{\lwk}[2]{#1 \rightsquigarrow #2}
+\newcommand{\lwk}[3]{#1 \vdash #2 \rightsquigarrow #3}
 \newcommand{\thyp}[3]{#1 : {#2}^{#3}}
 \newcommand{\bhyp}[2]{#1 : #2}
 \newcommand{\lhyp}[2]{#1(#2)}
@@ -207,6 +207,7 @@
 \newcommand{\cpyq}{\omega^+}
 \newcommand{\topq}{\omega}
 \newcommand{\zeroqv}[1]{#1^\uparrow}
+\newcommand{\dwnqv}[1]{\downarrow(#1)}
 
 % Operators
 \newcommand{\pto}{\rightharpoonup}
@@ -2187,16 +2188,17 @@ is nice...}
 \TODO{we note that \emph{each} label gets a quantity vector for the \emph{whole} input context}
 
 \begin{gather*}
-  \prftree[r]{\rle{nil}}{\lwk{\cdot}{\cdot}} \qquad 
+  \prftree[r]{\rle{nil}}{\lwk{\Gamma}{\cdot}{\cdot}} \qquad 
   \prftree[r]{\rle{cons}}
-    {\lwk{\ms{L}^{\mb{Q}}_{\mb{E}}}{\ms{K}^{\mb{Q}}_{\mb{E}}}}
-    {\mb{q}' \leq \mb{q}}
+    {\lwk{\Gamma}{\ms{L}^{\mb{Q}}_{\mb{E}}}{\ms{K}^{\mb{Q}}_{\mb{E}}}}
+    {\cwk{\Gamma^{\mb{q}'}}{\Gamma^{\mb{q}}}}
     {\epsilon' \leq \epsilon}
-    {\lwk{\ms{L}^{\mb{Q}}_{\mb{e}}, \lhyp{\ell}{A}^{\mb{q}}_{\epsilon}}
+    {\lwk{\Gamma}{\ms{L}^{\mb{Q}}_{\mb{e}}, \lhyp{\ell}{A}^{\mb{q}}_{\epsilon}}
     {\ms{K}^{\mb{Q}}_{\mb{e}}, \lhyp{\ell}{A}^{\mb{q}'}_{\epsilon'}}} \qquad
   \prftree[r]{\rle{skip}}
-    {\lwk{\ms{L}^{\mb{Q}}_{\mb{E}}}{\ms{K}^{\mb{Q}}_{\mb{E}}}}
-    {\lwk{\ms{L}^{\mb{Q}}_{\mb{E}}}{\ms{K}^{\mb{Q}}_{\mb{E}}, \lhyp{\ell}{A}^{\mb{q}}_{\epsilon}}}
+    {\lwk{\Gamma}{\ms{L}^{\mb{Q}}_{\mb{E}}}{\ms{K}^{\mb{Q}}_{\mb{E}}}}
+    {|\Gamma| = |\mb{q}|}
+    {\lwk{\Gamma}{\ms{L}^{\mb{Q}}_{\mb{E}}}{\ms{K}^{\mb{Q}}_{\mb{E}}, \lhyp{\ell}{A}^{\mb{q}}_{\epsilon}}}
 \end{gather*}
 
 \TODO{label context upgrades, which add a zero for the top variable for each quantity vector}
@@ -2207,6 +2209,12 @@ is nice...}
 \end{equation*}
 
 \TODO{explain each typing rule here}
+
+\begin{equation*}
+  \prftree[r]{\rle{lift}}
+    {\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{K}^{\mb{Q}'}}}
+    {\lwk{\Gamma, x : A}{\ms{L}^{\zeroqv{\mb{Q}}}}{\ms{K}^{\zeroqv{\mb{Q}'}}}}
+\end{equation*}
 
 \begin{figure}
   \begin{gather*}
@@ -2226,7 +2234,7 @@ is nice...}
     \prftree[r]{\rle{br}}
       {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
       {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\bot}{a}{A}}
-      {\lwk{\lhyp{\ell}{A}_\epsilon^{\mb{q}_l}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+      {\lwk{\Gamma}{\lhyp{\ell}{A}_\epsilon^{\mb{q}_l}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
       {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\brb{\ell}{a}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
     \\
     \prftree[r]{\rle{case}}
@@ -2261,7 +2269,121 @@ is nice...}
   \Description{}
 \end{figure}
 
-\TODO{give denotational semantics of SSA below}
+\TODO{give denotational semantics of SSA in Figure~\ref{fig:ssa-densem}}
+
+\begin{figure}
+  \begin{gather*}
+    \boxed{\dnt{\ms{L}^{\mb{Q}}_{\mb{e}}}(\Gamma) : |\mc{C}|}  
+    \qquad
+    \dnt{\cdot}(\Gamma) = \mb{0} \qquad
+    \dnt{\ms{L}^{\mb{Q}}_{\mb{e}}, \ell(A)^{\mb{q}}_{\epsilon}}(\Gamma)
+    = \dnt{\ms{L}^{\mb{Q}}_{\mb{e}}}(\Gamma) + \dnt{\Gamma^{\mb{q}}} \otimes \dnt{A}
+    \\
+    \boxed{\dwnqv{\ms{L}^{\mb{Q}}_{\mb{e}}}_{\Gamma}
+      : \mc{C}_\bot(
+          \dnt{\ms{L}^{\zeroqv{\mb{Q}}}_{\mb{e}}}(\Gamma, x : A), 
+          \dnt{\ms{L}^{\mb{Q}}_{\mb{e}}}(\Gamma)
+        )}
+    \\
+    \dwnqv{\cdot}_\Gamma = \ms{id}_{\mb{0}} \qquad
+    \dwnqv{\ms{L}^{\mb{Q}}_{\mb{e}}, \lhyp{\ell}{A}^{\mb{q}}_{\epsilon}}_\Gamma
+    = \dwnqv{\ms{L}^{\mb{Q}}_{\mb{e}}}_\Gamma + \rho_{\dnt{\Gamma^{\mb{q}}}} \otimes \dnt{A}
+    \\
+    \boxed{\dnt{\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{K}^{\mb{Q}'}}} 
+      : \mc{C}_\bot(\dnt{\ms{L}^{\mb{Q}}}(\Gamma), \dnt{\ms{K}^{\mb{Q}'}}(\Gamma))} \\
+    \dnt{\lwk{\Gamma}{\cdot}{\cdot}} = \ms{id}_{\mb{0}} \qquad
+    \dnt
+      {\lwk{\Gamma}{\ms{L}^{\mb{Q}}_{\mb{e}}, \lhyp{\ell}{A}^{\mb{q}}_{\epsilon}}
+      {\ms{K}^{\mb{Q}'}_{\mb{e}'}, \lhyp{\ell}{A}^{\mb{q}'}_{\epsilon'}}}
+    = \dnt{\lwk{\Gamma}{\ms{L}^{\mb{Q}}_{\mb{e}}}{\ms{K}^{\mb{Q}'}}} 
+      + \dnt{\cwk{\Gamma^{\mb{q}}}{\Gamma^{\mb{q}'}}} \otimes \dnt{A} \\
+    \dnt
+      {\lwk{\Gamma}{\ms{L}^{\mb{Q}}_{\mb{e}}}
+      {\ms{K}^{\mb{Q}'}_{\mb{e}'}, \lhyp{\ell}{A}^{\mb{q}}_{\epsilon}}}
+    = \dnt{\lwk{\Gamma}{\ms{L}^{\mb{Q}}_{\mb{e}}}{\ms{K}^{\mb{Q}'}_{\mb{e}'}}} ; \iota_l
+  \end{gather*}
+  \caption{Denotational semantics for label contexts and label weakenings}
+  \Description{}
+  \label{fig:lwk-densem}
+\end{figure}
+
+\begin{figure}
+  \begin{gather*}
+    \boxed{\dnt{\haslb{\Gamma}{\epsilon}{t}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+    : \mc{C}_\epsilon(\dnt{\Gamma^{\mb{q}}}, \dnt{\ms{L}^{\mb{Q}}_{\mb{e}}}(\Gamma))} \\
+    \dnt
+    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\letstmt{x}{o}{t}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+    =
+    \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    ; - \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{o}{A}}
+    ; \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{t}{\ms{L}^{\zeroqv{\mb{Q}}}_{\mb{e}}}}
+    ; \dwnqv{\ms{L}^{\mb{Q}}_{\mb{e}}} \\
+    \dnt
+    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\letstmt{(x, y)}{o}{t}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+    =
+    \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    ; - \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{o}{A \otimes B}}
+    ; \alpha
+    \\
+    \qquad 
+    ; \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A, y : B}{\epsilon}{t}
+      {\ms{L}^{\zeroqv{(\zeroqv{\mb{Q}})}}_{\mb{e}}}}
+    ; \dwnqv{\ms{L}^{\zeroqv{\mb{Q}}}_{\mb{e}}}
+    ; \dwnqv{\ms{L}^{\mb{Q}}_{\mb{e}}}
+    \\
+    \dnt
+    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\brb{\ell}{a}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+    = \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    ; - \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\bot}{a}{A}}
+    ; \iota_r
+    ; \dnt{\lwk{\Gamma}{\lhyp{\ell}{A}^{\mb{q}_l}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+    \\
+    \dnt
+    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\casestmt{o}{x}{\tau_l}{y}{\tau_r}}
+      {\ms{L}^{\mb{Q}}_{\mb{e}}}}
+    = \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    ; - \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\bot}{o}{A + B}}
+    ; \delta^{-1}
+    \\
+    \qquad
+    ; [
+      \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{\tau_l}{\ms{L}^{\zeroqv{\mb{Q}}}_{\mb{e}}}},
+      \dnt{\hasty{\Gamma^{\mb{q}_l}, y : B}{\epsilon}{\tau_r}{\ms{L}^{\zeroqv{\mb{Q}}}_{\mb{e}}}}
+    ]
+    \\
+    \dnt
+    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\awhere{\kappa}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
+      {\ms{L}^{\mb{Q}}_{\mb{e}}}}
+    =
+    \dnt{\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\kappa}
+      {\ms{L}^{\mb{Q}}_{\mb{e}}, \ms{R}^{\mb{Q}'}_{\mb{e}'}}}
+    \\ 
+    \qquad ; [
+      \ms{id}_{\dnt{\ms{L}^{\mb{Q}}_{\mb{e}}}(\Gamma)},
+      [
+        \dnt{\hasty{\Gamma^{\mb{q}_i}, x_i : A_i}{\epsilon_i}{t_i}
+          {\ms{L}^{\zeroqv{\mb{Q}}}_{\mb{e}}}},
+      ]_{\ell_i(A_i)^{\mb{q}_i}_{\epsilon_i} \in \ms{R}^{\mb{Q}'}_{\mb{e}'}}
+    ]
+    \\
+    \dnt
+    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\cwhere{\kappa}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
+      {\ms{L}^{\mb{Q}}_{\mb{e}}}}
+    = \dnt{\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\kappa}
+      {\ms{L}^{\mb{Q}}_{\mb{e}}, \ms{R}^{\mb{Q}'}_{\mb{e}'}}}
+    \\
+    \qquad ; [
+      \ms{id}_{\dnt{\ms{L}^{\mb{Q}}_{\mb{e}}}(\Gamma)},
+      [
+        \dnt{\hasty{\Gamma^{\mb{q}_i}, x_i : A_i}{\epsilon_i}{t_i}
+          {\ms{L}^{\mb{Q}}_{\mb{e}}, \ms{R}^{\mb{Q}'}}_{\mb{e}'}},
+      ]_{\ell_i(A_i)^{\mb{q}_i}_{\epsilon_i} \in \ms{R}^{\mb{Q}'}_{\mb{e}'}}^\dagger
+    ]
+  \end{gather*}
+  \caption{Denotational semantics for \isotopessa{}}
+  \Description{}
+  \label{fig:ssa-densem}
+\end{figure}
 
 \TODO{by completeness, $\subseteq$ expressions; this is like \citet{bohm-jacopini}}
 
