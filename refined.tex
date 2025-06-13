@@ -333,6 +333,95 @@ variable has precisely one definition. It is often straightforward to convert RT
 equivalent programs satisfying the SSA property by simply converting successive updates to a
 variable $x$ into distinct definitions $x_0, x_1, x_2$. 
 
+\begin{figure}
+  \begin{subfigure}[t]{.5\textwidth}
+    \centering
+    \begin{align*}
+      \ms{start}:\quad  & \ms{let}\;n = 10; \\
+                        & \ms{br}\;\ms{loop} \\
+      \ms{loop}: \quad  & \begingroup \color{red}
+                          \ms{let}\;i_0 = \phi(\ms{start}: 1, \ms{body}: i_1) 
+                          \endgroup \\
+                        & \begingroup \color{blue}
+                          \ms{let}\;a_0 = \phi(\ms{start}: 1, \ms{body}: a_1) 
+                          \endgroup \\
+                        & \ms{if}\;i_0 < n\;\{\;\ms{br}\;\ms{body}\;\} \\
+                        & \ms{else}\;\{\;\ms{ret}\;a_0\;\} \\
+      \ms{body}: \quad  & \ms{let}\;t = i_0 + 1 \\
+                        & \ms{let}\;a_1 = a_0 * t \\
+                        & \ms{let}\;i_1 = i_0 + 1 \\
+                        & \ms{br}\;\ms{loop}
+    \end{align*}
+    \caption{With $\phi$-nodes}
+    \label{fig:fact-phi}
+  \end{subfigure}%
+  \begin{subfigure}[t]{.5\textwidth}
+    \centering
+    \begin{align*}
+      \ms{start}:\quad            & \ms{let}\;n = 10; \\
+                                  & \ms{br}\;\ms{loop}(\textcolor{red}{1}, \textcolor{blue}{1}) \\
+      \ms{loop}(\textcolor{red}{i_0}, \textcolor{blue}{a_0}): \quad  
+                                  & \ms{if}\;i_0 < n\; \{\;\ms{br}\;\ms{body}\;\} \\
+                                  & \ms{else}\;\{\;\ms{ret}\;a_0\;\} \\
+      \ms{body}: \quad            & \ms{let}\;t = i_0 + 1 \\
+                                  & \ms{let}\;a_1 = a_0 * t \\
+                                  & \ms{let}\;i_1 = i_0 + 1 \\
+                                  & \ms{br}\;\ms{loop}(\textcolor{red}{i_1}, \textcolor{blue}{a_1}) 
+                                  \\ \\
+    \end{align*}
+    \caption{Basic-blocks with arguments}
+    \label{fig:fact-bba}
+  \end{subfigure}
+  
+  \caption{ 
+    A program to compute $10!$ written in standard SSA (using $\phi$ nodes), like in LLVM
+    \cite{llvm}, and in basic-blocks with arguments SSA, like in MLIR \cite{mlir} and Cranelift
+    \cite{cranelift}. The arguments $i_0, a_0$ corresponding to the $\phi$-nodes $i_0, a_0$ are
+    colored in \textcolor{red}{red} and \textcolor{blue}{blue}, respectively. 
+  }
+  \Description{}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \begin{subfigure}[t]{.5\textwidth}
+    \begin{align*}
+      \ms{start}:\quad            & \ms{let}\;n = 10; \\
+                                  & \ms{br}\;\ms{loop}(1, 1) \\
+      \ms{loop}(i_0, a_0): \quad  & \ms{if}\;i_0 < n\; \{\;\ms{br}\;\ms{body}\;\} \\
+                                  & \ms{else}\;\{\;\ms{ret}\;a_0\;\} \\
+      \ms{body}: \quad            & \ms{let}\;t = i_0 + 1 \\
+                                  & \ms{let}\;a_1 = a_0 * t \\
+                                  & \ms{let}\;i_1 = i_0 + 1 \\
+                                  & \ms{br}\;\ms{loop}(i_1, a_1) \\ \\ \\ \\ 
+    \end{align*}
+    \caption{Dominance-based scoping}
+  \end{subfigure}%
+  \begin{subfigure}[t]{.5\textwidth}
+    \begin{align*}
+      & \ms{let}\;n = 10; \\
+      & \ms{br}\;\ms{loop}(1, 1) \\
+      & \ms{where}\;\ms{loop}(i_0, a_0): \{ \\
+      & \quad \ms{if}\;i_0 < n\;\{\;\ms{br}\;\ms{body}\;\} \\
+      & \quad \ms{else}\;\{\;\ms{ret}\;a_0\;\} \\
+      & \quad \ms{where}\;\ms{body}: \{\\ 
+      & \qquad \ms{let}\;t = i_0 + 1 \\
+      & \qquad \ms{let}\;a_1 = a_0 * t \\
+      & \qquad \ms{let}\;i_1 = i_0 + 1 \\
+      & \qquad \ms{br}\;\ms{loop}(i_1, a_1) \\
+      & \quad \} \\
+      & \}
+    \end{align*}
+    \caption{Lexical scoping}
+  \end{subfigure}
+  \caption{
+    Conversion the program in Figure~\ref{fig:fact-bba} to \isotopessa{} with explicit lexical 
+    scoping
+  } 
+  \Description{}
+  \label{fig:dominance-to-lexical}
+\end{figure}
+
 \TODO{recall syntax with BBA / $\phi$-nodes}
 
 \TODO{where-blocks and dominance}
