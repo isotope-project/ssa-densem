@@ -594,11 +594,12 @@ inductively as follows:
   \alquant(A \otimes B) = \alquant(A + B) = \alquant(A) \sqcap \alquant(B) \qquad
   \alquant(\mb{1}) = \alquant(\mb{0}) = \topq
 \end{equation}
-We can further define the linearity of a context $\Gamma$ by induction as follows
+We now define the linearity of annotated types $A^q$ and contexts $\Gamma$ as follows:
 \begin{equation}
   \alquant(\cdot) = \topq \qquad
   \alquant(\Gamma^{\mb{q}}, x : A^q) 
-    = \alquant(\Gamma^{\mb{q}}) \sqcap \begin{cases}
+    = \alquant(\Gamma^{\mb{q}}) \sqcap \alquant(A^q) \qquad 
+  \alquant(A^q) = \begin{cases}
     \alquant(A) \sqcap q & \text{if } q \neq 0 \\
     \topq & \text{if } q = 0
   \end{cases}
@@ -1529,16 +1530,21 @@ One theorem of note about premonoidal categories is \emph{coherence}, which we s
   \end{enumerate}
   \label{thm:monoidal-coherence}
 \end{theorem}
-We will hence sometimes abuse notation and write $\alpha : \mc{C}(A, B)$ for the unique morphism in
-$\mc{C}_\mc{A}$ from $A$ to $B$, where the composition of associators and unitors is too cumbersome
-to write out in full. In particular, we note that we always have that $\alpha: \mc{C}(A, A) :=
-\ms{id}_A$.
+We will hence sometimes abuse notation and write $\alpha_B : \mc{C}(A, B)$ or simply $\alpha$ for
+the unique morphism in $\mc{C}_\mc{A}$ from $A$ to $B$, where the composition of associators and
+unitors is too cumbersome to write out in full. In particular, we note that we always have that
+$\alpha: \mc{C}(A, A) := \ms{id}_A$.
 
 We model branching control-flow using the coproduct $A + B$ as a primitive, whose definition is
 unchanged in the poset-enriched setting. Given morphisms $f : A \to C$ and $g : B \to C$, their
 coproduct $[f, g] : A + B \to C$ quite naturally models a case-statement which executes $f$ given an
 $A$ and executes $g$ given a $B$. We can implement a more traditional if-statement as a
 case-statement on the object $\mb{2} = I + I$.
+
+Since coproducts induce a monoidal structure on a category, we will also write $\alpha^+_B :
+\mc{C}(A, B)$ or simply $\alpha^+$ to denote the unique morphism from $A$ to $B$ with analogy to the
+$\alpha$ notation described above. Similarly, we will write $\sigma^+$ to denote the symmetry for
+coproducts.
 
 Coproducts on their own, however, cannot interpret variables captured by the branches of a
 case-statement. For example, given $x : \mbb{Z}$, $y : \mbb{Z} + \ms{str}$, consider the following
@@ -1916,6 +1922,17 @@ as follows: \subiterexp{}:
       = \dmor{A} \otimes \dmor{B}
       ; \sigma^{\ms{mid}}
     $
+    where
+    $$
+    \sigma^{\ms{mid}}_{A, B, C, D} = 
+      \alpha_{A \otimes (B \otimes C) \otimes D}
+      ; A \otimes \sigma \otimes D
+      ; \alpha
+      : \mc{C}_\bot(
+        (A \otimes B) \otimes (C \otimes D), 
+        (A \otimes C) \otimes (B \otimes D)
+      )
+    $$
     \item $\dnt{\mb{0}} = \mb{0}$, and $\dnt{A + B} = \dnt{A} + \dnt{B}$
     \item $!_{\mb{0}} = 0_{I}$, and $\Delta_{\mb{0}} = 0_{0 + 0}$
     \item For $A, B$ affine, $!_{A + B} = [!_A, !_B]$
@@ -1966,12 +1983,12 @@ and right component contexts (which are guaranteed to be of relevant type).
     \\
     \dnt{\qsp{\Gamma, x : A}{(\mb{q}, q)}{(\mb{q}_l, q_l)}{(\mb{q}_r, q_r)}}
     = \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}} \otimes
-    \begin{cases}
-      !_{A^q} ; \rho^{-1} & \text{if } q_l = q_r = 0 \text{ else} \\
+    \left(\begin{cases}
       \lambda^{-1} & \text{if } q_l = 0 \text{ else} \\
       \rho^{-1} & \text{if } q_r = 0 \text{ else} \\
       \Delta_A & \text{otherwise}
-    \end{cases} ; \sigma^{\ms{mid}}
+    \end{cases}\right) 
+    ; \sigma^{\ms{mid}}
   \end{gather*}
   \caption{Denotational semantics for structural \subiterexp{} judgements}
   \Description{}
