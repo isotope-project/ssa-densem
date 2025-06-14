@@ -28,6 +28,7 @@
 \usepackage{cancel}
 \usepackage{thmtools}
 \usepackage{pifont}
+\usepackage[export]{adjustbox}
 \usetikzlibrary{calc}
 
 \lstset{ %
@@ -73,6 +74,9 @@
 \newcommand{\mb}[1]{\ensuremath{\mathbf{#1}}}
 \newcommand{\mbb}[1]{\ensuremath{\mathbb{#1}}}
 \newcommand{\ms}[1]{\ensuremath{\mathsf{#1}}}
+
+\newcommand{\kwms}[1]{\textcolor{violet}{\ms{#1}}}
+\newcommand{\lbms}[1]{{\ms{#1}}}
 
 % Math
 \newcommand{\nats}{\mathbb{N}}
@@ -334,92 +338,78 @@ equivalent programs satisfying the SSA property by simply converting successive 
 variable $x$ into distinct definitions $x_0, x_1, x_2$. 
 
 \begin{figure}
-  \begin{subfigure}[t]{.5\textwidth}
+  \begin{subfigure}[t]{.35\textwidth}
     \centering
+    \begin{adjustbox}{minipage=1.2\textwidth,scale=0.8}
     \begin{align*}
-      \ms{start}:\quad  & \ms{let}\;n = 10; \\
-                        & \ms{br}\;\ms{loop} \\
-      \ms{loop}: \quad  & \begingroup \color{red}
-                          \ms{let}\;i_0 = \phi(\ms{start}: 1, \ms{body}: i_1) 
+      \lbms{start}:\quad  & \kwms{let}\;n = 10; \\
+                          & \kwms{br}\;\ms{loop} \\
+      \lbms{loop}: \quad  & \begingroup \color{red}
+                            \kwms{let}\;i_0 = \phi(\ms{start}: 1, \ms{body}: i_1) 
                           \endgroup \\
-                        & \begingroup \color{blue}
-                          \ms{let}\;a_0 = \phi(\ms{start}: 1, \ms{body}: a_1) 
+                          & \begingroup \color{blue}
+                            \kwms{let}\;a_0 = \phi(\ms{start}: 1, \ms{body}: a_1) 
                           \endgroup \\
-                        & \ms{if}\;i_0 < n\;\{\;\ms{br}\;\ms{body}\;\} \\
-                        & \ms{else}\;\{\;\ms{ret}\;a_0\;\} \\
-      \ms{body}: \quad  & \ms{let}\;t = i_0 + 1 \\
-                        & \ms{let}\;a_1 = a_0 * t \\
-                        & \ms{let}\;i_1 = i_0 + 1 \\
-                        & \ms{br}\;\ms{loop}
+                          & \kwms{if}\;i_0 < n\;\{\;\kwms{br}\;\lbms{body}\;\} \\
+                          & \kwms{else}\;\{\;\kwms{ret}\;a_0\;\} \\
+      \lbms{body}: \quad  & \kwms{let}\;t = i_0 + 1 \\
+                          & \kwms{let}\;a_1 = a_0 * t \\
+                          & \kwms{let}\;i_1 = i_0 + 1 \\
+                          & \kwms{br}\;\lbms{loop} \\ \\
     \end{align*}
-    \caption{With $\phi$-nodes}
+    \end{adjustbox}
+    \caption{$\phi$-nodes}
     \label{fig:fact-phi}
   \end{subfigure}%
-  \begin{subfigure}[t]{.5\textwidth}
+  \begin{subfigure}[t]{.35\textwidth}
     \centering
+    \begin{adjustbox}{minipage=1.2\textwidth,scale=0.8}
     \begin{align*}
-      \ms{start}:\quad            & \ms{let}\;n = 10; \\
-                                  & \ms{br}\;\ms{loop}(\textcolor{red}{1}, \textcolor{blue}{1}) \\
-      \ms{loop}(\textcolor{red}{i_0}, \textcolor{blue}{a_0}): \quad  
-                                  & \ms{if}\;i_0 < n\; \{\;\ms{br}\;\ms{body}\;\} \\
-                                  & \ms{else}\;\{\;\ms{ret}\;a_0\;\} \\
-      \ms{body}: \quad            & \ms{let}\;t = i_0 + 1 \\
-                                  & \ms{let}\;a_1 = a_0 * t \\
-                                  & \ms{let}\;i_1 = i_0 + 1 \\
-                                  & \ms{br}\;\ms{loop}(\textcolor{red}{i_1}, \textcolor{blue}{a_1}) 
-                                  \\ \\
+      \lbms{start}:\quad            & \kwms{let}\;n = 10; \\
+                                    & \kwms{br}\;
+                                        \lbms{loop}(\textcolor{red}{1}, \textcolor{blue}{1}) \\
+      \lbms{loop}(\textcolor{red}{i_0}, \textcolor{blue}{a_0}): \quad  
+                                    & \kwms{if}\;i_0 < n\; \{\;\kwms{br}\;\lbms{body}\;\} \\
+                                    & \kwms{else}\;\{\;\kwms{ret}\;a_0\;\} \\
+      \lbms{body}: \quad            & \kwms{let}\;t = i_0 + 1 \\
+                                    & \kwms{let}\;a_1 = a_0 * t \\
+                                    & \kwms{let}\;i_1 = i_0 + 1 \\
+                                    & \kwms{br}\;\lbms{loop}
+                                      (\textcolor{red}{i_1}, \textcolor{blue}{a_1}) 
+                                    \\ \\ \\ \\
     \end{align*}
+    \end{adjustbox}
     \caption{Basic-blocks with arguments}
     \label{fig:fact-bba}
-  \end{subfigure}
-  
-  \caption{ 
-    A program to compute $10!$ written in standard SSA (using $\phi$ nodes), like in LLVM
-    \cite{llvm}, and in basic-blocks with arguments SSA, like in MLIR \cite{mlir} and Cranelift
-    \cite{cranelift}. The arguments $i_0, a_0$ corresponding to the $\phi$-nodes $i_0, a_0$ are
-    colored in \textcolor{red}{red} and \textcolor{blue}{blue}, respectively. 
-  }
-  \Description{}
-\end{figure}
-
-\begin{figure}
-  \centering
-  \begin{subfigure}[t]{.5\textwidth}
-    \begin{align*}
-      \ms{start}:\quad            & \ms{let}\;n = 10; \\
-                                  & \ms{br}\;\ms{loop}(1, 1) \\
-      \ms{loop}(i_0, a_0): \quad  & \ms{if}\;i_0 < n\; \{\;\ms{br}\;\ms{body}\;\} \\
-                                  & \ms{else}\;\{\;\ms{ret}\;a_0\;\} \\
-      \ms{body}: \quad            & \ms{let}\;t = i_0 + 1 \\
-                                  & \ms{let}\;a_1 = a_0 * t \\
-                                  & \ms{let}\;i_1 = i_0 + 1 \\
-                                  & \ms{br}\;\ms{loop}(i_1, a_1) \\ \\ \\ \\ 
-    \end{align*}
-    \caption{Dominance-based scoping}
   \end{subfigure}%
-  \begin{subfigure}[t]{.5\textwidth}
+  \begin{subfigure}[t]{.3\textwidth}
+    \begin{adjustbox}{minipage=\linewidth,scale=0.8}
     \begin{align*}
-      & \ms{let}\;n = 10; \\
-      & \ms{br}\;\ms{loop}(1, 1) \\
-      & \ms{where}\;\ms{loop}(i_0, a_0): \{ \\
-      & \quad \ms{if}\;i_0 < n\;\{\;\ms{br}\;\ms{body}\;\} \\
-      & \quad \ms{else}\;\{\;\ms{ret}\;a_0\;\} \\
-      & \quad \ms{where}\;\ms{body}: \{\\ 
-      & \qquad \ms{let}\;t = i_0 + 1 \\
-      & \qquad \ms{let}\;a_1 = a_0 * t \\
-      & \qquad \ms{let}\;i_1 = i_0 + 1 \\
-      & \qquad \ms{br}\;\ms{loop}(i_1, a_1) \\
+      & \kwms{let}\;n = 10; \\
+      & \kwms{br}\;\lbms{loop}(\textcolor{red}{1}, \textcolor{blue}{1}) \\
+      & \kwms{where}\;\lbms{loop}(\textcolor{red}{i_0}, \textcolor{blue}{a_0}): \{ \\
+      & \quad \kwms{if}\;i_0 < n\;\{\;\kwms{br}\;\lbms{body}\;\} \\
+      & \quad \kwms{else}\;\{\;\kwms{ret}\;a_0\;\} \\
+      & \quad \kwms{where}\;\lbms{body}: \{\\ 
+      & \qquad \kwms{let}\;t = i_0 + 1 \\
+      & \qquad \kwms{let}\;a_1 = a_0 * t \\
+      & \qquad \kwms{let}\;i_1 = i_0 + 1 \\
+      & \qquad \kwms{br}\;\lbms{loop}(\textcolor{red}{i_1}, \textcolor{blue}{a_1})  \\
       & \quad \} \\
       & \}
     \end{align*}
+    \end{adjustbox}
     \caption{Lexical scoping}
   \end{subfigure}
-  \caption{
-    Conversion the program in Figure~\ref{fig:fact-bba} to \isotopessa{} with explicit lexical 
-    scoping
-  } 
+  
+  \caption{%  
+    A program to compute $10!$ written in standard SSA (using $\phi$ nodes), like in LLVM
+    \cite{llvm}, and using basic-blocks with arguments, like in MLIR \cite{mlir} and Cranelift
+    \cite{cranelift}, with both implicit (dominance-based) and explicit (lexical) scoping. The
+    arguments $i_0, a_0$ corresponding to the $\phi$-nodes $i_0, a_0$ are colored in
+    \textcolor{red}{red} and \textcolor{blue}{blue}, respectively.%
+  }
   \Description{}
-  \label{fig:dominance-to-lexical}
 \end{figure}
 
 \TODO{recall syntax with BBA / $\phi$-nodes}
