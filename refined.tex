@@ -333,20 +333,19 @@ jumps between them, form the nodes and edges of that program's \emph{control-flo
 
 The SSA intermediate representation can, at first glance, be viewed as the subset of RTL programs
 satisfying the \emph{static single assignment}, or \emph{SSA}, property, which states that every
-variable has precisely one definition. It is often straightforward to convert RTL programs into
-equivalent programs satisfying the SSA property by simply converting successive updates to a
-variable $x$ into distinct definitions $x_0, x_1, x_2$. Since a variable's definition is uniquely
-specified in SSA, we can consider a variable usage in scope if and only if it is \emph{dominated} by
-its definition, i.e., if every path from the entry block to the usage point must pass over the
-definition.
+variable has precisely one definition. In particular, we consider a variable usage well-scoped scope
+if and only if it is \emph{dominated} by its definition, i.e., if every path from the entry block to
+the usage point must pass over the definition.
 
-Unfortunately, this approach breaks down when the value of a variable depends on control-flow;
-consider, for example, the variables $i$ and $a$ in Figure~\ref{fig:fact-phi}, whose value depends
-on whether we are entering the loop for the first time from the \ms{start} block, or whether we come
-from a previous iteration of the \ms{body}. To remedy this, the traditional solution is to introduce
-\emph{$\phi$-nodes}, which evaluate to a different value depending on the previous block in our
-control-flow trace; for example, $i_0$, is given as $i_1$ if we come from the \ms{body} block, and
-$1$ otherwise.
+It is often straightforward to convert RTL programs into equivalent programs satisfying the SSA
+property by simply converting successive updates to a variable $x$ into distinct definitions $x_0,
+x_1, x_2$.  Unfortunately, this approach breaks down when the value of a variable depends on
+control-flow; consider, for example, the variables $i$ and $a$ in Figure~\ref{fig:fact-phi}, whose
+value depends on whether we are entering the loop for the first time from the \ms{start} block, or
+whether we come from a previous iteration of the \ms{body}. To remedy this, the traditional solution
+is to introduce \emph{$\phi$-nodes}, which evaluate to a different value depending on the previous
+block in our control-flow trace; for example, $i_0$, is given as $i_1$ if we come from the \ms{body}
+block, and $1$ otherwise.
 
 This slightly complicates both our semantics (for example, an operational semantics may need to keep
 track of the previous basic block) and our scoping rules, since the branches of a $\phi$-node need
@@ -356,12 +355,17 @@ basic blocks with \emph{arguments} via a straightforward isomorphism, with each 
 corresponding to an argument of the basic block containing it. This approach is often favored by
 many modern intermediate representations, such as MLIR \cite{mlir} and Cranelift \cite{cranelift},
 though it diverges from the idea of SSA as a subset of RTL. We can see the program in
-Figure~\ref{fig:fact-phi} rendered in this format in Figure~\ref{fig:fact-bba}.
+Figure~\ref{fig:fact-phi} rendered in this format in Figure~\ref{fig:fact-bba}. This recovers
+standard dominance-based scoping (with a basic block's argument considered to be defined at the
+beginning of that basic block).
 
-In this paper, we would like to give a type-theoretic account of SSA, and in particular, a sound and
-complete denotational semantics for SSA programs. We therefore introduce \isotopessa{},
-\emph{type-theoretic SSA}: a presentation of SSA with \emph{lexical scoping} amenable to induction.
-We give formal grammar of this language in Figure~\ref{fig:ssa-syntax}.
+Our goal in this paper is to give a type-theoretic account of SSA; consequently, it is much easier
+to work with traditional lexical scoping rather than dominance based scoping. To interconvert
+between the two, we note that the dominance relation on basic blocks always forms a tree rooted at
+the entry block (after eliminating dead-code; otherwise, it forms a forest): we call this the
+\emph{dominator tree}.
+
+\TODO{segue to \isotopessa{} definition}
 
 \TODO{term formers}
 
