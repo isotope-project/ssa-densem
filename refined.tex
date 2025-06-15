@@ -335,7 +335,39 @@ The SSA intermediate representation can, at first glance, be viewed as the subse
 satisfying the \emph{static single assignment}, or \emph{SSA}, property, which states that every
 variable has precisely one definition. It is often straightforward to convert RTL programs into
 equivalent programs satisfying the SSA property by simply converting successive updates to a
-variable $x$ into distinct definitions $x_0, x_1, x_2$. 
+variable $x$ into distinct definitions $x_0, x_1, x_2$. Since a variable's definition is uniquely
+specified in SSA, we can consider a variable usage in scope if and only if it is \emph{dominated} by
+its definition, i.e., if every path from the entry block to the usage point must pass over the
+definition.
+
+Unfortunately, this approach breaks down when the value of a variable depends on control-flow;
+consider, for example, the variables $i$ and $a$ in Figure~\ref{fig:fact-phi}, whose value depends
+on whether we are entering the loop for the first time from the \ms{start} block, or whether we come
+from a previous iteration of the \ms{body}. To remedy this, the traditional solution is to introduce
+\emph{$\phi$-nodes}, which evaluate to a different value depending on the previous block in our
+control-flow trace; for example, $i_0$, is given as $i_1$ if we come from the \ms{body} block, and
+$1$ otherwise.
+
+This slightly complicates both our semantics (for example, an operational semantics may need to keep
+track of the previous basic block) and, more pertinently, our scoping rules, since the branches of a
+$\phi$-node need to be well-scoped \emph{at the end of their source block}, rather than at the
+position of the $\phi$-node itself. It turns out, however, that $\phi$-nodes are exactly equivalent
+to equipping basic blocks with \emph{arguments} via a straightforward isomorphism, with each
+$\phi$-node corresponding to an argument of the basic block containing it. This approach is often
+favored by many modern intermediate representations, such as MLIR \cite{mlir} and Cranelift
+\cite{cranelift}, though it diverges from the idea of SSA as a subset of RTL. We can see the program
+in Figure~\ref{fig:fact-phi} rendered in this format in Figure~\ref{fig:fact-bba}.
+
+\TODO{lo, we would like to do induction on SSA programs, so we need to do lexical scoping}
+
+\TODO{we do that by introducing where blocks}
+
+\TODO{more formally, we use the grammar in Figure~\ref{fig:ssa-syntax}}
+
+\TODO{you can squint and see this is SSA due to the data in Figure~\ref{fig:ssa-data}}
+
+\TODO{note we distinguish between recursive/non-recursive where, the semantics are the same but we
+need this for effect system lore}
 
 \begin{figure}
   \begin{subfigure}[t]{.35\textwidth}
@@ -412,21 +444,6 @@ variable $x$ into distinct definitions $x_0, x_1, x_2$.
   \Description{}
 \end{figure}
 
-\TODO{recall syntax with BBA / $\phi$-nodes}
-
-\TODO{where-blocks and dominance}
-
-\TODO{SSA to BBA to \isotopessa{} example}
-
-\TODO{cut following text; to use example}
-
-Unfortunately, this approach breaks down when the value of a variable depends on control-flow;
-consider, for example, the variable $x$ in Figure~\ref{fig:rtl-example}, whose value depends on
-which branch of the if-statement is taken. To remedy this, the traditional solution is to introduce
-\emph{$\phi$-nodes}, whose value depends on the previous block in our control-flow trace; for
-example, the final value of $x$, $x_3$, is given as $x_1$ if we come from the true branch, and $x_2$
-otherwise, in Figure~\ref{fig:ssa-example}.
-
 \begin{figure}
   \begin{grammar}
     <\(o\)> ::= \(x\)
@@ -463,20 +480,18 @@ otherwise, in Figure~\ref{fig:ssa-example}.
   \end{lstlisting}
   \caption{Data encoded by the grammar in Figure \ref{fig:ssa-syntax}}
   \Description{}
+  \label{fig:ssa-data}
 \end{figure}
 
-\TODO{this system is bad for metatheory: ANF substitution restrictions, lots of syntactic
-categories}
+\TODO{\emph{Elas} (\emph{not} alas!), this system is bad for metatheory: ANF substitution restrictions, lots of
+syntactic categories}
 
-\TODO{so we'll introduce an equivalent but simpler syntax (we promise it's equivalent)}
+\TODO{so we'll introduce an equivalent but simpler syntax (we promise it's equivalent, because of
+\citet{bohm-jacopini})}
 
 \section{Expression Language}
 
 \subsection{Syntax and Typing Rules}
-
-\TODO{the \citet{bohm-jacopini} theorem says that to represent all control-flow, we need sequencing,
-branching, and looping; so let's build a language around these three structured control-flow
-primitves}
 
 In this section, we introduce and give typing rules for the \subiterexp{} expression language, which
 has grammar given in Figure~\ref{fig:expr-syntax}. \subiterexp{} is, at first glance, a
