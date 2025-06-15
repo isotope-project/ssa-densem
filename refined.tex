@@ -363,16 +363,27 @@ Our goal in this paper is to give a type-theoretic account of SSA; consequently,
 to work with traditional lexical scoping rather than dominance based scoping. To interconvert
 between the two, we note that the dominance relation on basic blocks always forms a tree rooted at
 the entry block (after eliminating dead-code; otherwise, it forms a forest): we call this the
-\emph{dominator tree}.
+\emph{dominator tree}. We will call a subtree of the dominator tree, which has a single entry point
+(the root) and multiple exits (the leaves, all dominated by the root), a \emph{region}. The
+variables defined in a given basic block $\beta$ are visible from another block $\beta'$ if and only
+if $\beta$ dominates $\beta'$, i.e., if $\beta$ is a child in the dominator tree, contained in the
+region $r$ rooted at $\beta$. Hence, dominance based scoping can be represented as lexical scoping
+\emph{with respect to the dominator tree}.
 
-\TODO{segue to \isotopessa{} definition}
+This idea underlies the design of \isotopessa{}, what we call \emph{type-theoretic SSA}, which has
+the grammar given in Figure~\ref{fig:ssa-syntax}.
 
-\TODO{term formers}
+\TODO{in particular, we give a grammar for \emph{regions} $r, s, t$, which are:
+\begin{itemize}
+  \item A sequence of let-bindings for operations $o$, followed by;
+  \item A terminator, making up a \emph{basic block}, wrapped by
+  \item A \emph{where-block}, which encodes the children dominated by that basic block. We
+  distinguish between recursive/non-recursive where for type-theoretic/effect system purposes, but
+  the semantics are the same.
+\end{itemize}
+}
 
-\TODO{you can squint and see this is SSA due to the data in Figure~\ref{fig:ssa-data}}
-
-\TODO{note we distinguish between recursive/non-recursive where, the semantics are the same but we
-need this for effect system lore}
+\TODO{i.e. you can squint and see this is SSA due to the data in Figure~\ref{fig:ssa-data}}
 
 \begin{figure}
   \begin{subfigure}[t]{.35\textwidth}
