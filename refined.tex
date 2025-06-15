@@ -371,19 +371,22 @@ region $r$ rooted at $\beta$. Hence, dominance based scoping can be represented 
 \emph{with respect to the dominator tree}.
 
 This idea underlies the design of \isotopessa{}, what we call \emph{type-theoretic SSA}, which has
-the grammar given in Figure~\ref{fig:ssa-syntax}.
+the grammar given in Figure~\ref{fig:ssa-syntax}. Rather than give a grammar for basic-blocks and
+control-flow graphs, we instead give a grammar for \emph{regions} $r, s, t$, which are composed of a
+series of \ms{let}-bindings (each corresponding to an instruction $o$), followed a subtree $\kappa$,
+which is composed of a terminator $\tau$ wrapped in \ms{where}-blocks containing the region's
+dominated subregions. We make a distinction between recursive and non-recursive \ms{where}-bocks for
+effect-system related bookkeeping, but semantically they are treated identically.
 
-\TODO{in particular, we give a grammar for \emph{regions} $r, s, t$, which are:
-\begin{itemize}
-  \item A sequence of let-bindings for operations $o$, followed by;
-  \item A terminator, making up a \emph{basic block}, wrapped by
-  \item A \emph{where-block}, which encodes the children dominated by that basic block. We
-  distinguish between recursive/non-recursive where for type-theoretic/effect system purposes, but
-  the semantics are the same.
-\end{itemize}
-}
-
-\TODO{i.e. you can squint and see this is SSA due to the data in Figure~\ref{fig:ssa-data}}
+If we squint, we can see that this is just SSA with \ms{where}-blocks as an annotation representing
+the dominator tree: basic blocks correspond to sequences of \ms{let}-bindings followed by a
+terminator. Indeed, it is straightforward to verify that any well-scoped SSA program can be convered
+to a \isotopessa{} program by simply adding in \ms{where}-blocks corresponding to the dominator
+tree; similarly, simply erasing the \ms{where}-blocks from an \isotopessa{} program yields a program
+in standard basic-blocks with arguments SSA; we see an example of this in Figure~\ref{fig:fact-lex}.
+We can also show that any two programs which are equivalent up to the placement of \ms{where}-blocks
+have equivalent semantics, therefore justifying \isotopessa{} as being simply SSA with additional
+annotations.
 
 \begin{figure}
   \begin{subfigure}[t]{.35\textwidth}
@@ -448,6 +451,7 @@ the grammar given in Figure~\ref{fig:ssa-syntax}.
     \end{align*}
     \end{adjustbox}
     \caption{Lexical scoping}
+    \label{fig:fact-lex}
   \end{subfigure}
   
   \caption{%  
@@ -2525,6 +2529,10 @@ this corresponds to ANF \citet{chakravarty-functional-ssa-2003}}
 just knowing what commutes with what. A good idea that is under-exploited.}
 
 \TODO{maybe take a peek at \citet{jiang-stack-25}; probably don't need to cite}
+
+\TODO{
+  we extend \citet{ghalayini-24-ssa-densem-arxiv} to be substructural and have a full effect system
+}
 
 \subsection*{Acknowledgements}
 
