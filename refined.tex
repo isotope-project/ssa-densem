@@ -349,20 +349,21 @@ control-flow trace; for example, $i_0$, is given as $i_1$ if we come from the \m
 $1$ otherwise.
 
 This slightly complicates both our semantics (for example, an operational semantics may need to keep
-track of the previous basic block) and, more pertinently, our scoping rules, since the branches of a
-$\phi$-node need to be well-scoped \emph{at the end of their source block}, rather than at the
-position of the $\phi$-node itself. It turns out, however, that $\phi$-nodes are exactly equivalent
-to equipping basic blocks with \emph{arguments} via a straightforward isomorphism, with each
-$\phi$-node corresponding to an argument of the basic block containing it. This approach is often
-favored by many modern intermediate representations, such as MLIR \cite{mlir} and Cranelift
-\cite{cranelift}, though it diverges from the idea of SSA as a subset of RTL. We can see the program
-in Figure~\ref{fig:fact-phi} rendered in this format in Figure~\ref{fig:fact-bba}.
+track of the previous basic block) and our scoping rules, since the branches of a $\phi$-node need
+to be well-scoped \emph{at the end of their source block}, rather than at the position of the
+$\phi$-node itself. It turns out, however, that $\phi$-nodes are exactly equivalent to equipping
+basic blocks with \emph{arguments} via a straightforward isomorphism, with each $\phi$-node
+corresponding to an argument of the basic block containing it. This approach is often favored by
+many modern intermediate representations, such as MLIR \cite{mlir} and Cranelift \cite{cranelift},
+though it diverges from the idea of SSA as a subset of RTL. We can see the program in
+Figure~\ref{fig:fact-phi} rendered in this format in Figure~\ref{fig:fact-bba}.
 
-\TODO{lo, we would like to do induction on SSA programs, so we need to do lexical scoping}
+In this paper, we would like to give a type-theoretic account of SSA, and in particular, a sound and
+complete denotational semantics for SSA programs. We therefore introduce \isotopessa{},
+\emph{type-theoretic SSA}: a presentation of SSA with \emph{lexical scoping} amenable to induction.
+We give formal grammar of this language in Figure~\ref{fig:ssa-syntax}.
 
-\TODO{we do that by introducing where blocks}
-
-\TODO{more formally, we use the grammar in Figure~\ref{fig:ssa-syntax}}
+\TODO{term formers}
 
 \TODO{you can squint and see this is SSA due to the data in Figure~\ref{fig:ssa-data}}
 
