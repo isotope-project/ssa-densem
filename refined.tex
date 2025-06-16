@@ -266,6 +266,7 @@
 
 \begin{abstract}
   \TODO{write the abstract}
+  \vspace{2cm}
 \end{abstract}
 
 \begin{CCSXML}
@@ -318,15 +319,15 @@
 
 \TODO{we want to study SSA with refinement and effects; so we need+get linearity}
 
+\vspace{5cm}
+
 \section{SSA}
 
 One of the first intermediate representations to be used in compilder design is
 \emph{register-transfer level (RTL)} code, often referred to as \emph{three-address code} since most
-instructions are of the form $x = f(y, z)$. RTL is essentially a straightforward generalization of
-assembly language, in which it is assumed that the machine has an infinite, rather than finite,
-number of registers, from which $x, y$ and $z$ are drawn.  While it is possible to view an RTL
-program as a sequence of instructions and labels, it is often fruitful to break it down into higher
-level components for analysis. In particular, we may define a \emph{basic block} to be a sequence of
+instructions are of the form $x = f(y, z)$. While it is possible to view an RTL program as a
+sequence of instructions and labels, it is often fruitful to break it down into higher level
+components for analysis. In particular, we may define a \emph{basic block} to be a sequence of
 straight-line code in which every instruction has a unique predecessor and successor; a basic block
 then ends with a \emph{terminator} instruction, which may branch to other basic blocks. The basic
 blocks, and the jumps between them, form the nodes and edges of that program's \emph{control-flow
@@ -376,9 +377,9 @@ the grammar given in Figure~\ref{fig:ssa-syntax}. Rather than give a grammar for
 control-flow graphs, we instead give a grammar for \emph{regions} $r, s, t$, which are composed of a
 series of \ms{let}-bindings (each corresponding to an instruction $o$), followed by a subtree
 $\kappa$, which is composed of a terminator $\tau$ wrapped in \ms{where}-blocks containing the
-region's dominated subregions. We make a distinction between recursive and non-recursive
+region's dominated subregions. \footnote{We make a distinction between recursive and non-recursive
 \ms{where}-blocks for effect-system related bookkeeping, but semantically they are treated
-identically.
+identically.}
 
 If we squint, we can see that this is just SSA with \ms{where}-blocks as an annotation representing
 the dominator tree: basic blocks correspond to sequences of \ms{let}-bindings followed by a
@@ -2487,6 +2488,8 @@ is nice...}
 
 \section{Concrete Models}
 
+\vspace{10cm}
+
 \TODO{UB and printing}
 
 \TODO{$\implies$ separation logic \emph{if there is space}}
@@ -2503,6 +2506,8 @@ is nice...}
   \end{itemize}
 \end{enumerate}
 }
+
+\vspace{10cm}
 
 \section{Discussion and Related Work}
 
@@ -2530,6 +2535,8 @@ this corresponds to ANF \citet{chakravarty-functional-ssa-2003}}
   structure. In some sense, this is ``everything that you could need.''
   %
 }
+
+\vspace{5cm}
 
 \TODO{\citet{lipton-mover-75} for movers.}
 
