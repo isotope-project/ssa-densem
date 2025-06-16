@@ -320,21 +320,22 @@
 
 \section{SSA}
 
-Probably the most basic intermediate representation is \emph{register-transfer level (RTL)} code,
-often referred to as \emph{3 address code} since most instructions are of the form $x = f(y, z)$.
-RTL is essentially a straightforward generalization of assembly language, in which it is assumed
-that the machine has an infinite, rather than finite, number of registers, from which $x, y$ and $z$
-in the above expression are drawn.  While it is possible to view an RTL program as a sequence of
-instructions and labels, it is often fruitful to break it down into higher level components for
-analysis. In particular, we may define a \emph{basic block} to be a sequence of straight-line code
-in which every instruction has a unique predecessor and successor; a basic block then ends with a
-\emph{terminator} instruction, which may branch to other basic blocks. The basic blocks, and the
-jumps between them, form the nodes and edges of that program's \emph{control-flow graph}.
+One of the first intermediate representations to be used in compilder design is
+\emph{register-transfer level (RTL)} code, often referred to as \emph{three-address code} since most
+instructions are of the form $x = f(y, z)$. RTL is essentially a straightforward generalization of
+assembly language, in which it is assumed that the machine has an infinite, rather than finite,
+number of registers, from which $x, y$ and $z$ are drawn.  While it is possible to view an RTL
+program as a sequence of instructions and labels, it is often fruitful to break it down into higher
+level components for analysis. In particular, we may define a \emph{basic block} to be a sequence of
+straight-line code in which every instruction has a unique predecessor and successor; a basic block
+then ends with a \emph{terminator} instruction, which may branch to other basic blocks. The basic
+blocks, and the jumps between them, form the nodes and edges of that program's \emph{control-flow
+graph}.
 
 The SSA intermediate representation can, at first glance, be viewed as the subset of RTL programs
 satisfying the \emph{static single assignment}, or \emph{SSA}, property, which states that every
-variable has precisely one definition. In particular, we consider a variable usage well-scoped scope
-if and only if it is \emph{dominated} by its definition, i.e., if every path from the entry block to
+variable has precisely one definition. In particular, we consider a variable usage well-scoped if
+and only if it is \emph{dominated} by its definition, i.e., if every path from the entry block to
 the usage point must pass over the definition.
 
 It is often straightforward to convert RTL programs into equivalent programs satisfying the SSA
@@ -343,18 +344,18 @@ x_1, x_2$.  Unfortunately, this approach breaks down when the value of a variabl
 control-flow; consider, for example, the variables $i$ and $a$ in Figure~\ref{fig:fact-phi}, whose
 value depends on whether we are entering the loop for the first time from the \ms{start} block, or
 whether we come from a previous iteration of the \ms{body}. To remedy this, the traditional solution
-is to introduce \emph{$\phi$-nodes}, which evaluate to a different value depending on the previous
-block in our control-flow trace; for example, $i_0$, is given as $i_1$ if we come from the \ms{body}
-block, and $1$ otherwise.
+is to introduce \emph{$\phi$-nodes}, which evaluate to a different value depending on the
+immediately preceding block in our control-flow trace; for example, $i_0$, is given as $i_1$ if we
+come from the \ms{body} block, and $1$ otherwise.
 
 This slightly complicates both our semantics (for example, an operational semantics may need to keep
 track of the previous basic block) and our scoping rules, since the branches of a $\phi$-node need
 to be well-scoped \emph{at the end of their source block}, rather than at the position of the
 $\phi$-node itself. It turns out, however, that $\phi$-nodes are exactly equivalent to equipping
-basic blocks with \emph{arguments} via a straightforward isomorphism, with each $\phi$-node
-corresponding to an argument of the basic block containing it. This approach is often favored by
-many modern intermediate representations, such as MLIR \cite{mlir} and Cranelift \cite{cranelift},
-though it diverges from the idea of SSA as a subset of RTL. We can see the program in
+basic blocks with \emph{arguments} via a straightforward isomorphism. Each $\phi$-node corresponding
+to an argument of the basic block containing it. This approach is often favored by many modern
+intermediate representations, such as MLIR \cite{mlir} and Cranelift \cite{cranelift}, though it
+diverges from the idea of SSA as a subset of RTL. We can see the program in
 Figure~\ref{fig:fact-phi} rendered in this format in Figure~\ref{fig:fact-bba}. This recovers
 standard dominance-based scoping (with a basic block's argument considered to be defined at the
 beginning of that basic block).
@@ -373,20 +374,21 @@ region $r$ rooted at $\beta$. Hence, dominance based scoping can be represented 
 This idea underlies the design of \isotopessa{}, what we call \emph{type-theoretic SSA}, which has
 the grammar given in Figure~\ref{fig:ssa-syntax}. Rather than give a grammar for basic-blocks and
 control-flow graphs, we instead give a grammar for \emph{regions} $r, s, t$, which are composed of a
-series of \ms{let}-bindings (each corresponding to an instruction $o$), followed a subtree $\kappa$,
-which is composed of a terminator $\tau$ wrapped in \ms{where}-blocks containing the region's
-dominated subregions. We make a distinction between recursive and non-recursive \ms{where}-bocks for
-effect-system related bookkeeping, but semantically they are treated identically.
+series of \ms{let}-bindings (each corresponding to an instruction $o$), followed by a subtree
+$\kappa$, which is composed of a terminator $\tau$ wrapped in \ms{where}-blocks containing the
+region's dominated subregions. We make a distinction between recursive and non-recursive
+\ms{where}-blocks for effect-system related bookkeeping, but semantically they are treated
+identically.
 
 If we squint, we can see that this is just SSA with \ms{where}-blocks as an annotation representing
 the dominator tree: basic blocks correspond to sequences of \ms{let}-bindings followed by a
-terminator. Indeed, it is straightforward to verify that any well-scoped SSA program can be convered
-to a \isotopessa{} program by simply adding in \ms{where}-blocks corresponding to the dominator
-tree; similarly, simply erasing the \ms{where}-blocks from an \isotopessa{} program yields a program
-in standard basic-blocks with arguments SSA; we see an example of this in Figure~\ref{fig:fact-lex}.
-We can also show that any two programs which are equivalent up to the placement of \ms{where}-blocks
-have equivalent semantics, therefore justifying \isotopessa{} as being simply SSA with additional
-annotations.
+terminator. Indeed, it is straightforward to verify that any well-scoped SSA program can be
+converted to a \isotopessa{} program by simply adding in \ms{where}-blocks corresponding to the
+dominator tree; similarly, simply erasing the \ms{where}-blocks from an \isotopessa{} program yields
+a program in standard basic-blocks with arguments SSA; we see an example of this in
+Figure~\ref{fig:fact-lex}. We can also show that any two programs which are equivalent up to the
+placement of \ms{where}-blocks have equivalent semantics, therefore justifying \isotopessa{} as
+being simply SSA with additional annotations.
 
 \begin{figure}
   \begin{subfigure}[t]{.35\textwidth}
@@ -510,11 +512,11 @@ cannot be arbitrary SSA programs. Moreover, while arbitrary control-flow allows 
 flexibility, it can make it difficult to build up a complete equational theory for our calculus. The
 B\"ohm-Jacopini theorem states that programs with arbitrary control-flow can be re-written to
 require only branching and iteration; \citet{ghalayini-24-ssa-densem-arxiv} show that the
-B\"ohm-Jacopini theorem holds for a syntactic model of SSA. Inspired by thisl, we introduce a 
-simpler expression language, \subiterexp{}, which supports \emph{only} iteration and branching
-as control-flow primitives. In a later section, we will show how to recover the full generality
-of SSA from this core language, which we will use to state our equational theory and build up
-our categorical semantics.
+B\"ohm-Jacopini theorem holds for a syntactic model of SSA. Inspired by this, we introduce a simpler
+expression language, \subiterexp{}, which supports \emph{only} iteration and branching as
+control-flow primitives. In a later section, we will show how to recover the full generality of SSA
+from this core language, which we will use to state our equational theory and build up our
+categorical semantics.
 
 \section{Expression Language}
 
@@ -595,7 +597,7 @@ explain what we mean by usage, and what the allowed effects are.
 \subsubsection{Variable Quantities}
 Our type system needs to track how often individual variables are used  to reason about rewrites
 involving substructural effects. Inspired by substructural logic, which distinguishes linear
-(exactly once), afficne (at most once), and relevant (at least once), we introduce a join
+(exactly once), affine (at most once), and relevant (at least once), we introduce a join
 semilattice of \emph{quantities} to model these usages. The primitive quantities are:
 \begin{itemize}
   \item $\zeroq$ -- corresponding to being used zero times
@@ -610,8 +612,8 @@ analysis, we simply complete this order into a join-semilattice by adding elemen
 \end{itemize}
 We will call the set $Q^0 = \{\zeroq, \oneq, \cpyq, \delq, \topq\}$ the \emph{extended} set of
 quantities, and $Q = \{\oneq, \cpyq, \delq, \topq\}$ the set of (\emph{nonzero}) quantities. We note
-in particular that $Q$ forms a lattice, with $\cpyq \sqcap \delq = 1$. We will in general define the
-\emph{product} of quantities $q, q' \in Q^0$ as follows:
+in particular that $Q$ forms a lattice, with $\cpyq \sqcap \delq = \oneq$. We will in general define
+the \emph{product} of quantities $q, q' \in Q^0$ as follows:
 \begin{equation}
   q * q' = \begin{cases}
     0 & \text{if } q = 0 \text{ or } q' = 0 \\
@@ -650,7 +652,7 @@ In particular, note that the linearity of an unused variable is always unrestric
 %
 We will enforce our quantity restrictions through the means of \emph{weakening} and \emph{splitting}
 judgements, which will determine how variables may be left unused or apportioned between
-sub-contexts, respectively. In particular, the judgement $\cwk{\Gamma^{\mb{q}}}{\Delta^{\mb{q}'}}$,
+subcontexts, respectively. In particular, the judgement $\cwk{\Gamma^{\mb{q}}}{\Delta^{\mb{q}'}}$,
 pronounced ``$\Gamma^{\mb{q}}$ weakens $\Delta^{\mb{q'}}$," is defined as follows:
 \begin{gather*}
   \prftree[r]{\rle{nil}}{\cwk{\cdot}{\cdot}} \qquad 
@@ -667,7 +669,7 @@ pronounced ``$\Gamma^{\mb{q}}$ weakens $\Delta^{\mb{q'}}$," is defined as follow
 \emph{Affinity} is encoded in the condition $\zeroq \leq q * \alquant(A)$ in the rule \brle{split};
 which ensures that only affine variables may be discarded. On the other hand, the rule \brle{cons}
 states that we may replace a variable quantity $q$ with another quantity $q'$ which allows
-\emph{less} usages \emph{with respect to that variable's quantity}: for example, for an affine
+\emph{fewer} usages \emph{with respect to that variable's quantity}: for example, for an affine
 variable, the quantities $\cpyq$ allows \emph{less} usages than the quantity $\delq$, since only the
 latter allows deletion, but copying is never possible. This clearly induces a \emph{preorder} on
 contexts, with two contexts equivalent if their component variables can be used the same way.
@@ -691,7 +693,7 @@ follows:
 \end{gather*}
 The rules \brle{left} and \brle{right} allow us to use a variable, regardless of quantity, in either
 the choice of subexpression, whereas the rule \brle{both} states that for a variable to be usable in
-two seperate subexpressions, it must be relevant.
+two separate subexpressions, it must be relevant.
 
 \subsubsection{Effects}
 Our language of effects is a bounded\footnote{has a maximum element $\top$ and minimum element
@@ -704,9 +706,8 @@ enough to know simply what set of effects a program might have, but we also need
 interact with each other. In particular, we need to know:
 \begin{enumerate}
   \item Which effects are \emph{iterable}, i.e., stable under loops. 
-  % In particular, all iterable  effects must have nontermination as a \emph{subeffect}.
   \item What \emph{multiplicity} each effect has, and in particular, whether a given effect
-  $\epsilon$ is \emph{duplicable}, \emph{fusable}, \emph{introducable}, or \emph{eliminable}.
+  $\epsilon$ is \emph{duplicable}, \emph{fusable}, \emph{introducible}, or \emph{eliminable}.
   \item Which effects $\epsilon$ are \emph{left-movers} (i.e. can be moved before) or
   \emph{right-movers} (i.e. can be moved after) other effects $\eta$
 \end{enumerate}
@@ -1099,8 +1100,8 @@ loop-invariant motion of subsequent code.
 body can be collapsed into a single iteration by fusing their recursive branches. Operationally,
 this justifies flattening nested loops into one with a more complex continuation.
 %
-\paragraph{Uniformity,} via the rule \textsf{unif$^p$}, allows us to effectively commute effectful
-operations with the infinite unrolling of a loop body. This is best explained in terms of
+\paragraph{Uniformity,} via the rule \textsf{unif$^p$}, allows us to effectively commute certain
+effectful operations with the infinite unrolling of a loop body. This is best explained in terms of
 control-flow graphs: the precondition of the rule is corresponds to the left-hand-side of the
 diagram in Figure~\ref{fig:unif-cfg}, while the postcondition corresponds to the right-hand-side. If
 we unroll the loops on both sides ``infinitely many times,'' to obtain an infinite tree, we see that
