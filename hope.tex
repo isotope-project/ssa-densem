@@ -310,4 +310,36 @@
 
 \maketitle
 
+\begin{itemize}
+  \item Two major approaches to verifying optimizations:
+  \begin{itemize}
+    \item Simulation: example is \citet{vellvm-12}, which provides an operational semantics
+    parametrized by a memory model and then prove each transformation sound with a bespoke
+    simulation. Bad for re-usability, good for confidence, lets you deal with somewhat complex side
+    effects and memory models, but not good for \emph{compositional} reasoning (you need to do whole
+    program transformations, which requires thinking about ways to break down a whole program for a
+    given optimization)
+    \item Denotational semantics: if our set of effects is simple enough, we can try to model it
+    with a denotational semantics, and then prove our optimization is an equality (or a refinement)
+    in the denotational model. Often more compositional, but you need to model the effects. Can do
+    relatively complex effects this way, but hard to deal with all the possible ways they may
+    intertwine compositionally, see e.g. \citet{release-acquire} for a Brookes style denotational
+    semantics for release acquire weak memory, or \citet{sparky} for pomset-based one SPARC TSO. And
+    you need a deep understanding of the effect itself, often very hard to come by (see, e.g.,
+    issues defining the C memory model, with e.g. \citet{math-cpp-batty-11},
+    \citet{comp-cpp-batty-12}, out-of-thin-air lore...)
+  \end{itemize}
+  \item Observation: we care about \emph{refinements}, not \emph{equations} \todo{factor observation
+  hammer from GPT...}
+  \item Want a middle ground; not a new idea, see \citet{kammar-effect-12}. \todo{explain middle
+  ground is commutativity + peephole optimizations, and for the latter \emph{especially} linearity}
+  \item \todo{categorical semantics}
+  \item \todo{sound + complete}
+  \item \todo{leanery}
+  \item \todo{SSAcraft}
+\end{itemize}
+
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{references}
+
 \end{document}
