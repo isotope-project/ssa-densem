@@ -310,34 +310,80 @@
 
 \maketitle
 
+Verification of compiler optimizations typically proceeds along two broad paths, corresponding to
+the chosen semantic framework. On one hand, operational semantics allow verification through
+simulation proofs: a transformed program is shown to simulate the behavior of the original. A
+classic example is \citet{vellvm-12}, which parametrizes LLVM's operational semantics by memory
+models and proves transformations individually sound via bespoke simulation arguments. On the other
+hand, denotational semantics enables proving optimizations correct by establishing semantic equality
+or refinement between original and transformed programs. Monadic semantics have proven effective
+even for complex effects; for instance, monadic Brookes-style semantics have been successfully
+applied to weak memory models such as release-acquire and TSO, as seen in recent work by
+\citet{release-acquire} and \citet{jagadeesan-brookes-relaxed-12}.
+
+However, both these approaches come with limitations. Simulation proofs typically involve repeated
+work for each optimization, reducing reusability—especially when new side effects or memory models
+arise. Conversely, constructing a comprehensive denotational model for a specific effect system
+often demands significant effort, resulting in proofs tightly coupled to the particulars of that
+model. Such proofs rarely generalize, requiring deep familiarity with complex model details.
+
+Interestingly, many practical compiler optimizations are expressible more abstractly through simpler
+properties of the underlying effects, namely: (1) how different effects commute, (2) peephole
+optimizations on effectful operations, and crucially, (3) the linearity characteristics of
+effects—whether they can be duplicated or discarded safely. In particular, these properties allow
+one to reason about the soundness of \emph{directed substitution}, i.e., whether
+$$
+\letexpr{x}{a}{b} \tref [a/x]b
+$$
+or
+$$
+[a/x]b \tref \letexpr{x}{a}{b}
+$$
+where $\tref$ indicates refinement.
+
+To illustrate these ideas concretely, consider undefined behavior (UB), as exhibited by division by
+zero. We have a straightforward refinement:
+\[
+(\ms{div}\;y\;z, \ms{div}\;y\;z) \tref \letexpr{x}{\ms{div}\;y\;z}{(x, x)}
+\]
+This refinement expresses that UB is fusable. Moreover, the reverse refinement also holds, showing
+that UB is duplicable. \citet{fuhrmann-direct-1999} classifies effects like UB, which are both
+fusable and duplicable, as copyable. By contrast, nondeterminism is fusable but not duplicable, as
+the refinement:
+\[
+(\ms{nondet}, \ms{nondet}) \tref \letexpr{x}{\ms{nondet}}{(x, x)}
+\]
+is strict, since the left-hand side can yield arbitrary pairs $(x,y)$, unlike the right-hand side.
+
+Additionally, UB is eliminable (the expression $\letexpr{x}{\ms{div}\;y\;z}{()}$ refines trivially
+to $()$), but not introducable—clearly, $() \not\tref \letexpr{x}{\ms{div}\;y\;z}{()}$. Conversely,
+nondeterminism is both eliminable and introducable, hence discardable. The nuanced differences
+between UB (copyable and eliminable) and nondeterminism (fusable and discardable) capture essential
+semantic distinctions between undefined and unspecified behavior.
+
+Commutativity properties further enrich the structure of effects. For example, UB acts as a
+right-mover: the refinement $\letexpr{x}{\ms{div}\;y\;z}{(e,x)} \tref (e,\ms{div}\;y\;z)$ holds
+universally. However, UB is a left-mover only relative to specific effects, like nondeterminism or
+memory access, but fails for effects that alter control flow, such as exceptions or nontermination.
+Thus, UB commutes fully with nondeterminism and memory access, but not in general, classifying it as
+partially commutative but not central.
+
+In this example, therefore, if $a$ exhibits potential UB, then:
 \begin{itemize}
-  \item Two major approaches to verifying optimizations:
-  \begin{itemize}
-    \item Simulation: example is \citet{vellvm-12}, which provides an operational semantics
-    parametrized by a memory model and then prove each transformation sound with a bespoke
-    simulation. Bad for re-usability, good for confidence, lets you deal with somewhat complex side
-    effects and memory models, but not good for \emph{compositional} reasoning (you need to do whole
-    program transformations, which requires thinking about ways to break down a whole program for a
-    given optimization)
-    \item Denotational semantics: if our set of effects is simple enough, we can try to model it
-    with a denotational semantics, and then prove our optimization is an equality (or a refinement)
-    in the denotational model. Often more compositional, but you need to model the effects. Can do
-    relatively complex effects this way, but hard to deal with all the possible ways they may
-    intertwine compositionally, see e.g. \citet{release-acquire} for a Brookes style denotational
-    semantics for release acquire weak memory, or \citet{sparky} for pomset-based one SPARC TSO. And
-    you need a deep understanding of the effect itself, often very hard to come by (see, e.g.,
-    issues defining the C memory model, with e.g. \citet{math-cpp-batty-11},
-    \citet{comp-cpp-batty-12}, out-of-thin-air lore...)
-  \end{itemize}
-  \item Observation: we care about \emph{refinements}, not \emph{equations} \todo{factor observation
-  hammer from GPT...}
-  \item Want a middle ground; not a new idea, see \citet{kammar-effect-12}. \todo{explain middle
-  ground is commutativity + peephole optimizations, and for the latter \emph{especially} linearity}
-  \item \todo{categorical semantics}
-  \item \todo{sound + complete}
-  \item \todo{leanery}
-  \item \todo{SSAcraft}
+  \item $\letexpr{x}{a}{b} \tref [a/x]b$ for arbitrary $b$
+  \item $[a/x]b \tref \letexpr{x}{a}{b}$, and therefore $\letexpr{x}{a}{b} \teqv [a/x]b$, if $x$ is
+  used relevantly in $b$ (i.e. at least once) and $b$ has an effect which is a right-mover w.r.t UB
+  (for example, nondeterminism, but \emph{not} nontermination).
 \end{itemize}
+
+In this talk, we will introduce a formal categorical framework for reasoning about effects in this
+manner in the presence of arbitrary control flow. We then introduce \subiterexp{}, a sound and
+complete calculus for our categorical semantics. Crucially, our framework supports diverse concrete
+models, including sophisticated side-effects such as release-acquire weak memory as formalized in
+\citet{release-acquire}.
+
+This work thus offers a unified algebraic foundation for compiler optimization verification,
+enabling generalized and compositional reasoning about programs exhibiting complex side effects.
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references}
