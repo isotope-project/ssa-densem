@@ -335,7 +335,9 @@ mathematical models, with resulting proofs that typically remain tightly coupled
 specific model. However, many practical compiler optimizations, such as loop hoisting,
 \texttt{mem2reg}, and sparse conditional constant propagation, seem not to depend upon the specific
 details of the model, instead relying on high level information such as which operations are
-pure/constant. In particular, we observe that we often only require information about:
+pure/constant; for example, \citet{release-acquire} note that, since they use a monadic semantics,
+they have access to a huge amount of generic machinery to deal with, e.g., higher-order programs,
+``for free''. In particular, we observe that we often only require information about:
 \begin{enumerate}
   \item How different effects commute; for example, printing commutes with (potential) UB, but not
   with (potential) nontermination. Sometimes, this is a \emph{refinement}, rather than an
@@ -354,16 +356,19 @@ pure/constant. In particular, we observe that we often only require information 
   a refinement rather than an equation; for example, $(\ms{nondet}, \ms{nondet}) \tref
   \letexpr{x}{\ms{nondet}}{(x, x)}$, making nondeterminism \emph{fusable}, but not relevant.
 \end{enumerate}
-
-\TODO{the talk covers:}
-
-\TODO{a calculus for reasoning about what equations can be derived from info 1 2 3}
-
-\TODO{a sound and complete denotational semantics for this calculus}
-
-\TODO{an equivalence between this calculus and (substructural) SSA, which we also drive-by-define}
-
-\TODO{fun models which support fun optimizations, like weak memory and separation logic}
+In this work, we introduce \subiterexp{}, a simple calculus for reasoning about program refinement
+given an effect system and information about (directed) commutativity, linearity, and an arbitrary
+set of peephole rewrites. We then proceed to:
+\begin{itemize}
+  \item Provide a denotational semantics for \subiterexp{}, which we prove is sound and complete
+  \item Show \subiterexp{} is in fact equivalent to (substructural) SSA, and explore how this can be
+  used to reason about compiler optimization passes
+  \item Give some interesting models of \subiterexp{}, supporting effects such as weak memory and
+  complex type-system features such as separation logic
+\end{itemize}
+We hope to use this work as a starting point to explore the utility of high-level algebraic
+approaches to building model and effect-generic optimizations and analysis passes for effectful
+programs, as well as to verify that new models are compatible with standard optimizations.
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references}
