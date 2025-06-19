@@ -350,10 +350,10 @@ they have access to a huge amount of generic machinery to deal with, e.g., highe
   In particular, we are interested in
   \item The \emph{linearity} of different effects. For example, we can't duplicate or discard a
   printing operation, so it is \emph{linear}. On the other hand, an effect like nontermination can
-  be duplicated ($\letexpr{x}{\ms{maybeloop}}{(x, x)} \teqv (\ms{maybeloop}, \ms{maybeloop})$), i.e.
-  is \emph{relevant}, while an effect like nondeterminism can be discarded
-  ($\letexpr{\cdot}{\ms{nondet}}{5} \teqv 5$), i.e. is \emph{affine}. Again, linearity is sometimes
-  a refinement rather than an equation; for example, $(\ms{nondet}, \ms{nondet}) \tref
+  be duplicated (e.g. $\letexpr{x}{\ms{maybeloop}}{(x, x)} \teqv (\ms{maybeloop}, \ms{maybeloop})$),
+  i.e. is \emph{relevant}, while an effect like nondeterminism can be discarded (e.g.
+  $\letexpr{\cdot}{\ms{nondet}}{5} \teqv 5$), i.e. is \emph{affine}. Again, linearity is sometimes a
+  refinement rather than an equation; for example, $(\ms{nondet}, \ms{nondet}) \tref
   \letexpr{x}{\ms{nondet}}{(x, x)}$, making nondeterminism \emph{fusable}, but not relevant.
 \end{enumerate}
 In this work, we introduce \subiterexp{}, a simple calculus for reasoning about program refinement
