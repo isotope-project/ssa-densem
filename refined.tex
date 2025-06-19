@@ -328,6 +328,8 @@
 
 \section{SSA}
 
+\label{sec:ssa-intro}
+
 One of the first intermediate representations to be used in compilder design is
 \emph{register-transfer level (RTL)} code, often referred to as \emph{three-address code} since most
 instructions are of the form $x = f(y, z)$. While it is possible to view an RTL program as a
@@ -1637,8 +1639,8 @@ write
 This corresponds exactly to the notion of a \emph{pre-iterative category} given below:
 \begin{definition}[Pre-iterative Category]
   Let $\mc{C}$ be a category with chosen coproducts. We say $\mc{C}$ is \emph{pre-iterative} if it
-  is equipped with a fixpoint operator $(-)^\dagger : \mc{C}(A, B + A) \to \mc{C}(A, B)$ satisfying the loop unrolling equation
-  $f ; [\ms{id}, f^\dagger] = f$
+  is equipped with a fixpoint operator $(-)^\dagger : \mc{C}(A, B + A) \to \mc{C}(A, B)$ satisfying
+  the loop unrolling equation $f ; [\ms{id}, f^\dagger] = f$
 \end{definition}
 Our goal is to have our fixpoint operator's properties correspond precisely to drawing a loop in a
 control-flow graph, as in the left-hand side of Figure~\ref{fig:fixpoint-string-diagram}, which
@@ -1932,7 +1934,7 @@ as well as \emph{discard} variables of affine type. We'll supply families of mor
 subcategory corresponding to that effect. Following this idea, we can now define a \subiterexp-model
 as follows: \subiterexp{}:
 \begin{definition}[\subiterexp-model]
-  A \subiterexp-model $\mc{M} = (\mc{C}, (\cdot)^\dagger, \dnt{\cdot}, \dmor{}, \tmor{})$ of a
+  A model $\mc{M} = (\mc{C}, (\cdot)^\dagger, \dnt{\cdot}, \dmor{}, \tmor{})$ of a
   \subiterexp-signature $\mc{S} = (\mc{X}, \mc{I}, \mc{E})$ is composed of:
   \begin{itemize}
     \item An effectful Elgot category ($\mc{C}$, $(\cdot)^\dagger$) over $(\mc{E},
@@ -2271,20 +2273,51 @@ well-defined. The rest of the structure of a \subiterexp{}-model is given in the
 
 \section{SSA Typing and Semantics}
 
-\TODO{annotated label contexts given by the following grammar}
+We now turn back to the promises at the end of Section~\ref{sec:ssa-intro} and attempt to give 
+typing rules and denotational semantics for \isotopessa{}. Recall that the primitive syntactic 
+element of an \isotopessa{} program is a \emph{region} $r$, which can be viewed as a program 
+fragment with a single entry point and multiple exit points. Consequently, our primitive typing 
+judgement will be of the form
+$$
+\haslb{\Gamma^{\mb{q}}}{\epsilon}{r}{\ms{L}^{\mb{Q}}_{\mb{e}}}
+$$
+which means that
+\begin{itemize}
+  \item Assuming the variables in $\Gamma$ are live on entry, with quantity $\mb{q}$, and
+  \item Jumping to each label in $\ms{L}$ can trigger at most the corresponding effect in $\mb{e}$.
+  \item Executing $r$ jumps to one of the labels in $\ms{L}$, with \emph{leftover} quantities
+  $\mb{Q}$ and effect $\epsilon$.
+\end{itemize}
+Here, $\ms{L}$ is a list of labels $\ell_i$, annotated with a single parameter type 
+(multiple parameters are implemented as a single tuple parameter), and $\mb{Q}, \mb{e}$ are lists of quantity vectors 
+$\mb{q}_i$ and effects $\epsilon_i$ for each $\ell_i$, as given by the grammar in 
+Figure~\ref{fig:label-grammar}.
 
-\begin{grammar}
-  <\(\ms{L}\)> ::= \(\cdot\) \;|\; \(\ms{L}, \lhyp{\ell}{A}\)
-
-  <\(\mb{Q}\)> ::= \(\cdot\) \;|\; \(\mb{Q}; \mb{q}\)
-
-  <\(\mb{e}\)> ::= \(\cdot\) \;|\; \(\mb{e}, \epsilon\)
-\end{grammar}
+\begin{figure}
+  \hspace{4em}
+  \begin{subfigure}[t]{.25\textwidth}
+  \begin{grammar}
+    <\(\ms{L}\)> ::= \(\cdot\) \;|\; \(\ms{L}, \lhyp{\ell}{A}\)
+  \end{grammar}
+  \end{subfigure}%
+  \begin{subfigure}[t]{.25\textwidth}
+  \begin{grammar}
+    <\(\mb{Q}\)> ::= \(\cdot\) \;|\; \(\mb{Q}; \mb{q}\)
+  \end{grammar}
+  \end{subfigure}%
+  \begin{subfigure}[t]{.25\textwidth}
+  \begin{grammar}
+    <\(\mb{e}\)> ::= \(\cdot\) \;|\; \(\mb{e}, \epsilon\)
+  \end{grammar}
+  \end{subfigure}%
+  \caption{Grammar for label contexts}
+  \Description{}
+  \label{fig:label-grammar}
+\end{figure}
 
 \TODO{label-weakening, labels also have an effect... or do we remove the effect stuff? this would
 also allow us to remove the distinction between where-rec and where-nonrec... but the effect stuff
 is nice...}
-
 \TODO{we note that \emph{each} label gets a quantity vector for the \emph{whole} input context}
 
 \begin{gather*}
