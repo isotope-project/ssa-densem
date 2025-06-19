@@ -2291,7 +2291,28 @@ which means that
 Here, $\ms{L}$ is a list of labels $\ell_i$, annotated with a single parameter type 
 (multiple parameters are implemented as a single tuple parameter), and $\mb{Q}, \mb{e}$ are lists of quantity vectors 
 $\mb{q}_i$ and effects $\epsilon_i$ for each $\ell_i$, as given by the grammar in 
-Figure~\ref{fig:label-grammar}.
+Figure~\ref{fig:label-grammar}. We call $\mb{Q}$ the \emph{quantity matrix}, and $\mb{e}$ the
+\emph{effect vector}.
+
+As we can see, a label context is interpreted w.r.t. a quantity matrix $\mb{Q}$, which also depends
+on the set of live variables $\Gamma$. To extend the set of live variables, we need to zero-pad
+the quantity matrix, an operation which we call \emph{lifting}, and define as follows:
+\begin{equation*}
+  \zeroqv{\cdot} = \cdot \qquad
+  \zeroqv{(\mb{Q}; \mb{q})} = \zeroqv{\mb{Q}} ; (\mb{q}, 0)
+\end{equation*}
+
+We may define a weakening judgement on annotated label contexts  using the rules in 
+Figure~\ref{fig:label-wk}; the judgement is with respect to a particular context $\Gamma$ used to 
+interpret the quantity vectors in $\mb{Q}$. In particular, weakening allows us to  insert arbitrary 
+labels using \brle{skip}, as well as weaken the quantities associated with each
+using \brle{cons}. It is easy to prove that label weakening is compatible with lifting, and in
+particular, that the following rule is derivable:
+\begin{equation*}
+  \prftree[r]{\rle{lift}}
+    {\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{K}^{\mb{Q}'}}}
+    {\lwk{\Gamma, x : A}{\ms{L}^{\zeroqv{\mb{Q}}}}{\ms{K}^{\zeroqv{\mb{Q}'}}}}
+\end{equation*}
 
 \begin{figure}
   \hspace{4em}
@@ -2315,11 +2336,7 @@ Figure~\ref{fig:label-grammar}.
   \label{fig:label-grammar}
 \end{figure}
 
-\TODO{label-weakening, labels also have an effect... or do we remove the effect stuff? this would
-also allow us to remove the distinction between where-rec and where-nonrec... but the effect stuff
-is nice...}
-\TODO{we note that \emph{each} label gets a quantity vector for the \emph{whole} input context}
-
+\begin{figure}
 \begin{gather*}
   \prftree[r]{\rle{nil}}{\lwk{\Gamma}{\cdot}{\cdot}} \qquad 
   \prftree[r]{\rle{cons}}
@@ -2333,21 +2350,12 @@ is nice...}
     {|\Gamma| = |\mb{q}|}
     {\lwk{\Gamma}{\ms{L}^{\mb{Q}}_{\mb{E}}}{\ms{K}^{\mb{Q}}_{\mb{E}}, \lhyp{\ell}{A}^{\mb{q}}_{\epsilon}}}
 \end{gather*}
-
-\TODO{label context upgrades, which add a zero for the top variable for each quantity vector}
-
-\begin{equation*}
-  \zeroqv{\cdot} = \cdot \qquad
-  \zeroqv{(\mb{Q}; \mb{q})} = \zeroqv{\mb{Q}} ; (\mb{q}, 0)
-\end{equation*}
+\caption{Rules for weakening label contexts}
+\Description{}
+\label{fig:label-wk}
+\end{figure}
 
 \TODO{explain each typing rule here}
-
-\begin{equation*}
-  \prftree[r]{\rle{lift}}
-    {\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{K}^{\mb{Q}'}}}
-    {\lwk{\Gamma, x : A}{\ms{L}^{\zeroqv{\mb{Q}}}}{\ms{K}^{\zeroqv{\mb{Q}'}}}}
-\end{equation*}
 
 \begin{figure}
   \begin{gather*}
