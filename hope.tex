@@ -310,80 +310,60 @@
 
 \maketitle
 
-Verification of compiler optimizations typically proceeds along two broad paths, corresponding to
-the chosen semantic framework. On one hand, operational semantics allow verification through
-simulation proofs: a transformed program is shown to simulate the behavior of the original. A
-classic example is \citet{vellvm-12}, which parametrizes LLVM's operational semantics by memory
-models and proves transformations individually sound via bespoke simulation arguments. On the other
-hand, denotational semantics enables proving optimizations correct by establishing semantic equality
-or refinement between original and transformed programs. Monadic semantics have proven effective
-even for complex effects; for instance, monadic Brookes-style semantics have been successfully
-applied to weak memory models such as release-acquire and TSO, as seen in recent work by
-\citet{release-acquire} and \citet{jagadeesan-brookes-relaxed-12}.
+Verification of compiler optimizations typically follows one of two broad semantic paradigms:
+operational and denotational. Operational semantics verifies transformations by constructing
+explicit simulation proofs, demonstrating that optimized programs replicate the behavior of their
+originals. A notable example is \citet{vellvm-12}'s work on Vellvm, which introduces multiple
+operational semantics for LLVM and establishes refinements among them. For instance, verifying the
+SoftBound transformation \cite{nagarakatte-softbound-09} involved defining a bespoke operational
+semantics tailored specifically to SoftBound and then proving simulation relative to the original
+semantics.
 
-However, both these approaches come with limitations. Simulation proofs typically involve repeated
-work for each optimization, reducing reusability—especially when new side effects or memory models
-arise. Conversely, constructing a comprehensive denotational model for a specific effect system
-often demands significant effort, resulting in proofs tightly coupled to the particulars of that
-model. Such proofs rarely generalize, requiring deep familiarity with complex model details.
+In contrast, denotational semantics allow verification by establishing semantic equivalence or
+refinement of the denotations of the original and transformed programs. Even complex side effects,
+such as those arising in weak memory models, can often be elegantly captured using monadic
+frameworks. Examples include monadic Brookes-style semantics for release-acquire
+(\citet{release-acquire}) and TSO (\citet{jagadeesan-brookes-relaxed-12}) memory models.
+Compositionality means that denotational semantics can often be used to reason about optimizations
+\emph{inductively}, as well as effectively reason about small program transformations such as
+peephole rewrites.
 
-Interestingly, many practical compiler optimizations are expressible more abstractly through simpler
-properties of the underlying effects, namely: (1) how different effects commute, (2) peephole
-optimizations on effectful operations, and crucially, (3) the linearity characteristics of
-effects—whether they can be duplicated or discarded safely. In particular, these properties allow
-one to reason about the soundness of \emph{directed substitution}, i.e., whether
-$$
-\letexpr{x}{a}{b} \tref [a/x]b
-$$
-or
-$$
-[a/x]b \tref \letexpr{x}{a}{b}
-$$
-where $\tref$ indicates refinement.
+Simulation proofs in operational semantics are often labor-intensive and lack reusability,
+necessitating new bespoke proofs for each optimization or additional side effect. Conversely,
+denotational semantics demands significant initial investment to construct comprehensive
+mathematical models, with resulting proofs that typically remain tightly coupled to the details of a
+specific model. However, many practical compiler optimizations, such as loop hoisting,
+\texttt{mem2reg}, and sparse conditional constant propagation, seem not to depend upon the specific
+details of the model, instead relying on high level information such as which operations are
+pure/constant. In particular, we observe that we often only require information about:
+\begin{enumerate}
+  \item How different effects commute; for example, printing commutes with (potential) UB, but not
+  with (potential) nontermination. Sometimes, this is a \emph{refinement}, rather than an
+  \emph{equation}: since UB followed by nontermination is UB (which can be optimized to
+  nontermination), but nontermination followed by UB is nontermination (which cannot be optimized to
+  UB)
+  \item Peephole rewrties on effectful operations relevant to our optimization; for example, a
+  \texttt{mem2reg} optimization may not care about details of our memory model except for facts like
+  $\ms{store}\;a\;b ; \ms{get}\;a \tref \ms{store}\;a\;b ; b$, where $\tref$ indicates refinement.
+  In particular, we are interested in
+  \item The \emph{linearity} of different effects. For example, we can't duplicate or discard a
+  printing operation, so it is \emph{linear}. On the other hand, an effect like nontermination can
+  be duplicated ($\letexpr{x}{\ms{maybeloop}}{(x, x)} \teqv (\ms{maybeloop}, \ms{maybeloop})$), i.e.
+  is \emph{relevant}, while an effect like nondeterminism can be discarded
+  ($\letexpr{\cdot}{\ms{nondet}}{5} \teqv 5$), i.e. is \emph{affine}. Again, linearity is sometimes
+  a refinement rather than an equation; for example, $(\ms{nondet}, \ms{nondet}) \tref
+  \letexpr{x}{\ms{nondet}}{(x, x)}$, making nondeterminism \emph{fusable}, but not relevant.
+\end{enumerate}
 
-To illustrate these ideas concretely, consider undefined behavior (UB), as exhibited by division by
-zero. We have a straightforward refinement:
-\[
-(\ms{div}\;y\;z, \ms{div}\;y\;z) \tref \letexpr{x}{\ms{div}\;y\;z}{(x, x)}
-\]
-This refinement expresses that UB is fusable. Moreover, the reverse refinement also holds, showing
-that UB is duplicable. \citet{fuhrmann-direct-1999} classifies effects like UB, which are both
-fusable and duplicable, as copyable. By contrast, nondeterminism is fusable but not duplicable, as
-the refinement:
-\[
-(\ms{nondet}, \ms{nondet}) \tref \letexpr{x}{\ms{nondet}}{(x, x)}
-\]
-is strict, since the left-hand side can yield arbitrary pairs $(x,y)$, unlike the right-hand side.
+\TODO{the talk covers:}
 
-Additionally, UB is eliminable (the expression $\letexpr{x}{\ms{div}\;y\;z}{()}$ refines trivially
-to $()$), but not introducable—clearly, $() \not\tref \letexpr{x}{\ms{div}\;y\;z}{()}$. Conversely,
-nondeterminism is both eliminable and introducable, hence discardable. The nuanced differences
-between UB (copyable and eliminable) and nondeterminism (fusable and discardable) capture essential
-semantic distinctions between undefined and unspecified behavior.
+\TODO{a calculus for reasoning about what equations can be derived from info 1 2 3}
 
-Commutativity properties further enrich the structure of effects. For example, UB acts as a
-right-mover: the refinement $\letexpr{x}{\ms{div}\;y\;z}{(e,x)} \tref (e,\ms{div}\;y\;z)$ holds
-universally. However, UB is a left-mover only relative to specific effects, like nondeterminism or
-memory access, but fails for effects that alter control flow, such as exceptions or nontermination.
-Thus, UB commutes fully with nondeterminism and memory access, but not in general, classifying it as
-partially commutative but not central.
+\TODO{a sound and complete denotational semantics for this calculus}
 
-In this example, therefore, if $a$ exhibits potential UB, then:
-\begin{itemize}
-  \item $\letexpr{x}{a}{b} \tref [a/x]b$ for arbitrary $b$
-  \item $[a/x]b \tref \letexpr{x}{a}{b}$, and therefore $\letexpr{x}{a}{b} \teqv [a/x]b$, if $x$ is
-  used relevantly in $b$ (i.e. at least once) and $b$ has an effect which is a right-mover w.r.t UB
-  (for example, nondeterminism, but \emph{not} nontermination).
-\end{itemize}
+\TODO{an equivalence between this calculus and (substructural) SSA, which we also drive-by-define}
 
-In this talk, we will introduce a formal categorical framework for reasoning about effects in this
-manner in the presence of arbitrary control flow. We then introduce \subiterexp{}, a sound and
-complete calculus for our categorical semantics. Crucially, our framework supports diverse concrete
-models, including sophisticated side-effects such as release-acquire weak memory as formalized in
-\citet{release-acquire}.
-
-This work thus offers a unified algebraic foundation for compiler optimization verification,
-enabling generalized and compositional reasoning about programs exhibiting complex side effects.
+\TODO{fun models which support fun optimizations, like weak memory and separation logic}
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references}
