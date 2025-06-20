@@ -310,8 +310,14 @@
 
 \maketitle
 
-Verification of compiler optimizations typically follows one of two broad semantic paradigms:
-operational and denotational. Operational semantics verifies transformations by constructing
+Compiler optimizations are fundamentally directed rewrites. Most production compilers use the
+\emph{static single assignment}, or SSA, as their intermediate representation, with optimization
+passes consisting of transformations from one \emph{effectful} SSA program into another. This
+immediately leads to a correctness question: is the output program a \emph{refinement} of the input
+program?
+
+Depending on what style semantics we assign our program, we can attempt to answer this question in
+two different ways. Using operational semantics, we can verify transformations by constructing
 explicit simulation proofs, demonstrating that optimized programs replicate the behavior of their
 originals. A notable example is \citet{vellvm-12}'s work on Vellvm, which introduces multiple
 operational semantics for LLVM and establishes refinements among them. For instance, verifying the
@@ -332,12 +338,16 @@ Simulation proofs in operational semantics are often labor-intensive and lack re
 necessitating new bespoke proofs for each optimization or additional side effect. Conversely,
 denotational semantics demands significant initial investment to construct comprehensive
 mathematical models, with resulting proofs that typically remain tightly coupled to the details of a
-specific model. However, many practical compiler optimizations, such as loop hoisting,
-\texttt{mem2reg}, and sparse conditional constant propagation, seem not to depend upon the specific
-details of the model, instead relying on high level information such as which operations are
-pure/constant; for example, \citet{release-acquire} note that, since they use a monadic semantics,
-they have access to a huge amount of generic machinery to deal with, e.g., higher-order programs,
-``for free''. In particular, we observe that we often only require information about:
+specific model. Using denotational semantics also requires us to figure out how to break down a
+program into components, and compositionally assign a semantics to those components; this has
+recently been achieved for SSA by \citet{ghalayini-24-ssa-densem-arxiv}.
+
+However, many practical compiler optimizations, such as loop hoisting, \texttt{mem2reg}, and sparse
+conditional constant propagation, seem not to depend upon the specific details of the model, instead
+relying on high level information such as which operations are pure/constant; for example,
+\citet{release-acquire} note that, since they use a monadic semantics, they have access to a huge
+amount of generic machinery to deal with, e.g., higher-order programs, ``for free''. In particular,
+we observe that we often only require information about:
 \begin{enumerate}
   \item How different effects commute; for example, printing commutes with (potential) UB, but not
   with (potential) nontermination. Sometimes, this is a \emph{refinement}, rather than an
@@ -360,9 +370,9 @@ In this work, we introduce \subiterexp{}, a simple calculus for reasoning about 
 given an effect system and information about (directed) commutativity, linearity, and an arbitrary
 set of peephole rewrites. We then proceed to:
 \begin{itemize}
-  \item Provide a denotational semantics for \subiterexp{}, which we prove is sound and complete
   \item Show \subiterexp{} is in fact equivalent to (substructural) SSA, and explore how this can be
   used to reason about compiler optimization passes
+  \item Provide a denotational semantics for \subiterexp{}, which we prove is sound and complete
   \item Give some interesting models of \subiterexp{}, supporting effects such as weak memory and
   complex type-system features such as separation logic
 \end{itemize}
