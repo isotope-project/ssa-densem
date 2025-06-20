@@ -1992,16 +1992,15 @@ as follows: \subiterexp{}:
     $
   \end{itemize}
 \end{definition}
+We define the \emph{effective type} of an annotated type $A^q$, $\etoty{A^q}$ to be $\mb{1}$ if
+$q = 0$, and $A$ otherwise. We can then proceed to define the effective type of an annotated context
+$\Gamma^{\mb{q}}$ to be the tensor product of its variables, i.e., $\etoty{\cdot} = \mb{1}$ and
+$\etoty{\Gamma, x : A^q} = \etoty{\Gamma} \otimes \etoty{A^q}$. 
 We will abuse notation slightly and extend $\dnt{\cdot}$ to quantity 
 annotated types $A^q$ by taking $\dnt{A^q} = \dnt{\etoty{A^q}}$; likewise, we define $!_{A^q} =
-!_{\etoty{A^q}}$ and $\Delta_{A^q} = \Delta_{\etoty{A^q}}$. As is standard, we proceed to
-define the semantics of an annotated context $\dnt{\Gamma^{\mb{q}}} : |\mc{C}|$ as the tensor
-product of the denotation of it's variables, i.e.,
-\begin{gather*}
-  \dnt{\cdot} = I
-  \qquad \dnt{\Gamma^{\mb{q}}, x : A^q_\epsilon} 
-          = \dnt{\Gamma^{\mb{q}}} \otimes \dnt{A^q}
-\end{gather*}
+!_{\etoty{A^q}}$ and $\Delta_{A^q} = \Delta_{\etoty{A^q}}$, where the \emph{effective type} of an annotated type $A^q$, $\etoty{A^q}$, is $\mb{1}$ if $q = 0$, and $A$ otherwise. 
+Likewise, we proceed to define the semantics of an annotated context $\dnt{\Gamma^{\mb{q}}} : |\mc{C}|$ as $\dnt{\etoty{\Gamma^{\mb{q}}}}$.
+
 We can now define the semantics of our structural judgements, weakenings and context splitting, in
 Figure~\ref{fig:struct-sem}. In particular, weakenings simply discard unused variables (which are
 guaranteed to be of affine type), while context splitting duplicates variables used in both the left
@@ -2253,9 +2252,10 @@ It then follows from soundness and the existence of $\ms{Tm}(\mc{R})$ that
 $\tmle{\Gamma}{\mc{R}}{a}{b}{A}$ \emph{if and only if} for all models $\mc{M} \models \mc{R}$,
 $\dnt{\hasty{\Gamma}{}{a}{A}}_{\mc{M}} \leq \dnt{\hasty{\Gamma}{}{b}{A}}_{\mc{M}}$, as desired.
 
-As is standard, our syntactic model $\ms{Tm}(\mc{R})$ will have types as objects. To construct
-morphisms, we start with terms with a single free variable. We stratify these terms by type and
-effect as follows:
+We now proceed to give a sketch of the construction of $\ms{Tm}(\mc{R})$ and the proof of 
+completeness; full details are given in Appendix~\ref{apx:completeness}. As is standard, our 
+syntactic model $\ms{Tm}(\mc{R})$ will have types as objects. To construct morphisms, we start with 
+terms with a single free variable. We stratify these terms by type and effect as follows:
 $$
 \ms{Term}(\mc{R})_\epsilon(A, B) := \{(x, a) \mid \hasty{x : A^\top}{\epsilon}{a}{B}\}
 $$
@@ -2268,7 +2268,69 @@ $$
 $$
 We can equip $\ms{Tm}(\mc{R})$ with the structure of a poset-enriched
 category by using the refinement relation as a partial order; it is trivial to see that this is
-well-defined. The rest of the structure of a \subiterexp{}-model is given in the appendix.
+well-defined. The rest of the structure of a \subiterexp{}-model is given in Appendix~\ref{apx:syn-model}.
+
+By soundness (since all members of an equivalence class with the same variable $x$ are equivalent) and semantic substitution (to allow us to rename variables, since a renaming has the identity as
+denotation), for any $f : \ms{Tm}_\epsilon(\mc{R})(A, B)$, we have that, for any model 
+$\mc{M} \models \mc{R}$,
+$$
+\forall (x, a), (y, b) \in f, \dnt{\hasty{x : A^\top}{\epsilon}{a}{B}}_{\mc{M}} 
+  = \dnt{\hasty{x : A^\top}{\epsilon}{b}{B}}_{\mc{M}}
+$$
+It follows that we can lift $\dnt{\cdot}_{\mc{M}}$ to $\ms{Tm}_\epsilon(\mc{R})$ by defining, for arbitrary
+$(x, a)$ in the equivalence class,
+$
+\dnt{f}_{\mc{M}} = \dnt{\hasty{x : A^\top}{\epsilon}{a}{B}}_{\mc{M}} 
+  : \mc{C}_\epsilon(\dnt{A}, \dnt{B})
+$. It therefore makes sense to ask whether we can relate 
+$\dnt{\dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}}_{\ms{Tm}(\mc{R})}}_{\mc{M}}$ 
+(where $\dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}}_{\ms{Tm}(\mc{R})} 
+  : \ms{Tm}(\mc{R})(\etoty{\Gamma^{\mb{q}}}, A)$)
+and
+$\dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}}_{\mc{M}}$; it turns out we can via the 
+\emph{packing lemma}:
+\begin{lemma}[Packing]
+  We can define functions $\ms{pack}$, $\ms{unpack}$ mapping derivations 
+  $\hasty{x : \etoty{\Gamma^{\mb{q}}}}{\epsilon}{a}{A}$, $\hasty{\Gamma^{\mb{q}}}{\epsilon}{b}{A}$
+  such that
+  \begin{itemize}
+    \item $\hasty{\Gamma^{\mb{q}}}{\epsilon}{
+        \ms{pack}(\hasty{x : \etoty{\Gamma^{\mb{q}}}}{\epsilon}{a}{A})
+        }{A}$ with
+        $$
+        \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{
+          \ms{pack}(\hasty{x : \etoty{\Gamma^{\mb{q}}}}{\epsilon}{a}{A})
+          }{A}}
+          = \lambda^{-1} ; \dnt{\hasty{x : \etoty{\Gamma^{\mb{q}}}}{\epsilon}{a}{A}}
+        $$
+    \item $\hasty{x : \etoty{\Gamma^{\mb{q}}}}{\epsilon}{
+      \ms{unpack}_x(\hasty{\Gamma^{\mb{q}}}{\epsilon}{b}{A})
+      }{A}$ with
+      $$
+      \dnt{\hasty{x : \etoty{\Gamma^{\mb{q}}}}{\epsilon}{
+        \ms{unpack}_x(\hasty{\Gamma^{\mb{q}}}{\epsilon}{b}{A})
+        }{A}}
+        = \lambda ; \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{b}{A}}
+      $$
+    \item $\tmeq{x : \etoty{\Gamma^{\mb{q}}}}{\mc{R}}
+        {\ms{unpack}_x(\ms{pack}(\hasty{x : \etoty{\Gamma^{\mb{q}}}}{\epsilon}{a}{A}))}
+        {a}
+        {A}$
+    \item $\tmeq{\Gamma^{\mb{q}}}{\mc{R}}
+        {\ms{pack}(\ms{unpack}_x(\hasty{\Gamma^{\mb{q}}}{\epsilon}{b}{A}))}
+        {b}
+        {A}$
+  \end{itemize}
+  \label{lem:packing}
+\end{lemma} 
+Completeness immediately follows from the fact that
+\begin{equation}
+  (x, \ms{unpack}_x(\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A})) \in
+  \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}}_{\ms{Tm}(\mc{R})}
+  \label{eqn:unpacking}
+\end{equation}
+Details of the definition of $\ms{pack}$ and $\ms{unpack}$ and the proofs of Lemma~\ref{lem:packing} 
+and Equation~\ref{eqn:unpacking} are given in Appendix~\ref{apx:packing}.
 
 \section{SSA Typing and Semantics}
 
@@ -2573,20 +2635,40 @@ expressions.
   \Description{}
   \label{fig:ssa-densem}
 \end{figure}
+We will consider two \isotopessa{} programs equivalent under the relation $\mc{R}$...
 
-We now wish to show that \isotopessa{} and \subiterexp{} are equivalent; to show this, it suffices
+\TODO{program equivalence}
+
+We now wish to show that \isotopessa{} and \subiterexp{} are equivalent
+
+\TODO{SSA to Expr, Expr to SSA, bijection up to equivalence}
+
+; to show this, it suffices
 to show that there are semantics-preserving translations between them. For the than explicitly
 translate \isotopessa{} to \subiterexp{}, it suffices to note that the denotational semantics of
 \isotopessa{} using the syntactic \subiterexp{}-model can be viewed as mapping \isotopessa{} regions
 to (equivalence classes of) \subiterexp{} expressions satisfying
 $$
-\forall (x, a) \in \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{r}{\ms{L}^{\mb{Q}}}} . 
+\forall (x, a) \in \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{r}{\ms{L}^{\mb{Q}}}}_{\ms{Tm}(\mc{R})}, \qquad
   \hasty{x : \etoty{\Gamma^{\mb{q}}}}{\epsilon}{a}{\ltoty{\Gamma}{\ms{L}^{\mb{Q}}}}
 $$
+It hence suffices to show that
+\begin{equation}
+\forall (x, a) \in \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{r}{\ms{L}^{\mb{Q}}}}_{\ms{Tm}(\mc{R})},
+  \dnt{\hasty{x : \etoty{\Gamma^{\mb{q}}}}{\epsilon}{a}{\ltoty{\Gamma}{\ms{L}^{\mb{Q}}}}}
+  = \rho^{-1}_{\dnt{\Gamma^{\mb{q}}}} 
+  ; \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{r}{\ms{L}^{\mb{Q}}}}
+  \label{eqn:ssa-to-expr}
+\end{equation}
+For the other direction, we require a semantics-preserving function $\ms{SSA}$ compiling well-typed
+\subiterexp{} terms to SSA (with a single output label corresponding to the output value), i.e., such that
+\begin{equation}
+  \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{\ms{SSA}(\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A})}{\ell(A)^0}} = \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}} ; \alpha^+
+  \label{eqn:expr-to-ssa}
+\end{equation}
+We leave the definition of $\ms{SSA}$ and the proof of Equations~\ref{eqn:ssa-to-expr} and \ref{eqn:expr-to-ssa} to Appendix~\ref{apx:ssa-roundtrip}.
 
-\TODO{by completeness, $\subseteq$ expressions; this is like \citet{bohm-jacopini}}
-
-\TODO{by translation, expressions $\subseteq$; translation procedure goes to appendix}
+\TODO{\citet{bohm-jacopini} lore}
 
 \section{Concrete Models}
 
@@ -2784,9 +2866,23 @@ agreement no. 101002277).
 
 \section{Completeness}
 
+\label{apx:completeness}
+
+\subsection{Syntactic Model}
+
+\label{apx:syn-model}
+
+\TODO{this}
+
+\subsection{Packing Lemma}
+
+\label{apx:packing}
+
 \TODO{this}
 
 \section{SSA Semantics}
+
+\label{apx:ssa-roundtrip}
 
 \TODO{this}
 
