@@ -6,12 +6,30 @@ jobs:
     steps:
       - name: Set up Git repository
         uses: actions/checkout@v4
-      - name: Compile LaTeX document
+      - name: Compile paper.tex
         uses: xu-cheng/latex-action@v3
         with:
           root_file: paper.tex
-      - name: Upload PDF file
+      - name: Compile refined.tex
+        uses: xu-cheng/latex-action@v3
+        with:
+          root_file: refined.tex
+      - name: Compile hope.tex
+        uses: xu-cheng/latex-action@v3
+        with:
+          root_file: hope.tex
+      - name: Upload paper.pdf
         uses: actions/upload-artifact@v4
         with:
-          name: PDF
+          name: paper.pdf
           path: paper.pdf
+      - name: Upload refined.pdf
+        uses: actions/upload-artifact@v4
+        with:
+          name: refined.pdf
+          path: refined.pdf
+      - name: Upload hope.pdf
+        uses: actions/upload-artifact@v4
+        with:
+          name: hope.pdf
+          path: hope.pdf

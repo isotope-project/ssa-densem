@@ -156,8 +156,7 @@
 \newcommand{\toterm}[1]{\ms{Term}(#1)}
 \newcommand{\etoty}[1]{[#1]}
 \newcommand{\ctoty}[1]{[#1]}
-\newcommand{\ltoty}[2]{[#1]}
-\newcommand{\dltoty}[2]{[#1; #2]}
+\newcommand{\ltoty}[2]{[#1 \mapsto #2]}
 
 % Denotational semantics
 \newcommand{\dnt}[1]{\llbracket{#1}\rrbracket}
@@ -2311,6 +2310,8 @@ particular, that the following rule is derivable:
     {\lwk{\Gamma, x : A}{\ms{L}^{\zeroqv{\mb{Q}}}}{\ms{K}^{\zeroqv{\mb{Q}'}}}}
 \end{equation*}
 
+\TODO{fuse figures here}
+
 \begin{figure}
   \hspace{4em}
   \begin{subfigure}[t]{.25\textwidth}
@@ -2433,8 +2434,12 @@ accordingly.
   \label{fig:ssa-typing}
 \end{figure}
 
-We can now proceed to give a denotational semantics for \isotopessa{}, which we will then use to 
-relate it to \subiterexp{}. We begin by giving a denotational semantics for label contexts and label
+We can now proceed to give a denotational semantics for \isotopessa{}, which targets an arbitrary
+\subiterexp{} model of our signature. 
+
+\TODO{rework label context narrative to define and use ltoty}
+
+We begin by giving a denotational semantics for label contexts and label
 weakenings in Figure~\ref{fig:lwk-densem}, which are both w.r.t. a variable context $\Gamma$.
 It is easy to verify that we can reassociate 
 $\alpha^+: \mc{C}_\bot(\dnt{\ms{L}^{\zeroqv{\mb{Q}}}}(\Gamma, x : A), \dnt{\ms{L}^{\mb{Q}}}(\Gamma))
@@ -2568,6 +2573,16 @@ expressions.
   \Description{}
   \label{fig:ssa-densem}
 \end{figure}
+
+We now wish to show that \isotopessa{} and \subiterexp{} are equivalent; to show this, it suffices
+to show that there are semantics-preserving translations between them. For the than explicitly
+translate \isotopessa{} to \subiterexp{}, it suffices to note that the denotational semantics of
+\isotopessa{} using the syntactic \subiterexp{}-model can be viewed as mapping \isotopessa{} regions
+to (equivalence classes of) \subiterexp{} expressions satisfying
+$$
+\forall (x, a) \in \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{r}{\ms{L}^{\mb{Q}}}} . 
+  \hasty{x : \etoty{\Gamma^{\mb{q}}}}{\epsilon}{a}{\ltoty{\Gamma}{\ms{L}^{\mb{Q}}}}
+$$
 
 \TODO{by completeness, $\subseteq$ expressions; this is like \citet{bohm-jacopini}}
 
