@@ -2433,25 +2433,34 @@ accordingly.
   \label{fig:ssa-typing}
 \end{figure}
 
-\TODO{give denotational semantics of SSA in Figure~\ref{fig:ssa-densem}}
+We can now proceed to give a denotational semantics for \isotopessa{}, which we will then use to 
+relate it to \subiterexp{}. We begin by giving a denotational semantics for label contexts and label
+weakenings in Figure~\ref{fig:lwk-densem}, which are both w.r.t. a variable context $\Gamma$.
+It is easy to verify that we can reassociate 
+$\alpha^+: \mc{C}_\bot(\dnt{\ms{L}^{\zeroqv{\mb{Q}}}}(\Gamma, x : A), \dnt{\ms{L}^{\mb{Q}}}(\Gamma))
+$ and $\alpha^+ : \mc{C}_\bot(
+  \dnt{\ms{L}^{\mb{Q}}, \ms{R}^{\mb{Q}'}}(\Gamma),
+  \dnt{\ms{L}^{\mb{Q}}}(\Gamma) + \dnt{\ms{R}^{\mb{Q}'}}(\Gamma)
+)
+$; we will use these freely in our semantics. 
+
+We can now give our semantics for regions in Figure~\ref{fig:ssa-densem}; just like for the typing
+judgements, the semantics of operations is given by the semantics of the corresponding \subiterexp{}
+expressions.
+\begin{itemize}
+  \item \todo{br semantics}
+  \item \todo{let and case semantics}
+  \item \todo{where nonrec semantics}
+  \item \todo{where semantics}
+\end{itemize}
 
 \begin{figure}
   \begin{gather*}
     \boxed{\dnt{\ms{L}^{\mb{Q}}}(\Gamma) : |\mc{C}|}  
-    \qquad
+    \\
     \dnt{\cdot}(\Gamma) = \mb{0} \qquad
     \dnt{\ms{L}^{\mb{Q}}, \ell(A)^{\mb{q}}_{\epsilon}}(\Gamma)
     = \dnt{\ms{L}^{\mb{Q}}}(\Gamma) + \dnt{\Gamma^{\mb{q}}} \otimes \dnt{A}
-    \\
-    \boxed{\dwnqv{\ms{L}^{\mb{Q}}}_{\Gamma}
-      : \mc{C}_\bot(
-          \dnt{\ms{L}^{\zeroqv{\mb{Q}}}}(\Gamma, x : A), 
-          \dnt{\ms{L}^{\mb{Q}}}(\Gamma)
-        )}
-    \\
-    \dwnqv{\cdot}_\Gamma = \ms{id}_{\mb{0}} \qquad
-    \dwnqv{\ms{L}^{\mb{Q}}, \lhyp{\ell}{A}^{\mb{q}}_{\epsilon}}_\Gamma
-    = \dwnqv{\ms{L}^{\mb{Q}}}_\Gamma + \rho_{\dnt{\Gamma^{\mb{q}}}} \otimes \dnt{A}
     \\
     \boxed{\dnt{\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{K}^{\mb{Q}'}}} 
       : \mc{C}_\bot(\dnt{\ms{L}^{\mb{Q}}}(\Gamma), \dnt{\ms{K}^{\mb{Q}'}}(\Gamma))} \\
@@ -2481,7 +2490,7 @@ accordingly.
     \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
     ; - \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{o}{A}}
     ; \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{t}{\ms{L}^{\zeroqv{\mb{Q}}}}}
-    ; \dwnqv{\ms{L}^{\mb{Q}}} \\
+    ; \alpha^+ \\
     \dnt
     {\haslb{\Gamma^{\mb{q}}}{\epsilon}{\letstmt{(x, y)}{o}{t}}{\ms{L}^{\mb{Q}}}}
     =
@@ -2492,8 +2501,7 @@ accordingly.
     \qquad 
     ; \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A, y : B}{\epsilon}{t}
       {\ms{L}^{\zeroqv{(\zeroqv{\mb{Q}})}}}}
-    ; \dwnqv{\ms{L}^{\zeroqv{\mb{Q}}}}
-    ; \dwnqv{\ms{L}^{\mb{Q}}}
+    ; \alpha^+
     \\
     \dnt
     {\haslb{\Gamma^{\mb{q}}}{\epsilon}{\brb{\ell}{a}}{\ms{L}^{\mb{Q}}}}
