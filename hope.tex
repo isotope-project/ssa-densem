@@ -346,8 +346,8 @@ they have access to a huge amount of generic machinery to deal with, e.g., highe
   UB)
   \item Peephole rewrties on effectful operations relevant to our optimization; for example, a
   \texttt{mem2reg} optimization may not care about details of our memory model except for facts like
-  $\ms{store}\;a\;b ; \ms{get}\;a \tref \ms{store}\;a\;b ; b$, where $\tref$ indicates refinement.
-  In particular, we are interested in
+  $\ms{store}\;a\;b ; \ms{get}\;a \tref \letexpr{x}{b}{\ms{store}\;a\;x ; x}$, where $\tref$
+  indicates refinement. In particular, we are interested in
   \item The \emph{linearity} of different effects. For example, we can't duplicate or discard a
   printing operation, so it is \emph{linear}. On the other hand, an effect like nontermination can
   be duplicated (e.g. $\letexpr{x}{\ms{maybeloop}}{(x, x)} \teqv (\ms{maybeloop}, \ms{maybeloop})$),
