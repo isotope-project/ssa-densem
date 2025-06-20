@@ -843,8 +843,8 @@ particular,
 \begin{figure}
   \begin{gather*}
     \prftree[r]{\rle{var}}
-      {\cwk{\Gamma^{\mb{q}}_{\mb{e}}}{x : A^\oneq}}
-        {\hasty{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{x}{A}} 
+      {\cwk{\Gamma^{\mb{q}}}{x : A^\oneq}}
+        {\hasty{\Gamma^{\mb{q}}}{\epsilon}{x}{A}} 
       \qquad
     \prftree[r]{\rle{let$_1$}}{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
       {\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A}}
@@ -2010,16 +2010,16 @@ and right component contexts (which are guaranteed to be of relevant type).
 
 \begin{figure}
   \begin{gather*}
-    \boxed{\dnt{\cwk{\Gamma^{\mb{q}}}{\Delta^{\mb{q}'}_{\mb{e}'}}} 
-      : \mc{C}_\bot(\dnt{\Gamma^{\mb{q}}}, \dnt{\Delta^{\mb{q}'}_{\mb{e}'}})} \\
+    \boxed{\dnt{\cwk{\Gamma^{\mb{q}}}{\Delta^{\mb{q}'}}} 
+      : \mc{C}_\bot(\dnt{\Gamma^{\mb{q}}}, \dnt{\Delta^{\mb{q}'}})} \\
     \dnt{\cwk{\cdot}{\cdot}} = \ms{id}_I \qquad
-    \dnt{\cwk{\Gamma^{\mb{q}}, x : A^q_\epsilon}{\Delta^{\mb{q}'}_{\mb{e}'}}}
+    \dnt{\cwk{\Gamma^{\mb{q}}, x : A^q_\epsilon}{\Delta^{\mb{q}'}}}
       = \dnt{\Gamma^{\mb{q}}} \otimes !_{A^q}
       ; \lambda
-      ; \dnt{\cwk{\Gamma^{\mb{q}}}{\Delta^{\mb{q}'}_{\mb{e}'}}} \\
+      ; \dnt{\cwk{\Gamma^{\mb{q}}}{\Delta^{\mb{q}'}}} \\
     \dnt{\cwk{\Gamma^{\mb{q}}, x : A^q_\epsilon}
-              {\Delta^{\mb{q}'}_{\mb{e}'}, x : A^{q'}_{\epsilon'}}}
-      = \dnt{\cwk{\Gamma^{\mb{q}}}{\Delta^{\mb{q}'}_{\mb{e}'}}} \otimes \begin{cases}
+              {\Delta^{\mb{q}'}, x : A^{q'}_{\epsilon'}}}
+      = \dnt{\cwk{\Gamma^{\mb{q}}}{\Delta^{\mb{q}'}}} \otimes \begin{cases}
         \ms{id}_{\dnt{A}} & \text{if } q, q' \neq 0 \\
         !_{A^q} & \text{otherwise} \\
       \end{cases}
@@ -2279,20 +2279,17 @@ element of an \isotopessa{} program is a \emph{region} $r$, which can be viewed 
 fragment with a single entry point and multiple exit points. Consequently, our primitive typing 
 judgement will be of the form
 $$
-\boxed{\haslb{\Gamma^{\mb{q}}}{\epsilon}{r}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+\boxed{\haslb{\Gamma^{\mb{q}}}{\epsilon}{r}{\ms{L}^{\mb{Q}}}}
 $$
 which means that
 \begin{itemize}
-  \item Assuming the variables in $\Gamma$ are live on entry, with quantity $\mb{q}$, and
-  \item Jumping to each label in $\ms{L}$ can trigger at most the corresponding effect in $\mb{e}$.
-  \item Executing $r$ jumps to one of the labels in $\ms{L}$, with \emph{leftover} quantities
-  $\mb{Q}$ and effect $\epsilon$.
+  \item \emph{If} the variables in $\Gamma$ are live on entry, with quantity $\mb{q}$
+  \item \emph{Then} executing the region $r$ jumps to one of the labels in $\ms{L}$, with 
+  \emph{leftover} quantities $\mb{Q}$.
 \end{itemize}
 Here, $\ms{L}$ is a list of labels $\ell_i$, annotated with a single parameter type 
-(multiple parameters are implemented as a single tuple parameter), and $\mb{Q}, \mb{e}$ are lists of quantity vectors 
-$\mb{q}_i$ and effects $\epsilon_i$ for each $\ell_i$, as given by the grammar in 
-Figure~\ref{fig:label-grammar}. We call $\mb{Q}$ the \emph{quantity matrix}, and $\mb{e}$ the
-\emph{effect vector}.
+(multiple parameters are implemented as a single tuple parameter), and $\mb{Q}$ is a list of 
+quantity vectors $\mb{q}_i$ which we call the \emph{quantity matrix}.
 
 As we can see, a label context is interpreted w.r.t. a quantity matrix $\mb{Q}$, which also depends
 on the set of live variables $\Gamma$. To extend the set of live variables, we need to zero-pad
@@ -2326,11 +2323,6 @@ particular, that the following rule is derivable:
     <\(\mb{Q}\)> ::= \(\cdot\) \;|\; \(\mb{Q}; \mb{q}\)
   \end{grammar}
   \end{subfigure}%
-  \begin{subfigure}[t]{.25\textwidth}
-  \begin{grammar}
-    <\(\mb{e}\)> ::= \(\cdot\) \;|\; \(\mb{e}, \epsilon\)
-  \end{grammar}
-  \end{subfigure}%
   \caption{Grammar for label contexts}
   \Description{}
   \label{fig:label-grammar}
@@ -2340,15 +2332,14 @@ particular, that the following rule is derivable:
 \begin{gather*}
   \prftree[r]{\rle{nil}}{\lwk{\Gamma}{\cdot}{\cdot}} \qquad 
   \prftree[r]{\rle{cons}}
-    {\lwk{\Gamma}{\ms{L}^{\mb{Q}}_{\mb{E}}}{\ms{K}^{\mb{Q}}_{\mb{E}}}}
+    {\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{K}^{\mb{Q}}}}
     {\cwk{\Gamma^{\mb{q}'}}{\Gamma^{\mb{q}}}}
-    {\epsilon' \leq \epsilon}
-    {\lwk{\Gamma}{\ms{L}^{\mb{Q}}_{\mb{e}}, \lhyp{\ell}{A}^{\mb{q}}_{\epsilon}}
-    {\ms{K}^{\mb{Q}}_{\mb{e}}, \lhyp{\ell}{A}^{\mb{q}'}_{\epsilon'}}} \qquad
+    {\lwk{\Gamma}{\ms{L}^{\mb{Q}}, \lhyp{\ell}{A}^{\mb{q}}_{\epsilon}}
+    {\ms{K}^{\mb{Q}}, \lhyp{\ell}{A}^{\mb{q}'}_{\epsilon'}}} \qquad
   \prftree[r]{\rle{skip}}
-    {\lwk{\Gamma}{\ms{L}^{\mb{Q}}_{\mb{E}}}{\ms{K}^{\mb{Q}}_{\mb{E}}}}
+    {\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{K}^{\mb{Q}}}}
     {|\Gamma| = |\mb{q}|}
-    {\lwk{\Gamma}{\ms{L}^{\mb{Q}}_{\mb{E}}}{\ms{K}^{\mb{Q}}_{\mb{E}}, \lhyp{\ell}{A}^{\mb{q}}_{\epsilon}}}
+    {\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{K}^{\mb{Q}}, \lhyp{\ell}{A}^{\mb{q}}_{\epsilon}}}
 \end{gather*}
 \caption{Rules for weakening label contexts}
 \Description{}
@@ -2360,81 +2351,82 @@ that instructions $o$ are simply treated as restricted expressions in \subiterex
 accordingly.
 \begin{itemize}
   \item We begin with the typing rule for branches, \brle{br}. This states that, if $o$ is a pure
-  expression of type $A$, and $\ell(A)^{\mb{q}_l}_\epsilon$ weakens to the label context 
-  $\ms{L}^{\mb{Q}}_{\mb{e}}$, where $\mb{q}_l$ is the quantities left over after typing $o$, then
-  $\brb{\ell}{o}$ is a valid branch into $\ms{L}^{\mb{Q}}_{\mb{e}}$
+  expression of type $A$, and $\ell(A)^{\mb{q}_l}$ weakens to the label context 
+  $\ms{L}^{\mb{Q}}$, where $\mb{q}_l$ is the quantities left over after typing $o$, then
+  $\brb{\ell}{o}$ is a valid branch into $\ms{L}^{\mb{Q}}$
   \item Let-bindings are typed using \brle{let$_1$} and \brle{let$_2$}, which are exactly the same
   as the corresponding rule for expressions, except that we target a label-context, which needs to
   be lifted (i.e. $\mb{Q}$ replaced with $\zeroqv{\mb{Q}}$) in the premise to deal with the 
   additional variable in the input context.
   \item Case terminators are typed using \brle{case}, which is again the same as the rule for 
-  expressions modulo lifting
+  expressions modulo lifting, except for the fact that the discriminator $o$ is required to be
+  pure.
   \item \ms{where}-blocks are typed using \brle{where$_\ms{nonrec}$} and \brle{where$_\ms{rec}$}, 
   which we distinguish since the effect of an \ms{where_{rec}} subtree must be iterative 
   (since, for example, we often track potential nontermination as an explicit effect).
 
   \brle{where$_\ms{nonrec}$} subtrees are composed of an entry subtree $\kappa$, which we take to target
-  the compound label-context $\ms{L}^{\mb{Q}}_{\mb{e}}, \ms{R}^{\mb{Q}'}_{\mb{e}'}$, and,
-  for each label in $\ell_i(A_i)^{\mb{q_i}}_{\epsilon_i}$ in $\ms{R}^{\mb{Q}'}_{\mb{e}'}$, an 
-  associated region $t_i$ which, with variables $\Gamma^{\mb{q}_i}_{\mb{e}}, x_i : A_i$ live
-  on entry, targets the exit labels $\ms{L}^{\mb{Q}}_{\mb{e}}$ with effect $\epsilon_i$. 
-  This is non-recursive since the $\ms{R}^{\mb{Q}'}_{\mb{e}'}$ cannot call themselves, but we can 
-  encode any DAG since the inner subtree $\kappa$ can contain other basic blocks.
+  the compound label-context $\ms{L}^{\mb{Q}}, \ms{R}^{\mb{Q}'}$, and,
+  for each label in $\ell_i(A_i)^{\mb{q_i}}$ in $\ms{R}^{\mb{Q}'}$, an 
+  associated region $t_i$ which, with variables $\Gamma^{\mb{q}_i}$ plus an argument $x_i : A_i$ 
+  live on entry, targets the exit labels $\ms{L}^{\mb{Q}}$. 
+  This is non-recursive since the $\ms{R}^{\mb{Q}'}$ cannot call themselves, but we can 
+  encode any DAG since the inner subtree $\kappa$ can contain other regions.
 
   \brle{where$_\ms{rec}$} simply requires the effect $\epsilon$ to be iterative, and in exchange 
-  allows the $t_i$ to make recursive calls to $\ms{R}^{\mb{Q}'}_{\mb{e}'}$ as well.
+  allows the $t_i$ to make recursive calls to $\ms{R}^{\mb{Q}'}$ as well.
 \end{itemize}
 
 \begin{figure}
   \begin{gather*}
     \prftree[r]{\rle{br}}
       {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-      {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\bot}{o}{A}}
-      {\lwk{\Gamma}{\lhyp{\ell}{A}_\epsilon^{\mb{q}_l}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
-      {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\brb{\ell}{o}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+      {\hasty{\Gamma^{\mb{q}_r}}{\bot}{o}{A}}
+      {\lwk{\Gamma}{\lhyp{\ell}{A}^{\mb{q}_l}}{\ms{L}^{\mb{Q}}}}
+      {\haslb{\Gamma^{\mb{q}}}{\epsilon}{\brb{\ell}{o}}{\ms{L}^{\mb{Q}}}}
     \\
     \prftree[r]{\rle{let$_1$}}
       {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-      {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{o}{A}}
-      {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{t}{\ms{L}^{\zeroqv{\mb{Q}}}_{\mb{e}}}}
-      {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\letstmt{x}{o}{t}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+      {\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{o}{A}}
+      {\haslb{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{t}{\ms{L}^{\zeroqv{\mb{Q}}}}}
+      {\haslb{\Gamma^{\mb{q}}}{\epsilon}{\letstmt{x}{o}{t}}{\ms{L}^{\mb{Q}}}}
     \\
     \prftree[r]{\rle{let$_2$}}
       {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-      {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{o}{A \otimes B}}
-      {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A, y : B}{\epsilon}{t}
-        {\ms{L}^{\zeroqv{(\zeroqv{\mb{Q}})}}}_{\mb{e}}}
-      {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\letstmt{(x, y)}{o}{t}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+      {\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{o}{A \otimes B}}
+      {\haslb{\Gamma^{\mb{q}_l}, x : A, y : B}{\epsilon}{t}
+        {\ms{L}^{\zeroqv{(\zeroqv{\mb{Q}})}}}}
+      {\haslb{\Gamma^{\mb{q}}}{\epsilon}{\letstmt{(x, y)}{o}{t}}{\ms{L}^{\mb{Q}}}}
     \\
     \prftree[r]{\rle{case}}
       {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-      {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\bot}{o}{A + B}}
-      {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A}{\epsilon}{\tau_l}
-        {\ms{L}^{\zeroqv{\mb{Q}}}_{\mb{e}}}}
-      {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, y : B}{\epsilon}{\tau_r}
-        {\ms{L}^{\zeroqv{\mb{Q}}}_{\mb{e}}}}
-      {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\casestmt{o}{x}{\tau_l}{y}{\tau_r}}
-                                                {\ms{L}^{\mb{Q}}_{\mb{e}}}}
+      {\hasty{\Gamma^{\mb{q}_r}}{\bot}{o}{A + B}}
+      {\haslb{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{\tau_l}
+        {\ms{L}^{\zeroqv{\mb{Q}}}}}
+      {\haslb{\Gamma^{\mb{q}_l}, y : B}{\epsilon}{\tau_r}
+        {\ms{L}^{\zeroqv{\mb{Q}}}}}
+      {\haslb{\Gamma^{\mb{q}}}{\epsilon}{\casestmt{o}{x}{\tau_l}{y}{\tau_r}}
+                                                {\ms{L}^{\mb{Q}}}}
     \\
     \prftree[r]{\rle{where$_{\ms{nonrec}}$}}
-      {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\kappa}
-        {\ms{L}^{\mb{Q}}_{\mb{e}}, \ms{R}^{\mb{Q}'}_{\mb{e}'}}}
-      {\forall \lhyp{\ell_i}{A_i}^{\mb{q}_i}_{\epsilon_i} \in \ms{R}^{\mb{Q}'}_{\mb{e}'} .
-        \haslb{\Gamma^{\mb{q}}_{\mb{e}}, x_i : A_i}{\epsilon_i}{t_i}{\ms{L}^{\mb{Q}}_{\mb{e}}}
+      {\haslb{\Gamma^{\mb{q}}}{\epsilon}{\kappa}
+        {\ms{L}^{\mb{Q}}, \ms{R}^{\mb{Q}'}}}
+      {\forall \lhyp{\ell_i}{A_i}^{\mb{q}_i} \in \ms{R}^{\mb{Q}'} .
+        \haslb{\Gamma^{\mb{q}}, x_i : A_i}{\epsilon}{t_i}{\ms{L}^{\mb{Q}}}
       }
-      {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\awhere{\kappa}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
-        {\ms{L}^{\mb{Q}}_{\mb{e}}}}
+      {\haslb{\Gamma^{\mb{q}}}{\epsilon}{\awhere{\kappa}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
+        {\ms{L}^{\mb{Q}}}}
     \\
     \prftree[r]{\rle{where$_{\ms{rec}}$}}
-    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\kappa}
-      {\ms{L}^{\mb{Q}}_{\mb{e}}, \ms{R}^{\mb{Q}'}_{\mb{e}'}}}
+    {\haslb{\Gamma^{\mb{q}}}{\epsilon}{\kappa}
+      {\ms{L}^{\mb{Q}}, \ms{R}^{\mb{Q}'}}}
     {\einf{\epsilon}}
-    {\forall \lhyp{\ell_i}{A_i}^{\mb{q}_i}_{\epsilon_i} \in \ms{R}^{\mb{Q}'}_{\mb{e}'} .
-      \haslb{\Gamma^{\mb{q}}_{\mb{e}}, x_i : A_i}{\epsilon_i}{t_i}{
-        \ms{L}^{\mb{Q}}_{\mb{e}}, \ms{R}^{\mb{Q}'}_{\mb{e}'}}
+    {\forall \lhyp{\ell_i}{A_i}^{\mb{q}_i} \in \ms{R}^{\mb{Q}'} .
+      \haslb{\Gamma^{\mb{q}}, x_i : A_i}{\epsilon}{t_i}{
+        \ms{L}^{\mb{Q}}, \ms{R}^{\mb{Q}'}}
     }
-    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\cwhere{\kappa}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
-      {\ms{L}^{\mb{Q}}_{\mb{e}}}}
+    {\haslb{\Gamma^{\mb{q}}}{\epsilon}{\cwhere{\kappa}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
+      {\ms{L}^{\mb{Q}}}}
   \end{gather*}
   \caption{Typing rules for \isotopessa{}}
   \Description{}
@@ -2445,34 +2437,34 @@ accordingly.
 
 \begin{figure}
   \begin{gather*}
-    \boxed{\dnt{\ms{L}^{\mb{Q}}_{\mb{e}}}(\Gamma) : |\mc{C}|}  
+    \boxed{\dnt{\ms{L}^{\mb{Q}}}(\Gamma) : |\mc{C}|}  
     \qquad
     \dnt{\cdot}(\Gamma) = \mb{0} \qquad
-    \dnt{\ms{L}^{\mb{Q}}_{\mb{e}}, \ell(A)^{\mb{q}}_{\epsilon}}(\Gamma)
-    = \dnt{\ms{L}^{\mb{Q}}_{\mb{e}}}(\Gamma) + \dnt{\Gamma^{\mb{q}}} \otimes \dnt{A}
+    \dnt{\ms{L}^{\mb{Q}}, \ell(A)^{\mb{q}}_{\epsilon}}(\Gamma)
+    = \dnt{\ms{L}^{\mb{Q}}}(\Gamma) + \dnt{\Gamma^{\mb{q}}} \otimes \dnt{A}
     \\
-    \boxed{\dwnqv{\ms{L}^{\mb{Q}}_{\mb{e}}}_{\Gamma}
+    \boxed{\dwnqv{\ms{L}^{\mb{Q}}}_{\Gamma}
       : \mc{C}_\bot(
-          \dnt{\ms{L}^{\zeroqv{\mb{Q}}}_{\mb{e}}}(\Gamma, x : A), 
-          \dnt{\ms{L}^{\mb{Q}}_{\mb{e}}}(\Gamma)
+          \dnt{\ms{L}^{\zeroqv{\mb{Q}}}}(\Gamma, x : A), 
+          \dnt{\ms{L}^{\mb{Q}}}(\Gamma)
         )}
     \\
     \dwnqv{\cdot}_\Gamma = \ms{id}_{\mb{0}} \qquad
-    \dwnqv{\ms{L}^{\mb{Q}}_{\mb{e}}, \lhyp{\ell}{A}^{\mb{q}}_{\epsilon}}_\Gamma
-    = \dwnqv{\ms{L}^{\mb{Q}}_{\mb{e}}}_\Gamma + \rho_{\dnt{\Gamma^{\mb{q}}}} \otimes \dnt{A}
+    \dwnqv{\ms{L}^{\mb{Q}}, \lhyp{\ell}{A}^{\mb{q}}_{\epsilon}}_\Gamma
+    = \dwnqv{\ms{L}^{\mb{Q}}}_\Gamma + \rho_{\dnt{\Gamma^{\mb{q}}}} \otimes \dnt{A}
     \\
     \boxed{\dnt{\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{K}^{\mb{Q}'}}} 
       : \mc{C}_\bot(\dnt{\ms{L}^{\mb{Q}}}(\Gamma), \dnt{\ms{K}^{\mb{Q}'}}(\Gamma))} \\
     \dnt{\lwk{\Gamma}{\cdot}{\cdot}} = \ms{id}_{\mb{0}} \qquad
     \dnt
-      {\lwk{\Gamma}{\ms{L}^{\mb{Q}}_{\mb{e}}, \lhyp{\ell}{A}^{\mb{q}}_{\epsilon}}
-      {\ms{K}^{\mb{Q}'}_{\mb{e}'}, \lhyp{\ell}{A}^{\mb{q}'}_{\epsilon'}}}
-    = \dnt{\lwk{\Gamma}{\ms{L}^{\mb{Q}}_{\mb{e}}}{\ms{K}^{\mb{Q}'}}} 
+      {\lwk{\Gamma}{\ms{L}^{\mb{Q}}, \lhyp{\ell}{A}^{\mb{q}}_{\epsilon}}
+      {\ms{K}^{\mb{Q}'}, \lhyp{\ell}{A}^{\mb{q}'}_{\epsilon'}}}
+    = \dnt{\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{K}^{\mb{Q}'}}} 
       + \dnt{\cwk{\Gamma^{\mb{q}}}{\Gamma^{\mb{q}'}}} \otimes \dnt{A} \\
     \dnt
-      {\lwk{\Gamma}{\ms{L}^{\mb{Q}}_{\mb{e}}}
-      {\ms{K}^{\mb{Q}'}_{\mb{e}'}, \lhyp{\ell}{A}^{\mb{q}}_{\epsilon}}}
-    = \dnt{\lwk{\Gamma}{\ms{L}^{\mb{Q}}_{\mb{e}}}{\ms{K}^{\mb{Q}'}_{\mb{e}'}}} ; \iota_l
+      {\lwk{\Gamma}{\ms{L}^{\mb{Q}}}
+      {\ms{K}^{\mb{Q}'}, \lhyp{\ell}{A}^{\mb{q}}_{\epsilon}}}
+    = \dnt{\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{K}^{\mb{Q}'}}} ; \iota_l
   \end{gather*}
   \caption{Denotational semantics for label contexts and label weakenings}
   \Description{}
@@ -2481,17 +2473,17 @@ accordingly.
 
 \begin{figure}
   \begin{gather*}
-    \boxed{\dnt{\haslb{\Gamma}{\epsilon}{t}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
-    : \mc{C}_\epsilon(\dnt{\Gamma^{\mb{q}}}, \dnt{\ms{L}^{\mb{Q}}_{\mb{e}}}(\Gamma))} \\
+    \boxed{\dnt{\haslb{\Gamma}{\epsilon}{t}{\ms{L}^{\mb{Q}}}}
+    : \mc{C}_\epsilon(\dnt{\Gamma^{\mb{q}}}, \dnt{\ms{L}^{\mb{Q}}}(\Gamma))} \\
     \dnt
-    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\letstmt{x}{o}{t}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+    {\haslb{\Gamma^{\mb{q}}}{\epsilon}{\letstmt{x}{o}{t}}{\ms{L}^{\mb{Q}}}}
     =
     \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
     ; - \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{o}{A}}
-    ; \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{t}{\ms{L}^{\zeroqv{\mb{Q}}}_{\mb{e}}}}
-    ; \dwnqv{\ms{L}^{\mb{Q}}_{\mb{e}}} \\
+    ; \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{t}{\ms{L}^{\zeroqv{\mb{Q}}}}}
+    ; \dwnqv{\ms{L}^{\mb{Q}}} \\
     \dnt
-    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\letstmt{(x, y)}{o}{t}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+    {\haslb{\Gamma^{\mb{q}}}{\epsilon}{\letstmt{(x, y)}{o}{t}}{\ms{L}^{\mb{Q}}}}
     =
     \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
     ; - \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{o}{A \otimes B}}
@@ -2499,57 +2491,57 @@ accordingly.
     \\
     \qquad 
     ; \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A, y : B}{\epsilon}{t}
-      {\ms{L}^{\zeroqv{(\zeroqv{\mb{Q}})}}_{\mb{e}}}}
-    ; \dwnqv{\ms{L}^{\zeroqv{\mb{Q}}}_{\mb{e}}}
-    ; \dwnqv{\ms{L}^{\mb{Q}}_{\mb{e}}}
+      {\ms{L}^{\zeroqv{(\zeroqv{\mb{Q}})}}}}
+    ; \dwnqv{\ms{L}^{\zeroqv{\mb{Q}}}}
+    ; \dwnqv{\ms{L}^{\mb{Q}}}
     \\
     \dnt
-    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\brb{\ell}{a}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+    {\haslb{\Gamma^{\mb{q}}}{\epsilon}{\brb{\ell}{a}}{\ms{L}^{\mb{Q}}}}
     = \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
     ; - \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\bot}{a}{A}}
     ; \iota_r
-    ; \dnt{\lwk{\Gamma}{\lhyp{\ell}{A}^{\mb{q}_l}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+    ; \dnt{\lwk{\Gamma}{\lhyp{\ell}{A}^{\mb{q}_l}}{\ms{L}^{\mb{Q}}}}
     \\
     \dnt
-    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\casestmt{o}{x}{\tau_l}{y}{\tau_r}}
-      {\ms{L}^{\mb{Q}}_{\mb{e}}}}
+    {\haslb{\Gamma^{\mb{q}}}{\epsilon}{\casestmt{o}{x}{\tau_l}{y}{\tau_r}}
+      {\ms{L}^{\mb{Q}}}}
     = \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
     ; - \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\bot}{o}{A + B}}
     ; \delta^{-1}
     \\
     \qquad
     ; [
-      \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{\tau_l}{\ms{L}^{\zeroqv{\mb{Q}}}_{\mb{e}}}},
-      \dnt{\hasty{\Gamma^{\mb{q}_l}, y : B}{\epsilon}{\tau_r}{\ms{L}^{\zeroqv{\mb{Q}}}_{\mb{e}}}}
+      \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{\tau_l}{\ms{L}^{\zeroqv{\mb{Q}}}}},
+      \dnt{\hasty{\Gamma^{\mb{q}_l}, y : B}{\epsilon}{\tau_r}{\ms{L}^{\zeroqv{\mb{Q}}}}}
     ]
     \\
     \dnt
-    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\awhere{\kappa}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
-      {\ms{L}^{\mb{Q}}_{\mb{e}}}}
+    {\haslb{\Gamma^{\mb{q}}}{\epsilon}{\awhere{\kappa}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
+      {\ms{L}^{\mb{Q}}}}
     =
-    \dnt{\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\kappa}
-      {\ms{L}^{\mb{Q}}_{\mb{e}}, \ms{R}^{\mb{Q}'}_{\mb{e}'}}}
+    \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{\kappa}
+      {\ms{L}^{\mb{Q}}, \ms{R}^{\mb{Q}'}}}
     \\ 
     \qquad ; [
-      \ms{id}_{\dnt{\ms{L}^{\mb{Q}}_{\mb{e}}}(\Gamma)},
+      \ms{id}_{\dnt{\ms{L}^{\mb{Q}}}(\Gamma)},
       [
         \dnt{\hasty{\Gamma^{\mb{q}_i}, x_i : A_i}{\epsilon_i}{t_i}
-          {\ms{L}^{\zeroqv{\mb{Q}}}_{\mb{e}}}},
-      ]_{\ell_i(A_i)^{\mb{q}_i}_{\epsilon_i} \in \ms{R}^{\mb{Q}'}_{\mb{e}'}}
+          {\ms{L}^{\zeroqv{\mb{Q}}}}},
+      ]_{\ell_i(A_i)^{\mb{q}_i}_{\epsilon_i} \in \ms{R}^{\mb{Q}'}}
     ]
     \\
     \dnt
-    {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\cwhere{\kappa}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
-      {\ms{L}^{\mb{Q}}_{\mb{e}}}}
-    = \dnt{\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\kappa}
-      {\ms{L}^{\mb{Q}}_{\mb{e}}, \ms{R}^{\mb{Q}'}_{\mb{e}'}}}
+    {\haslb{\Gamma^{\mb{q}}}{\epsilon}{\cwhere{\kappa}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
+      {\ms{L}^{\mb{Q}}}}
+    = \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{\kappa}
+      {\ms{L}^{\mb{Q}}, \ms{R}^{\mb{Q}'}}}
     \\
     \qquad ; [
-      \ms{id}_{\dnt{\ms{L}^{\mb{Q}}_{\mb{e}}}(\Gamma)},
+      \ms{id}_{\dnt{\ms{L}^{\mb{Q}}}(\Gamma)},
       [
         \dnt{\hasty{\Gamma^{\mb{q}_i}, x_i : A_i}{\epsilon_i}{t_i}
-          {\ms{L}^{\mb{Q}}_{\mb{e}}, \ms{R}^{\mb{Q}'}}_{\mb{e}'}},
-      ]_{\ell_i(A_i)^{\mb{q}_i}_{\epsilon_i} \in \ms{R}^{\mb{Q}'}_{\mb{e}'}}^\dagger
+          {\ms{L}^{\mb{Q}}, \ms{R}^{\mb{Q}'}}},
+      ]_{\ell_i(A_i)^{\mb{q}_i}_{\epsilon_i} \in \ms{R}^{\mb{Q}'}}^\dagger
     ]
   \end{gather*}
   \caption{Denotational semantics for \isotopessa{}}
