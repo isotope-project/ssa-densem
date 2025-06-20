@@ -2355,10 +2355,44 @@ particular, that the following rule is derivable:
 \label{fig:label-wk}
 \end{figure}
 
-\TODO{explain each typing rule here}
+We now go over the typing rules for \isotopessa{}, given in Figure~\ref{fig:ssa-typing}. We note
+that instructions $o$ are simply treated as restricted expressions in \subiterexp{}, and typed 
+accordingly.
+\begin{itemize}
+  \item We begin with the typing rule for branches, \brle{br}. This states that, if $o$ is a pure
+  expression of type $A$, and $\ell(A)^{\mb{q}_l}_\epsilon$ weakens to the label context 
+  $\ms{L}^{\mb{Q}}_{\mb{e}}$, where $\mb{q}_l$ is the quantities left over after typing $o$, then
+  $\brb{\ell}{o}$ is a valid branch into $\ms{L}^{\mb{Q}}_{\mb{e}}$
+  \item Let-bindings are typed using \brle{let$_1$} and \brle{let$_2$}, which are exactly the same
+  as the corresponding rule for expressions, except that we target a label-context, which needs to
+  be lifted (i.e. $\mb{Q}$ replaced with $\zeroqv{\mb{Q}}$) in the premise to deal with the 
+  additional variable in the input context.
+  \item Case terminators are typed using \brle{case}, which is again the same as the rule for 
+  expressions modulo lifting
+  \item \ms{where}-blocks are typed using \brle{where$_\ms{nonrec}$} and \brle{where$_\ms{rec}$}, 
+  which we distinguish since the effect of an \ms{where_{rec}} subtree must be iterative 
+  (since, for example, we often track potential nontermination as an explicit effect).
+
+  \brle{where$_\ms{nonrec}$} subtrees are composed of an entry subtree $\kappa$, which we take to target
+  the compound label-context $\ms{L}^{\mb{Q}}_{\mb{e}}, \ms{R}^{\mb{Q}'}_{\mb{e}'}$, and,
+  for each label in $\ell_i(A_i)^{\mb{q_i}}_{\epsilon_i}$ in $\ms{R}^{\mb{Q}'}_{\mb{e}'}$, an 
+  associated region $t_i$ which, with variables $\Gamma^{\mb{q}_i}_{\mb{e}}, x_i : A_i$ live
+  on entry, targets the exit labels $\ms{L}^{\mb{Q}}_{\mb{e}}$ with effect $\epsilon_i$. 
+  This is non-recursive since the $\ms{R}^{\mb{Q}'}_{\mb{e}'}$ cannot call themselves, but we can 
+  encode any DAG since the inner subtree $\kappa$ can contain other basic blocks.
+
+  \brle{where$_\ms{rec}$} simply requires the effect $\epsilon$ to be iterative, and in exchange 
+  allows the $t_i$ to make recursive calls to $\ms{R}^{\mb{Q}'}_{\mb{e}'}$ as well.
+\end{itemize}
 
 \begin{figure}
   \begin{gather*}
+    \prftree[r]{\rle{br}}
+      {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+      {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\bot}{o}{A}}
+      {\lwk{\Gamma}{\lhyp{\ell}{A}_\epsilon^{\mb{q}_l}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+      {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\brb{\ell}{o}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
+    \\
     \prftree[r]{\rle{let$_1$}}
       {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
       {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\epsilon}{o}{A}}
@@ -2371,12 +2405,6 @@ particular, that the following rule is derivable:
       {\haslb{\Gamma^{\mb{q}_l}_{\mb{e}}, x : A, y : B}{\epsilon}{t}
         {\ms{L}^{\zeroqv{(\zeroqv{\mb{Q}})}}}_{\mb{e}}}
       {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\letstmt{(x, y)}{o}{t}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
-    \\
-    \prftree[r]{\rle{br}}
-      {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-      {\hasty{\Gamma^{\mb{q}_r}_{\mb{e}}}{\bot}{a}{A}}
-      {\lwk{\Gamma}{\lhyp{\ell}{A}_\epsilon^{\mb{q}_l}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
-      {\haslb{\Gamma^{\mb{q}}_{\mb{e}}}{\epsilon}{\brb{\ell}{a}}{\ms{L}^{\mb{Q}}_{\mb{e}}}}
     \\
     \prftree[r]{\rle{case}}
       {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
@@ -2410,6 +2438,7 @@ particular, that the following rule is derivable:
   \end{gather*}
   \caption{Typing rules for \isotopessa{}}
   \Description{}
+  \label{fig:ssa-typing}
 \end{figure}
 
 \TODO{give denotational semantics of SSA in Figure~\ref{fig:ssa-densem}}
