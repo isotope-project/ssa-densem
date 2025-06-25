@@ -2633,7 +2633,7 @@ expressions.
       \ms{id}_{\dnt{\ltoty{\Gamma}{\ms{L}^{\mb{Q}}}}},
       [
         \dnt{\hasty{\Gamma^{\mb{q}_i}, x_i : A_i}{\epsilon}{t_i}
-          {\ms{L}^{\zeroqv{\mb{Q}}}}},
+          {\ms{L}^{\zeroqv{\mb{Q}}}}} ; \alpha^\downarrow,
       ]_{\ell_i(A_i)^{\mb{q}_i} \in \ms{R}^{\mb{Q}'}}
     ]
     \\
@@ -2647,7 +2647,7 @@ expressions.
       \ms{id}_{\dnt{\ltoty{\Gamma}{\ms{L}^{\mb{Q}}}}},
       [
         \dnt{\hasty{\Gamma^{\mb{q}_i}, x_i : A_i}{\epsilon}{t_i}
-          {\ms{L}^{\mb{Q}}, \ms{R}^{\mb{Q}'}}},
+          {\ms{L}^{\zeroqv{\mb{Q}}}, \ms{R}^{\zeroqv{\mb{Q}'}}}} ; \alpha^\downarrow ; \alpha^+,
       ]_{\ell_i(A_i)^{\mb{q}_i} \in \ms{R}^{\mb{Q}'}}^\dagger
     ]
   \end{gather*}
@@ -2680,16 +2680,24 @@ are \emph{semantics-preserving} functions $\ms{SSA}$, $\ms{Expr}$ on derivations
     {\ltoty{\Gamma}{\ms{L}^{\mb{Q}}}}
 }_{\mc{M}} &= \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{r}{\ms{L}^{\mb{Q}}}}_{\mc{M}}
 \end{align*}
-for arbitrary models $\mc{M}$. 
-
-% The astute reader will note that these functions are not \emph{quite} mutually inverse, since the 
-% output of a round-trip  $\ms{SSA}(\ms{Expr}(\haslb{\Gamma^{\mb{q}}}{\epsilon}{r}{\ms{L}^{\mb{Q}}}))$ 
-% now targets a \emph{single} label.
-% TODO: expr + case is mutually inverse
-% TODO: 
+for arbitrary models $\mc{M}$. \footnote{
+  The astute reader will note that these functions are not 
+  \emph{quite} mutually inverse, since the output of a round-trip 
+  $\ms{SSA}(\ms{Expr}(\haslb{\Gamma^{\mb{q}}}{\epsilon}{r}{\ms{L}^{\mb{Q}}}))$ now targets a 
+  \emph{single} label with an argument of type $\ltoty{\Gamma}{\ms{L}^{\mb{Q}}}$. This is a somewhat
+  thorny problem since the leftover variables in $\mb{Q}$ can be unpacked using an $\ms{L}$-ary 
+  case-statement, but cannot \emph{escape} that case-statement. We can't get around this problem,
+  at least naively, by defining a function $\ms{SSA}_{\ms{L}^{\mb{Q}}}$ taking the desired output
+  label context as parameter 
+  (and requiring a derivation with output type $\ltoty{\Gamma}{\ms{L}^{\mb{Q}}}$), since a value of
+  type $\ltoty{\Gamma}{\ms{L}^{\mb{Q}}}$ can have the leftover variables filled in by any
+  arbitrary expression, while our SSA typing enforces they can only come from the input
+  live variables $\Gamma^{\mb{q}}$. On the other hand, if we require $\mb{Q} = 0$, then the
+  $n$-ary case-statement works fine.
+}
 
 It is easy enough to construct $\ms{Expr}$: for each derivation,
-pick a representative 
+we simply pick a representative 
 $
   (x, a) \in 
   \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{r}{\ms{L}^{\mb{Q}}}}_{\ms{Th(\cdot)}}
@@ -2699,17 +2707,10 @@ $$
   \ms{pack}(\hasty{x : \etoty{\Gamma^{\mb{q}}}}{\epsilon}{a}{\ltoty{\Gamma}{\ms{L}^{\mb{Q}}}})
 $$
 It is straightforward to verify that this indeed satisfies the desired properties. On the other 
-hand, the function $\ms{SSA}$ is essentially just a standard inductive ``compiler pass;''
-we leave it's definition and verification to Appendix~\ref{apx:ssa-roundtrip}; we note in passing
-that the result of this function will always use only structured control-flow (since \subiterexp{}
-only supports structured control flow). 
-
-% Hence, the round-trip 
-% $\ms{SSA}(\ms{Expr}(\haslb{\Gamma^{\mb{q}}}{\epsilon}{r}{\ms{L}^{\mb{Q}}}))$ can be viewed as a
-% somewhat crude implementation of the transformation to structured control-flow described in
-% \citet{bohm-jacopini}, except that the output labels are changed to a single coproduct. Recovering
-% the original output labels, and hence implementing the transformation on SSA in full, should not
-% be particularly difficult.
+hand, the function $\ms{SSA}$ is essentially just the standard expression compilation presented 
+inductively; we leave it's definition and verification to  Appendix~\ref{apx:ssa-roundtrip}. 
+We note in passing that the result of this function will always use only structured control-flow 
+(since \subiterexp{} only supports structured control flow). 
 
 \section{Concrete Models}
 
