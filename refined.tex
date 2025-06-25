@@ -1462,7 +1462,8 @@ control-flow constructs, which are:
   \item \emph{Branching}, which we will do using \emph{coproducts}
   \item \emph{Iteration}, which we will do using a \emph{Conway operator}
 \end{itemize}
-To maintain compositionality, we must additionally require that these structures interact properly with each other. Hence, we will also require our category to satisfy
+To maintain compositionality, we must additionally require that these structures interact properly 
+with each other. Hence, we will also require our category to satisfy
 \begin{itemize}
   \item \emph{Distributivity}, which ensures the premonoidal and coproduct structures are compatible
   \item \emph{Strength}, which ensures the Conway operator is compatible with the premonoidal
@@ -2665,6 +2666,7 @@ expressions.
 % \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{r}{\ms{L}^{\mb{Q}}}}_{\mc{M}} 
 % \leq \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{r'}{\ms{L}^{\mb{Q}}}}_{\mc{M}}
 % $; in particular, two programs are \emph{equivalent} if their semantics are always equal.
+
 When we say that \isotopessa{} and \subiterexp{} are \emph{equivalent}, what we mean is that there
 are \emph{semantics-preserving} functions $\ms{SSA}$, $\ms{Expr}$ on derivations satisfying
 \begin{align*}
@@ -2678,7 +2680,15 @@ are \emph{semantics-preserving} functions $\ms{SSA}$, $\ms{Expr}$ on derivations
     {\ltoty{\Gamma}{\ms{L}^{\mb{Q}}}}
 }_{\mc{M}} &= \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{r}{\ms{L}^{\mb{Q}}}}_{\mc{M}}
 \end{align*}
-for arbitrary models $\mc{M}$. It is easy enough to construct $\ms{Expr}$: for each derivation,
+for arbitrary models $\mc{M}$. 
+
+% The astute reader will note that these functions are not \emph{quite} mutually inverse, since the 
+% output of a round-trip  $\ms{SSA}(\ms{Expr}(\haslb{\Gamma^{\mb{q}}}{\epsilon}{r}{\ms{L}^{\mb{Q}}}))$ 
+% now targets a \emph{single} label.
+% TODO: expr + case is mutually inverse
+% TODO: 
+
+It is easy enough to construct $\ms{Expr}$: for each derivation,
 pick a representative 
 $
   (x, a) \in 
