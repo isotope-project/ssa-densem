@@ -2397,12 +2397,12 @@ particular, that the following rule is derivable:
   \prftree[r]{\rle{cons}}
     {\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{K}^{\mb{Q}}}}
     {\cwk{\Gamma^{\mb{q}'}}{\Gamma^{\mb{q}}}}
-    {\lwk{\Gamma}{\ms{L}^{\mb{Q}}, \lhyp{\ell}{A}^{\mb{q}}_{\epsilon}}
-    {\ms{K}^{\mb{Q}}, \lhyp{\ell}{A}^{\mb{q}'}_{\epsilon'}}} \qquad
+    {\lwk{\Gamma}{\ms{L}^{\mb{Q}}, \lhyp{\ell}{A}^{\mb{q}}}
+    {\ms{K}^{\mb{Q}}, \lhyp{\ell}{A}^{\mb{q}'}}} \qquad
   \prftree[r]{\rle{skip}}
     {\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{K}^{\mb{Q}}}}
     {|\Gamma| = |\mb{q}|}
-    {\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{K}^{\mb{Q}}, \lhyp{\ell}{A}^{\mb{q}}_{\epsilon}}}
+    {\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{K}^{\mb{Q}}, \lhyp{\ell}{A}^{\mb{q}}}}
 \end{gather*}
 \caption{Rules for weakening label contexts}
 \Description{}
@@ -2475,7 +2475,7 @@ accordingly.
       {\haslb{\Gamma^{\mb{q}}}{\epsilon}{\kappa}
         {\ms{L}^{\mb{Q}}, \ms{R}^{\mb{Q}'}}}
       {\forall \lhyp{\ell_i}{A_i}^{\mb{q}_i} \in \ms{R}^{\mb{Q}'} .
-        \haslb{\Gamma^{\mb{q}}, x_i : A_i}{\epsilon}{t_i}{\ms{L}^{\mb{Q}}}
+        \haslb{\Gamma^{\mb{q}_i}, x_i : A_i}{\epsilon}{t_i}{\ms{L}^{\zeroqv{\mb{Q}}}}
       }
       {\haslb{\Gamma^{\mb{q}}}{\epsilon}{\awhere{\kappa}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
         {\ms{L}^{\mb{Q}}}}
@@ -2485,8 +2485,8 @@ accordingly.
       {\ms{L}^{\mb{Q}}, \ms{R}^{\mb{Q}'}}}
     {\einf{\epsilon}}
     {\forall \lhyp{\ell_i}{A_i}^{\mb{q}_i} \in \ms{R}^{\mb{Q}'} .
-      \haslb{\Gamma^{\mb{q}}, x_i : A_i}{\epsilon}{t_i}{
-        \ms{L}^{\mb{Q}}, \ms{R}^{\mb{Q}'}}
+      \haslb{\Gamma^{\mb{q}_i}, x_i : A_i}{\epsilon}{t_i}{
+        \ms{L}^{\zeroqv{\mb{Q}}}, \ms{R}^{\zeroqv{\mb{Q}'}}}
     }
     {\haslb{\Gamma^{\mb{q}}}{\epsilon}{\cwhere{\kappa}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
       {\ms{L}^{\mb{Q}}}}
@@ -2497,19 +2497,34 @@ accordingly.
 \end{figure}
 
 We can now proceed to give a denotational semantics for \isotopessa{}, which targets an arbitrary
-\subiterexp{} model of our signature. 
-
-\TODO{rework label context narrative to define and use ltoty}
-
-We begin by giving a denotational semantics for label contexts and label
-weakenings in Figure~\ref{fig:lwk-densem}, which are both w.r.t. a variable context $\Gamma$.
+\subiterexp{} model of our signature. We'd like to interpret a judgement 
+$\haslb{\Gamma^{\mb{q}}}{\epsilon}{r}{\ms{L}^{\mb{Q}}}$ as a morphism from the input state, 
+the set of live variables $\dnt{\Gamma^{\mb{q}}}$, to the output state, which consists of a label 
+$\ell_i$ in $\ms{L}$, its argument $A_i$, and leftover variables $\mb{q}_i$ in $\mb{Q}$. To 
+represent this as a type, we can defint the (context-dependent) \emph{effective type} of an
+annotated label context as follows:
+\begin{equation*}
+  \ltoty{\Gamma}{\cdot} = \mb{0} \qquad
+  \ltoty{\Gamma}{\ms{L}^{\mb{Q}}, \ell(A)^{\mb{q}}} 
+    = \ltoty{\Gamma}{\ms{L}^{\mb{Q}}} + \etoty{\Gamma^{\mb{q}}} \otimes A
+\end{equation*}
+Here, the label is encoded as the branch of the coproduct we end up in, with each branch carrying
+the argument and any leftover variables as data. We may now give a denotational semantics for label 
+contexts and label weakenings in Figure~\ref{fig:lwk-densem}. 
 It is easy to verify that we can reassociate 
-$\alpha^+: \mc{C}_\bot(\dnt{\ms{L}^{\zeroqv{\mb{Q}}}}(\Gamma, x : A), \dnt{\ms{L}^{\mb{Q}}}(\Gamma))
-$ and $\alpha^+ : \mc{C}_\bot(
+$
+\alpha^+ : \mc{C}_\bot(
   \dnt{\ms{L}^{\mb{Q}}, \ms{R}^{\mb{Q}'}}(\Gamma),
   \dnt{\ms{L}^{\mb{Q}}}(\Gamma) + \dnt{\ms{R}^{\mb{Q}'}}(\Gamma)
 )
-$; we will use these freely in our semantics. 
+$.
+We also note that we can apply the 
+associator ``pointwise'' to reassociate
+$\alpha^\downarrow: \mc{C}_\bot(
+  \dnt{\ltoty{\Gamma, x : A}{\ms{L}^{\zeroqv{\mb{Q}}}}}, 
+  \dnt{\ltoty{\Gamma}{\ms{L}^{\mb{Q}}}}
+)$; 
+we will use this freely in our semantics. 
 
 We can now give our semantics for regions in Figure~\ref{fig:ssa-densem}; just like for the typing
 judgements, the semantics of operations is given by the semantics of the corresponding \subiterexp{}
@@ -2523,7 +2538,8 @@ expressions.
   $\dnt{\ms{L}^{\zeroqv{Q}}}(\Gamma, -)$ to $\dnt{\ms{L}^{\mb{Q}}}$.
   \item The denotation of non-recursive \ms{where}-subtrees is given by the denotation of their
   entry subtree, reassociated to the sum of the exit labels $\ms{L}^{\mb{Q}}$ and sublabels 
-  $\ms{R}^{\mb{Q}'}$. The exit labels are then passed through as is, while the sublabels $\ell_i$ are passed to the denotation of the appropriate subregion $t_i$.
+  $\ms{R}^{\mb{Q}'}$. The exit labels are then passed through as is, while the sublabels $\ell_i$ 
+  are passed to the denotation of the appropriate subregion $t_i$.
   \item The denotation of a recursive \ms{where}-subtree is the same as above, except, since each
   subregion targets $\ms{L}^{\mb{Q}}, \ms{R}^{\mb{Q}'}$, we take the \emph{fixpoint} of the sum
   of the denotations of the subregions viewed as morphisms from $\dnt{\ms{R}^{\mb{Q}}}(\Gamma)$
@@ -2533,23 +2549,18 @@ expressions.
 
 \begin{figure}
   \begin{gather*}
-    \boxed{\dnt{\ms{L}^{\mb{Q}}}(\Gamma) : |\mc{C}|}  
-    \\
-    \dnt{\cdot}(\Gamma) = \mb{0} \qquad
-    \dnt{\ms{L}^{\mb{Q}}, \ell(A)^{\mb{q}}_{\epsilon}}(\Gamma)
-    = \dnt{\ms{L}^{\mb{Q}}}(\Gamma) + \dnt{\Gamma^{\mb{q}}} \otimes \dnt{A}
-    \\
     \boxed{\dnt{\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{K}^{\mb{Q}'}}} 
-      : \mc{C}_\bot(\dnt{\ms{L}^{\mb{Q}}}(\Gamma), \dnt{\ms{K}^{\mb{Q}'}}(\Gamma))} \\
+      : \mc{C}_\bot(\dnt{\ltoty{\Gamma}{\ms{L}^{\mb{Q}}}}, 
+                    \dnt{\ltoty{\Gamma}{\ms{K}^{\mb{Q}'}}})} \\
     \dnt{\lwk{\Gamma}{\cdot}{\cdot}} = \ms{id}_{\mb{0}} \qquad
     \dnt
-      {\lwk{\Gamma}{\ms{L}^{\mb{Q}}, \lhyp{\ell}{A}^{\mb{q}}_{\epsilon}}
-      {\ms{K}^{\mb{Q}'}, \lhyp{\ell}{A}^{\mb{q}'}_{\epsilon'}}}
+      {\lwk{\Gamma}{\ms{L}^{\mb{Q}}, \lhyp{\ell}{A}^{\mb{q}}}
+      {\ms{K}^{\mb{Q}'}, \lhyp{\ell}{A}^{\mb{q}'}}}
     = \dnt{\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{K}^{\mb{Q}'}}} 
       + \dnt{\cwk{\Gamma^{\mb{q}}}{\Gamma^{\mb{q}'}}} \otimes \dnt{A} \\
     \dnt
       {\lwk{\Gamma}{\ms{L}^{\mb{Q}}}
-      {\ms{K}^{\mb{Q}'}, \lhyp{\ell}{A}^{\mb{q}}_{\epsilon}}}
+      {\ms{K}^{\mb{Q}'}, \lhyp{\ell}{A}^{\mb{q}}}}
     = \dnt{\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{K}^{\mb{Q}'}}} ; \iota_l
   \end{gather*}
   \caption{Denotational semantics for label contexts and label weakenings}
@@ -2574,7 +2585,7 @@ expressions.
     \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
     ; - \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{o}{A}}
     ; \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{t}{\ms{L}^{\zeroqv{\mb{Q}}}}}
-    ; \alpha^+ \\
+    ; \alpha^\downarrow \\
     \dnt
     {\haslb{\Gamma^{\mb{q}}}{\epsilon}{\letstmt{(x, y)}{o}{t}}{\ms{L}^{\mb{Q}}}}
     =
@@ -2585,7 +2596,7 @@ expressions.
     \qquad 
     ; \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A, y : B}{\epsilon}{t}
       {\ms{L}^{\zeroqv{(\zeroqv{\mb{Q}})}}}}
-    ; \alpha^+
+    ; \alpha^\downarrow ; \alpha^\downarrow
     \\
     \dnt
     {\haslb{\Gamma^{\mb{q}}}{\epsilon}{\casestmt{o}{x}{\tau_l}{y}{\tau_r}}
@@ -2597,9 +2608,9 @@ expressions.
     \qquad
     ; [
       \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{\tau_l}{\ms{L}^{\zeroqv{\mb{Q}}}}}
-        ; \alpha^+,
+        ; \alpha^\downarrow,
       \dnt{\hasty{\Gamma^{\mb{q}_l}, y : B}{\epsilon}{\tau_r}{\ms{L}^{\zeroqv{\mb{Q}}}}}
-        ; \alpha^+
+        ; \alpha^\downarrow
     ]
     \\
     \dnt
