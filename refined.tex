@@ -1670,13 +1670,14 @@ $f$ on an input $A$ and,
   \item If we get an output $A$, feed it as an input to $f^\dagger$ and return the resulting $B$
 \end{itemize}
 Indeed, in a functional language supporting higher-order functions such as ML or Haskell, we might
-write 
-\begin{lstlisting}[language=Haskell]
-  iterate :: (A -> B + A) -> A -> B
-  iterate f a = case f a of
-    Left b -> b
-    Right a' -> iterate f a'
-\end{lstlisting}
+write \texttt{iterate :: (A -> B + A) -> A -> B} with definition
+\begin{center}
+  \begin{minipage}{0.85\textwidth}
+    \begin{lstlisting}[language=Haskell]
+      iterate f a = case f a of { Left b -> b ; Right a' -> iterate f a' }
+    \end{lstlisting}
+  \end{minipage}
+\end{center}
 This corresponds exactly to the notion of a \emph{pre-iterative category} given below:
 \begin{definition}[Pre-iterative Category]
   Let $\mc{C}$ be a category with chosen coproducts. We say $\mc{C}$ is \emph{pre-iterative} if it
@@ -1906,17 +1907,17 @@ morphisms.
   An effectful category $\mc{C}$ over an effect system $\mc{E}$ consists of a symmetric premonoidal
   poset-enriched category $\mc{C}$ equipped with a  monotonic mapping from $\epsilon \in \mc{E}$ to
   wide\footnote{A \emph{wide} subcategory is one which has all of the objects of the original
-  category.} (symmetric premonoidal) subcategories $\mc{C}_\epsilon \subseteq \mc{E}$ such that,
-  given $\epsilon, \eta \in \mc{E}$, $f \in \mc{C}_\epsilon(A, B)$, and $g \in \mc{C}_\eta(A', B')$, 
-  \begin{itemize}
-    \item $\epsilon \rightmove \eta \implies f \ltimes g \cref f \rtimes g$
-    \item $\epsilon \leftmove \eta \implies f \ltimes g \anticref f \rtimes g$
-  \end{itemize}
+  category.} (symmetric premonoidal) subcategories $\mc{C}_\epsilon \subseteq \mc{E}$ 
   \footnote{
     Note that $\mc{C}_\epsilon(A, B)$ is \emph{not} necessarily closed under refinement:
     we can have $f \in \mc{C}_\epsilon(A, B)$ and $f \cref f'$ with 
     $f' \notin \mc{C}_\epsilon(A, B)$.
   }
+  such that,
+  given $\epsilon, \eta \in \mc{E}$, $f \in \mc{C}_\epsilon(A, B)$, and $g \in \mc{C}_\eta(A', B')$,
+  $\epsilon \rightmove \eta \implies f \ltimes g \cref f \rtimes g$
+  and
+  $\epsilon \leftmove \eta \implies f \ltimes g \anticref f \rtimes g$.
   We call morphisms with effect $\bot$ \emph{pure}. We say an effectful category is
   \emph{distributive} if the underlying premonoidal category is, and the injections are pure.
 \end{definition}
@@ -2012,29 +2013,28 @@ as follows: \subiterexp{}:
   \end{itemize}
   where
   \begin{itemize}
-    \item $\dnt{\mb{1}} = I$, and $\dnt{A \otimes B} = \dnt{A} \otimes \dnt{B}$
-    \item $!_{\mb{1}} = \ms{id}_I$, and $\Delta_{\mb{1}} = \lambda^{-1} = \rho^{-1}$
-    \item For $A, B$ affine, $!_{A \otimes B} = !_A \otimes !_B ; \lambda$
-    \item For $A, B$ relevant, 
+    \item $\dnt{\mb{1}} = I$, $\dnt{A \otimes B} = \dnt{A} \otimes \dnt{B}$, 
+          $!_{\mb{1}} = \ms{id}_I$, and $\Delta_{\mb{1}} = \lambda^{-1} = \rho^{-1}$
+    \item For $A, B$ affine, $!_{A \otimes B} = !_A \otimes !_B ; \lambda$, and for $A, B$ relevant, 
     $\Delta_{A \otimes B} 
       = \dmor{A} \otimes \dmor{B}
       ; \sigma^{\ms{mid}}
     $
-    where
-    $$
+    where we define
+    $
     \sigma^{\ms{mid}}_{A, B, C, D} = 
       \alpha_{A \otimes (B \otimes C) \otimes D}
       ; A \otimes \sigma \otimes D
       ; \alpha
-      : \mc{C}_\bot(
+    $
+    having type $\mc{C}_\bot(
         (A \otimes B) \otimes (C \otimes D), 
         (A \otimes C) \otimes (B \otimes D)
       )
-    $$
-    \item $\dnt{\mb{0}} = \mb{0}$, and $\dnt{A + B} = \dnt{A} + \dnt{B}$
-    \item $!_{\mb{0}} = 0_{I}$, and $\Delta_{\mb{0}} = 0_{0 + 0}$
-    \item For $A, B$ affine, $!_{A + B} = [!_A, !_B]$
-    \item For $A, B$ relevant, 
+    $
+    \item $\dnt{\mb{0}} = \mb{0}$, $\dnt{A + B} = \dnt{A} + \dnt{B}$, 
+          $!_{\mb{0}} = 0_{I}$, and $\Delta_{\mb{0}} = 0_{0 + 0}$
+    \item For $A, B$ affine, $!_{A + B} = [!_A, !_B]$, and for $A, B$ relevant, 
     $\Delta_{A + B} 
       = [\dmor{A} ; \iota_l \otimes \iota_l, \dmor{B} ; \iota_r \otimes \iota_r]
     $
@@ -2405,27 +2405,26 @@ Here, $\ms{L}$ is a list of labels $\ell_i$, annotated with a single parameter t
 (multiple parameters are implemented as a single tuple parameter), and $\mb{Q}$ is a list of 
 quantity vectors $\mb{q}_i$ which we call the \emph{quantity matrix}.
 
-As we can see, a label context is interpreted w.r.t. a quantity matrix $\mb{Q}$, which also depends
-on the set of live variables $\Gamma$. To extend the set of live variables, we need to zero-pad
-the quantity matrix, an operation which we call \emph{lifting}, and define as follows:
-\begin{equation*}
-  \zeroqv{\cdot} = \cdot \qquad
-  \zeroqv{(\mb{Q}; \mb{q})} = \zeroqv{\mb{Q}} ; (\mb{q}, 0)
-\end{equation*}
-
-We may define a weakening judgement on annotated label contexts  using the rules in 
+We may define a weakening judgement on annotated label contexts using the rules in 
 Figure~\ref{fig:label-wk}; the judgement is with respect to a particular context $\Gamma$ used to 
 interpret the quantity vectors in $\mb{Q}$. In particular, weakening allows us to  insert arbitrary 
 labels using \brle{skip}, as well as weaken the quantities associated with each
-using \brle{cons}. It is easy to prove that label weakening is compatible with lifting, and in
-particular, that the following rule is derivable:
+using \brle{cons}.
+As we can see, a label context is interpreted w.r.t. a quantity matrix $\mb{Q}$, which also depends
+on the set of live variables $\Gamma$. To extend the set of live variables 
+(e.g. to type a let-binding), we need to zero-pad the quantity matrix, an operation which we call 
+\emph{lifting}. This may be defined inductively as follows:
+\begin{equation*}
+  \zeroqv{\cdot} = \cdot \qquad
+  \zeroqv{(\mb{Q}; \mb{q})} = \zeroqv{\mb{Q}} ; (\mb{q}, 0)
+\end{equation*} 
+It is easy to prove that label weakening is compatible with lifting, i.e. the following rule is 
+derivable:
 \begin{equation*}
   \prftree[r]{\rle{lift}}
     {\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{K}^{\mb{Q}'}}}
     {\lwk{\Gamma, x : A}{\ms{L}^{\zeroqv{\mb{Q}}}}{\ms{K}^{\zeroqv{\mb{Q}'}}}}
 \end{equation*}
-
-\TODO{fuse figures here}
 
 \begin{figure}
   \hspace{4em}
