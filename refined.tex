@@ -2776,11 +2776,12 @@ We note in passing that the result of this function will always use only structu
 \section{Concrete Models}
 
 In this section, we give sketches of some concrete models of our semantics, and the optimizations
-which they enable. For reasons of space, full details of each model are given in the appendix.
-In all the models in this section, every type has unrestricted linearity; see Appendix~\ref{apx:sep}
-for a model with linear types.
-
-\TODO{explain that we will therefore use unannotated contexts $\Gamma$ for simplicity}
+which they enable. For reasons of space, full details of each model are given in the appendix. We
+note that, in all the models given here, every type has unrestricted linearity. Hence, we will often
+write out our typing rules using \emph{un-annotated} contexts and variables $\Gamma, x: A$,
+continuing the convention that a missing quantity annotation $\mb{q}$ corresponds to every variable
+having unrestricted quantity $\topq$. We give a more sophisticated model taking advantage of
+substructural types in Appendix~\ref{apx:sep}.
 
 \subsection{UB}
 
