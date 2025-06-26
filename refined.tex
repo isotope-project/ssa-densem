@@ -324,9 +324,39 @@
 
 \section{Introduction}
 
-\TODO{we want to study SSA with refinement and effects; so we need+get linearity}
+Static single assignment form, or SSA, rapidly became the dominant compiler intermediate representation (IR) after its introduction by \citet{alpern} and \citet{rosen} in the 1980s. The fundamental idea behind SSA is one which is very familiar to functional programmers: if a variable is defined exactly once and never reassigned, then substitution is then a valid program transformation. This both simplifies the implementation and improves the performance of many compiler optimizations.
 
-\vspace{5cm}
+The correctness of SSA transformations has mostly been handled informally, because it was originally intended to be a simple, first-order imperative programming language. Unfortunately, in the decades since its introduction, computers have become much less simple, and the optimizations that compiler writers want to do have become much more ambitious. Modern hardware is highly concurrent, and exhibits user-visible non-sequentially-consistent behaviour:  \emph{weak memory}~\cite{batty}. This means memory can no longer be correctly modelled as a global array of bytes. Furthermore, compilers like LLVM and GCC now make very aggressive optimizations exploiting knowledge of memory aliasing, undefined behaviour, and nondeterminism. Because all these optimizations are all done in the presence of nondeterminism, the transformations compilers want to do are not usually progarm equivalences, but merely refinements: the possible behaviours of the optimized program must be a subset of the possible behaviours of the original program. 
+
+Because of this complexity, the old informal techniques are no longer sufficient, and we need to study SSA using more mathematically sophisticated techniques to understand and justify what modern hardware and compilers do. In this paper, we introduce a type-theoretic account of static single assigment form, and equip it with a semantics which explains and can be used to justify many program transformations even in the presence of state, undefined behaviour, and weak memory concurrency. 
+
+Concretely, our contributions are as follows:
+
+\begin{itemize}
+\item First, we give a pair of type theories for SSA. The first
+  language, \isotopessa, is intended to mimic the structure of
+  traditional presentations of SSA. The second type theory,
+  \subiterexp, has a syntax very different from ordinary SSA, but
+  which greatly facilitates giving a syntactic presentation of its
+  refinement theory. Both of these theories have a rich type system
+  with both linearity and effect tracking. The extra structure enables
+  us to express many effect-dependent program transformations in a
+  type-directed way. We show that \subiterexp can be seen as an
+  alternative presentation of ordinary SSA by showing that there are
+  meaning-preserving translations to and from \isotopessa.
+\item We then give a categorical axiomatization of first-order
+  effectful programs with looping and control, and then show that
+  \subiterexp is soundly interpreted in this model, and furthermore we
+  show completeness of our refinement theory by proving that the
+  syntactic model is the initial model.
+\item We then give a collection of concrete models validating the
+  categorical axiomatization. We start with a model including
+  nontermination, nondeterminism, and undefined behaviour, and then
+  show how to give another model augmented with state, as well as
+  giving a model for release-acquire concurrency which validates our
+  axioms. Finally, we show how a variety of interesting optimizations
+  are validated by our model.
+\end{itemize}
 
 \section{SSA}
 
