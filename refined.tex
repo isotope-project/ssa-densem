@@ -324,9 +324,25 @@
 
 \section{Introduction}
 
-Static single assignment form, or SSA, rapidly became the dominant compiler intermediate representation (IR) after its introduction by \citet{alpern} and \citet{rosen} in the 1980s. The fundamental idea behind SSA is one which is very familiar to functional programmers: if a variable is defined exactly once and never reassigned, then substitution is then a valid program transformation. This both simplifies the implementation and improves the performance of many compiler optimizations.
+Static single assignment form, or SSA, rapidly became the dominant compiler intermediate
+representation (IR) after its introduction by \citet{alpern-ssa-original-88} and
+\citet{rosen-gvn-1988} in the 1980s. The fundamental idea behind SSA is one which is very familiar
+to functional programmers: if a variable is defined exactly once and never reassigned, then
+substitution is then a valid program transformation. This both simplifies the implementation and
+improves the performance of many compiler optimizations.
 
-The correctness of SSA transformations has mostly been handled informally, because it was originally intended to be a simple, first-order imperative programming language. Unfortunately, in the decades since its introduction, computers have become much less simple, and the optimizations that compiler writers want to do have become much more ambitious. Modern hardware is highly concurrent, and exhibits user-visible non-sequentially-consistent behaviour:  \emph{weak memory}~\cite{batty}. This means memory can no longer be correctly modelled as a global array of bytes. Furthermore, compilers like LLVM and GCC now make very aggressive optimizations exploiting knowledge of memory aliasing, undefined behaviour, and nondeterminism. Because all these optimizations are all done in the presence of nondeterminism, the transformations compilers want to do are not usually progarm equivalences, but merely refinements: the possible behaviours of the optimized program must be a subset of the possible behaviours of the original program. 
+The correctness of SSA transformations has mostly been handled informally, because it was originally
+intended to be a simple, first-order imperative programming language. Unfortunately, in the decades
+since its introduction, computers have become much less simple, and the optimizations that compiler
+writers want to do have become much more ambitious. Modern hardware is highly concurrent, and
+exhibits user-visible non-sequentially-consistent behaviour: \emph{weak
+memory}~\cite{batty-compositional-17}. This means memory can no longer be correctly modelled as a
+global array of bytes. Furthermore, compilers like LLVM and GCC now make very aggressive
+optimizations exploiting knowledge of memory aliasing, undefined behaviour, and nondeterminism.
+Because all these optimizations are all done in the presence of nondeterminism, the transformations
+compilers want to do are not usually progarm equivalences, but merely refinements: the possible
+behaviours of the optimized program must be a subset of the possible behaviours of the original
+program. 
 
 Because of this complexity, the old informal techniques are no longer sufficient, and we need to study SSA using more mathematically sophisticated techniques to understand and justify what modern hardware and compilers do. In this paper, we introduce a type-theoretic account of static single assigment form, and equip it with a semantics which explains and can be used to justify many program transformations even in the presence of state, undefined behaviour, and weak memory concurrency. 
 
@@ -2764,6 +2780,8 @@ which they enable. For reasons of space, full details of each model are given in
 In all the models in this section, every type has unrestricted linearity; see Appendix~\ref{apx:sep}
 for a model with linear types.
 
+\TODO{explain that we will therefore use unannotated contexts $\Gamma$ for simplicity}
+
 \subsection{UB}
 
 Probably the simplest possible model which exercises all the features of our refinement calculus is
@@ -2864,29 +2882,72 @@ $\{\infty, \ubeff, ?, \ms{r}, \ms{w}, \ms{a}\}$ (with $\ms{r}, \ms{w}, \ms{a}$ c
 for all $\epsilon \in \{\infty, \ubeff, ?\}$,
 $\ms{Heap}_\epsilon(A, B) \approx A \to \ms{UB}_\epsilon(B)$ and primitive effectful instructions
 \begin{itemize}
-  \item $\ms{load} : \ms{Heap}_{\ms{r}\ubeff}(\nats, \nats) := 
+  \item $\ms{ld} : \ms{Heap}_{\ms{r}\ubeff}(\nats, \nats) := 
     \lambda p\; s.
       \ms{if}\;p \in s\;\ms{then}\;\ms{pure}_{\ms{ND}}(s\;p, s)\;\ms{else}\;\ubeff
     $
-  \item $\ms{store} : \ms{Heap}_{\ms{w}\ubeff}(\nats \otimes \nats, \mb{1}) :=
+  \item $\ms{st} : \ms{Heap}_{\ms{w}\ubeff}(\nats \otimes \nats, \mb{1}) :=
     \lambda (p, x)\; s.
       \ms{if}\;p \in s\;\ms{then}\;\ms{pure}_{\ms{ND}}((), [p \mapsto x]s)\;\ms{else}\;\ubeff
     $
-  \item $\ms{alloc} : \ms{Heap}_{\ms{a}?}(\nats, \nats) :=
+  \item $\ms{mk} : \ms{Heap}_{\ms{a}?}(\nats, \nats) :=
     \lambda x\; s. \{(p, [p \mapsto x]s) \mid p \notin s\}
     $
-  \item $\ms{free} : \ms{Heap}_{\ms{w}\ubeff}(\nats, ()) :=
+  \item $\ms{rm} : \ms{Heap}_{\ms{w}\ubeff}(\nats, ()) :=
     \lambda p . \ms{if}\;p \in s\;\ms{then}\;s \setminus p\;\ms{else}\;\ubeff
     $
 \end{itemize}
+This model allows us to validate a few useful properties of heaps, given in 
+Figure~\ref{fig:heap-eqns}. These, combined with the fact that the allocation effect is central
+and that reads are relevant and eliminable (but not affine, since \emph{introducing} a read may
+introduce UB!) is enough to implement a simple \texttt{mem2reg}, details of which are given in
+Appendix~\ref{apx:mem2reg}.
 
-\TODO{we can use this to validate a few of the usual rewrite rules for heapcraft}
+We note that so far, none of our models make use of our ability to handle substructural 
+\emph{types}, rather than merely \emph{effects}. It turns out that our model of heaps is rich enough 
+to \emph{build} a simple, higher-level model implementing \emph{separation logic}; for reasons of
+space, this is relegated to Appendix~\ref{apx:sep}.
 
-\TODO{by power of nondeterminism, allocations are central}
-
-\TODO{can therefore implement mem2reg, see the appendix}
-
-\TODO{separation logic pointer for Moar Commutativity}
+\begin{figure}
+  \begin{gather*}
+    \prftree[r]{\rle{ld-st}}
+      {\hasty{\Gamma}{\bot}{p}{\nats}}
+      {\hasty{\Gamma}{\bot}{a}{\nats}}
+      {\tmeq{\Gamma}{}{\ms{st}\;(p, a) ; \ms{ld}\;p}{\ms{st}\;(p, a) ; a}{\nats}}
+    \qquad
+    \prftree[r]{\rle{mk-ld}}
+      {\hasty{\Gamma}{\bot}{a}{\nats}}
+      {\tmeq{\Gamma}{}{\letexpr{p}{\ms{mk}\;a}{(p, \ms{ld}\;p)}}
+                                                 {(\ms{mk}\;a; a)}
+                                                 {\nats \otimes \nats}}
+    \\
+    \prftree[r]{\rle{st-st}}
+      {\hasty{\Gamma}{\bot}{p}{\nats}}
+      {\hasty{\Gamma}{\bot}{a}{\nats}}
+      {\hasty{\Gamma}{\bot}{b}{\nats}}
+      {\tmeq{\Gamma}{}{\ms{st}\;(p, a) ; \ms{st}\;(p, b)}{\ms{st}\;(p, b)}{\mb{1}}}
+    \qquad
+    \prftree[r]{\rle{mk-st}}
+      {\hasty{\Gamma}{\bot}{a}{\nats}}
+      {\hasty{\Gamma}{\bot}{b}{\nats}}
+      {\tmeq{\Gamma}{}{\letexpr{p}{\ms{mk}\;a}{\ms{st}\;(p, b) ; p}}
+                                                  {\ms{mk\;b}}
+                                                  {\nats}}
+    \\
+    \prftree[r]{\rle{mk-rm}}
+      {\hasty{\Gamma}{\bot}{a}{\nats}}
+      {\tmeq{\Gamma}{}{\letexpr{p}{\ms{mk}\;a}{\ms{rm}\;p}}{()}{\mb{1}}}
+    \qquad
+    \prftree[r]{\rle{st-rm}}
+      {\hasty{\Gamma}{\bot}{p}{\nats}}
+      {\hasty{\Gamma}{\bot}{a}{\nats}}
+      {\tmeq{\Gamma}{}{\ms{st}\;(p, a) ; \ms{rm}\;p}{\ms{rm}\;p}{\mb{1}}}
+    \\
+  \end{gather*}
+  \caption{Some properties of heaps}
+  \label{fig:heap-eqns}
+  \Description{}
+\end{figure}
 
 \subsection{Release-Acquire Weak Memory}
 
@@ -2896,20 +2957,7 @@ $\ms{Heap}_\epsilon(A, B) \approx A \to \ms{UB}_\epsilon(B)$ and primitive effec
 
 \TODO{our traces are reads and writes quotiented by a relation $R$ (with example, e.g. mumble), for relation + bind + Elgot see appendix}
 
-\TODO{all the heap peepholes still work}
-
-\TODO{conjecture mem2reg}
-
-\TODO{for each model, we
-\begin{enumerate}
-  \item What is the model: Monad and Elgot stuff goes in the appendix; we just give the set
-  \item Give some operations which have refinements
-  \begin{itemize}
-    \item UB optimizes to anything
-    \item Stuttering for weak memory; now the complex optimizations are just syntactic
-  \end{itemize}
-\end{enumerate}
-}
+\TODO{stutter mumble load n' store}
 
 \vspace{10cm}
 
@@ -3109,6 +3157,8 @@ agreement no. 101002277).
 \TODO{coproducts}
 
 \section{\texttt{mem2reg}}
+
+\label{apx:mem2reg}
 
 \TODO{this}
 
