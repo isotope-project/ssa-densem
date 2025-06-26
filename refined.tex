@@ -140,7 +140,9 @@
 \newcommand{\lbsubst}[4]{#1 \vdash #2: #3 \rightsquigarrow #4}
 \newcommand{\teqv}{\approx}
 \newcommand{\tref}{\twoheadrightarrow}
+\newcommand{\cref}{\twoheadrightarrow}
 \newcommand{\antitref}{\twoheadleftarrow}
+\newcommand{\anticref}{\twoheadleftarrow}
 \newcommand{\tmle}[5]{#1 \vdash_{#2} #3 \tref #4 : {#5}}
 \newcommand{\tmlep}[6]{#1 \vdash_{#2} #3 \tref^{#6} #4 : {#5}}
 \newcommand{\tmeq}[5]{#1 \vdash_{#2} #3 \teqv #4 : {#5}}
@@ -1482,25 +1484,30 @@ In ordinary categorical semantics, we want syntactic equivalence to
 correspond to equality of morphisms: given $\tmeq{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A}$,
 $\dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}} = \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{b}{A}}$. 
 
-However, in our calculus, we do not only have a syntactic notion of equivalence, but we also have the order structure arising from refinement. Since terms correpond to morphisms, this means we need to be able to compare morphisms according to an order structure interpreting the refinement relation. Thus, to interpret $\tref$, we generalize from ordinary categories to 
-\emph{poset-enriched} categories, in which our hom-sets are partially ordered. In particular, we define:
+However, in our calculus, we do not only have a syntactic notion of equivalence, but we also have
+the order structure arising from refinement. Since terms correpond to morphisms, this means we need
+to be able to compare morphisms according to an order structure interpreting the refinement
+relation. Thus, to interpret $\tref$, we generalize from ordinary categories to
+\emph{poset-enriched} categories, in which our hom-sets are partially ordered. In particular, we
+define:
 
 \begin{definition}[Poset-enriched category]
   A category $\mc{C}$ is \emph{poset-enriched} if each hom-set $\mc{C}(A, B)$ is equipped with a
-  partial order which is compatible with composition, i.e., which satisfies
+  partial order $\cref$ which is compatible with composition, i.e., which satisfies
   $$
-  \forall f \leq f' \in \mc{C}(A, B) . \forall g \leq g' \in \mc{C}(B, C) . (f ; g) \leq (f' ; g')
+  \forall f \cref f' \in \mc{C}(A, B) . \forall g \tref g' \in \mc{C}(B, C) . 
+    (f ; g) \tref (f' ; g')
   $$
   A poset-enriched functor between categories $\mc{C}$, $\mc{D}$ is then simply a functor whose
   action on morphisms is monotonic.
 \end{definition}
 
-We can now quite
-naturally intepret soundness of refinement as follows: given
+We can now quite naturally intepret soundness of refinement as follows: given
 $\tmle{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A}$, we require that
-$\dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}} \leq \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{b}{A}}$.
-Soundness of equivalence follows directly from antisymmetry of partial orders.\footnote{Requiring $\mc{C}$ to be a poset-enriched category does not in fact rob us of any generality, since
-\emph{all} categories are poset-enriched under the identity ordering on hom-sets.}
+$\dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}} \cref \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{b}{A}}$.
+Soundness of equivalence follows directly from antisymmetry of partial orders.\footnote{Requiring
+$\mc{C}$ to be a poset-enriched category does not in fact rob us of any generality, since \emph{all}
+categories are poset-enriched under the identity ordering on hom-sets.}
 
 
 We can now proceed to give poset-enriched versions of the models for our three control-flow
@@ -1868,12 +1875,18 @@ morphisms.
 \begin{definition}[Effectful category]
   An effectful category $\mc{C}$ over an effect system $\mc{E}$ consists of a symmetric premonoidal
   poset-enriched category $\mc{C}$ equipped with a  monotonic mapping from $\epsilon \in \mc{E}$ to
-  wide\footnote{A \emph{wide} subcategory is one which has all of the objects of the original category.} (symmetric premonoidal) subcategories $\mc{C}_\epsilon \subseteq \mc{E}$ such that, given
-  $\epsilon, \eta \in \mc{E}$, $f \in \mc{C}_\epsilon(A, B)$, and $g \in \mc{C}_\eta(A', B')$, 
+  wide\footnote{A \emph{wide} subcategory is one which has all of the objects of the original
+  category.} (symmetric premonoidal) subcategories $\mc{C}_\epsilon \subseteq \mc{E}$ such that,
+  given $\epsilon, \eta \in \mc{E}$, $f \in \mc{C}_\epsilon(A, B)$, and $g \in \mc{C}_\eta(A', B')$, 
   \begin{itemize}
-    \item $\epsilon \rightmove \eta \implies f \ltimes g \leq f \rtimes g$
-    \item $\epsilon \leftmove \eta \implies f \ltimes g \geq f \rtimes g$
+    \item $\epsilon \rightmove \eta \implies f \ltimes g \cref f \rtimes g$
+    \item $\epsilon \leftmove \eta \implies f \ltimes g \anticref f \rtimes g$
   \end{itemize}
+  \footnote{
+    Note that $\mc{C}_\epsilon(A, B)$ is \emph{not} necessarily closed under refinement:
+    we can have $f \in \mc{C}_\epsilon(A, B)$ and $f \cref f'$ with 
+    $f' \notin \mc{C}_\epsilon(A, B)$.
+  }
   We call morphisms with effect $\bot$ \emph{pure}. We say an effectful category is
   \emph{distributive} if the underlying premonoidal category is, and the injections are pure.
 \end{definition}
@@ -1896,11 +1909,11 @@ iteration operator} as follows:
   operator, we say $\mc{C}$ is \emph{$\mc{K}^+$-uniform} if, for all $h : A \to_{\mc{K}} B$, $f : B
   \to C + B$, and $g : A \to C + A$, we have that
   $$
-  h ; f \leq g ; C + h \implies h ; f^\dagger \leq g^\dagger 
+  h ; f \cref g ; C + h \implies h ; f^\dagger \cref g^\dagger 
   $$
   and \emph{$\mc{K}^-$-uniform} if
   $$
-  h ; f \geq g ; C + h \implies h ; f^\dagger \geq g^\dagger 
+  h ; f \anticref g ; C + h \implies h ; f^\dagger \anticref g^\dagger 
   $$
   This corresponds precisely to the ability to perform the rewrites shown in
   Figure~\ref{fig:unif-cfg} whenever $s$ is in $\mc{K}$ and $b$ is in $\mc{C}$. We say a category
@@ -1956,16 +1969,16 @@ as follows: \subiterexp{}:
   \begin{itemize}
     \item If $A$ relevant, 
       $\dmor{A} ; \dmor{A} \otimes \dnt{A} ; \alpha = \dmor{A} ; \dnt{A} \otimes \dmor{A}$
-    \item If $\zeroq \leq \alquant^+(\epsilon)$ and $A, B$ affine, $f ; !_B \leq !_A$
+    \item If $\zeroq \leq \alquant^+(\epsilon)$ and $A, B$ affine, $f ; !_B \tref !_A$
     \item If $\zeroq \leq \alquant^+(\epsilon)$ and $A$ relevant, $B$ affine, 
-      $\dmor{A} ; (f ; !_B) \otimes \dnt{A} \leq \rho^{-1}$
+      $\dmor{A} ; (f ; !_B) \otimes \dnt{A} \tref \rho^{-1}$
     \item If $\cpyq \leq \alquant^+(\epsilon)$ and $A, B$ relevant, 
-    $f ; \dmor{B} \leq \dmor{A} ; f \ltimes f = \dmor{A} ; f \rtimes f$
-    \item If $\zeroq \leq \alquant^-(\epsilon)$ and $A, B$ affine, $f ; !_B \geq !_A$
+    $f ; \dmor{B} \cref \dmor{A} ; f \ltimes f = \dmor{A} ; f \rtimes f$
+    \item If $\zeroq \leq \alquant^-(\epsilon)$ and $A, B$ affine, $f ; !_B \anticref !_A$
     \item If $\zeroq \leq \alquant^-(\epsilon)$ and $A$ relevant, $B$ affine, 
-      $\dmor{A} ; (f ; !_B) \otimes \dnt{A} \geq \rho^{-1}$
+      $\dmor{A} ; (f ; !_B) \otimes \dnt{A} \anticref \rho^{-1}$
     \item If $\cpyq \leq \alquant^-(\epsilon)$ and $A, B$ relevant, 
-    $f ; \dmor{B} \geq \dmor{A} ; f \ltimes f = \dmor{A} ; f \rtimes f$
+    $f ; \dmor{B} \anticref \dmor{A} ; f \ltimes f = \dmor{A} ; f \rtimes f$
   \end{itemize}
   where
   \begin{itemize}
@@ -2003,8 +2016,10 @@ $\Gamma^{\mb{q}}$ to be the tensor product of its variables, i.e., $\etoty{\cdot
 $\etoty{\Gamma, x : A^q} = \etoty{\Gamma} \otimes \etoty{A^q}$. 
 We will abuse notation slightly and extend $\dnt{\cdot}$ to quantity 
 annotated types $A^q$ by taking $\dnt{A^q} = \dnt{\etoty{A^q}}$; likewise, we define $!_{A^q} =
-!_{\etoty{A^q}}$ and $\Delta_{A^q} = \Delta_{\etoty{A^q}}$, where the \emph{effective type} of an annotated type $A^q$, $\etoty{A^q}$, is $\mb{1}$ if $q = 0$, and $A$ otherwise. 
-Likewise, we proceed to define the semantics of an annotated context $\dnt{\Gamma^{\mb{q}}} : |\mc{C}|$ as $\dnt{\etoty{\Gamma^{\mb{q}}}}$.
+!_{\etoty{A^q}}$ and $\Delta_{A^q} = \Delta_{\etoty{A^q}}$, where the \emph{effective type} of an 
+annotated type $A^q$, $\etoty{A^q}$, is $\mb{1}$ if $q = 0$, and $A$ otherwise. 
+Likewise, we proceed to define the semantics of an annotated context 
+$\dnt{\Gamma^{\mb{q}}} : |\mc{C}|$ as $\dnt{\etoty{\Gamma^{\mb{q}}}}$.
 
 We can now define the semantics of our structural judgements, weakenings and context splitting, in
 Figure~\ref{fig:struct-sem}. In particular, weakenings simply discard unused variables (which are
@@ -2202,7 +2217,7 @@ of the substitution.
   \eta \rightmove \epsilon \implies
   \dnt{\issubst{\Gamma^{\mb{q}}}{\eta}{\sigma}{\Delta^{\mb{q'}}}} 
     ; \dnt{\hasty{\Delta^{\mb{q}'}}{\epsilon}{a}{A}}
-  \leq \dnt{\hasty{\Gamma^{\mb{q}}}{}{[\sigma]a}{A}} \\
+  \cref \dnt{\hasty{\Gamma^{\mb{q}}}{}{[\sigma]a}{A}} \\
   \eta \leftmove \epsilon \implies
   \dnt{\issubst{\Gamma^{\mb{q}}}{\eta}{\sigma}{\Delta^{\mb{q'}}}} 
     ; \dnt{\hasty{\Delta^{\mb{q}'}}{\epsilon}{a}{A}}
@@ -2225,7 +2240,7 @@ a typed refinement family as follows:
   $
   we have that
   $
-  \dnt{\hasty{\Gamma}{\epsilon}{a}{A}} \leq \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}
+  \dnt{\hasty{\Gamma}{\epsilon}{a}{A}} \tref \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}
   $
 \end{definition}
 We note that, for every model $\mc{M}$, $\mc{M} \models \varnothing$. We can then phrase soundness
@@ -2234,7 +2249,7 @@ $\mc{R}$, $\ms{Th}(\mc{R})$, $\mc{M}$ validates that refinement. Or, more formal
 \begin{theorem}[Soundness]
   We have that $\mc{M} \models \mc{R} \iff \mc{M} \models \ms{Th}(\mc{R})$. That is, given $\mc{M}
   \models \mc{R}$ and $\tmle{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A}$, we have
-  $\dnt{\hasty{\Gamma}{\epsilon}{a}{A}}_{\mc{M}} \leq
+  $\dnt{\hasty{\Gamma}{\epsilon}{a}{A}}_{\mc{M}} \cref
   \dnt{\hasty{\Gamma}{\epsilon}{b}{A}}_{\mc{M}}$.
 \end{theorem}
 In particular, we hence have that, for every model $\mc{M}$, $\mc{M} \models \ms{Th}(\varnothing)$,
@@ -2247,7 +2262,7 @@ semantics; that is, if some refinement holds for every $\mc{M} \models \mc{R}$, 
 is in fact contained in $\ms{Th}(\mc{R})$. We will do this by constructing an \emph{initial} model
 $\ms{Tm}(\mc{R})$, the \emph{syntactic model}, such that the following theorem holds:
 \begin{theorem}[Completeness]
-  If $\dnt{\hasty{\Gamma}{}{a}{A}}_{\ms{Tm}(\mc{R})} \leq
+  If $\dnt{\hasty{\Gamma}{}{a}{A}}_{\ms{Tm}(\mc{R})} \tref
   \dnt{\hasty{\Gamma}{}{b}{A}}_{\ms{Tm}(\mc{R})}$, then
   $
   \tmle{\Gamma}{\mc{R}}{a}{b}{A}
@@ -2255,7 +2270,7 @@ $\ms{Tm}(\mc{R})$, the \emph{syntactic model}, such that the following theorem h
 \end{theorem}
 It then follows from soundness and the existence of $\ms{Tm}(\mc{R})$ that
 $\tmle{\Gamma}{\mc{R}}{a}{b}{A}$ \emph{if and only if} for all models $\mc{M} \models \mc{R}$,
-$\dnt{\hasty{\Gamma}{}{a}{A}}_{\mc{M}} \leq \dnt{\hasty{\Gamma}{}{b}{A}}_{\mc{M}}$, as desired.
+$\dnt{\hasty{\Gamma}{}{a}{A}}_{\mc{M}} \tref \dnt{\hasty{\Gamma}{}{b}{A}}_{\mc{M}}$, as desired.
 
 We now proceed to give a sketch of the construction of $\ms{Tm}(\mc{R})$ and the proof of 
 completeness; full details are given in Appendix~\ref{apx:completeness}. As is standard, our 
@@ -2275,7 +2290,8 @@ We can equip $\ms{Tm}(\mc{R})$ with the structure of a poset-enriched
 category by using the refinement relation as a partial order; it is trivial to see that this is
 well-defined. The rest of the structure of a \subiterexp{}-model is given in Appendix~\ref{apx:syn-model}.
 
-By soundness (since all members of an equivalence class with the same variable $x$ are equivalent) and semantic substitution (to allow us to rename variables, since a renaming has the identity as
+By soundness (since all members of an equivalence class with the same variable $x$ are equivalent) 
+and semantic substitution (to allow us to rename variables, since a renaming has the identity as
 denotation), for any $f : \ms{Tm}_\epsilon(\mc{R})(A, B)$, we have that, for any model 
 $\mc{M} \models \mc{R}$,
 $$
@@ -2664,7 +2680,7 @@ expressions.
 % for all  models $\mc{M} \models \mc{R}$, we have
 % $
 % \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{r}{\ms{L}^{\mb{Q}}}}_{\mc{M}} 
-% \leq \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{r'}{\ms{L}^{\mb{Q}}}}_{\mc{M}}
+% \tref \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{r'}{\ms{L}^{\mb{Q}}}}_{\mc{M}}
 % $; in particular, two programs are \emph{equivalent} if their semantics are always equal.
 
 When we say that \isotopessa{} and \subiterexp{} are \emph{equivalent}, what we mean is that there
@@ -2754,9 +2770,11 @@ $\ms{Heap}\;A = S \to \ms{UB}\;(A \times S)$, with the natural pointwise partial
 Again, we give a full description of this monad and its associated Elgot
 structure in Appendix~\ref{apx:ub-st}.
 
-Just like in the previous section, the most natural way to equip this model with an effect system
-is to consider the lattice generated by a primitive set of effects, with joins and meets interpreted
-as joins and meets in the lattice of wide subcategories of the Kleisli category.
+In the previous section, the most natural way to define an effect system was as the lattice 
+generated by a set of primitive effects: morphisms which \emph{can} loop forever ($\infty$) or 
+\emph{can} exhibit UB ($\ubeff$). Interestingly, we can take the opposite perspective, and think
+of the \emph{negation} of effects: note that $\infty$ is defined precisely as the morphisms which
+\emph{cannot} exhibit UB ($\lnot\ubeff$) and $\ubeff$ as the morphisms which \emph{cannot}
 
 \TODO{load, store, alloc, free, haul legacy}
 
