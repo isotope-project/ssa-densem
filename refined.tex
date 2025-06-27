@@ -2956,18 +2956,25 @@ space, this is relegated to Appendix~\ref{apx:sep}.
 In Brookes's \cite{brookes-full-abstraction-96} semantics for concurrency, a program term's
 effect is denoted by a trace consisting of a finite sequence of transitions 
 $\langle \mu, \rho \rangle$, where $\mu$ and $\rho$ are maps from locations to values, representing
-the current state of memory. A program's denotation is then given by a \emph{set} of pairs
-$\tret{\xi}{r}$ of a trace $\xi$ and return value $r$. We interpret such traces as
+the current state of memory. We interpret such traces as
 \emph{interrupted} program executions: for example, the trace $\langle \mu_1, \rho_1 \rangle ;
 \langle \mu_2, \rho_2 \rangle$ can be viewed as the program, starting in condition $\mu_1$,
 executing up until condition $\rho_1$, at which point control is returned to the environment, which
-then returns control to the program with the system in state $\mu_2$, and so on.
-
-\TODO{discuss the semantics of a read or a write?}
+then returns control to the program with the system in state $\mu_2$, and so on. As a concrete
+example, the program $\ms{st}\;\ell\;5 ; \ms{st}\;\ell\;3$ might have semantics
+$
+\langle \mu, [\ell \mapsto 5]\mu \rangle ; \langle \mu', [\ell \mapsto 3]\mu' \rangle
+$
+for some $\mu, \mu'$. We can think of the left-hand side of each pair as a \emph{requirement} the
+program makes of the environment, and the right-hand side as a \emph{guarantee} the program gives
+the environment if that requirement is fulfilled. A program's denotation is then given by a
+\emph{set} of pairs $\tret{\xi}{r}$ of a trace $\xi$ and return value $r$.
 
 The key observation of \citet{brookes-full-abstraction-96} is that we can achieve \emph{abstraction}
 of a concurrent memory model (in this case, sequentially consistent concurrent execution) by
-requiring our set of traces to satisfy certain \emph{closure properties}. In particular...
+requiring our set of traces to satisfy certain \emph{closure properties}. In particular, we want to
+allow our program to ``\emph{stutter},'' i.e., insert additional steps where it does nothing, and
+``\emph{mumble},'' i.e. omit steps where the environment does nothing.
 
 \TODO{SC closure rules are stutter (the system does nothing; or, a program can always guarantee what
 it relies on) and mumble (the environment does nothing; or, a program can always omit a guarantee to
