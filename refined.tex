@@ -2953,36 +2953,34 @@ space, this is relegated to Appendix~\ref{apx:sep}.
 
 \subsection{Concurrency}
 
-In Brookes's \cite{brookes-full-abstraction-96} semantics for concurrency, a program term's
-effect is denoted by a trace consisting of a finite sequence of transitions 
-$\langle \mu, \rho \rangle$, where $\mu$ and $\rho$ are maps from locations to values, representing
-the current state of memory. We interpret such traces as
-\emph{interrupted} program executions: for example, the trace $\langle \mu_1, \rho_1 \rangle ;
-\langle \mu_2, \rho_2 \rangle$ can be viewed as the program, starting in condition $\mu_1$,
-executing up until condition $\rho_1$, at which point control is returned to the environment, which
-then returns control to the program with the system in state $\mu_2$, and so on. As a concrete
-example, the program $\ms{st}\;\ell\;5 ; \ms{st}\;\ell\;3$ might have semantics
-$
-\langle \mu, [\ell \mapsto 5]\mu \rangle ; \langle \mu', [\ell \mapsto 3]\mu' \rangle
-$
-for some $\mu, \mu'$. We can think of the left-hand side of each pair as a \emph{requirement} the
-program makes of the environment, and the right-hand side as a \emph{guarantee} the program gives
-the environment if that requirement is fulfilled. A program's denotation is then given by a
-\emph{set} of pairs $\tret{\xi}{r}$ of a trace $\xi$ and return value $r$.
+In Brookes's \cite{brookes-full-abstraction-96} semantics for concurrency, a program term's effect 
+is denoted by a trace consisting of a finite sequence of transitions $\langle \mu, \rho \rangle$ 
+between memory states $\mu$ and $\rho$.
+%
+We interpret such traces as \emph{interrupted} program executions: a transition $\langle \mu, \rho
+\rangle$ represents a single step in which the program, \emph{relying on} a state $\mu$ by the
+environment, \emph{guarantees} a state $\rho$ upon returning control to the environment.
+%
+A program's denotation is then given by a \emph{set} of pairs $\tret{\xi}{r}$ of a trace $\xi$ and
+corresponding return value $r$; each such pair corresponds to a possible execution of the program
+given potential environmental interference (e.g., some external thread performing reads and writes);
+for simplicity, we will simply discard any executions which do not terminate with a return value
+$r$.
 
 The key observation of \citet{brookes-full-abstraction-96} is that we can achieve \emph{abstraction}
-of a concurrent memory model (in this case, sequentially consistent concurrent execution) by
-requiring our set of traces to satisfy certain \emph{closure properties}. In particular, we want to
-allow our program to ``\emph{stutter},'' i.e., insert additional steps where it does nothing, and
-``\emph{mumble},'' i.e. omit steps where the environment does nothing.
+of a concurrent memory model by requiring our set of traces to satisfy certain \emph{closure
+properties}. For example, we may require traces to be closed under ``\emph{stuttering}'' (adding
+transitions of the form $\langle \mu, \mu \rangle$, corresponding to the program doing nothing) and
+``\emph{mumbling}'' (merging $\langle \mu, \rho \rangle\langle \rho, \theta \rangle \tref \langle
+\mu, \theta \rangle$, corresponding to the environment doing nothing). 
 
-\TODO{SC closure rules are stutter (the system does nothing; or, a program can always guarantee what
-it relies on) and mumble (the environment does nothing; or, a program can always omit a guarantee to
-the environment, and rely on that omitted guarantee rather than the environment)}
+\TODO{define the monad}
 
-\TODO{we can use this to make a monad exposing SC as a side effect}
+By choosing the appropriate state types, closure properties, and operations on states, it is
+possible to model a wide variety of memory models in this fashion.
 
-\TODO{Simplest possible Elgot structure just ignores divergent executions; do this for now}
+\TODO{SC example, simplest possible Elgot structure just ignores divergent executions; do this for
+now}
 
 \TODO{We can validate fun rules like write-write elimination}
 
