@@ -3068,11 +3068,6 @@ agreement no. 101002277).
 \clearpage 
 
 \appendix
-
-\section{Refinement Rules}
-
-...
-
 \begin{figure}
   \begin{gather*}
     \prftree[r]{\rle{var}}
@@ -3133,6 +3128,10 @@ agreement no. 101002277).
   \label{fig:congruence-refinement}
 \end{figure}
 
+\section{Translation}
+
+\TODO{this}
+
 \section{Completeness}
 
 \label{apx:completeness}
@@ -3141,13 +3140,56 @@ agreement no. 101002277).
 
 \label{apx:syn-model}
 
-\TODO{this}
+We define the syntactic category of \subiterexp{}-models of a signature $\mc{S} = (\mc{X}, \mc{E},
+\mc{I})$ quotiented by a set of primitive rewrites $\mc{R}$ as follows:
+\begin{itemize}
+  \item Objects types $A, B, C \in \ms{Ty}(\mc{X})$
+  \item Morphisms $\ms{Tm}(A, B) := \{(x, a) \mid \hasty{x : A}{}{a}{B}\} / \approx$ where $(x, a)
+  \approx (y, b)$ if and only if $\tmeq{x : A}{\mc{R}}{a}{[x/y]b}{B}$. 
+  \item Refinement on morphisms $(x, a) \tref (y, b)$ if and only if $\tmle{x :
+  A}{\mc{R}}{a}{[x/y]b}{B}$ (this is well-defined since, by definition, we quotient precisely the
+  equivalence clases of $\tref_{\mc{R}}$)
+  \item Identity morphisms $\ms{id}_A := (x, x)$
+  \item Composition $(x, a) ; (y, b) := (x, \letexpr{y}{a}{b})$
+  \item Tensor products (with the tensor product on objects simply the tensor product on types)
+  $$
+  (x, a) \otimes A := (z, \letexpr{(x, y)}{z}{(a, y)})
+  \qquad
+  A \otimes (x, b)
+  := (z, \letexpr{(y, x)}{z}{(y, b)}))
+  $$ \todo{monoidal unit...}
+  \item Associators, unitors, and symmetries
+  \begin{gather*}
+    \begin{aligned}
+      \alpha 
+      &:= (x, \letexpr{(x_{12}, x_3)}{x}{\letexpr{(x_1, x_2)}{x_{12}}{(x_1, (x_2, x_3))}}) 
+      \\
+      \alpha^{-1} 
+      &:= (x, \letexpr{(x_1, x_{23})}{x}{\letexpr{(x_2, x_3)}{x_{23}}{((x_1, x_2), x_3)}})
+    \end{aligned} \\
+    \lambda := (x, \letexpr{(y, z)}{x}{y}) \qquad
+    \lambda^{-1} := (x, (x, ())) \\
+    \rho := (x, \letexpr{(y, z)}{x}{z}) \qquad
+    \rho^{-1} := (x, ((), x)) \\
+    \sigma := (x, \letexpr{(y, z)}{x}{(z, y)})
+  \end{gather*}
+  \item \todo{coproducts and initial object}
+  \item \todo{distributors}
+  \item \todo{iteration operator}
+  \item \todo{discard and duplicate}
+\end{itemize}
+
+\TODO{this is indeed a model; partial Lean 4 formalization of this fact, rest goes here}
+
+\section{Category of Models}
+
+\TODO{this, and in particular translation functors}
 
 \subsection{Packing Lemma}
 
 \label{apx:packing}
 
-\TODO{this}
+\TODO{permutation lore}
 
 \section{SSA Semantics}
 
