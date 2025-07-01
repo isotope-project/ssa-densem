@@ -3112,20 +3112,30 @@ agreement no. 101002277).
   \label{fig:congruence-refinement}
 \end{figure}
 
-\section{Translation}
-
-\TODO{this}
-
 \section{Completeness}
 
 \label{apx:completeness}
+
+In this section, we give the proof of completeness of our refinement calculus w.r.t. our
+denotational semantics, which proceeds in two stages:
+\begin{enumerate}
+  \item We define the \emph{syntactic category} of \subiterexp{} terms for a signature $\mc{S} =
+  (\mc{X}, \mc{E}, \mc{I})$ quotiented by a set of rewrites $\mc{R}$, and show it yields a valid
+  \subiterexp{}-model, which we call the \emph{syntactic model} of $\mc{S}$ quotiented by $\mc{R}$;
+  we write this $\ms{Tm}_{\mc{S}}(\mc{R})$, or $\ms{Tm}(\mc{R})$ when $\mc{S}$ is clear from
+  context.
+  \item We prove the \emph{packing lemma}, which establishes a relationship between a well-typed
+  term $\hasty{\Gamma^{\mb{q}}}{}{a}{A}$ and
+  $\dnt{\hasty{\Gamma^{\mb{q}}}{}{a}{A}}_{\ms{Tm}_{\mc{S}}(\mc{R})}$, which we use to establish that
+  the latter \emph{reflects} refinement $\tref_{\mc{R}}$ and hence that completeness holds.
+\end{enumerate}
 
 \subsection{Syntactic Model}
 
 \label{apx:syn-model}
 
-We define the syntactic category of \subiterexp{}-models of a signature $\mc{S} = (\mc{X}, \mc{E},
-\mc{I})$ quotiented by a set of primitive rewrites $\mc{R}$ as follows:
+We define the syntactic category of \subiterexp{}-models of a signature $\mc{S}$ quotiented by a set
+of primitive rewrites $\mc{R}$ as follows:
 \begin{itemize}
   \item Objects types $A, B, C \in \ms{Ty}(\mc{X})$
   \item Morphisms $\ms{Tm}(A, B) := \{(x, a) \mid \hasty{x : A}{}{a}{B}\} / \approx$ where $(x, a)
@@ -3135,13 +3145,13 @@ We define the syntactic category of \subiterexp{}-models of a signature $\mc{S} 
   equivalence clases of $\tref_{\mc{R}}$)
   \item Identity morphisms $\ms{id}_A := (x, x)$
   \item Composition $(x, a) ; (y, b) := (x, \letexpr{y}{a}{b})$
-  \item Tensor products (with the tensor product on objects simply the tensor product on types)
+  \item Tensor products $A \otimes B$ with monoidal unit $\mb{1}$, and tensor functors
   $$
   (x, a) \otimes A := (z, \letexpr{(x, y)}{z}{(a, y)})
   \qquad
   A \otimes (x, b)
   := (z, \letexpr{(y, x)}{z}{(y, b)}))
-  $$ \todo{monoidal unit...}
+  $$
   \item Associators, unitors, and symmetries
   \begin{gather*}
     \begin{aligned}
@@ -3157,17 +3167,26 @@ We define the syntactic category of \subiterexp{}-models of a signature $\mc{S} 
     \rho^{-1} := (x, ((), x)) \\
     \sigma := (x, \letexpr{(y, z)}{x}{(z, y)})
   \end{gather*}
-  \item \todo{coproducts and initial object}
-  \item \todo{distributors}
-  \item \todo{iteration operator}
-  \item \todo{discard and duplicate}
+  \item Coproducts \(A + B\) with initial object $\mb{0}$, zero morphisms $0 := (x, \labort{x})$,
+  and injections and distributors
+  \begin{gather*}
+    \iota_l := (x, \linl{x}) \qquad \iota_r := (x, \linr{x}) \qquad
+    [(x, a), (y, b)] := (z, \caseexpr{z}{x}{a}{y}{b}) \\
+    \delta := (x, \caseexpr{x}
+                          {y}{\letexpr{(y_l, y_r)}{y}{(y_l, \linl{y_r})}}
+                          {z}{\letexpr{(z_l, z_r)}{z}{(z_l, \linr{z_r})}}) \\
+    \delta^{-1} := (x, \letexpr{(x_l, x_r)}{x}{\caseexpr{x_r}
+                                          {y}{\linl{(x_l, y)}}
+                                          {z}{\linr{(x_r, z)}}})
+  \end{gather*}
+  \item Iteration operator
+  $
+    (x, a)^\dagger := (y, \liter{y}{x}{a})
+  $
+  \item Discard and diagonal morphisms $!_A := (x, ())$ and $\Delta_A := (x, (x, x))$
 \end{itemize}
 
 \TODO{this is indeed a model; partial Lean 4 formalization of this fact, rest goes here}
-
-\section{Category of Models}
-
-\TODO{this, and in particular translation functors}
 
 \subsection{Packing Lemma}
 
@@ -3175,79 +3194,165 @@ We define the syntactic category of \subiterexp{}-models of a signature $\mc{S} 
 
 \TODO{permutation lore}
 
-\section{SSA Semantics}
-
-\label{apx:ssa-roundtrip}
-
-\TODO{this}
-
-\section{Models}
-
-\subsection{Ordered Elgot Monads}
-
-\TODO{this...}
-
-\subsection{UB}
-
-\label{apx:ub}
-
-\TODO{this}
-
-\subsection{Heaps}
-
-\label{apx:ub-st}
-
-\TODO{this}
-
-\subsection{Separation Logic}
-
-\label{apx:sep}
-
-\TODO{this}
-
-\subsection{Sequential Consistency}
-
-\label{apx:sc}
-
-\TODO{this}
-
-\subsection{Release-Acquire}
-
-\label{apx:rel-acq}
-
-\TODO{this}
-
 \section{Model Category}
+
+\label{apx:model-cats}
+
+In this section, we will build up the theory of the category of \subiterexp{} models and signatures,
+which allows us to frame other results, such as completeness, much more cleanly. In particular, we
+will define and prove some properties about:
+\begin{itemize}
+  \item The category of \subiterexp{} signatures
+  \item The category of \subiterexp{} refinement theories, and the full subcategory of refinement
+  theories of a signature $\mc{S}$
+  \item The category of \subiterexp{} models, and the full subcategories of models of a given
+  signature $\mc{S}$ and a given refinement theory $\mc{R}$
+\end{itemize}
+\TODO{names}
 
 \subsection{Category of Signatures}
 
-\TODO{definition}
+\TODO{definition:}
 
-\TODO{initial object}
+\TODO{a morphism of signatures maps base types to types, instructions to programs, which are arrows
+in the syntactic model}
 
-\TODO{coproduct}
+\TODO{a morphism is type preserving if it is the identity on types (injection); this is a
+subcategory}
+
+\TODO{a morphism is strict or something if it's just instructions to instructions; this is a wide
+subcategory}
+
+\TODO{initial object is the empty signature}
+
+\TODO{coproduct of signatures is just coproduct on types and on instructions}
+
+\TODO{type preserving subcategory has union on types, coproduct on instructions; initial object is
+again empty signature}
 
 \subsection{Category of Refinement Theories}
 
 \TODO{definition}
 
-\TODO{initial objects}
+\TODO{
+  a morphism is a refinement preserving morphism of signatures; 
+  TODO: is it enough to see if $T$ preserves $\mc{R}$?
+}
 
-\TODO{coproducts}
+\TODO{initial object for any/all signatures is the empty theory}
+
+\TODO{coproducts of refinement theories?}
 
 \subsection{Category of Models}
 
-\TODO{definition}
+\TODO{definition; obvious morphism of models}
 
-\TODO{initial objects (syntactic models)}
+\TODO{initial objects (syntactic models) for each wide subcategory of a given rewrite theory
+$(\mc{S}, \mc{R})$}
 
-\TODO{coproducts}
+\TODO{functor from category of refinement theories to initial objects; \textit{question: is this
+faithful? full?}}
 
-\section{\texttt{mem2reg}}
+\TODO{\emph{the} initial model of SSA: tfw is it just partial functions on bitvectors?}
 
-\label{apx:mem2reg}
+\section{Compiling Expressions to SSA}
 
+\label{apx:ssa-roundtrip}
+
+In this section, we give a compilation function $\ms{SSA}_\ell$ that compiles a \subiterexp{} terms 
+to an SSA program returning its result as an argument to output label $\ell$. We will then show
+that this function is \emph{semantics-preserving}, i.e. that it satisfies the following property:
+$$
+\dnt{
+  \haslb{\Gamma^{\mb{q}}}{\epsilon}{\ms{SSA}_\ell(\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A})}
+  {\ell(A)^0}
+}_{\mc{M}} = \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}}_{\mc{M}} ; \alpha^+ 
+$$
+We begin by giving an inductive definition of $\ms{SSA}_\ell$ as follows:
 \TODO{this}
+
+\TODO{proof by induction that it is in fact semantics preserving}
+
+\section{Models}
+
+\label{apx:models}
+
+In this section, we give a few simple families of \subiterexp{}-models highlighting some of the
+features of our formalization. Using the machinery developed in Appendix~\ref{apx:model-cats}, we
+also construct some relationships between models, allowing us to use higher level models as
+``analysis passes'' for lower-level ones.
+
+\subsection{Ordered Elgot Monads}
+
+\TODO{an \emph{ordred monad} lets us poset-enrich the Kleisli category as follows}
+ 
+\TODO{an \emph{Elgot monad}... an \emph{ordered Elgot monad} is the obvious thing...}
+
+\TODO{NT is an ordered Elgot monad}
+
+\subsection{Nondeterminism}
+
+\TODO{ND is an ordered Elgot monad}
+
+\TODO{ND + NT is an ordered Elgot monad, again with \emph{two} Elgot structures}
+
+\subsection{UB}
+
+\label{apx:ub}
+
+\TODO{UB is an ordered Elgot monad}
+
+\TODO{acts like \emph{symbolic} nondeterminism}
+
+\TODO{UB + NT is an ordered Elgot monad, with \emph{two} Elgot structures}
+
+\TODO{UB + ND + NT is an ordered Elgot monad}
+
+\subsection{Ordered Monad Transformers}
+
+\TODO{readerT preserves order}
+
+\TODO{writerT preserves order}
+
+\TODO{stateT preserves order}
+
+\subsection{Heaps}
+
+\label{apx:ub-st}
+
+\TODO{apply stateT for the appropriate state to UB + ND + NT}
+
+\TODO{prove some rewrite rules}
+
+\TODO{fuse with below?}
+
+\subsection{Separation Logic}
+
+\label{apx:sep}
+
+\TODO{predicates on heaps above}
+
+\TODO{basetypes are datatypes + predicates}
+
+\TODO{objects are sets + predicates, do tensor}
+
+\TODO{morphisms are predicate-preserving morphisms in the underlying; these become our instructions}
+
+\TODO{forgetful functor is a model morphism to heap model; show results here}
+
+\subsection{Brookes-Style Concurrency}
+
+\label{apx:rel-acq}
+
+\TODO{trace models of concurrency; associated monad}
+
+\TODO{ordered Elgot structure}
+
+\TODO{instantiate for sequential consistency following \citet{brookes-full-abstraction-96}}
+
+\TODO{instantiate for release-acquire following \citet{release-acquire}}
+
+\TODO{instantiate for TSO following \citet{jagadeesan-brookes-relaxed-12}}
 
 \end{document}
 \endinput
