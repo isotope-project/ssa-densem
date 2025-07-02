@@ -2333,73 +2333,81 @@ refinement relation as a partial order; it is trivial to see that this is well-d
 the structure of a \subiterexp{}-model is given in Appendix~\ref{apx:syn-model}.
 
 To prove completeness, it suffices need to show that $\dnt{\cdot}_{\ms{Tm}(\mc{R})}$ \emph{reflects}
-refinement. To do so, we begin by noting that by soundness (since all members of an equivalence
-class with the same variable $x$ are equivalent) and semantic substitution (to allow us to rename
-variables, since a renaming has the identity as denotation), for any $f :
-\ms{Tm}_\epsilon(\mc{R})(A, B)$, we have that, for any model $\mc{M} \models \mc{R}$,
-$$
-\forall (x, a), (y, b) \in f, \dnt{\hasty{x : A^\top}{\epsilon}{a}{B}}_{\mc{M}} 
-  = \dnt{\hasty{x : A^\top}{\epsilon}{b}{B}}_{\mc{M}}
-$$
-It follows that we can lift $\dnt{\cdot}_{\mc{M}}$ to $\ms{Tm}_\epsilon(\mc{R})$ by defining, for
-arbitrary $(x, a)$ in the equivalence class,
-$
-\dnt{f}_{\mc{M}} = \dnt{\hasty{x : A^\top}{\epsilon}{a}{B}}_{\mc{M}} 
-  : \mc{C}_\epsilon(\dnt{A}, \dnt{B})
-$. 
-In particular, we can hence state the \emph{flattening lemma}:
-\begin{lemma}[name=Flattening, restate=flatteninglemma]
-We have that
-$
-  \dnt{\dnt{\hasty{\Gamma}{}{a}{A}}_{\ms{Tm}(\mc{R})}}_{\mc{M}} 
-  = \lambda ; \dnt{\hasty{\Gamma}{}{a}{A}}_{\mc{M}}
-$
-\label{lem:flattening}
-\end{lemma}
-\TODO{segue to packing}
+refinement. To do so, we note that $\dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{B}}_{\ms{Tm}(\mc{R})}$
+is, up to equivalence, a term of the form $\hasty{x : [\Gamma^{\mb{q}}]}{\epsilon}{\bar{a}}{B}$.
+Hence, our strategy for proving completeness is simply to relate the terms $a$ and $\bar{a}$ such
+that $\bar{a} \tref \bar{b} \implies a \tref b$. We begin by relating the contexts $\Gamma^{\mb{q}}$
+and $x : [\Gamma^{\mb{q}}]$ via the \emph{packing lemma}
 \begin{lemma}[name=Packing, restate=packinglemma]
-  We can define functions $\ms{pack}$, $\ms{unpack}$ mapping derivations 
-  $
-  \hasty{\Gamma^{\mb{q}}, x : \etoty{\Delta^{\mb{q}'}}}{\epsilon}{a}{A}$, 
-  $\hasty{\Gamma^{\mb{q}}, \Delta^{\mb{q}'}}{\epsilon}{b}{A}$ such that
+  We can define monotone functions $\ms{pack}$, $\ms{unpack}_{\Gamma, x}$ on derivations
+  $$
+  \hasty{\Gamma^{\mb{q}}, \Delta^{\mb{q}'}}{\epsilon}{
+        \ms{pack}(\hasty{\Gamma^{\mb{q}}, x : \etoty{\Delta^{\mb{q}'}}}{\epsilon}{a}{A})
+  }{A} \qquad
+  \hasty{\Gamma^{\mb{q}}, x : \etoty{\Delta^{\mb{q}'}}}{\epsilon}{
+        \ms{unpack}_{\Gamma, x}(\hasty{\Gamma^{\mb{q}}, \Delta^{\mb{q}'}}{\epsilon}{b}{A})
+  }{A}
+  $$
+  which are
   \begin{itemize}
-    \item $\hasty{\Gamma^{\mb{q}}}{\epsilon}{
-        \ms{pack}(\hasty{x : \etoty{\Gamma^{\mb{q}}}}{\epsilon}{a}{A})
-        }{A}$ with
-        $$
-        \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{
-          \ms{pack}(\hasty{x : \etoty{\Gamma^{\mb{q}}}}{\epsilon}{a}{A})
-          }{A}}
-          = \lambda^{-1} ; \dnt{\hasty{x : \etoty{\Gamma^{\mb{q}}}}{\epsilon}{a}{A}}
-        $$
-    \item $\hasty{x : \etoty{\Gamma^{\mb{q}}}}{\epsilon}{
-      \ms{unpack}_x(\hasty{\Gamma^{\mb{q}}}{\epsilon}{b}{A})
-      }{A}$ with
-      $$
-      \dnt{\hasty{x : \etoty{\Gamma^{\mb{q}}}}{\epsilon}{
-        \ms{unpack}_x(\hasty{\Gamma^{\mb{q}}}{\epsilon}{b}{A})\
+    \item Semantics-preserving: 
+      \begin{align*}
+      \dnt{\hasty{\Gamma^{\mb{q}}, \Delta^{\mb{q}'}}{\epsilon}{
+        \ms{pack}(\hasty{\Gamma^{\mb{q}}, x : \etoty{\Delta^{\mb{q}'}}}{\epsilon}{a}{A})
         }{A}}
-        = \lambda ; \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{b}{A}}
-      $$
-    \item $\tmeq{x : \etoty{\Gamma^{\mb{q}}}}{\mc{R}}
-        {\ms{unpack}_x(\ms{pack}(\hasty{x : \etoty{\Gamma^{\mb{q}}}}{\epsilon}{a}{A}))}
+        &= \alpha ; \dnt{\hasty{\Gamma^{\mb{q}}, x : \etoty{\Delta^{\mb{q}'}}}{\epsilon}{a}{A}}
+      \\
+      \dnt{\hasty{\Gamma^{\mb{q}}, x : \etoty{\Delta^{\mb{q}'}}}{\epsilon}{
+        \ms{unpack}_{\Gamma, x}(\hasty{\Gamma^{\mb{q}}, \Delta^{\mb{q}'}}{\epsilon}{b}{A})\
+        }{A}}
+        &= \alpha ; \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{b}{A}}
+      \end{align*} 
+    \item Mutually inverse (up to $\approx$):
+        $
+        \tmeq{\Gamma^{\mb{q}}, x : \etoty{\Delta^{\mb{q}'}}}{\mc{R}}
+        {\ms{unpack}_{\Gamma, x}(\ms{pack}(
+          \hasty{\Gamma^{\mb{q}}, x : \etoty{\Delta^{\mb{q}'}}}{\epsilon}{a}{A}
+        ))}
         {a}
-        {A}$
-    \item $\tmeq{\Gamma^{\mb{q}}}{\mc{R}}
-        {\ms{pack}(\ms{unpack}_x(\hasty{\Gamma^{\mb{q}}}{\epsilon}{b}{A}))}
+        {A}
+        $
+        and
+        $
+        \tmeq{\Gamma^{\mb{q}}, \Delta^{\mb{q}'}}{\mc{R}}
+        {\ms{pack}(\ms{unpack}_{\Gamma, x}(
+          \hasty{\Gamma^{\mb{q}, \Delta^{\mb{q}'}}}{\epsilon}{b}{A}))}
         {b}
-        {A}$
+        {A}
+        $
   \end{itemize}
   \label{lem:packing}
-\end{lemma} 
-Completeness immediately follows from the fact that
-\begin{equation}
-  (x, \ms{unpack}_x(\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A})) \in
-  \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}}_{\ms{Tm}(\mc{R})}
-  \label{eqn:unpacking}
-\end{equation}
-Details of the definition of $\ms{pack}$ and $\ms{unpack}$ and the proofs of
-Lemmas~\ref{lem:flattening} and \ref{lem:packing} are given in Appendix~\ref{apx:packing}.
+\end{lemma}
+We write $\ms{unpack}_x$ as shorthand for $\ms{unpack}_{\cdot, x}$. We may now state the
+\emph{unpacking lemma} as follows: 
+\begin{lemma}[name=Unpacking, restate=unpackinglemma]
+  Given $\hasty{\Gamma^{\mb{q}}}{}{a}{A}$, 
+  for all $(x, \bar{a}) \in \dnt{\hasty{\Gamma^{\mb{q}}}{}{a}{A}}_{\ms{Tm}(\mc{R})}$
+  we have that
+  $
+    \tmeq{\Gamma^{\mb{q}}}{\mc{R}}
+      {\ms{unpack}_{\cdot, \Gamma}(\hasty{x : [\Gamma^{\mb{q}}])}{}{\bar{a}}{A}}
+      {a}{A}
+  $
+  \label{lem:unpacking}
+\end{lemma}
+Completeness follows directly, since, in this case, by monotonicity, for all $(x, \bar{a}) \tref (y,
+\bar{b})$, we have that
+$
+\tmle{\Gamma^{\mb{q}}}{\mc{R}}
+  {\ms{unpack}_{\cdot, x}(\hasty{x : [\Gamma^{\mb{q}}])}{}{\bar{a}}{A}}
+  {\ms{unpack}_{\cdot, y}(\hasty{y : [\Gamma^{\mb{q}}])}{}{\bar{b}}{A}}{A}
+$
+and hence that 
+$
+a \tref b
+$
+as desired. Details of the definition of $\ms{pack}$ and $\ms{unpack}$ and the proofs of
+Lemmas~\ref{lem:packing} and \ref{lem:unpacking} are given in Appendix~\ref{apx:packing}.
 
 \section{SSA Typing and Semantics}
 
