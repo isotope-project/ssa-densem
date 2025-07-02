@@ -2328,34 +2328,40 @@ may be impure!) but rather by let-bindings as follows:
 $$
 (x, a) ; (y, b) := (x, (\letexpr{y}{a}{b}))
 $$
-We can equip $\ms{Tm}(\mc{R})$ with the structure of a poset-enriched
-category by using the refinement relation as a partial order; it is trivial to see that this is
-well-defined. The rest of the structure of a \subiterexp{}-model is given in Appendix~\ref{apx:syn-model}.
+We can equip $\ms{Tm}(\mc{R})$ with the structure of a poset-enriched category by using the
+refinement relation as a partial order; it is trivial to see that this is well-defined. The rest of
+the structure of a \subiterexp{}-model is given in Appendix~\ref{apx:syn-model}.
 
-By soundness (since all members of an equivalence class with the same variable $x$ are equivalent) 
-and semantic substitution (to allow us to rename variables, since a renaming has the identity as
-denotation), for any $f : \ms{Tm}_\epsilon(\mc{R})(A, B)$, we have that, for any model 
-$\mc{M} \models \mc{R}$,
+To prove completeness, it suffices need to show that $\dnt{\cdot}_{\ms{Tm}(\mc{R})}$ \emph{reflects}
+refinement. To do so, we begin by noting that by soundness (since all members of an equivalence
+class with the same variable $x$ are equivalent) and semantic substitution (to allow us to rename
+variables, since a renaming has the identity as denotation), for any $f :
+\ms{Tm}_\epsilon(\mc{R})(A, B)$, we have that, for any model $\mc{M} \models \mc{R}$,
 $$
 \forall (x, a), (y, b) \in f, \dnt{\hasty{x : A^\top}{\epsilon}{a}{B}}_{\mc{M}} 
   = \dnt{\hasty{x : A^\top}{\epsilon}{b}{B}}_{\mc{M}}
 $$
-It follows that we can lift $\dnt{\cdot}_{\mc{M}}$ to $\ms{Tm}_\epsilon(\mc{R})$ by defining, for arbitrary
-$(x, a)$ in the equivalence class,
+It follows that we can lift $\dnt{\cdot}_{\mc{M}}$ to $\ms{Tm}_\epsilon(\mc{R})$ by defining, for
+arbitrary $(x, a)$ in the equivalence class,
 $
 \dnt{f}_{\mc{M}} = \dnt{\hasty{x : A^\top}{\epsilon}{a}{B}}_{\mc{M}} 
   : \mc{C}_\epsilon(\dnt{A}, \dnt{B})
-$. It therefore makes sense to ask whether we can relate 
-$\dnt{\dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}}_{\ms{Tm}(\mc{R})}}_{\mc{M}}$ 
-(where $\dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}}_{\ms{Tm}(\mc{R})} 
-  : \ms{Tm}(\mc{R})(\etoty{\Gamma^{\mb{q}}}, A)$)
-and
-$\dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}}_{\mc{M}}$; it turns out we can via the 
-\emph{packing lemma}:
+$. 
+In particular, we can hence state the \emph{flattening lemma}:
+\begin{lemma}[name=Flattening, restate=flatteninglemma]
+We have that
+$
+  \dnt{\dnt{\hasty{\Gamma}{}{a}{A}}_{\ms{Tm}(\mc{R})}}_{\mc{M}} 
+  = \lambda ; \dnt{\hasty{\Gamma}{}{a}{A}}_{\mc{M}}
+$
+\label{lem:flattening}
+\end{lemma}
+\TODO{segue to packing}
 \begin{lemma}[name=Packing, restate=packinglemma]
   We can define functions $\ms{pack}$, $\ms{unpack}$ mapping derivations 
-  $\hasty{x : \etoty{\Gamma^{\mb{q}}}}{\epsilon}{a}{A}$, $\hasty{\Gamma^{\mb{q}}}{\epsilon}{b}{A}$
-  such that
+  $
+  \hasty{\Gamma^{\mb{q}}, x : \etoty{\Delta^{\mb{q}'}}}{\epsilon}{a}{A}$, 
+  $\hasty{\Gamma^{\mb{q}}, \Delta^{\mb{q}'}}{\epsilon}{b}{A}$ such that
   \begin{itemize}
     \item $\hasty{\Gamma^{\mb{q}}}{\epsilon}{
         \ms{pack}(\hasty{x : \etoty{\Gamma^{\mb{q}}}}{\epsilon}{a}{A})
@@ -2392,8 +2398,8 @@ Completeness immediately follows from the fact that
   \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}}_{\ms{Tm}(\mc{R})}
   \label{eqn:unpacking}
 \end{equation}
-Details of the definition of $\ms{pack}$ and $\ms{unpack}$ and the proofs of Lemma~\ref{lem:packing} 
-and Equation~\ref{eqn:unpacking} are given in Appendix~\ref{apx:packing}.
+Details of the definition of $\ms{pack}$ and $\ms{unpack}$ and the proofs of
+Lemmas~\ref{lem:flattening} and \ref{lem:packing} are given in Appendix~\ref{apx:packing}.
 
 \section{SSA Typing and Semantics}
 
