@@ -229,7 +229,7 @@
 \newcommand{\tret}[2]{#1 \therefore #2}
 
 % Truth tables
-\newcommand{\cmark}{\textcolor{green}{\ding{51}}}%
+\newcommand{\cmark}{\ding{51}}%
 \newcommand{\xmark}{\textcolor{red}{\ding{55}}}%
 % \newcommand{\cmark}{\textcolor{Green}{\ding{51}}}%
 % \newcommand{\xmark}{\textcolor{BrickRed}{\ding{55}}}%
@@ -2950,11 +2950,12 @@ A program's denotation is now a \emph{set} of pairs $\tret{\xi}{r}$ of a trace $
 return value $r$. Each pair corresponds to a possible execution of the program
 given potential interference (e.g., an external thread reading and writing).
 
-\citet{brookes-full-abstraction-96} observed that to make a denotational model sound with respect to the operational semantics, the traces need to satisfy certain \emph{closure
-properties}. Trace sets should be closed under ``\emph{stuttering}'' (adding
-transitions of the form $\langle \mu, \mu \rangle$, corresponding to the program doing nothing) and
-``\emph{mumbling}'' (merging $\langle \mu, \rho \rangle\langle \rho, \theta \rangle \tref \langle
-\mu, \theta \rangle$, corresponding to the environment doing nothing).
+\citet{brookes-full-abstraction-96} observed that to make a denotational model sound with respect to
+the operational semantics, the traces need to satisfy certain \emph{closure properties}. Trace sets
+should be closed under ``\emph{stuttering}'' (adding transitions of the form $\langle \mu, \mu
+\rangle$, corresponding to the program doing nothing) and ``\emph{mumbling}'' (merging $\langle \mu,
+\rho \rangle\langle \rho, \theta \rangle \tref \langle \mu, \theta \rangle$, corresponding to the
+environment doing nothing).
 
 By choosing the appropriate state types, closure properties, and operations on states, it is
 possible to model a wide variety of memory models in this fashion. In particular,
@@ -3184,6 +3185,39 @@ of primitive rewrites $\mc{R}$ as follows:
     (x, a)^\dagger := (y, \liter{y}{x}{a})
   $
   \item Discard and diagonal morphisms $!_A := (x, ())$ and $\Delta_A := (x, (x, x))$
+\end{itemize}
+We can verify that:
+\begin{itemize}
+  \item $\ms{Tm}(\mc{R})$ is a category (\cmark): we have that, given $(x, a) :
+  \ms{Tm}_\epsilon(\mc{R})(A, B)$, $(y, b) : \ms{Tm}(\mc{R})(B, C)$, $(z, c) : \ms{Tm}(\mc{R})(C,
+  D)$, that
+  \begin{gather*}
+  \tmeq{x : A}{\mc{R}}{\letexpr{y}{a}{y}}{a}{B} 
+  \implies (x, a) ; (y, y) = (x, a) \\
+  \tmeq{y : A}{\mc{R}}{\letexpr{x}{y}{a}}{[y/x]a}{B} 
+  \implies (y, y) ; (x, a) = (y, [y/x]a) = (x, a) \\
+  \tmeq{x : A}{\mc{R}}
+    {\letexpr{z}{(\letexpr{y}{a}{b})}{c}}
+    {\letexpr{y}{a}{\letexpr{z}{b}{c}}}{A} \\
+  \qquad \implies ((x, a) ; (y, b)) ; (z, c) = (x, a) ; ((y, b); (z, c)) \\
+  \end{gather*}
+  \item $\ms{Tm}_\epsilon(\mc{R})$ has symmetric premonoidal structure $(\mb{1}, \otimes, \alpha,
+  \lambda, \rho, \sigma)$: \todo{this...}
+  \item $\ms{Tm}(\mc{R})$ has chosen coproudcts and initial object $(\mb{0}, +, \iota_l, \iota_r,
+  [\cdot, \cdot])$ (\cmark):
+  \todo{this...}
+  \item $\ms{Tm}(\mc{R})$ is distributive: \todo{this...}
+  \item $\ms{Tm}(\mc{R})$ is a distributive effectful category: \todo{this...}
+  \item $\ms{Tm}(\mc{R})$ has a Conway iteration operator: \todo{this...}
+  \item $\ms{Tm}(\mc{R})$ is an Elgot category: \todo{this...}
+\end{itemize}
+Hence, to show that we have a valid \subiterexp{}-model, it suffices to prove that, given $(x, a) :
+\ms{Tm}_\epsilon(\mc{R})(A, B)$
+\begin{itemize}
+  \item If $A$ is relevant \todo{this}
+  \item If $0 \leq \alquant^p(\epsilon)$ and $A, B$ affine, \todo{this}
+  \item If $0 \leq \alquant^p(\epsilon)$ and $A$ relevant, $B$ affine, \todo{this}
+  \item If $\omega^+ \leq \alquant^p(\epsilon)$ and $A, B$ relevant, \todo{this}
 \end{itemize}
 
 \TODO{this is indeed a model; partial Lean 4 formalization of this fact, rest goes here}
