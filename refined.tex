@@ -626,16 +626,16 @@ Mirroring this, expressions $a, b, c$ consist of
 \end{figure}
 
 The primary judgement of our type system is of the form $\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}$.
-This says that in context $\Gamma$ with \emph{variable quantities} $\mb{q}$, the expression $a$ has
-type $A$ and \emph{effects} $\epsilon$. However, before we can define this judgment, we need to
-explain what we mean by usage, and what the allowed effects are. 
-
+This says that in the context $\Gamma$, the expression $a$ has type $A$ and \emph{effects}
+$\epsilon$, and uses the variables in $\Gamma$ in accordance with the quantities in the
+\emph{quantity vector} $\mb{q}$.
 
 \subsubsection{Variable Quantities}
-Our type system needs to track how often individual variables are used  to reason about rewrites
+
+Our type system needs to track how often individual variables are used to reason about rewrites
 involving substructural effects. Inspired by substructural logic, which distinguishes linear
-(exactly once), affine (at most once), and relevant (at least once), we introduce a join
-semilattice of \emph{quantities} to model these usages. The primitive quantities are:
+(exactly once), affine (at most once), and relevant (at least once), we introduce a join semilattice
+of \emph{quantities} to model these usages. The primitive quantities are:
 \begin{itemize}
   \item $\zeroq$ -- corresponding to being used zero times
   \item $\oneq$ -- corresponding to being used exactly once
@@ -1951,26 +1951,18 @@ iteration operator} as follows:
   h ; f = g ; C + h \implies h ; f^\dagger = g^\dagger 
   $$
 \end{definition}
-We briefly note the following useful fact:
-\begin{proposition}
-  If $(-)^\dagger$ is an iteration operator which satisfies naturality and codiagonal and is
-  $\mc{K}$-uniform for $\mc{K}$ cocartesian, then it also satisfies dinaturality.
-\end{proposition}
-\begin{proof}
-  See Lemma 31 of \citet{goncharov-18-guarded-traced}
-\end{proof}
 Requiring that substitution is compatible with loops is then equivalent to requiring that the
 subcategories of morphisms having commutative effects are uniform with respect to each other. We
 call this notion an (effectful) Elgot category:
 \begin{definition}[Elgot category]
   We say a distributive effectful category $\mc{C}$ is \emph{Elgot} if it has an iterative effect
   system and is equipped with a strong Conway iteration operator, such that, for all effects
-  $\epsilon, \eta$ where $\epsilon \in \mc{E}^\infty$,
-  \begin{itemize}
-    \item The wide subcategory $\mc{C}_\epsilon$ is closed under iteration  
-    \item If $\epsilon \rightmove^p \eta$, then $\mc{C}_\epsilon$ is $\mc{C}_\eta^p$-uniform.
-  \end{itemize}
-  In particular, we note that $\mc{C}$ and hence every $\mc{C}_\epsilon$ is $\mc{C}_\bot$-uniform.
+  $\epsilon, \eta$ where $\epsilon \in \mc{E}^\infty$, the wide subcategory $\mc{C}_\epsilon$ is
+  closed under iteration, and, iff $\epsilon \rightmove^p \eta$, then $\mc{C}_\epsilon$ is
+  $\mc{C}_\eta^p$-uniform. 
+  %
+  In particular, we note that $\mc{C}$ and hence every $\mc{C}_\epsilon$ is
+  $\mc{C}_\bot$-uniform.
 \end{definition}
 The final piece of the puzzle is that we need a way to \emph{duplicate} variables of relevant type,
 as well as \emph{discard} variables of affine type. We'll supply families of morphisms $\Delta: A
@@ -3338,8 +3330,17 @@ We may now verify that:
   \todo{this...}
   \item $\ms{Tm}(\mc{R})$ is distributive: \todo{this...}
   \item $\ms{Tm}(\mc{R})$ is a distributive effectful category: \todo{this...}
-  \item $\ms{Tm}(\mc{R})$ has a Conway iteration operator: \todo{this...}
-  \item $\ms{Tm}(\mc{R})$ is an Elgot category: \todo{this...}
+  \item $\ms{Tm}(\mc{R})$ has an iteration operator: \todo{this...}
+  \item $\ms{Tm}(\mc{R})$ is an Elgot category: 
+  We begin by briefly noting the following useful fact:
+  \begin{proposition}
+    If $(-)^\dagger$ is an iteration operator which satisfies naturality and codiagonal and is
+    $\mc{K}$-uniform for $\mc{K}$ cocartesian, then it also satisfies dinaturality.
+  \end{proposition}
+  \begin{proof}
+    See Lemma 31 of \citet{goncharov-18-guarded-traced}
+  \end{proof}
+  \TODO{rest}
 \end{itemize}
 Hence, to show that we have a valid \subiterexp{}-model, it suffices to prove that, given $(x, a) :
 \ms{Tm}_\epsilon(\mc{R})(A, B)$
