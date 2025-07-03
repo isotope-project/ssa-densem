@@ -2213,6 +2213,8 @@ denotation.
   \label{fig:expr-densem}
 \end{figure}
 
+\paragraph{Weakening}
+
 As a sanity check on our semantics, we can verify that it satisfies \emph{weakening} by a
 straightforward induction, stated as follows:
 \begin{lemma}[Weakening]
@@ -2223,6 +2225,15 @@ straightforward induction, stated as follows:
   = \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}}
   $$
 \end{lemma}
+
+\paragraph{Substitution}
+
+We proceed to give a semantics for substitution in Figure~\ref{fig:subst-den}. We split up the input
+context into subcontexts for each \emph{used} variable, which are then simply interpreted using
+their denotation. Unused variables are simply represented via the left unitor. We can then state
+soundness of substitution in the following manner, which is standard except that we prove an
+\emph{inequality} whose direction is determined by the commutativity of the effects of the term and
+of the substitution. 
 
 \begin{figure}
   \begin{gather*}
@@ -2245,13 +2256,6 @@ straightforward induction, stated as follows:
   \label{fig:subst-den}
 \end{figure}
 
-We proceed to give a semantics for substitution in Figure~\ref{fig:subst-den}. We split up the input
-context into subcontexts for each \emph{used} variable, which are then simply interpreted using
-their denotation. Unused variables are simply represented via the left unitor. We can then state
-soundness of substitution in the following manner, which is standard except that we prove an
-\emph{inequality} whose direction is determined by the commutativity of the effects of the term and
-of the substitution. 
-
 \begin{theorem}[Soundness of Substitution]
   Given $\issubst{\Gamma^{\mb{q}}}{\eta}{\sigma}{\Delta^{\mb{q'}}}$ and
   $\hasty{\Delta^{\mb{q}'}}{\epsilon}{a}{A}$, we have
@@ -2267,7 +2271,7 @@ of the substitution.
   \end{align*}
 \end{theorem}
 
-\subsection{Soundness}
+\paragraph{Soundness}
 
 Now that we have given our terms a denotational semantics, we would like to show that our refinement
 theory is \emph{sound} w.r.t. this semantics. In particular, as we allow a refinement theory to be
@@ -2297,7 +2301,7 @@ $\mc{R}$, $\ms{Th}(\mc{R})$, $\mc{M}$ validates that refinement. Or, more formal
 In particular, we hence have that, for every model $\mc{M}$, $\mc{M} \models \ms{Th}(\varnothing)$,
 validating our equational theory.
 
-\subsection{Syntactic Models and Completeness}
+\paragraph{Syntactic Models and Completeness}
 
 We now wish to show that our equational theory is \emph{complete} with respect to our denotational
 semantics; that is, if some refinement holds for every $\mc{M} \models \mc{R}$, then this refinement
