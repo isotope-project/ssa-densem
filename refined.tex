@@ -3067,6 +3067,26 @@ agreement no. 101002277).
 \clearpage 
 
 \appendix
+
+\section{Refinement Rules}
+
+We begin by giving the congruence rules for \subiterexp{} in Figure~\ref{fig:congruence-refinement},
+which completes our presentation of \subiterexp{}'s type theory. We now wish to go over some basic
+derivable refinement rules, which we will make use of throughout the rest of the appendix. We begin
+with some useful lemmas and notational conventions:
+\begin{itemize}
+  \item $\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r} \iff \qsp{\Gamma}{\mb{q}}{\mb{q}_r}{\mb{q}_l}$
+  \item We will write $\Gamma^\zeroq$ to mean the variable context $\Gamma$ with every variable
+  having the zero quantity $\zeroq$. In particular, we note that $\qsp{\Gamma}{\mb{q}}{0}{\mb{q}}$
+  and $\qsp{\Gamma}{\mb{q}}{0}{\mb{q}}$ are always derivable.
+\end{itemize}
+As stated in Section~\ref{ssec:refinement-theory}, binding rules for the rest of our calculus are
+derivable from the rest of \subiterexp{}'s refinement rules. We give these explicitly in
+Figure~\ref{fig:derivable-binding}, along with the $\eta$-rule for unary let-bindings, which is
+similarly derived from \brle{let$_1$-$\beta$}. We note the commutativity requirement for
+\brle{pair-right-bind}, since on the left-hand side $a$ executes before $b$, while on the right-hand
+side $b$ executes before $a$, hence the requirement that their effects commute.
+
 \begin{figure}
   \begin{gather*}
     \prftree[r]{\rle{var}}
@@ -3127,23 +3147,55 @@ agreement no. 101002277).
   \label{fig:congruence-refinement}
 \end{figure}
 
+\begin{figure}
+  \begin{gather*}
+    \prftree[r]{\rle{op-bind}}
+      {f : A \to B}
+      {\hasty{\Gamma}{}{a}{A}}
+      {\tmeq{\Gamma}{\mc{R}}{f\;a}{\letexpr{x}{a}{f\;x}}{B}} 
+      \\
+    \prftree[r]{\rle{pair-bind}}
+      {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+      {\hasty{\Gamma^{\mb{q}_l}}{}{a}{A}}
+      {\hasty{\Gamma^{\mb{q}_r}}{}{b}{B}}
+      {\tmeq{\Gamma^{\mb{q}}}{\mc{R}}{(a, b)}{\letexpr{x}{a}{\letexpr{y}{b}{(x, y)}}}{A \otimes B}} 
+      \\
+    \prftree[r]{\rle{pair-left-bind}}
+      {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+      {\hasty{\Gamma^{\mb{q}_l}}{}{a}{A}}
+      {\hasty{\Gamma^{\mb{q}_r}}{}{b}{B}}
+      {\tmeq{\Gamma^{\mb{q}}}{\mc{R}}{(a, b)}{\letexpr{x}{a}{(x, b)}}{A \otimes B}} 
+      \\
+    \prftree[r]{\rle{pair-right-bind}}
+      {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+      {\hasty{\Gamma^{\mb{q}_l}}{\epsilon}{a}{A}}
+      {\hasty{\Gamma^{\mb{q}_r}}{\eta}{b}{B}}
+      {\epsilon \slides \eta}
+      {\tmeq{\Gamma^{\mb{q}}}{\mc{R}}{(a, b)}{\letexpr{y}{b}{(a, y)}}{A \otimes B}} 
+      \\
+    \prftree[r]{\rle{inl-bind}}
+      {\hasty{\Gamma^{\mb{q}}}{}{a}{A}}
+      {\tmeq{\Gamma^{\mb{q}}}{\mc{R}}{\linl{a}}{\letexpr{x}{a}{\linl{x}}}{A + B}} \qquad
+    \prftree[r]{\rle{inr-bind}}
+      {\hasty{\Gamma^{\mb{q}}}{}{b}{B}}
+      {\tmeq{\Gamma^{\mb{q}}}{\mc{R}}
+      {\linr{b}}{\letexpr{y}{b}{\linr{y}}}{A + B}} 
+      \\
+    \prftree[r]{\rle{abort-bind}}
+      {\hasty{\Gamma^{\mb{q}}}{}{a}{\mb{0}}}
+      {\tmeq{\Gamma^{\mb{q}}}{\mc{R}}{\labort{a}}{\letexpr{x}{a}{\labort{x}}}{C}} 
+      \\
+  \end{gather*}
+  \caption{Derivable binding rules for \subiterexp{}}
+  \Description{}
+  \label{fig:derivable-binding}
+\end{figure}
 \section{Completeness}
 
 \label{apx:completeness}
 
-In this section, we give the proof of completeness of our refinement calculus w.r.t. our
-denotational semantics, which proceeds in two stages:
-\begin{enumerate}
-  \item We define the \emph{syntactic category} of \subiterexp{} terms for a signature $\mc{S} =
-  (\mc{X}, \mc{E}, \mc{I})$ quotiented by a set of rewrites $\mc{R}$, and show it yields a valid
-  \subiterexp{}-model, which we call the \emph{syntactic model} of $\mc{S}$ quotiented by $\mc{R}$;
-  we write this $\ms{Tm}_{\mc{S}}(\mc{R})$, or $\ms{Tm}(\mc{R})$ when $\mc{S}$ is clear from
-  context.
-  \item We prove the \emph{packing lemma}, which establishes a relationship between a well-typed
-  term $\hasty{\Gamma^{\mb{q}}}{}{a}{A}$ and
-  $\dnt{\hasty{\Gamma^{\mb{q}}}{}{a}{A}}_{\ms{Tm}_{\mc{S}}(\mc{R})}$, which we use to establish that
-  the latter \emph{reflects} refinement $\tref_{\mc{R}}$ and hence that completeness holds.
-\end{enumerate}
+In this section, we give the details of the proof of completeness of our refinement calculus w.r.t.
+our denotational semantics.
 
 \subsection{Syntactic Model}
 
@@ -3200,7 +3252,25 @@ of primitive rewrites $\mc{R}$ as follows:
   $
   \item Discard and diagonal morphisms $!_A := (x, ())$ and $\Delta_A := (x, (x, x))$
 \end{itemize}
-We can verify that:
+We begin by proving a few useful identities:
+\begin{align*}
+  (x, a) ; \alpha 
+  &= (x, 
+    \letexpr{x}{a}{\letexpr{(y_{12}, y_3)}{x}{\letexpr{(y_1, y_2)}{y_{12}}{(y_1, (y_2, y_3))}}}
+  ) 
+    \\
+  &= (x, \letexpr{(x_{12}, x_3)}{x}{\letexpr{(x_1, x_2)}{x_{12}}{(x_1, (x_2, x_3))}})
+\end{align*}
+\begin{align*}
+  (x, a) ; \sigma 
+  = (x, 
+    \letexpr{x}{a}{\letexpr{(y_1, y_2)}{x}{(y_2, y_1)}}
+  ) = (x, \letexpr{(x_1, x_2)}{a}{(x_2, x_1)})
+\end{align*}
+\begin{align*}
+  (x, a) ; \lambda
+\end{align*}
+We may now verify that:
 \begin{itemize}
   \item $\ms{Tm}(\mc{R})$ is a category (\cmark): we have that, given $(x, a) :
   \ms{Tm}_\epsilon(\mc{R})(A, B)$, $(y, b) : \ms{Tm}(\mc{R})(B, C)$, $(z, c) : \ms{Tm}(\mc{R})(C,
@@ -3215,10 +3285,31 @@ We can verify that:
     {\letexpr{y}{a}{\letexpr{z}{b}{c}}}{A} \\
   \qquad \implies ((x, a) ; (y, b)) ; (z, c) = (x, a) ; ((y, b); (z, c)) \\
   \end{gather*}
-  \item $\ms{Tm}_\epsilon(\mc{R})$ has symmetric premonoidal structure $(\mb{1}, \otimes, \alpha,
-  \lambda, \rho, \sigma)$: \todo{this...}
-  \item $\ms{Tm}(\mc{R})$ has chosen coproudcts and initial object $(\mb{0}, +, \iota_l, \iota_r,
-  [\cdot, \cdot])$ (\cmark):
+  \item $\ms{Tm}_\epsilon(\mc{R})$ has binoidal structure (\cmark): 
+  \todo{this...}
+  \item $\ms{Tm}_\epsilon(\mc{R})$ has symmetric premonoidal structure: 
+  \begin{itemize}
+    \item Pentagon equation: we first define $\alpha_4 : \ms{Tm}_\bot(\mc{R})( ((A \otimes B)
+    \otimes C) \otimes D, A \otimes (B \otimes (C \otimes D)))$ as follows:
+    \begin{equation*}
+    (x, \letexpr{(x_{123}, x_4)}{x}{
+        \letexpr{(x_{12}, x_3)}{x_{123}}{
+        \letexpr{(x_1, x_2)}{x_{12}}{
+          (x_1, (x_2, (x_3, x_4)))
+        }}})
+    \end{equation*}
+    We now aim to show that both sides of the pentagon equation are equal to $\alpha_4$:
+    \begin{align*}
+      & \alpha_{(A \otimes B), C, D} ; \alpha_{A, B, (C \otimes D)}
+      \approx (x, \letexpr{x}{})
+    \end{align*}
+    \TODO{define 4 associator}
+    \TODO{left 4 associator}
+    \TODO{right 4 associator}
+    \item Triangle equations:
+    \item Hexagon equation:
+  \end{itemize}
+  \item $\ms{Tm}(\mc{R})$ has chosen coproudcts and an initial object (\cmark):
   \todo{this...}
   \item $\ms{Tm}(\mc{R})$ is distributive: \todo{this...}
   \item $\ms{Tm}(\mc{R})$ is a distributive effectful category: \todo{this...}
