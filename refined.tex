@@ -2325,23 +2325,27 @@ $\dnt{\hasty{\Gamma}{}{a}{A}}_{\mc{M}} \tref \dnt{\hasty{\Gamma}{}{b}{A}}_{\mc{M
 
 We now proceed to give a sketch of the construction of $\ms{Tm}(\mc{R})$ and the proof of 
 completeness; full details are given in Appendix~\ref{apx:completeness}. As is standard, our 
-syntactic model $\ms{Tm}(\mc{R})$ will have types as objects. To construct morphisms, we start with 
-terms with a single free variable. We stratify these terms by type and effect as follows:
+syntactic model $\ms{Tm}(\mc{R})$ will have types as objects. 
+% TODO: rewrite to be purely functional?
+To construct morphisms, we start with terms with a single free variable. We stratify these terms by
+type and effect as follows:
 $$
 \ms{Term}(\mc{R})_\epsilon(A, B) := \{(x, a) \mid \hasty{x : A^\top}{\epsilon}{a}{B}\}
 $$
 We will quotient each $\ms{Term}_\epsilon(\mc{R})$ by term equivalence $\approx_{\mc{R}}$, as well
-as by renaming the free variable $x$, to define $\ms{Tm}(\mc{R})_\epsilon$. The identity morphism is
-simply given as $\ms{id}_A = (x, x)$, while composition is given not by substitution (since terms
-may be impure!) but rather by let-bindings as follows:
+as by renaming the free variable $x$, to define $\ms{Tm}(\mc{R})_\epsilon$; we will somewhat
+suggestively write quotiented pairs $(x, a)$ as lambda-expressions $\lambda x. a$, with $(\lambda x
+. a)(y) = [y/x]a$ yielding a term up to equivalence. The identity morphism is simply given as
+$\ms{id}_A = (\lambda x. x)$, while composition is given not by substitution (since terms may be
+impure!) but rather by let-bindings as follows:
 $$
-(x, a) ; (y, b) := (x, (\letexpr{y}{a}{b}))
+(\lambda x . a) ; (\lambda y . b) := (\lambda x . \letexpr{y}{a}{b})
 $$
 We can equip $\ms{Tm}(\mc{R})$ with the structure of a poset-enriched category by using the
 refinement relation as a partial order; it is trivial to see that this is well-defined. The rest of
-the structure of a \subiterexp{}-model is given in Appendix~\ref{apx:syn-model}.
-To prove completeness, it then suffices need to show that $\dnt{\cdot}_{\ms{Tm}(\mc{R})}$
-\emph{reflects} refinement. The details of how to do so are given in Appendix~\ref{apx:packing}.
+the structure of a \subiterexp{}-model is given in Appendix~\ref{apx:syn-model}. To prove
+completeness, it then suffices to show that $\dnt{\cdot}_{\ms{Tm}(\mc{R})}$ \emph{reflects}
+refinement. The details of how to do so are given in Appendix~\ref{apx:packing}.
 
 % To do so, we note that
 % $\dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{B}}_{\ms{Tm}(\mc{R})}$ is, up to equivalence, a term of
@@ -3080,7 +3084,7 @@ agreement no. 101002277).
 
 \appendix
 
-\section{Refinement Rules}
+\section{Refinement Rules and Notation}
 
 We begin by giving the congruence rules for \subiterexp{} in Figure~\ref{fig:congruence-refinement},
 which completes our presentation of \subiterexp{}'s type theory. We now wish to go over some basic
@@ -3098,6 +3102,34 @@ Figure~\ref{fig:derivable-binding}, along with the $\eta$-rule for unary let-bin
 similarly derived from \brle{let$_1$-$\beta$}. We note the commutativity requirement for
 \brle{pair-right-bind}, since on the left-hand side $a$ executes before $b$, while on the right-hand
 side $b$ executes before $a$, hence the requirement that their effects commute.
+
+We define \emph{pattern binding} $\letexpr{P}{a}{b}$ of patterns $P ::= x \mid (P, P')$ inductively
+as follows (with bindings of variables $x$ and pairs $(x, y)$ defined as normally):
+\begin{align*}
+  \letexpr{(P, y)}{a}{b} &:= \letexpr{(x, y)}{a}{\letexpr{P}{x}{b}} 
+    & \text{for } P \notin \ms{Var}, x \notin \ms{fv}(b) \\
+  \letexpr{(x, P)}{a}{b} &:= \letexpr{(x, y)}{a}{\letexpr{P}{y}{b}} 
+    & \text{for } P \notin \ms{Var}, y \notin \ms{fv}(b) \\
+  \letexpr{(P, P')}{a}{b} &:= \letexpr{(x, y)}{a}{\letexpr{P}{x}{\letexpr{P'}{y}{b}}} 
+    & \text{for } P, P' \notin \ms{Var}
+\end{align*}
+By a straightforward case analysis, we may show that the following rule is admissible:
+\begin{equation*}
+  \prftree[r]{\rle{pattern-pair'}}
+    {\hasty{\Gamma^{\mb{q}}}{\epsilon}{\letexpr{(P, P')}{x}{a}}{B}}
+    {\tmeq{\Gamma^{\mb{q}}}
+      {\mc{R}}{\letexpr{(P, P')}{a}{b}}
+      {\letexpr{(x, y)}{a}{\letexpr{P}{x}{\letexpr{P'}{y}{b}}}}{B}}
+\end{equation*}
+We extend pattern binding to other binding forms, for $P \notin \ms{Var}$, in the obvious manner:
+\begin{align*}
+  \caseexpr{a}{P}{b}{y}{c} &:= \caseexpr{a}{x}{\letexpr{P}{x}{b}}{y}{c} 
+  & \text{for } x \notin \ms{fv}(b) \\
+  \caseexpr{a}{x}{b}{P}{c} &:= \caseexpr{a}{x}{b}{y}{\letexpr{P}{y}{c}} 
+  & \text{for } y \notin \ms{fv}(c) \\
+  \liter{a}{P}{b} &:= \liter{a}{x}{\letexpr{P}{x}{b}}
+  & \text{for } x \notin \ms{fv}(b)
+\end{align*}
 
 \begin{figure}
   \begin{gather*}
@@ -3202,6 +3234,7 @@ side $b$ executes before $a$, hence the requirement that their effects commute.
   \Description{}
   \label{fig:derivable-binding}
 \end{figure}
+
 \section{Completeness}
 
 \label{apx:completeness}
@@ -3217,71 +3250,80 @@ We define the syntactic category of \subiterexp{}-models of a signature $\mc{S}$
 of primitive rewrites $\mc{R}$ as follows:
 \begin{itemize}
   \item Objects types $A, B, C \in \ms{Ty}(\mc{X})$
-  \item Morphisms $\ms{Tm}(A, B) := \{(x, a) \mid \hasty{x : A}{}{a}{B}\} / \approx$ where $(x, a)
-  \approx (y, b)$ if and only if $\tmeq{x : A}{\mc{R}}{a}{[x/y]b}{B}$. 
-  \item Refinement on morphisms $(x, a) \tref (y, b)$ if and only if $\tmle{x :
-  A}{\mc{R}}{a}{[x/y]b}{B}$ (this is well-defined since, by definition, we quotient precisely the
-  equivalence clases of $\tref_{\mc{R}}$)
-  \item Identity morphisms $\ms{id}_A := (x, x)$
-  \item Composition $(x, a) ; (y, b) := (x, \letexpr{y}{a}{b})$
+  \item Morphisms $\ms{Tm}_\epsilon(A, B) := \{(x, a) \mid \hasty{x : A}{\epsilon}{a}{B}\} /
+  \approx$, with quotiented pairs written as $\lambda$-expressions $\lambda x . a$, where $(\lambda
+  x . a) \approx (\lambda x . b)$ if and only if $\tmeq{x : A}{\mc{R}}{a}{[x/y]b}{B}$. 
+
+  Equivalently, morphisms in $\ms{Tm}_\epsilon(A, B)$ may be viewed as \emph{functions} $f :
+  \ms{Var} \to \ms{Term}$, with $(x, a)(y) := [y/x]a$, satisfying the property that, for all $x, y
+  \in \ms{Var}$, $\hasty{x : A}{\epsilon}{f(x)}{B}$ $f(y) = [y/x]f(x)$, quotiented up to equivalence
+  $f \approx g \iff \tmeq{x : A}{\mc{R}}{f(x)}{g(x)}{B}$. The equivalence between these two
+  representations is given by the $\eta$-law $f \approx \lambda x. f(x)$.
+
+  \item Refinement on morphisms $f \tref g$ if and only if $\tmle{x : A}{\mc{R}}{f(x)}{g(x)}{B}$
+  (this is well-defined since, by definition, we quotient precisely the equivalence clases of
+  $\tref_{\mc{R}}$)
+  \item Identity morphisms $\ms{id}_A := (\lambda x . x)$
+  \item Composition $(\lambda x. a) ; (\lambda y. b) := (\lambda x. \letexpr{y}{a}{b})$
   \item Tensor products $A \otimes B$ with monoidal unit $\mb{1}$, and tensor functors
   $$
-  (x, a) \otimes A := (z, \letexpr{(x, y)}{z}{(a, y)})
+  (\lambda x. a) \otimes A := (\lambda z. \letexpr{(x, y)}{z}{(a, y)})
   \qquad
-  A \otimes (x, b)
-  := (z, \letexpr{(y, x)}{z}{(y, b)}))
+  A \otimes (z, b)
+  := (\lambda x. \letexpr{(y, z)}{x}{(y, b)}))
   $$
+  In general, we extend pattern binding to $\lambda$-expressions, writing 
+  (for $x \notin \ms{fv}(a)$),
+  $$
+  (\lambda P . a) := (\lambda x. \letexpr{P}{x}{a})
+  $$
+  in which case we may rewrite the above as
+  $$
+  (\lambda x. a) \otimes A := (\lambda (x, y). (a, y))
+  \qquad
+  A \otimes (\lambda z. b) := (\lambda (y, z). (y, b)))
+  $$
+
   \item Associators, unitors, and symmetries
   \begin{gather*}
-    \begin{aligned}
-      \alpha 
-      &:= (x, \letexpr{(x_{12}, x_3)}{x}{\letexpr{(x_1, x_2)}{x_{12}}{(x_1, (x_2, x_3))}}) 
-      \\
-      \alpha^{-1} 
-      &:= (x, \letexpr{(x_1, x_{23})}{x}{\letexpr{(x_2, x_3)}{x_{23}}{((x_1, x_2), x_3)}})
-    \end{aligned} \\
-    \lambda := (x, \letexpr{(y, z)}{x}{y}) \qquad
-    \lambda^{-1} := (x, (x, ())) \\
-    \rho := (x, \letexpr{(y, z)}{x}{z}) \qquad
-    \rho^{-1} := (x, ((), x)) \\
-    \sigma := (x, \letexpr{(y, z)}{x}{(z, y)})
+    \alpha := (\lambda ((x, y), z) . (x, (y, z))) \qquad
+    \alpha^{-1} := (\lambda (x, (y, z)) . ((x, y), z)) \qquad
+    \sigma := (\lambda (x, y) . (y, x))
+    \\
+    \lambda := (\lambda (x, y) . x) \qquad
+    \lambda^{-1} := (\lambda x. (x, ())) \qquad
+    \rho := (\lambda (x, y) . y) \qquad
+    \rho^{-1} := (\lambda y. ((), y))
   \end{gather*}
   \item Coproducts \(A + B\) with initial object $\mb{0}$, zero morphisms $0 := (x, \labort{x})$,
   and injections and distributors
   \begin{gather*}
-    \iota_l := (x, \linl{x}) \qquad \iota_r := (x, \linr{x}) \qquad
-    [(x, a), (y, b)] := (z, \caseexpr{z}{x}{a}{y}{b}) \\
-    \delta := (x, \caseexpr{x}
-                          {y}{\letexpr{(y_l, y_r)}{y}{(y_l, \linl{y_r})}}
-                          {z}{\letexpr{(z_l, z_r)}{z}{(z_l, \linr{z_r})}}) \\
-    \delta^{-1} := (x, \letexpr{(x_l, x_r)}{x}{\caseexpr{x_r}
-                                          {y}{\linl{(x_l, y)}}
-                                          {z}{\linr{(x_r, z)}}})
+    \iota_l := (\lambda x. \linl{x}) \qquad \iota_r := (\lambda x. \linr{x}) \qquad
+    [(\lambda x. a), (\lambda y. b)] := (\lambda z. \caseexpr{z}{x}{a}{y}{b}) \\
+    \delta := (\lambda x. \caseexpr{x}
+                          {(y_l, y_r)}{(y_l, \linl{y_r})}
+                          {(z_l, z_r)}{(z_l, \linr{z_r})}) \\
+    \delta^{-1} := (\lambda (x_l, x_r). \caseexpr{x_r}{y}{\linl{(x_l, y)}}{z}{\linr{(x_r, z)}})
   \end{gather*}
   \item Iteration operator
   $
-    (x, a)^\dagger := (y, \liter{y}{x}{a})
+    (\lambda x. a)^\dagger := (\lambda y. \liter{y}{x}{a})
   $
-  \item Discard and diagonal morphisms $!_A := (x, ())$ and $\Delta_A := (x, (x, x))$
+  \item Discard and diagonal morphisms $!_A := (\lambda x. ())$ and $\Delta_A := (\lambda x. (x,
+  x))$
 \end{itemize}
+\TODO{pattern binding lore}
+\TODO{tensor sequence lore}
 We begin by proving a few useful identities:
-\begin{align*}
-  (x, a) ; \alpha 
-  &= (x, 
-    \letexpr{x}{a}{\letexpr{(y_{12}, y_3)}{x}{\letexpr{(y_1, y_2)}{y_{12}}{(y_1, (y_2, y_3))}}}
-  ) 
-    \\
-  &= (x, \letexpr{(x_{12}, x_3)}{x}{\letexpr{(x_1, x_2)}{x_{12}}{(x_1, (x_2, x_3))}})
-\end{align*}
-\begin{align*}
-  (x, a) ; \sigma 
-  = (x, 
-    \letexpr{x}{a}{\letexpr{(y_1, y_2)}{x}{(y_2, y_1)}}
-  ) = (x, \letexpr{(x_1, x_2)}{a}{(x_2, x_1)})
-\end{align*}
-\begin{align*}
-  (x, a) ; \lambda
-\end{align*}
+\begin{gather*}
+  (\lambda x. a) ; \alpha = (\lambda x. \letexpr{((y, z), w)}{a}{(y, (z, w))}) \\
+  (\lambda x. a) ; \alpha^{-1} = (\lambda x. \letexpr{(y, (z, w))}{a}{((y, z), w)}) \\
+  (\lambda x. a) ; \sigma = (\lambda x. \letexpr{(y, z)}{a}{(z, y)}) \\
+  (\lambda x. a) ; \lambda = (\lambda x. \letexpr{(y, z)}{a}{y}) \qquad
+  (\lambda x. a) ; \lambda^{-1} = (\lambda x. (a, ())) \\
+  (\lambda x. a) ; \rho = (\lambda x. \letexpr{(y, z)}{a}{z}) \qquad
+  (\lambda x. a) ; \rho^{-1} = (\lambda x. ((), a))
+\end{gather*}
 We may now verify that:
 \begin{itemize}
   \item $\ms{Tm}(\mc{R})$ is a category (\cmark): we have that, given $(x, a) :
@@ -3289,33 +3331,29 @@ We may now verify that:
   D)$, that
   \begin{gather*}
   \tmeq{x : A}{\mc{R}}{\letexpr{y}{a}{y}}{a}{B} 
-  \implies (x, a) ; (y, y) = (x, a) \\
+  \implies (\lambda x.a) ; (\lambda y.y) = (x, a) \\
   \tmeq{y : A}{\mc{R}}{\letexpr{x}{y}{a}}{[y/x]a}{B} 
-  \implies (y, y) ; (x, a) = (y, [y/x]a) = (x, a) \\
+  \implies (\lambda y.y) ; (\lambda x.a) = (\lambda y. [y/x]a) = (\lambda x. a) \\
   \tmeq{x : A}{\mc{R}}
     {\letexpr{z}{(\letexpr{y}{a}{b})}{c}}
     {\letexpr{y}{a}{\letexpr{z}{b}{c}}}{A} \\
-  \qquad \implies ((x, a) ; (y, b)) ; (z, c) = (x, a) ; ((y, b); (z, c)) \\
+  \qquad \implies ((\lambda x. a) ; (\lambda y. b)) ; (\lambda z. c) 
+                  = (\lambda x. a) ; ((\lambda y. b); (\lambda z. c)) \\
   \end{gather*}
   \item $\ms{Tm}_\epsilon(\mc{R})$ has binoidal structure (\cmark): 
   \todo{this...}
   \item $\ms{Tm}_\epsilon(\mc{R})$ has symmetric premonoidal structure: 
   \begin{itemize}
-    \item Pentagon equation: we first define $\alpha_4 : \ms{Tm}_\bot(\mc{R})( ((A \otimes B)
-    \otimes C) \otimes D, A \otimes (B \otimes (C \otimes D)))$ as follows:
-    \begin{equation*}
-    (x, \letexpr{(x_{123}, x_4)}{x}{
-        \letexpr{(x_{12}, x_3)}{x_{123}}{
-        \letexpr{(x_1, x_2)}{x_{12}}{
-          (x_1, (x_2, (x_3, x_4)))
-        }}})
-    \end{equation*}
-    We now aim to show that both sides of the pentagon equation are equal to $\alpha_4$:
+    \item Pentagon equation: we first define $
+    \alpha_4 := (\lambda (((x, y), z), w) . (x, (y, (z, w))))
+    $ of type $\ms{Tm}_\bot(\mc{R})( ((A \otimes B)
+    \otimes C) \otimes D, A \otimes (B \otimes (C \otimes D)))
+    $.
+    We now show that both sides of the pentagon equation are equal to $\alpha_4$:
     \begin{align*}
       & \alpha_{(A \otimes B), C, D} ; \alpha_{A, B, (C \otimes D)}
-      \approx (x, \letexpr{x}{})
+      \approx (...)
     \end{align*}
-    \TODO{define 4 associator}
     \TODO{left 4 associator}
     \TODO{right 4 associator}
     \item Triangle equations:
