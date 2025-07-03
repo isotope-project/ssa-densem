@@ -344,7 +344,11 @@ compilers want to do are not usually progarm equivalences, but merely refinement
 behaviours of the optimized program must be a subset of the possible behaviours of the original
 program. 
 
-Because of this complexity, the old informal techniques are no longer sufficient, and we need to study SSA using more mathematically sophisticated techniques to understand and justify what modern hardware and compilers do. In this paper, we introduce a type-theoretic account of static single assigment form, and equip it with a semantics which explains and can be used to justify many program transformations even in the presence of state, undefined behaviour, and weak memory concurrency. 
+Because of this complexity, the old informal techniques are no longer sufficient, and we need to
+study SSA using more mathematically sophisticated techniques to understand and justify what modern
+hardware and compilers do. In this paper, we introduce a type-theoretic account of static single
+assigment form, and equip it with a semantics which explains and can be used to justify many program
+transformations even in the presence of state, undefined behaviour, and weak memory concurrency. 
 
 Concretely, our contributions are as follows:
 
@@ -378,63 +382,42 @@ Concretely, our contributions are as follows:
 
 \label{sec:ssa-intro}
 
-One of the first intermediate representations to be used in compiler design is
-\emph{register-transfer level (RTL)} code, often referred to as \emph{three-address code} since most
-instructions are of the form $x = f(y, z)$. While it is possible to view an RTL program as a
-sequence of instructions and labels, it is often fruitful to break it down into higher level
-components for analysis. In particular, we may define a \emph{basic block} to be a sequence of
-straight-line code in which every instruction has a unique predecessor and successor; a basic block
-then ends with a \emph{terminator} instruction, which may branch to other basic blocks. The basic
-blocks, and the jumps between them, form the nodes and edges of that program's \emph{control-flow
-graph}.
+One of the first IRs to find widespread use was \emph{register transfer level (RTL)} code. RTL
+programs are composed of a collection of \emph{basic blocks}, defined to be a sequence of
+instructions of the form $x = f(y, z)$ ending with a \emph{terminator} instruction, which may branch
+to other basic blocks. The basic blocks, and the jumps between them, form the nodes and edges of
+that program's \emph{control-flow graph}. Because RTL variables are \emph{mutable}, program analyses
+have to keep track of the values of every variable \emph{at every program point}, significantly
+complicating performant implementations.
 
-The SSA intermediate representation can, at first glance, be viewed as the subset of RTL programs
-satisfying the \emph{static single assignment}, or \emph{SSA}, property, which states that every
-variable has precisely one definition. In particular, we consider a variable usage well-scoped if
-and only if it is \emph{dominated} by its definition, i.e., if every path from the entry block to
-the usage point must pass over the definition.
+To avoid this multplicative overhead, the \emph{static single assignment}, or \emph{SSA}, IR
+enforces the restriction that every variable has precisely one definition. Just as in functional
+programs, this raises the question of how to handle control-flow dependent variables such as loop
+induction variables. The answer is the same \cite{appel-ssa}: each basic block (or tail-recursive
+function!) takes a list of control-flow dependent variables as \emph{arguments}. Traditionally,
+these arguments are represented ``inside out" using \emph{$\phi$-functions}, which are assignments
+whose value depends on which basic block is their immediate predecessor. Our formalization follows
+modern practice and uses the \emph{basic blocks with arguments} (BBA) representation of SSA.
 
-It is often straightforward to convert RTL programs into equivalent programs satisfying the SSA
-property by simply converting successive updates to a variable $x$ into distinct definitions $x_0,
-x_1, x_2$.  Unfortunately, this approach breaks down when the value of a variable depends on
-control-flow; consider, for example, the variables $i$ and $a$ in Figure~\ref{fig:fact-phi}, whose
-value depends on whether we are entering the loop for the first time from the \ms{start} block, or
-whether we come from a previous iteration of the \ms{body}. To remedy this, the traditional solution
-is to introduce \emph{$\phi$-nodes}, which evaluate to a different value depending on the
-immediately preceding block in our control-flow trace; for example, $i_0$, is given as $i_1$ if we
-come from the \ms{body} block, and $1$ otherwise.
-
-This slightly complicates both our semantics (for example, an operational semantics may need to keep
-track of the previous basic block) and our scoping rules, since the branches of a $\phi$-node need
-to be well-scoped \emph{at the end of their source block}, rather than at the position of the
-$\phi$-node itself. It turns out, however, that $\phi$-nodes are exactly equivalent to equipping
-basic blocks with \emph{arguments} via a straightforward isomorphism. Each $\phi$-node corresponding
-to an argument of the basic block containing it. This approach is often favored by many modern
-intermediate representations, such as MLIR \cite{mlir} and Cranelift \cite{cranelift}, though it
-diverges from the idea of SSA as a subset of RTL. We can see the program in
-Figure~\ref{fig:fact-phi} rendered in this format in Figure~\ref{fig:fact-bba}. This recovers
-standard dominance-based scoping (with a basic block's argument considered to be defined at the
-beginning of that basic block).
-
-Our goal in this paper is to give a type-theoretic account of SSA; consequently, it is much easier
-to work with traditional lexical scoping rather than dominance based scoping. To interconvert
+In SSA, the property that every variable has a single definition is graph-theoretic: we require that
+the use point of the variable is \emph{dominated} by its definition in the control-flow
+graph.\footnote{ A node $n$ is dominated by a node $N$ in a directed graph if every path to $n$
+passes through $N$. } Semantics, however, is much easier with lexical scoping. To interconvert
 between the two, we note that the dominance relation on basic blocks always forms a tree rooted at
-the entry block (after eliminating dead-code; otherwise, it forms a forest): we call this the
-\emph{dominator tree}. We will call a subtree of the dominator tree, which has a single entry point
-(the root) and multiple exits (the leaves, all dominated by the root), a \emph{region}. The
-variables defined in a given basic block $\beta$ are visible from another block $\beta'$ if and only
-if $\beta$ dominates $\beta'$, i.e., if $\beta$ is a child in the dominator tree, contained in the
-region $r$ rooted at $\beta$. Hence, dominance based scoping can be represented as lexical scoping
-\emph{with respect to the dominator tree}.
+the entry block: we call this the \emph{dominator tree}. We will call a subtree of the dominator
+tree, which has a single entry point (the root) and multiple exits (the leaves, all dominated by the
+root), a \emph{region}. The variables defined in a given basic block $\beta$ are visible from
+another block $\beta'$ if and only if $\beta$ dominates $\beta'$, i.e., if $\beta$ is a child in the
+dominator tree, contained in the region $r$ rooted at $\beta$. Hence, dominance based scoping can be
+represented as lexical scoping \emph{with respect to the dominator tree}.
 
 This idea underlies the design of \isotopessa{}, what we call \emph{type-theoretic SSA}, which has
 the grammar given in Figure~\ref{fig:ssa-syntax}. Rather than give a grammar for basic-blocks and
 control-flow graphs, we instead give a grammar for \emph{regions} $r, s, t$, which are composed of a
 series of \ms{let}-bindings (each corresponding to an instruction $o$), followed by a subtree
 $\kappa$, which is composed of a terminator $\tau$ wrapped in \ms{where}-blocks containing the
-region's dominated subregions. \footnote{We make a distinction between recursive and non-recursive
-\ms{where}-blocks for effect-system related bookkeeping, but semantically they are treated
-identically.}
+region's dominated subregions.\footnote{We distinguish recursive and non-recursive \ms{where}-blocks
+for effect-system bookkeeping, but semantically they are identical.}
 
 If we squint, we can see that this is just SSA with \ms{where}-blocks as an annotation representing
 the dominator tree: basic blocks correspond to sequences of \ms{let}-bindings followed by a
