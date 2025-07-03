@@ -2331,83 +2331,85 @@ $$
 We can equip $\ms{Tm}(\mc{R})$ with the structure of a poset-enriched category by using the
 refinement relation as a partial order; it is trivial to see that this is well-defined. The rest of
 the structure of a \subiterexp{}-model is given in Appendix~\ref{apx:syn-model}.
+To prove completeness, it then suffices need to show that $\dnt{\cdot}_{\ms{Tm}(\mc{R})}$
+\emph{reflects} refinement. The details of how to do so are given in Appendix~\ref{apx:packing}.
 
-To prove completeness, it suffices need to show that $\dnt{\cdot}_{\ms{Tm}(\mc{R})}$ \emph{reflects}
-refinement. To do so, we note that $\dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{B}}_{\ms{Tm}(\mc{R})}$
-is, up to equivalence, a term of the form $\hasty{x : [\Gamma^{\mb{q}}]}{\epsilon}{\bar{a}}{B}$.
-Hence, our strategy for proving completeness is simply to relate the terms $a$ and $\bar{a}$ such
-that $\bar{a} \tref \bar{b} \implies a \tref b$. We begin by relating the contexts $\Gamma^{\mb{q}}$
-and $x : [\Gamma^{\mb{q}}]$ via the \emph{packing lemma}
-\begin{lemma}[name=Packing, restate=packinglemma]
-  We can define monotone functions $\ms{pack}$, $\ms{unpack}_{\Gamma, x}$ on derivations
-  $$
-  \hasty{\Gamma^{\mb{q}}, \Delta^{\mb{q}'}}{\epsilon}{
-        \ms{pack}(\hasty{\Gamma^{\mb{q}}, x : \etoty{\Delta^{\mb{q}'}}}{\epsilon}{a}{A})
-  }{A} \qquad
-  \hasty{\Gamma^{\mb{q}}, x : \etoty{\Delta^{\mb{q}'}}}{\epsilon}{
-        \ms{unpack}_{\Gamma, x}(\hasty{\Gamma^{\mb{q}}, \Delta^{\mb{q}'}}{\epsilon}{b}{A})
-  }{A}
-  $$
-  which are
-  \begin{itemize}
-    \item Semantics-preserving: 
-      \begin{align*}
-      \dnt{\hasty{\Gamma^{\mb{q}}, \Delta^{\mb{q}'}}{\epsilon}{
-        \ms{pack}(\hasty{\Gamma^{\mb{q}}, x : \etoty{\Delta^{\mb{q}'}}}{\epsilon}{a}{A})
-        }{A}}
-        &= \alpha ; \dnt{\hasty{\Gamma^{\mb{q}}, x : \etoty{\Delta^{\mb{q}'}}}{\epsilon}{a}{A}}
-      \\
-      \dnt{\hasty{\Gamma^{\mb{q}}, x : \etoty{\Delta^{\mb{q}'}}}{\epsilon}{
-        \ms{unpack}_{\Gamma, x}(\hasty{\Gamma^{\mb{q}}, \Delta^{\mb{q}'}}{\epsilon}{b}{A})\
-        }{A}}
-        &= \alpha ; \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{b}{A}}
-      \end{align*} 
-    \item Mutually inverse (up to $\approx$):
-        $
-        \tmeq{\Gamma^{\mb{q}}, x : \etoty{\Delta^{\mb{q}'}}}{\mc{R}}
-        {\ms{unpack}_{\Gamma, x}(\ms{pack}(
-          \hasty{\Gamma^{\mb{q}}, x : \etoty{\Delta^{\mb{q}'}}}{\epsilon}{a}{A}
-        ))}
-        {a}
-        {A}
-        $
-        and
-        $
-        \tmeq{\Gamma^{\mb{q}}, \Delta^{\mb{q}'}}{\mc{R}}
-        {\ms{pack}(\ms{unpack}_{\Gamma, x}(
-          \hasty{\Gamma^{\mb{q}, \Delta^{\mb{q}'}}}{\epsilon}{b}{A}))}
-        {b}
-        {A}
-        $
-  \end{itemize}
-  \label{lem:packing}
-\end{lemma}
-We write $\ms{unpack}_x$ as shorthand for $\ms{unpack}_{\cdot, x}$. We may now state the
-\emph{unpacking lemma} as follows: 
-\begin{lemma}[name=Unpacking, restate=unpackinglemma]
-  Given $\hasty{\Gamma^{\mb{q}}}{}{a}{A}$, 
-  for all $(x, \bar{a}) \in \dnt{\hasty{\Gamma^{\mb{q}}}{}{a}{A}}_{\ms{Tm}(\mc{R})}$
-  we have that
-  $
-    \tmeq{\Gamma^{\mb{q}}}{\mc{R}}
-      {\ms{unpack}_{\cdot, \Gamma}(\hasty{x : [\Gamma^{\mb{q}}])}{}{\bar{a}}{A}}
-      {a}{A}
-  $
-  \label{lem:unpacking}
-\end{lemma}
-Completeness follows directly, since, in this case, by monotonicity, for all $(x, \bar{a}) \tref (y,
-\bar{b})$, we have that
-$
-\tmle{\Gamma^{\mb{q}}}{\mc{R}}
-  {\ms{unpack}_{\cdot, x}(\hasty{x : [\Gamma^{\mb{q}}])}{}{\bar{a}}{A}}
-  {\ms{unpack}_{\cdot, y}(\hasty{y : [\Gamma^{\mb{q}}])}{}{\bar{b}}{A}}{A}
-$
-and hence that 
-$
-a \tref b
-$
-as desired. Details of the definition of $\ms{pack}$ and $\ms{unpack}$ and the proofs of
-Lemmas~\ref{lem:packing} and \ref{lem:unpacking} are given in Appendix~\ref{apx:packing}.
+% To do so, we note that
+% $\dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{B}}_{\ms{Tm}(\mc{R})}$ is, up to equivalence, a term of
+% the form $\hasty{x : [\Gamma^{\mb{q}}]}{\epsilon}{\bar{a}}{B}$. Hence, our strategy for proving
+% completeness is simply to relate the terms $a$ and $\bar{a}$ such that $\bar{a} \tref \bar{b}
+% \implies a \tref b$. We begin by relating the contexts $\Gamma^{\mb{q}}$ and $x : [\Gamma^{\mb{q}}]$
+% via the \emph{packing lemma}
+% \begin{lemma}[name=Packing, restate=packinglemma]
+%   We can define monotone functions $\ms{pack}$, $\ms{unpack}_{\Gamma, x}$ on derivations
+%   $$
+%   \hasty{\Gamma^{\mb{q}}, \Delta^{\mb{q}'}}{\epsilon}{
+%         \ms{pack}(\hasty{\Gamma^{\mb{q}}, x : \etoty{\Delta^{\mb{q}'}}}{\epsilon}{a}{A})
+%   }{A} \qquad
+%   \hasty{\Gamma^{\mb{q}}, x : \etoty{\Delta^{\mb{q}'}}}{\epsilon}{
+%         \ms{unpack}_{\Gamma, x}(\hasty{\Gamma^{\mb{q}}, \Delta^{\mb{q}'}}{\epsilon}{b}{A})
+%   }{A}
+%   $$
+%   which are
+%   \begin{itemize}
+%     \item Semantics-preserving: 
+%       \begin{align*}
+%       \dnt{\hasty{\Gamma^{\mb{q}}, \Delta^{\mb{q}'}}{\epsilon}{
+%         \ms{pack}(\hasty{\Gamma^{\mb{q}}, x : \etoty{\Delta^{\mb{q}'}}}{\epsilon}{a}{A})
+%         }{A}}
+%         &= \alpha ; \dnt{\hasty{\Gamma^{\mb{q}}, x : \etoty{\Delta^{\mb{q}'}}}{\epsilon}{a}{A}}
+%       \\
+%       \dnt{\hasty{\Gamma^{\mb{q}}, x : \etoty{\Delta^{\mb{q}'}}}{\epsilon}{
+%         \ms{unpack}_{\Gamma, x}(\hasty{\Gamma^{\mb{q}}, \Delta^{\mb{q}'}}{\epsilon}{b}{A})\
+%         }{A}}
+%         &= \alpha ; \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{b}{A}}
+%       \end{align*} 
+%     \item Mutually inverse (up to $\approx$):
+%         $
+%         \tmeq{\Gamma^{\mb{q}}, x : \etoty{\Delta^{\mb{q}'}}}{\mc{R}}
+%         {\ms{unpack}_{\Gamma, x}(\ms{pack}(
+%           \hasty{\Gamma^{\mb{q}}, x : \etoty{\Delta^{\mb{q}'}}}{\epsilon}{a}{A}
+%         ))}
+%         {a}
+%         {A}
+%         $
+%         and
+%         $
+%         \tmeq{\Gamma^{\mb{q}}, \Delta^{\mb{q}'}}{\mc{R}}
+%         {\ms{pack}(\ms{unpack}_{\Gamma, x}(
+%           \hasty{\Gamma^{\mb{q}, \Delta^{\mb{q}'}}}{\epsilon}{b}{A}))}
+%         {b}
+%         {A}
+%         $
+%   \end{itemize}
+%   \label{lem:packing}
+% \end{lemma}
+% We write $\ms{unpack}_x$ as shorthand for $\ms{unpack}_{\cdot, x}$. We may now state the
+% \emph{unpacking lemma} as follows: 
+% \begin{lemma}[name=Unpacking, restate=unpackinglemma]
+%   Given $\hasty{\Gamma^{\mb{q}}}{}{a}{A}$, 
+%   for all $(x, \bar{a}) \in \dnt{\hasty{\Gamma^{\mb{q}}}{}{a}{A}}_{\ms{Tm}(\mc{R})}$
+%   we have that
+%   $
+%     \tmeq{\Gamma^{\mb{q}}}{\mc{R}}
+%       {\ms{unpack}_{\cdot, \Gamma}(\hasty{x : [\Gamma^{\mb{q}}])}{}{\bar{a}}{A}}
+%       {a}{A}
+%   $
+%   \label{lem:unpacking}
+% \end{lemma}
+% Completeness follows directly, since, in this case, by monotonicity, for all $(x, \bar{a}) \tref (y,
+% \bar{b})$, we have that
+% $
+% \tmle{\Gamma^{\mb{q}}}{\mc{R}}
+%   {\ms{unpack}_{\cdot, x}(\hasty{x : [\Gamma^{\mb{q}}])}{}{\bar{a}}{A}}
+%   {\ms{unpack}_{\cdot, y}(\hasty{y : [\Gamma^{\mb{q}}])}{}{\bar{b}}{A}}{A}
+% $
+% and hence that 
+% $
+% a \tref b
+% $
+% as desired. Details of the definition of $\ms{pack}$ and $\ms{unpack}$ and the proofs of
+% Lemmas~\ref{lem:packing} and \ref{lem:unpacking} are given in Appendix~\ref{apx:packing}.
 
 \section{SSA Typing and Semantics}
 
@@ -2775,13 +2777,14 @@ $
 $. Since $\dnt{\Gamma^{\mb{q}}}_{\ms{Th}(\cdot)} = \etoty{\Gamma^{\mb{q}}}$, we may simply define
 $$
 \ms{Expr}(\haslb{\Gamma^{\mb{q}}}{\epsilon}{r}{\ms{L}^{\mb{Q}}}) := 
-  \ms{pack}(\hasty{x : \etoty{\Gamma^{\mb{q}}}}{\epsilon}{a}{\ltoty{\Gamma}{\ms{L}^{\mb{Q}}}})
+  \letexpr{[x_1,...,x_n]}{x}{a}
 $$
-It is straightforward to verify that this indeed satisfies the desired properties. On the other 
-hand, the function $\ms{SSA}$ is essentially the expression compilation presented 
-inductively; we leave its definition and verification to  Appendix~\ref{apx:ssa-roundtrip}. 
-We note in passing that the result of this function will always use only structured control-flow 
-(since \subiterexp{} only supports structured control flow). 
+where the unpacking of a value $c : \etoty{\Gamma^{\mb{q}}}$ is defined in the obvious recursive
+manner (see Appendix~\ref{apx:packing} for details). It is straightforward to verify that this
+indeed satisfies the desired properties. On the other hand, the function $\ms{SSA}$ is essentially
+the expression compilation presented inductively; we leave its definition and verification to
+Appendix~\ref{apx:ssa-roundtrip}. We note in passing that the result of this function will always
+use only structured control-flow (since \subiterexp{} only supports structured control flow).  
 
 \section{Concrete Models}
 
@@ -2793,12 +2796,12 @@ model with substructural types.
 
 \subsection{UB}
 
-The simplest model exercising all the features of our refinement calculus is
-the language with nondeterminism, undefined behavior and nontermination. We represent this
-using the monad $\ms{UB}\;A = \mc{P}^+(A \cup \{\infty\}) \cup \{\ubeff\}$ over sets, with $\infty$ 
-a sentinel value for nontermination and $\ubeff$ for UB. Its ordering is the inclusion 
-order on nonempty sets $\mc{P}^+(A \cup \{\infty\})$ extended with a top element $\ubeff$. (The full description of this model is in Appendix~\ref{apx:ub}.)
-The monadic bind is:
+The simplest model exercising all the features of our refinement calculus is the language with
+nondeterminism, undefined behavior and nontermination. We represent this using the monad $\ms{UB}\;A
+= \mc{P}^+(A \cup \{\infty\}) \cup \{\ubeff\}$ over sets, with $\infty$ a sentinel value for
+nontermination and $\ubeff$ for UB. Its ordering is the inclusion order on nonempty sets $\mc{P}^+(A
+\cup \{\infty\})$ extended with a top element $\ubeff$. (The full description of this model is in
+Appendix~\ref{apx:ub}.) The monadic bind is:
 $$
 \mbind{\ms{UB}}{\ubeff}{f} = \ubeff \qquad
 \mbind{\ms{UB}}{X}{f} = \begin{cases}
@@ -3327,17 +3330,15 @@ Hence, to show that we have a valid \subiterexp{}-model, it suffices to prove th
 
 \TODO{this is indeed a model; partial Lean 4 formalization of this fact, rest goes here}
 
-\subsection{Packing Lemma}
+\subsection{Packing and Unpacking}
 
 \label{apx:packing}
 
-We now wish to prove the \emph{packing lemma}, which we restate below
-\packinglemma*
-\begin{proof}
-  
-\end{proof}
+\TODO{$n$-ary packing, $n$-ary unpacking}
 
-\TODO{permutation lore}
+\TODO{$n$-ary packing and $n$-ary unpacking are mutually inverse up to $\approx$}
+
+\TODO{$n$-ary packing is $\approx$ term-densem}
 
 \section{Model Category}
 
