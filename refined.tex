@@ -561,20 +561,25 @@ being simply SSA with additional annotations.
   \label{fig:ssa-data}
 \end{figure}
 
+\section{Expression Language}
+
 Unfortunately, while SSA is a good format for implementing compiler optimizations, it has poor
 metatheoretic properties. In particular, much like ANF, it is challenging to state
 \emph{substitution}, and consequently to build up a solid equational theory, since expressions
-cannot be arbitrary SSA programs. Moreover, while arbitrary control-flow allows exceptional
-flexibility, it can make it difficult to build up a complete equational theory for our calculus. The
-B\"ohm-Jacopini theorem states that programs with arbitrary control-flow can be re-written to
+cannot be arbitrary SSA programs. In particular, since we would like to consider the substitution of
+\emph{effectful} operations, we also need to a type system to keep track of the linearity of how
+variables are used, as well as the commutativity of the effect's operation and that of any code
+between the original definition and the substitution site. Moreover, while arbitrary control-flow
+allows exceptional flexibility, it can make it difficult to build up a complete equational theory
+for our calculus, especially when we want fine-grained effect tracking.
+
+The B\"ohm-Jacopini theorem states that programs with arbitrary control-flow can be re-written to
 require only branching and iteration; \citet{ghalayini-24-ssa-densem-arxiv} show that the
 B\"ohm-Jacopini theorem holds for a syntactic model of SSA. Inspired by this, we introduce a simpler
 expression language, \subiterexp{}, which supports \emph{only} iteration and branching as
 control-flow primitives. In a later section, we will show how to recover the full generality of SSA
 from this core language, which we will use to state our equational theory and build up our
 categorical semantics.
-
-\section{Expression Language}
 
 \subsection{Syntax and Typing Rules}
 
