@@ -2413,26 +2413,59 @@ Here, $\ms{L}$ is a list of labels $\ell_i$, annotated with a single parameter t
 (multiple parameters are implemented as a single tuple parameter), and $\mb{Q}$ is a list of 
 quantity vectors $\mb{q}_i$ which we call the \emph{quantity matrix}.
 
-We may define a weakening judgement on annotated label contexts using the rules in 
-Figure~\ref{fig:label-wk}; the judgement is with respect to a particular context $\Gamma$ used to 
-interpret the quantity vectors in $\mb{Q}$. In particular, weakening allows us to  insert arbitrary 
-labels using \brle{skip}, as well as weaken the quantities associated with each
-using \brle{cons}.
+We may define a weakening judgement on annotated label contexts using the rules in
+Figure~\ref{fig:label-wk}; the judgement is with respect to a particular context $\Gamma$ used to
+interpret the quantity vectors in $\mb{Q}$. In particular, weakening allows us to  insert arbitrary
+labels using \brle{skip}, as well as weaken the quantities associated with each using \brle{cons}.
 As we can see, a label context is interpreted w.r.t. a quantity matrix $\mb{Q}$, which also depends
-on the set of live variables $\Gamma$. To extend the set of live variables 
-(e.g. to type a let-binding), we need to zero-pad the quantity matrix, an operation which we call 
-\emph{lifting}. This may be defined inductively as follows:
-\begin{equation*}
-  \zeroqv{\cdot} = \cdot \qquad
+on the set of live variables $\Gamma$. To extend the set of live variables (e.g. to type a
+let-binding), we need to zero-pad the quantity matrix to obtain its \emph{lifting}
+$\zeroqv{\mb{Q}}$. In particular, we define this inductively with 
+$
+  \zeroqv{\cdot} = \cdot
+$ and
+$
   \zeroqv{(\mb{Q}; \mb{q})} = \zeroqv{\mb{Q}} ; (\mb{q}, 0)
-\end{equation*} 
-It is easy to prove that label weakening is compatible with lifting, i.e. the following rule is 
-derivable:
-\begin{equation*}
-  \prftree[r]{\rle{lift}}
-    {\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{K}^{\mb{Q}'}}}
-    {\lwk{\Gamma, x : A}{\ms{L}^{\zeroqv{\mb{Q}}}}{\ms{K}^{\zeroqv{\mb{Q}'}}}}
-\end{equation*}
+$.
+%
+% It is easy to prove that label weakening is compatible with lifting, i.e. that the following rule
+% is derivable:
+%
+% \begin{equation*}
+%   \prftree[r]{\rle{lift}}
+%     {\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{K}^{\mb{Q}'}}}
+%     {\lwk{\Gamma, x : A}{\ms{L}^{\zeroqv{\mb{Q}}}}{\ms{K}^{\zeroqv{\mb{Q}'}}}}
+% \end{equation*}
+With this, we give typing rules for \isotopessa{}, which we do in Figure~\ref{fig:ssa-typing}.
+% We now go over the typing rules for \isotopessa{}, given in Figure~\ref{fig:ssa-typing}. 
+% We note that instructions $o$ are simply treated as restricted expressions in \subiterexp{}, and
+% typed accordingly.
+\begin{itemize}
+  \item We begin with the typing rule for branches, \brle{br}. This states that, if $o$ is a pure
+  expression of type $A$, and $\ell(A)^{\mb{q}_l}$ weakens to the label context 
+  $\ms{L}^{\mb{Q}}$, where $\mb{q}_l$ is the quantities left over after typing $o$, then
+  $\brb{\ell}{o}$ is a valid branch into $\ms{L}^{\mb{Q}}$
+  \item Let-bindings are typed using \brle{let$_1$} and \brle{let$_2$}, which are exactly the same
+  as the corresponding rule for expressions, except that we target a label-context, which needs to
+  be lifted (i.e. $\mb{Q}$ replaced with $\zeroqv{\mb{Q}}$) in the premise to deal with the 
+  additional variable in the input context.
+  \item Case terminators are typed using \brle{case}, which is again the same as the rule for 
+  expressions modulo lifting, except for the fact that the discriminator $o$ is required to be
+  pure.
+  \item \ms{where}-blocks are typed using \brle{where$_\ms{nonrec}$} and \brle{where$_\ms{rec}$},
+  which we distinguish since the effect of a \ms{where_{rec}} subtree must be iterative. In
+  particular, a  \ms{where_{rec}} subtree is composed of an entry subtree $\kappa$, which we take to
+  target the compound label-context $\ms{L}^{\mb{Q}}, \ms{R}^{\mb{Q}'}$, and, for each
+  \emph{sublabel} in $\ell_i(A_i)^{\mb{q_i}}$ in $\ms{R}^{\mb{Q}'}$, an associated \emph{subregion}
+  $t_i$ which, with variables $\Gamma^{\mb{q}_i}$ plus an argument $x_i : A_i$ live on entry,
+  targets the exit labels $\ms{L}^{\mb{Q}}$ or makes a recursive call to $\ms{R}^{\mb{Q}'}$.
+  %
+  % This is non-recursive since the $\ms{R}^{\mb{Q}'}$ cannot call themselves, but we can 
+  % encode any DAG since the inner subtree $\kappa$ can contain other regions.
+  %
+  \brle{where$_\ms{nonrec}$} simply removes the requirement that $\epsilon$ be iterative, in
+  exchange requiring the $t_i$ to only jump to exit labels in $\ms{L}^{\mb{Q}}$.
+\end{itemize}
 
 \begin{figure}
   \hspace{4em}
@@ -2469,36 +2502,6 @@ derivable:
 \label{fig:label-wk}
 \end{figure}
 
-We now go over the typing rules for \isotopessa{}, given in Figure~\ref{fig:ssa-typing}. We note
-that instructions $o$ are simply treated as restricted expressions in \subiterexp{}, and typed 
-accordingly.
-\begin{itemize}
-  \item We begin with the typing rule for branches, \brle{br}. This states that, if $o$ is a pure
-  expression of type $A$, and $\ell(A)^{\mb{q}_l}$ weakens to the label context 
-  $\ms{L}^{\mb{Q}}$, where $\mb{q}_l$ is the quantities left over after typing $o$, then
-  $\brb{\ell}{o}$ is a valid branch into $\ms{L}^{\mb{Q}}$
-  \item Let-bindings are typed using \brle{let$_1$} and \brle{let$_2$}, which are exactly the same
-  as the corresponding rule for expressions, except that we target a label-context, which needs to
-  be lifted (i.e. $\mb{Q}$ replaced with $\zeroqv{\mb{Q}}$) in the premise to deal with the 
-  additional variable in the input context.
-  \item Case terminators are typed using \brle{case}, which is again the same as the rule for 
-  expressions modulo lifting, except for the fact that the discriminator $o$ is required to be
-  pure.
-  \item \ms{where}-blocks are typed using \brle{where$_\ms{nonrec}$} and \brle{where$_\ms{rec}$}, 
-  which we distinguish since the effect of an \ms{where_{rec}} subtree must be iterative 
-  (since, for example, we often track potential nontermination as an explicit effect).
-
-  \brle{where$_\ms{nonrec}$} subtrees are composed of an entry subtree $\kappa$, which we take to target
-  the compound label-context $\ms{L}^{\mb{Q}}, \ms{R}^{\mb{Q}'}$, and,
-  for each \emph{sublabel} in $\ell_i(A_i)^{\mb{q_i}}$ in $\ms{R}^{\mb{Q}'}$, an 
-  associated \emph{subregion} $t_i$ which, with variables $\Gamma^{\mb{q}_i}$ plus an argument 
-  $x_i : A_i$ live on entry, targets the exit labels $\ms{L}^{\mb{Q}}$. 
-  This is non-recursive since the $\ms{R}^{\mb{Q}'}$ cannot call themselves, but we can 
-  encode any DAG since the inner subtree $\kappa$ can contain other regions.
-
-  \brle{where$_\ms{rec}$} simply requires the effect $\epsilon$ to be iterative, and in exchange 
-  allows the $t_i$ to make recursive calls to sublabels in $\ms{R}^{\mb{Q}'}$.
-\end{itemize}
 
 \begin{figure}
   \begin{gather*}
@@ -2559,17 +2562,15 @@ accordingly.
 \subsection{Denotational Semantics}
 
 We can now proceed to give a denotational semantics for \isotopessa{}, which targets an arbitrary
-\subiterexp{} model of our signature. We'd like to interpret a judgement 
-$\haslb{\Gamma^{\mb{q}}}{\epsilon}{r}{\ms{L}^{\mb{Q}}}$ as a morphism from the input state, 
-the set of live variables $\dnt{\Gamma^{\mb{q}}}$, to the output state, which consists of a label 
-$\ell_i$ in $\ms{L}$, its argument $A_i$, and leftover variables $\mb{q}_i$ in $\mb{Q}$. To 
-represent this as a type, we can defint the (context-dependent) \emph{effective type} of an
-annotated label context as follows:
-\begin{equation*}
-  \ltoty{\Gamma}{\cdot} = \mb{0} \qquad
-  \ltoty{\Gamma}{\ms{L}^{\mb{Q}}, \ell(A)^{\mb{q}}} 
-    = \ltoty{\Gamma}{\ms{L}^{\mb{Q}}} + \etoty{\Gamma^{\mb{q}}} \otimes A
-\end{equation*}
+\subiterexp{} model of our signature. We'd like to interpret a judgement
+$\haslb{\Gamma^{\mb{q}}}{\epsilon}{r}{\ms{L}^{\mb{Q}}}$ as a morphism from the input state, the set
+of live variables $\dnt{\Gamma^{\mb{q}}}$, to the output state, which consists of a label $\ell_i$
+in $\ms{L}$, its argument $A_i$, and leftover variables $\mb{q}_i$ in $\mb{Q}$. 
+
+To represent this as a type, we can define the (context-dependent) \emph{effective type}
+$\ltoty{\Gamma}{\ms{L}}$ of an annotated label context with $\ltoty{\Gamma}{\cdot} = \mb{0}$ and
+$\ltoty{\Gamma}{\ms{L}^{\mb{Q}}, \ell(A)^{\mb{q}}} = \ltoty{\Gamma}{\ms{L}^{\mb{Q}}} +
+\etoty{\Gamma^{\mb{q}}} \otimes A$.    
 Here, the label is encoded as the branch of the coproduct we end up in, with each branch carrying
 the argument and any leftover variables as data. We may now give a denotational semantics for label 
 contexts and label weakenings in Figure~\ref{fig:lwk-densem}. 
@@ -2585,12 +2586,11 @@ associator ``pointwise'' to reassociate
 $\alpha^\downarrow: \mc{C}_\bot(
   \dnt{\ltoty{\Gamma, x : A}{\ms{L}^{\zeroqv{\mb{Q}}}}}, 
   \dnt{\ltoty{\Gamma}{\ms{L}^{\mb{Q}}}}
-)$; 
-we will use this freely in our semantics. 
-
-We can now give our semantics for regions in Figure~\ref{fig:ssa-densem}; just like for the typing
-judgements, the semantics of operations is given by the semantics of the corresponding \subiterexp{}
-expressions.
+)$. 
+%
+We can now give our semantics for regions in Figure~\ref{fig:ssa-densem}
+% ; just like for the typing judgements, the semantics of operations is given by the semantics of
+% the corresponding \subiterexp{} expressions.
 \begin{itemize}
   \item Branches are interpreted by splitting the context, evaluating the argument expression,
   and then passing the remainder of the context and the evaluated argument into the appropriate
@@ -2733,46 +2733,47 @@ are \emph{semantics-preserving} functions $\ms{SSA}$, $\ms{Expr}$ on derivations
     {\ltoty{\Gamma}{\ms{L}^{\mb{Q}}}}
 }_{\mc{M}} &= \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{r}{\ms{L}^{\mb{Q}}}}_{\mc{M}}
 \end{align*}
-for arbitrary models $\mc{M}$. \footnote{
-  The astute reader will note that these functions are not 
-  \emph{quite} mutually inverse, since the output of a round-trip 
-  $\ms{SSA}(\ms{Expr}(\haslb{\Gamma^{\mb{q}}}{\epsilon}{r}{\ms{L}^{\mb{Q}}}))$ now targets a 
-  \emph{single} label with an argument of type $\ltoty{\Gamma}{\ms{L}^{\mb{Q}}}$. This is a somewhat
-  thorny problem since the leftover variables in $\mb{Q}$ can be unpacked using an $\ms{L}$-ary 
-  case-statement, but cannot \emph{escape} that case-statement. We can't get around this problem,
-  at least naively, by defining a function $\ms{SSA}_{\ms{L}^{\mb{Q}}}$ taking the desired output
-  label context as parameter 
-  (and requiring a derivation with output type $\ltoty{\Gamma}{\ms{L}^{\mb{Q}}}$), since a value of
-  type $\ltoty{\Gamma}{\ms{L}^{\mb{Q}}}$ can have the leftover variables filled in by any
-  arbitrary expression, while our SSA typing enforces they can only come from the input
-  live variables $\Gamma^{\mb{q}}$. On the other hand, if we require $\mb{Q} = 0$, then the
-  $n$-ary case-statement works fine.
-}
-
+for arbitrary models $\mc{M}$. 
+%
+% \footnote{ The astute reader will note that these functions are not \emph{quite} mutually inverse,
+%   since the output of a round-trip
+%   $\ms{SSA}(\ms{Expr}(\haslb{\Gamma^{\mb{q}}}{\epsilon}{r}{\ms{L}^{\mb{Q}}}))$ now targets a
+%   \emph{single} label with an argument of type $\ltoty{\Gamma}{\ms{L}^{\mb{Q}}}$. This is a
+%   somewhat thorny problem since the leftover variables in $\mb{Q}$ can be unpacked using an
+%   $\ms{L}$-ary case-statement, but cannot \emph{escape} that case-statement. We can't get around
+%   this problem, at least naively, by defining a function $\ms{SSA}_{\ms{L}^{\mb{Q}}}$ taking the
+%   desired output label context as parameter (and requiring a derivation with output type
+%   $\ltoty{\Gamma}{\ms{L}^{\mb{Q}}}$), since a value of type $\ltoty{\Gamma}{\ms{L}^{\mb{Q}}}$ can
+%   have the leftover variables filled in by any arbitrary expression, while our SSA typing enforces
+%   they can only come from the input live variables $\Gamma^{\mb{q}}$. On the other hand, if we
+%   require $\mb{Q} = 0$, then the $n$-ary case-statement works fine. }
+%
 It is easy enough to construct $\ms{Expr}$: for each derivation,
 we simply pick a representative 
 $
   (x, a) \in 
   \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{r}{\ms{L}^{\mb{Q}}}}_{\ms{Th(\cdot)}}
-$. Since $\dnt{\Gamma^{\mb{q}}}_{\ms{Th}(\cdot)} = \etoty{\Gamma^{\mb{q}}}$, we may simply define
-$$
+$. Since $\dnt{\Gamma^{\mb{q}}}_{\ms{Th}(\cdot)} = \etoty{\Gamma^{\mb{q}}}$, we may take
+$
 \ms{Expr}(\haslb{\Gamma^{\mb{q}}}{\epsilon}{r}{\ms{L}^{\mb{Q}}}) := 
   \letexpr{[x_1,...,x_n]}{x}{a}
-$$
+$
 where the unpacking of a value $c : \etoty{\Gamma^{\mb{q}}}$ is defined in the obvious recursive
-manner (see Appendix~\ref{apx:packing} for details). It is straightforward to verify that this
-indeed satisfies the desired properties. On the other hand, the function $\ms{SSA}$ is essentially
-the expression compilation presented inductively; we leave its definition and verification to
-Appendix~\ref{apx:ssa-roundtrip}. We note in passing that the result of this function will always
-use only structured control-flow (since \subiterexp{} only supports structured control flow).  
+manner (see Appendix~\ref{apx:packing} for details). 
+%
+% It is straightforward to verify that this indeed satisfies the desired properties. 
+%
+On the other hand, the function $\ms{SSA}$ is just standard expression compilation presented
+inductively; we leave its definition and verification to Appendix~\ref{apx:ssa-roundtrip}. 
+% We note in passing that the result of this function will always use only structured control-flow
+% (since \subiterexp{} only supports structured control flow).  
 
 \section{Concrete Models}
 
-In this section, we sketch some concrete models of our semantics, with full details in the appendix.
-In all the models given here, all types have unrestricted linearity. Hence, we will write out our
-typing rules using \emph{un-annotated} contexts and variables $\Gamma, x: A$, assuming every
-quantity annotation is the unrestricted quantity $\topq$. Appendix~\ref{apx:sep} has an example
-model with substructural types.
+In this section, we sketch some concrete models of our semantics. All the models given here have
+types with unrestricted linearity. Hence, we will write out our typing rules using
+\emph{un-annotated} contexts and variables $\Gamma, x: A$, assuming every quantity annotation is the
+unrestricted quantity $\topq$. Appendix~\ref{apx:sep} has an example model with substructural types.
 
 \subsection{UB}
 
@@ -2784,10 +2785,13 @@ nontermination and $\ubeff$ for UB. Its ordering is the inclusion order on nonem
 Appendix~\ref{apx:ub}.) The monadic bind is:
 $$
 \mbind{\ms{UB}}{\ubeff}{f} = \ubeff \qquad
-\mbind{\ms{UB}}{X}{f} = \begin{cases}
-  \ubeff & \text{if}\;\exists a \in X, f\;a = \ubeff \\
-  \{f\;a \mid a \in X\} & \text{otherwise}
-\end{cases}
+\mbind{\ms{UB}}{X}{f} = \{f\;a \mid a \in X\} \;\; \text{if } \forall a \in X, f\;a \neq \ubeff
+\qquad
+\mbind{\ms{UB}}{X}{f} = \ubeff \;\; \text{otherwise}
+% \begin{cases}
+%   \ubeff & \text{if}\;\exists a \in X, f\;a = \ubeff \\
+%   \{f\;a \mid a \in X\} & \text{otherwise}
+% \end{cases}
 $$
 where we define $f\;\infty = \infty$. 
 %
@@ -2984,12 +2988,12 @@ effect is not only eliminable, but also \emph{introducable}, since we do not hav
       {\hasty{\Gamma}{\bot}{b}{\nats}}
       {\tmle{\Gamma}{}{\ms{st}\;(p, a) ; \ms{st}\;(p, b)}{\ms{st}\;(p, b)}{\mb{1}}}
     \\
-    \prftree[r]{\rle{st-faa}}
-      {\hasty{\Gamma}{\bot}{p}{\nats}}
-      {\hasty{\Gamma}{\bot}{a}{\nats}}
-      {\hasty{\Gamma}{\bot}{b}{\nats}}
-      {\tmle{\Gamma}{}{\ms{st}\;(p, a) ; \ms{faa}\;(p, b)}{\ms{st}\;(p, a + b) ; a}{\nats}}
-    \\
+    % \prftree[r]{\rle{st-faa}}
+    %   {\hasty{\Gamma}{\bot}{p}{\nats}}
+    %   {\hasty{\Gamma}{\bot}{a}{\nats}}
+    %   {\hasty{\Gamma}{\bot}{b}{\nats}}
+    %   {\tmle{\Gamma}{}{\ms{st}\;(p, a) ; \ms{faa}\;(p, b)}{\ms{st}\;(p, a + b) ; a}{\nats}}
+    % \\
     \prftree[r]{\rle{ld-st}}
       {\hasty{\Gamma}{\bot}{p}{\nats}}
       {\hasty{\Gamma}{\bot}{a}{\nats}}
