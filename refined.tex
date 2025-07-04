@@ -3299,9 +3299,9 @@ In particular, this allows us to deduce the following useful identities:
 \end{gather*}
 We now verify that:
 \begin{itemize}
-  \item We begin by verifying that $\ms{Tm}_\epsilon(\mc{R})$ is indeed a category: we have that,
-  for arbitrary $(\lambda x . a) : \ms{Tm}_\epsilon(\mc{R})(A, B)$, $(\lambda y . b) :
-  \ms{Tm}_\epsilon(\mc{R})(B, C)$, $(\lambda z . c) : \ms{Tm}_\epsilon(\mc{R})(C, D)$, that
+  \item $\ms{Tm}_\epsilon(\mc{R})$ is a category (\cmark): we have that
+  % for arbitrary $(\lambda x . a) : \ms{Tm}_\epsilon(\mc{R})(A, B)$, $(\lambda y . b) :
+  % \ms{Tm}_\epsilon(\mc{R})(B, C)$, $(\lambda z . c) : \ms{Tm}_\epsilon(\mc{R})(C, D)$, that
   \begin{align*}
     (\lambda x . x) ; (\lambda y . a) &= (\lambda x . \letexpr{y}{x}{a}) 
     = (\lambda x . [x/y]a) = (\lambda y . a) \\
@@ -3312,9 +3312,27 @@ We now verify that:
     &= (\lambda x . a) ; (\lambda y . \letexpr{z}{b}{c})
     = (\lambda x . a) ; ((\lambda y . b) ; (\lambda z . c))
   \end{align*}
-  \item $\ms{Tm}_\epsilon(\mc{R})$ has binoidal structure (\cmark): 
-    \todo{this...}
-  \item $\ms{Tm}_\epsilon(\mc{R})$ has symmetric premonoidal structure: 
+  \item $\ms{Tm}_\epsilon(\mc{R})$ is binoidal (\cmark): we have that
+  \begin{align*}
+    (\lambda x . x) \otimes A 
+    &= (\lambda z . \letexpr{(x, y)}{z}{(x, y)}) = (\lambda z . z)\
+    \\
+    ((\lambda x . a) ; (\lambda y . b)) \otimes A
+    &= (\lambda (x, z) . (\letexpr{y}{a}{b}, z))
+    = (\lambda (x, z) . \letexpr{y}{a}{(b, z)}) \\
+    &= (\lambda (x, z) . \letexpr{(y, z')}{(a, z)}{(b, z')}) \\
+    &= (\lambda (x, z) . (a, z)) ; (\lambda (y, z') . (b, z')) \\
+    &= ((\lambda x . a) \otimes A) ; ((\lambda y  . b) \otimes A) \\
+    A \otimes (\lambda y . y)
+    &= (\lambda z . \letexpr{(x, y)}{z}{(x, y)}) = (\lambda z . z) \\
+    A \otimes ((\lambda y . a) ; (\lambda z . b))
+    &= (\lambda (x, y) . (x, \letexpr{z}{a}{b}))
+    = (\lambda (x, y) . \letexpr{z}{a}{(x, b)}) \\
+    &= (\lambda (x, y) . \letexpr{(x', z)}{(x, a)}{(x', b)}) \\
+    &= (\lambda (x, y) . (x, a)) ; (\lambda (x', z) . (x', b)) \\
+    &= (A \otimes (\lambda y . a)) ; (A \otimes (\lambda z . b)) 
+  \end{align*}
+  \item $\ms{Tm}_\epsilon(\mc{R})$ is symmetric premonoidal: 
   \begin{itemize}
     \item Pentagon equation: we first define $
     \alpha_4 := (\lambda (((x, y), z), w) . (x, (y, (z, w))))
