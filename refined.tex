@@ -3254,7 +3254,6 @@ of primitive rewrites $\mc{R}$ as follows:
   \qquad
   A \otimes (\lambda z. b) := (\lambda (y, z). (y, b)))
   $$
-
   \item Associators, unitors, and symmetries
   \begin{gather*}
     \alpha := (\lambda ((x, y), z) . (x, (y, z))) \qquad
@@ -3283,9 +3282,12 @@ of primitive rewrites $\mc{R}$ as follows:
   \item Discard and diagonal morphisms $!_A := (\lambda x. ())$ and $\Delta_A := (\lambda x. (x,
   x))$
 \end{itemize}
-\TODO{pattern binding lore}
-\TODO{tensor sequence lore}
-We begin by proving a few useful identities:
+
+We begin by noting that
+\begin{gather*}
+  (\lambda x . a) ; (\lambda P . b) = (\lambda x . \letexpr{P}{a}{b})
+\end{gather*}
+In particular, this allows us to deduce the following useful identities:
 \begin{gather*}
   (\lambda x. a) ; \alpha = (\lambda x. \letexpr{((y, z), w)}{a}{(y, (z, w))}) \\
   (\lambda x. a) ; \alpha^{-1} = (\lambda x. \letexpr{(y, (z, w))}{a}{((y, z), w)}) \\
@@ -3295,24 +3297,23 @@ We begin by proving a few useful identities:
   (\lambda x. a) ; \rho = (\lambda x. \letexpr{(y, z)}{a}{z}) \qquad
   (\lambda x. a) ; \rho^{-1} = (\lambda x. ((), a))
 \end{gather*}
-We may now verify that:
+We now verify that:
 \begin{itemize}
-  \item $\ms{Tm}(\mc{R})$ is a category (\cmark): we have that, given $(x, a) :
-  \ms{Tm}_\epsilon(\mc{R})(A, B)$, $(y, b) : \ms{Tm}(\mc{R})(B, C)$, $(z, c) : \ms{Tm}(\mc{R})(C,
-  D)$, that
-  \begin{gather*}
-  \tmeq{x : A}{\mc{R}}{\letexpr{y}{a}{y}}{a}{B} 
-  \implies (\lambda x.a) ; (\lambda y.y) = (x, a) \\
-  \tmeq{y : A}{\mc{R}}{\letexpr{x}{y}{a}}{[y/x]a}{B} 
-  \implies (\lambda y.y) ; (\lambda x.a) = (\lambda y. [y/x]a) = (\lambda x. a) \\
-  \tmeq{x : A}{\mc{R}}
-    {\letexpr{z}{(\letexpr{y}{a}{b})}{c}}
-    {\letexpr{y}{a}{\letexpr{z}{b}{c}}}{A} \\
-  \qquad \implies ((\lambda x. a) ; (\lambda y. b)) ; (\lambda z. c) 
-                  = (\lambda x. a) ; ((\lambda y. b); (\lambda z. c)) \\
-  \end{gather*}
+  \item We begin by verifying that $\ms{Tm}_\epsilon(\mc{R})$ is indeed a category: we have that,
+  for arbitrary $(\lambda x . a) : \ms{Tm}_\epsilon(\mc{R})(A, B)$, $(\lambda y . b) :
+  \ms{Tm}_\epsilon(\mc{R})(B, C)$, $(\lambda z . c) : \ms{Tm}_\epsilon(\mc{R})(C, D)$, that
+  \begin{align*}
+    (\lambda x . x) ; (\lambda y . a) &= (\lambda x . \letexpr{y}{x}{a}) 
+    = (\lambda x . [x/y]a) = (\lambda y . a) \\
+    (\lambda x . a) ; (\lambda y . y) &= (\lambda x . \letexpr{y}{a}{y}) = (\lambda x . a) \\
+    ((\lambda x . a) ; (\lambda y . b)) ; (\lambda z . c)
+    &= (\lambda x . \letexpr{z}{(\letexpr{y}{a}{b})}{c})
+    = (\lambda x . \letexpr{y}{a}{\letexpr{z}{b}{c}}) \\
+    &= (\lambda x . a) ; (\lambda y . \letexpr{z}{b}{c})
+    = (\lambda x . a) ; ((\lambda y . b) ; (\lambda z . c))
+  \end{align*}
   \item $\ms{Tm}_\epsilon(\mc{R})$ has binoidal structure (\cmark): 
-  \todo{this...}
+    \todo{this...}
   \item $\ms{Tm}_\epsilon(\mc{R})$ has symmetric premonoidal structure: 
   \begin{itemize}
     \item Pentagon equation: we first define $
