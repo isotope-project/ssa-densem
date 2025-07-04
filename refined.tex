@@ -3297,6 +3297,17 @@ In particular, this allows us to deduce the following useful identities:
   (\lambda x. a) ; \rho = (\lambda x. \letexpr{(y, z)}{a}{z}) \qquad
   (\lambda x. a) ; \rho^{-1} = (\lambda x. ((), a))
 \end{gather*}
+We also note that
+\begin{align*}
+  (\lambda P . a) \otimes A 
+    &= (\lambda (x, y) . (\letexpr{P}{x}{a}, y))
+    = (\lambda (x, y) . \letexpr{P}{x}{(a, y)})
+    = (\lambda (P, y) . (a, y)) \\
+  A \otimes (\lambda P . b)
+    &= (\lambda (x, y) . (x, \letexpr{P}{y}{b}))
+    = (\lambda (x, y) . \letexpr{P}{y}{(x, b)})
+    = (\lambda (x, P) . (x, b))
+\end{align*}
 We now verify that:
 \begin{itemize}
   \item $\ms{Tm}_\epsilon(\mc{R})$ is a category (\cmark): we have that
@@ -3344,10 +3355,26 @@ We now verify that:
       &= (\lambda ((x_{12}, x_3), x_4) . 
         \letexpr{(x_1, x_2)}{x_{12}}{(x_1, (x_2, (x_3, x_4)))}) \\
       &= (\lambda (((x_1, x_2), x_3), x_4) . (x_1, (x_2, (x_3, x_4)))) \\
-      &= ... \\
+      &= (\lambda (((x_1, x_2), x_3), x_4) . 
+        \letexpr{(z_1, ((z_2, z_3), z_4))}{(x_1, ((x_2, x_3), x_4))}{(z_1, (z_2, (z_3, z_4)))})
+      \\
+      &= (\lambda (((x_1, x_2), x_3), x_4) . (x_1, ((x_2, x_3), x_4))) ;
+      (\lambda (z_1, ((z_2, z_3), z_4)) . (z_1, (z_2, (z_3, z_4))))
+      \\
+      &= (\lambda (((x_1, x_2), x_3), x_4) . 
+        \letexpr{((y_1, y_{23}), y_4)}{((x_1, (x_2, x_3)), x_4)}{(y_1, (y_{23}, y_4))}) ; \\ & \qquad 
+      (\lambda (z_1, ((z_2, z_3), z_4)) . (z_1, (z_2, (z_3, z_4))))
+      \\
+      &= (\lambda (((x_1, x_2), x_3), x_4) . ((x_1, (x_2, x_3)), x_4)) ; 
+      (\lambda ((y_1, y_{23}), y_4) . (y_1, (y_{23}, y_4))) ; \\ & \qquad 
+      (\lambda (z_1, ((z_2, z_3), z_4)) . (z_1, (z_2, (z_3, z_4))))
+      \\
       &= \alpha_{A, B, C} \otimes D ; \alpha_{A, B \otimes C, D} ; A \otimes \alpha_{B, C, D}
     \end{align*}
-    \item Triangle equations: \todo{this...}
+    \item Triangle equations (\cmark): we have that
+      \begin{align*}
+      ...
+      \end{align*}
     \item Hexagon equation: \todo{this...}
   \end{itemize}
   \item $\ms{Tm}(\mc{R})$ has chosen coproudcts and an initial object (\cmark):
