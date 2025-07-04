@@ -340,9 +340,13 @@ memory}~\cite{batty-compositional-17}. This means memory can no longer be correc
 global array of bytes. Furthermore, compilers like LLVM and GCC now make very aggressive
 optimizations exploiting knowledge of memory aliasing, undefined behaviour, and nondeterminism.
 Because all these optimizations are all done in the presence of nondeterminism, the transformations
-compilers want to do are not usually progarm equivalences, but merely refinements: the possible
+compilers want to do are not usually program equivalences, but merely refinements: the possible
 behaviours of the optimized program must be a subset of the possible behaviours of the original
-program. 
+program.
+
+As a concrete example, consider the interaction of undefined behaviour and nontermination. 
+
+\TODO{UB refinements go here}
 
 Because of this complexity, the old informal techniques are no longer sufficient, and we need to
 study SSA using more mathematically sophisticated techniques to understand and justify what modern
@@ -544,31 +548,48 @@ being simply SSA with additional annotations.
   \label{fig:ssa-data}
 \end{figure}
 
-\section{Expression Language}
+\section{\subiterexp{}, an expression language for SSA }
 
-Unfortunately, while SSA is a good format for implementing compiler optimizations, it has poor
-metatheoretic properties. In particular, much like ANF, it is challenging to state
-\emph{substitution}, and consequently to build up a solid equational theory, since expressions
-cannot be arbitrary SSA programs. In particular, since we would like to consider the substitution of
-\emph{effectful} operations, we also need to a type system to keep track of the linearity of how
-variables are used, as well as the commutativity of the effect's operation and that of any code
-between the original definition and the substitution site. Moreover, while arbitrary control-flow
-allows exceptional flexibility, it can make it difficult to build up a complete equational theory
-for our calculus, especially when we want fine-grained effect tracking.
+SSA is a useful IR because it enables complex, whole-procedure transformation of code, but
+its block-statement-value hierarchy makes it difficult to uniformly formulate the allowed
+transformations as an (in)equational
+theory. If we unified all of these levels into a single
+expression language, then formulating many transformations becomes much simpler. For example, if
+loops were an expression, then control-flow-graph transformations which duplicate or fuse loop
+bodies are merely instances of substitution (and its dual, CSE/let-introduction). 
 
-The B\"ohm-Jacopini theorem states that programs with arbitrary control-flow can be re-written to
-require only branching and iteration; \citet{ghalayini-24-ssa-densem-arxiv} show that the
-B\"ohm-Jacopini theorem holds for a syntactic model of SSA. Inspired by this, we introduce a simpler
-expression language, \subiterexp{}, which supports \emph{only} iteration and branching as
-control-flow primitives. In a later section, we will show how to recover the full generality of SSA
-from this core language, which we will use to state our equational theory and build up our
-categorical semantics.
+In this section, we introduce \subiterexp{}, which is an expression-oriented variant of SSA.
+Essentially, it is a simple first-order expression language with support for binding/sequencing,
+branching, and loops. \subiterexp{} looks very different from traditional presentations of SSA, but
+we later prove in Subsection~\ref{ssec:interconversion} that the two syntaxes are completely
+equivalent to one another. The main novelty of \subiterexp{} is in its type system and equational theory.
+It has a rich substructural type and effect system, which enables us to give a complete inequational
+characterization of refinement of \subiterexp{} programs. Hence, because \subiterexp{} is equivalent
+to SSA, we get a complete syntactic characterization of refinement for SSA programs. 
 
+% Unfortunately, while SSA is a good format for implementing compiler optimizations, it has poor
+% metatheoretic properties. In particular, much like ANF, it is challenging to state
+% \emph{substitution}, and consequently to build up a solid equational theory, since expressions
+% cannot be arbitrary SSA programs. In particular, since we would like to consider the substitution of
+% \emph{effectful} operations, we also need to a type system to keep track of the linearity of how
+% variables are used, as well as the commutativity of the effect's operation and that of any code
+% between the original definition and the substitution site. Moreover, while arbitrary control-flow
+% allows exceptional flexibility, it can make it difficult to build up a complete equational theory
+% for our calculus, especially when we want fine-grained effect tracking.
+% 
+% The B\"ohm-Jacopini theorem states that programs with arbitrary control-flow can be re-written to
+% require only branching and iteration; \citet{ghalayini-24-ssa-densem-arxiv} show that the
+% B\"ohm-Jacopini theorem holds for a syntactic model of SSA. Inspired by this, we introduce a simpler
+% expression language, \subiterexp{}, which supports \emph{only} iteration and branching as
+% control-flow primitives. In a later section, we will show how to recover the full generality of SSA
+% from this core language, which we will use to state our equational theory and build up our
+% categorical semantics.
+% 
 \subsection{Syntax and Typing Rules}
 
-\subiterexp{} is, at first glance, a standard first-order expression language with branching and
-iteration; in short, a functional analogue of \textsc{While}. We present its grammar in
-Figure~\ref{fig:expr-syntax}; this is parametrized by a set of \emph{base types} $X \in \mc{X}$ and
+As mentioned before, \subiterexp{} is a standard first-order expression language with branching and
+iteration: a functional analogue of \textsc{While}. Its grammar is in
+Figure~\ref{fig:expr-syntax}, and is parametrized by a set of \emph{base types} $X \in \mc{X}$ and
 a set of \emph{instructions} $f \in \mc{I}$. 
 %
 To allow us to support both destructuring let-bindings and case-statements, our grammar of types $A,
@@ -2710,6 +2731,7 @@ We can now give our semantics for regions in Figure~\ref{fig:ssa-densem}
 \end{figure}
 
 \subsection{Interconversion with \subiterexp{}}
+\label{ssec:interconversion}
 
 % Given a rewrite system $\mc{R}$, we say an \isotopessa{} region 
 % $\haslb{\Gamma^{\mb{q}}}{\epsilon}{r}{\ms{L}^{\mb{Q}}}$ is refined by $r'$, written
