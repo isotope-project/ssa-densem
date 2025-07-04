@@ -3334,36 +3334,46 @@ We now verify that:
   \end{align*}
   \item $\ms{Tm}_\epsilon(\mc{R})$ is symmetric premonoidal: 
   \begin{itemize}
-    \item Pentagon equation: we first define $
-    \alpha_4 := (\lambda (((x, y), z), w) . (x, (y, (z, w))))
-    $ of type $\ms{Tm}_\bot(\mc{R})( ((A \otimes B)
-    \otimes C) \otimes D, A \otimes (B \otimes (C \otimes D)))
-    $.
-    We now show that both sides of the pentagon equation are equal to $\alpha_4$:
+    \item Pentagon equation: we have that
     \begin{align*}
-      & \alpha_{(A \otimes B), C, D} ; \alpha_{A, B, (C \otimes D)}
-      \approx (...)
+      &\alpha_{(A \otimes B), C, D} ; \alpha_{A, B, (C \otimes D)} \\
+      &= (\lambda ((x_{12}, x_3), x_4) . (x_{12}, (x_3, x_4))) ; 
+         (\lambda ((x_1, x_2), x_{34}) . (x_1, (x_2, x_{34}))) \\
+      &= (\lambda ((x_{12}, x_3), x_4) . 
+        \letexpr{((x_1, x_2), x_{34})}{(x_{12}, (x_3, x_4))}{(x_1, (x_2, x_{34}))}) \\
+      &= (\lambda ((x_{12}, x_3), x_4) . 
+        \letexpr{(x_1, x_2)}{x_{12}}{(x_1, (x_2, (x_3, x_4)))}) \\
+      &= (\lambda (((x_1, x_2), x_3), x_4) . (x_1, (x_2, (x_3, x_4)))) \\
+      &= ... \\
+      &= \alpha_{A, B, C} \otimes D ; \alpha_{A, B \otimes C, D} ; A \otimes \alpha_{B, C, D}
     \end{align*}
-    \TODO{left 4 associator}
-    \TODO{right 4 associator}
-    \item Triangle equations:
-    \item Hexagon equation:
+    \item Triangle equations: \todo{this...}
+    \item Hexagon equation: \todo{this...}
   \end{itemize}
   \item $\ms{Tm}(\mc{R})$ has chosen coproudcts and an initial object (\cmark):
   \todo{this...}
   \item $\ms{Tm}(\mc{R})$ is distributive: \todo{this...}
   \item $\ms{Tm}(\mc{R})$ is a distributive effectful category: \todo{this...}
   \item $\ms{Tm}(\mc{R})$ has an iteration operator: \todo{this...}
-  \item $\ms{Tm}(\mc{R})$ is an Elgot category: 
-  We begin by briefly noting the following useful fact:
-  \begin{proposition}
-    If $(-)^\dagger$ is an iteration operator which satisfies naturality and codiagonal and is
-    $\mc{K}$-uniform for $\mc{K}$ cocartesian, then it also satisfies dinaturality.
-  \end{proposition}
-  \begin{proof}
-    See Lemma 31 of \citet{goncharov-18-guarded-traced}
-  \end{proof}
-  \TODO{rest}
+  \item $\ms{Tm}(\mc{R})$ is an Elgot category: it suffices to show that our iteration operator
+  satisfies:
+  \begin{itemize}
+    \item Naturality: \todo{this}
+    \item Codiagonal: \todo{this}
+    \item Directed Uniformity: \todo{this}
+    \item Dinaturality:
+    We have that:
+    \begin{proposition}
+      If $(-)^\dagger$ is an iteration operator which satisfies naturality and codiagonal and is
+      $\mc{K}$-uniform for $\mc{K}$ cocartesian, then it also satisfies dinaturality.
+    \end{proposition}
+    \begin{proof}
+      See Lemma 31 of \citet{goncharov-18-guarded-traced}
+    \end{proof}
+    Since all $\ms{Tm}_\epsilon(\mc{R})$ for $\einf{\epsilon}$ are $\ms{Tm}_\bot(\mc{R})$-uniform,
+    and $\ms{Tm}_\bot(\mc{R})$ is cocartesian, $\ms{Tm}_\epsilon(\mc{R})$ must in fact satisfy
+    dinaturality as desired.
+  \end{itemize}
 \end{itemize}
 Hence, to show that we have a valid \subiterexp{}-model, it suffices to prove that, given $(x, a) :
 \ms{Tm}_\epsilon(\mc{R})(A, B)$
