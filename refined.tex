@@ -1392,7 +1392,7 @@ satisfies $\mc{R} \subseteq \ms{Th}(\mc{R})$, making it a closure operator.
       {\hasty{\Gamma^{\mb{q}_l}, y : B}{\epsilon}{c}{C}}
       {\tmeq{\Gamma^{\mb{q}}}{\mc{R}}
         {\letexpr{y}{\liter{a}{x}{b}}{c}}
-        {\liter{a}{x}{\caseexpr{b}{y}{c}{z}{\linr{z}}}}
+        {\liter{a}{x}{\caseexpr{b}{y}{\linl{c}}{z}{\linr{z}}}}
         {C}
       } \\
     \prftree[r]{\rle{codiag}}
@@ -3300,6 +3300,16 @@ of primitive rewrites $\mc{R}$ as follows:
                           {(z_l, z_r)}{(z_l, \linr{z_r})}) \\
     \delta^{-1} := (\lambda (x_l, x_r). \caseexpr{x_r}{y}{\linl{(x_l, y)}}{z}{\linr{(x_r, z)}})
   \end{gather*}
+  In particular, this means that we have
+  \begin{align*}
+    (\lambda x . a) ; [(\lambda y . b), (\lambda z . c)]
+      &= (\lambda x . \caseexpr{a}{y}{b}{z}{c})
+      \\
+    (\lambda x . a) + (\lambda y . b) &= (\lambda z. \caseexpr{z}{x}{\linl{a}}{y}{\linr{b}})
+      \\
+    (\lambda x . a) ; (\lambda y . b) + (\lambda z . c)
+      &= (\lambda x . \caseexpr{a}{y}{\linl{b}}{z}{\linr{c}})
+  \end{align*}
   \item Iteration operator
   $
     (\lambda x. a)^\dagger := (\lambda y. \liter{y}{x}{a})
@@ -3481,7 +3491,16 @@ We now verify that:
   \item $\ms{Tm}_\epsilon(\mc{R})$ is an Elgot category: it suffices to show that our iteration
   operator satisfies:
   \begin{itemize}
-    \item Naturality: \todo{this}
+    \item Naturality: we have that
+    \begin{align*}
+    ((\lambda x.a) ; (\lambda y.b) + (\lambda z.z))^\dagger 
+    &= (\lambda x.\caseexpr{a}{y}{\linl{b}}{z}{\linr{z}})^\dagger \\
+    &= (\lambda w.\liter{w}{x}{\caseexpr{a}{y}{\linl{b}}{z}{\linr{z}}}) \\
+    &= (\lambda w.\liter{w}{x}{\caseexpr{a}{y}{\linl{b}}{z}{\linr{z}}}) \\
+    &= (\lambda w.\letexpr{y}{\liter{w}{x}{a}}{b}) \\
+    &= (\lambda x.a)^\dagger ; (\lambda y.b)
+    \end{align*} 
+    \TODO{this}
     \item Codiagonal: \todo{this}
     \item Directed Uniformity: \todo{this}
     \item Dinaturality:
