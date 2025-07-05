@@ -3452,7 +3452,19 @@ We now verify that:
   \end{align*}
   and
   \begin{align*}
-    ...
+    \delta^{-1}_{X, Y, Z} ; \delta_{X, Y, Z}
+    &= (\lambda (x, w) .  \caseexpr{w}{y}{\linl{(x, y)}}{z}{\linr{(x, z)}})
+      ; [X \otimes \iota_l, X \otimes \iota_r] \\
+    &= (\lambda (x, w) . \letexpr{w'}{\caseexpr{w}{y}{\linl{(x, y)}}{z}{\linr{(x, z)}}}{ 
+      \\ & \quad\;\;
+      \caseexpr{w'}{(x, y)}{(x, \linl{y})}{(x, z)}{(x, \linr{z})}}) \\
+    &= (\lambda (x, w) . \caseexpr{w}
+      {y}{\caseexpr{\linl{(x, y)}}{(x, y)}{(x, \linl{y})}{(x, z)}{(x, \linr{z})} \\ & \quad\;\;}
+      {z}{\caseexpr{\linr{(x, z)}}{(x, y)}{(x, \linl{y})}{(x, z)}{(x, \linr{z})}}
+    ) \\
+    &= (\lambda (x, w) . \caseexpr{w}{y}{(x, \linl{y})}{z}{(x, \linr{z})}) \\
+    &= (\lambda (x, w) . (x, \caseexpr{w}{y}{\linl{y}}{z}{\linr{z}}))
+    = (\lambda (x, w) . (x, w)) = \ms{id}_{X \otimes (Y + Z)}
   \end{align*}
   \item $\ms{Tm}_\epsilon(\mc{R})$ is a distributive effectful category: \todo{this...}
   \item $\ms{Tm}_\epsilon(\mc{R})$ has an iteration operator: \todo{this...}
