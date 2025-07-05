@@ -3467,7 +3467,17 @@ We now verify that:
     = (\lambda (x, w) . (x, w)) = \ms{id}_{X \otimes (Y + Z)}
   \end{align*}
   \item $\ms{Tm}_\epsilon(\mc{R})$ is a distributive effectful category: \todo{this...}
-  \item $\ms{Tm}_\epsilon(\mc{R})$ has an iteration operator: \todo{this...}
+  \item $\ms{Tm}_\epsilon(\mc{R})$ has an iteration operator: we have that
+  \begin{align*}
+    (\lambda x . a)^\dagger
+    &= (\lambda y . \liter{y}{x}{a}) \\
+    &= (\lambda y . \letexpr{x}{y}{\caseexpr{a}{z}{z}{y}{\liter{y}{x}{a}}}) \\
+    &= (\lambda x . \caseexpr{a}{z}{z}{y}{\liter{y}{x}{a}}) \\
+    &= (\lambda x . \letexpr{w}{a}{\caseexpr{w}{z}{z}{y}{\liter{y}{x}{a}}}) \\
+    &= (\lambda x . a) ; (\lambda w . \caseexpr{w}{z}{z}{y}{\liter{y}{x}{a}}) \\
+    &= (\lambda x . a) ; [(\lambda z.z), (\lambda x.a)^\dagger]
+    = (\lambda x.a) ; [\ms{id}, (\lambda x.a)^\dagger] \\
+  \end{align*}
   \item $\ms{Tm}_\epsilon(\mc{R})$ is an Elgot category: it suffices to show that our iteration
   operator satisfies:
   \begin{itemize}
@@ -3487,6 +3497,7 @@ We now verify that:
     and $\ms{Tm}_\bot(\mc{R})$ is cocartesian, $\ms{Tm}_\epsilon(\mc{R})$ must in fact satisfy
     dinaturality as desired.
   \end{itemize}
+  \item Strength: \todo{this}
 \end{itemize}
 Hence, to show that we have a valid \subiterexp{}-model, it suffices to prove that, given $(x, a) :
 \ms{Tm}_\epsilon(\mc{R})(A, B)$
