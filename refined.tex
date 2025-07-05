@@ -3295,7 +3295,7 @@ of primitive rewrites $\mc{R}$ as follows:
   \begin{gather*}
     \iota_l := (\lambda x. \linl{x}) \qquad \iota_r := (\lambda x. \linr{x}) \qquad
     [(\lambda x. a), (\lambda y. b)] := (\lambda z. \caseexpr{z}{x}{a}{y}{b}) \\
-    \delta := (\lambda x. \caseexpr{x}
+    \delta := [- \otimes \iota_l, - \otimes \iota_r] = (\lambda x. \caseexpr{x}
                           {(y_l, y_r)}{(y_l, \linl{y_r})}
                           {(z_l, z_r)}{(z_l, \linr{z_r})}) \\
     \delta^{-1} := (\lambda (x_l, x_r). \caseexpr{x_r}{y}{\linl{(x_l, y)}}{z}{\linr{(x_r, z)}})
@@ -3428,13 +3428,36 @@ We now verify that:
       &= \sigma_{A, B} \otimes C ; \alpha_{B, A, C} ; B \otimes \sigma_{A, C}
     \end{align*}
   \end{itemize}
-  \item $\ms{Tm}(\mc{R})$ has chosen coproudcts and an initial object (\cmark):
+  \item $\ms{Tm}_\epsilon(\mc{R})$ has chosen coproudcts and an initial object (\cmark):
   \todo{this...}
-  \item $\ms{Tm}(\mc{R})$ is distributive: \todo{this...}
-  \item $\ms{Tm}(\mc{R})$ is a distributive effectful category: \todo{this...}
-  \item $\ms{Tm}(\mc{R})$ has an iteration operator: \todo{this...}
-  \item $\ms{Tm}(\mc{R})$ is an Elgot category: it suffices to show that our iteration operator
-  satisfies:
+  \item $\ms{Tm}_\epsilon(\mc{R})$ is distributive: we have that
+  \begin{align*}
+    \delta_{X, Y, Z} ; \delta^{-1}_{X, Y, Z}
+    &= [X \otimes \iota_l, X \otimes \iota_r] ; (\lambda (x, w) . 
+      \caseexpr{w}{y}{\linl{(x, y)}}{z}{\linr{(x, z)}}) \\
+    &= [
+      (\lambda (x, y) . (x, \linl{y})) 
+      ; (\lambda (x, w) . \caseexpr{w}{y}{\linl{(x, y)}}{z}{\linr{(x, z)}}), \\ & \quad\;\;
+      (\lambda (x, z) . (x, \linr{z})) 
+      ; (\lambda (x, w) . \caseexpr{w}{y}{\linl{(x, y)}}{z}{\linr{(x, z)}})
+    ] \\
+    &= [
+      (\lambda (x, y) . \caseexpr{\linl{y}}{y}{\linl{(x, y)}}{z}{\linr{(x, z)}}), \\ & \quad\;\;
+      (\lambda (x, z) . \caseexpr{\linr{z}}{y}{\linl{(x, y)}}{z}{\linr{(x, z)}})
+    ] \\
+    &= [
+      (\lambda (x, y) . \linl{(x, y)}),
+      (\lambda (x, z) . \linr{(x, z)})
+    ] = [\iota_l, \iota_r] = \ms{id}_{(X \otimes Y) + (X \otimes Z)}
+  \end{align*}
+  and
+  \begin{align*}
+    ...
+  \end{align*}
+  \item $\ms{Tm}_\epsilon(\mc{R})$ is a distributive effectful category: \todo{this...}
+  \item $\ms{Tm}_\epsilon(\mc{R})$ has an iteration operator: \todo{this...}
+  \item $\ms{Tm}_\epsilon(\mc{R})$ is an Elgot category: it suffices to show that our iteration
+  operator satisfies:
   \begin{itemize}
     \item Naturality: \todo{this}
     \item Codiagonal: \todo{this}
