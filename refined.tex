@@ -3257,7 +3257,10 @@ of primitive rewrites $\mc{R}$ as follows:
   (this is well-defined since, by definition, we quotient precisely the equivalence clases of
   $\tref_{\mc{R}}$)
   \item Identity morphisms $\ms{id}_A := (\lambda x . x)$
-  \item Composition $(\lambda x. a) ; (\lambda y. b) := (\lambda x. \letexpr{y}{a}{b})$
+  \item 
+    Composition $(\lambda x. a) ; (\lambda y. b) := (\lambda x. \letexpr{y}{a}{b})$.
+    We note that, for $a$ \emph{pure}, this reduces to the usual substitution-based definition
+    $(\lambda x. a) ; (\lambda y. b) = (\lambda x . [a/y]b)$.
   \item Tensor products $A \otimes B$ with monoidal unit $\mb{1}$, and tensor functors
   $$
   (\lambda x. a) \otimes A := (\lambda z. \letexpr{(x, y)}{z}{(a, y)})
@@ -3395,16 +3398,35 @@ We now verify that:
       &= \alpha_{A, B, C} \otimes D ; \alpha_{A, B \otimes C, D} ; A \otimes \alpha_{B, C, D}
     \end{align*}
     \item Triangle equation (\cmark): we have that
-      \begin{align*}
-        \alpha_{A, \mb{1}, B} ; X \otimes \lambda_B
-        &= (\lambda ((x, y), z) . (x, (y, z))) ; (\lambda (x', y') . y') \\
-        &= (\lambda ((x, y), z) . \letexpr{(x', y')}{(x, (y, z))}{y'}) \\
-        &= (\lambda ((x, y), z) . (y, z)) 
-         = (\lambda (x, y) . y) \otimes B
-          \\
-        &= \rho_A \otimes B
-      \end{align*}
-    \item Hexagon equation: \todo{this...}
+    \begin{align*}
+      \alpha_{A, \mb{1}, B} ; X \otimes \lambda_B
+      &= (\lambda ((x, y), z) . (x, (y, z))) ; (\lambda (x', y') . y') \\
+      &= (\lambda ((x, y), z) . \letexpr{(x', y')}{(x, (y, z))}{y'}) \\
+      &= (\lambda ((x, y), z) . (y, z)) 
+        = (\lambda (x, y) . y) \otimes B
+        \\
+      &= \rho_A \otimes B
+    \end{align*}
+    \item Hexagon equation: we have that
+    \begin{align*}
+      &\alpha_{A, B, C} ; \sigma_{A, B \otimes C} ; \alpha_{B, C, A} \\
+      &= (\lambda ((x_1, x_2), x_3) . (x_1, (x_2, x_3))) 
+        ; (\lambda (y_1, y_{23}) . (y_{23}, y_1))
+        ; (\lambda ((z_2, z_3), z_1) . (z_2, (z_3, z_1)))
+      \\
+      &= (\lambda ((x_1, x_2), x_3) . ((x_2, x_3), x_1)) 
+        ;  (\lambda ((z_2, z_3), z_1) . (z_2, (z_3, z_1))) 
+      \\
+      &= (\lambda ((x_1, x_2), x_3) . (x_2, (x_3, x_1))) \\
+      &= (\lambda ((x_1, x_2), x_3) . (x_2, (x_1, x_3)))
+        ; (\lambda (z_2, (z_1, z_3)) . (z_2, (z_3, z_1)))
+      \\
+      &= (\lambda ((x_1, x_2), x_3) . ((x_2, x_1), x_3)) 
+        ; (\lambda ((y_2, y_1), y_3) . (y_2, (y_1, y_3)))
+        ; (\lambda (z_2, (z_1, z_3)) . (z_2, (z_3, z_1)))
+      \\
+      &= \sigma_{A, B} \otimes C ; \alpha_{B, A, C} ; B \otimes \sigma_{A, C}
+    \end{align*}
   \end{itemize}
   \item $\ms{Tm}(\mc{R})$ has chosen coproudcts and an initial object (\cmark):
   \todo{this...}
