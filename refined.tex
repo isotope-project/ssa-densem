@@ -3384,7 +3384,8 @@ We now verify that:
       (\lambda (z_1, ((z_2, z_3), z_4)) . (z_1, (z_2, (z_3, z_4))))
       \\
       &= (\lambda (((x_1, x_2), x_3), x_4) . 
-        \letexpr{((y_1, y_{23}), y_4)}{((x_1, (x_2, x_3)), x_4)}{(y_1, (y_{23}, y_4))}) ; \\ & \qquad 
+        \letexpr{((y_1, y_{23}), y_4)}{((x_1, (x_2, x_3)), x_4)}{(y_1, (y_{23}, y_4))}) ; 
+        \\ & \qquad 
       (\lambda (z_1, ((z_2, z_3), z_4)) . (z_1, (z_2, (z_3, z_4))))
       \\
       &= (\lambda (((x_1, x_2), x_3), x_4) . ((x_1, (x_2, x_3)), x_4)) ; 
@@ -3393,9 +3394,15 @@ We now verify that:
       \\
       &= \alpha_{A, B, C} \otimes D ; \alpha_{A, B \otimes C, D} ; A \otimes \alpha_{B, C, D}
     \end{align*}
-    \item Triangle equations (\cmark): we have that
+    \item Triangle equation (\cmark): we have that
       \begin{align*}
-      ...
+        \alpha_{A, \mb{1}, B} ; X \otimes \lambda_B
+        &= (\lambda ((x, y), z) . (x, (y, z))) ; (\lambda (x', y') . y') \\
+        &= (\lambda ((x, y), z) . \letexpr{(x', y')}{(x, (y, z))}{y'}) \\
+        &= (\lambda ((x, y), z) . (y, z)) 
+         = (\lambda (x, y) . y) \otimes B
+          \\
+        &= \rho_A \otimes B
       \end{align*}
     \item Hexagon equation: \todo{this...}
   \end{itemize}
