@@ -1392,7 +1392,7 @@ satisfies $\mc{R} \subseteq \ms{Th}(\mc{R})$, making it a closure operator.
       {\hasty{\Gamma^{\mb{q}_l}, y : B}{\epsilon}{c}{C}}
       {\tmeq{\Gamma^{\mb{q}}}{\mc{R}}
         {\letexpr{y}{\liter{a}{x}{b}}{c}}
-        {\liter{a}{x}{\caseexpr{b}{y}{c}{z}{\linr{z}}}}
+        {\liter{a}{x}{\caseexpr{b}{y}{\linl{c}}{z}{\linr{z}}}}
         {C}
       } \\
     \prftree[r]{\rle{codiag}}
@@ -1421,13 +1421,13 @@ satisfies $\mc{R} \subseteq \ms{Th}(\mc{R})$, making it a closure operator.
       } \\
     \text{where} \qquad {\qsp{\Gamma}{\mb{q}}{\mb{q}_c}{\mb{q}_r}} \qquad
     {\qsp{\Gamma}{\mb{q}_c}{\mb{q}_l}{\mb{q}_m}} \qquad
-    \alquant(\Gamma^{\mb{q}_l}) = \top \qquad
+    \alquant(\Gamma^{\mb{q}_c}) = \top \qquad
     \einf{\epsilon}
     \\
     \qquad {\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A}}
     \qquad {\hasty{\Gamma^{\mb{q}_m}, x : A}{\eta}{s}{S}}
     \qquad {\hasty{\Gamma^{\mb{q}_l}, y : S}{\epsilon}{b}{B + A}}
-    \qquad {\hasty{\Gamma^{\mb{q}_c}, x : A}{\epsilon}{b'}{B + A}}
+    \qquad {\hasty{\Gamma^{\mb{q}_c}, x : A}{}{b'}{B + A}}
   \end{gather*}
   \caption{Iteration rules for \subiterexp{}}
   \Description{}
@@ -3288,7 +3288,10 @@ of primitive rewrites $\mc{R}$ as follows:
   (this is well-defined since, by definition, we quotient precisely the equivalence clases of
   $\tref_{\mc{R}}$)
   \item Identity morphisms $\ms{id}_A := (\lambda x . x)$
-  \item Composition $(\lambda x. a) ; (\lambda y. b) := (\lambda x. \letexpr{y}{a}{b})$
+  \item 
+    Composition $(\lambda x. a) ; (\lambda y. b) := (\lambda x. \letexpr{y}{a}{b})$.
+    We note that, for $a$ \emph{pure}, this reduces to the usual substitution-based definition
+    $(\lambda x. a) ; (\lambda y. b) = (\lambda x . [a/y]b)$.
   \item Tensor products $A \otimes B$ with monoidal unit $\mb{1}$, and tensor functors
   $$
   (\lambda x. a) \otimes A := (\lambda z. \letexpr{(x, y)}{z}{(a, y)})
@@ -3323,11 +3326,21 @@ of primitive rewrites $\mc{R}$ as follows:
   \begin{gather*}
     \iota_l := (\lambda x. \linl{x}) \qquad \iota_r := (\lambda x. \linr{x}) \qquad
     [(\lambda x. a), (\lambda y. b)] := (\lambda z. \caseexpr{z}{x}{a}{y}{b}) \\
-    \delta := (\lambda x. \caseexpr{x}
+    \delta := [- \otimes \iota_l, - \otimes \iota_r] = (\lambda x. \caseexpr{x}
                           {(y_l, y_r)}{(y_l, \linl{y_r})}
                           {(z_l, z_r)}{(z_l, \linr{z_r})}) \\
     \delta^{-1} := (\lambda (x_l, x_r). \caseexpr{x_r}{y}{\linl{(x_l, y)}}{z}{\linr{(x_r, z)}})
   \end{gather*}
+  In particular, this means that we have
+  \begin{align*}
+    (\lambda x . a) ; [(\lambda y . b), (\lambda z . c)]
+      &= (\lambda x . \caseexpr{a}{y}{b}{z}{c})
+      \\
+    (\lambda x . a) + (\lambda y . b) &= (\lambda z. \caseexpr{z}{x}{\linl{a}}{y}{\linr{b}})
+      \\
+    (\lambda x . a) ; (\lambda y . b) + (\lambda z . c)
+      &= (\lambda x . \caseexpr{a}{y}{\linl{b}}{z}{\linr{c}})
+  \end{align*}
   \item Iteration operator
   $
     (\lambda x. a)^\dagger := (\lambda y. \liter{y}{x}{a})
@@ -3415,7 +3428,8 @@ We now verify that:
       (\lambda (z_1, ((z_2, z_3), z_4)) . (z_1, (z_2, (z_3, z_4))))
       \\
       &= (\lambda (((x_1, x_2), x_3), x_4) . 
-        \letexpr{((y_1, y_{23}), y_4)}{((x_1, (x_2, x_3)), x_4)}{(y_1, (y_{23}, y_4))}) ; \\ & \qquad 
+        \letexpr{((y_1, y_{23}), y_4)}{((x_1, (x_2, x_3)), x_4)}{(y_1, (y_{23}, y_4))}) ; 
+        \\ & \qquad 
       (\lambda (z_1, ((z_2, z_3), z_4)) . (z_1, (z_2, (z_3, z_4))))
       \\
       &= (\lambda (((x_1, x_2), x_3), x_4) . ((x_1, (x_2, x_3)), x_4)) ; 
@@ -3424,25 +3438,127 @@ We now verify that:
       \\
       &= \alpha_{A, B, C} \otimes D ; \alpha_{A, B \otimes C, D} ; A \otimes \alpha_{B, C, D}
     \end{align*}
-    \item Triangle equations (\cmark): we have that
-      \begin{align*}
-      ...
-      \end{align*}
-    \item Hexagon equation: \todo{this...}
+    \item Triangle equation (\cmark): we have that
+    \begin{align*}
+      \alpha_{A, \mb{1}, B} ; X \otimes \lambda_B
+      &= (\lambda ((x, y), z) . (x, (y, z))) ; (\lambda (x', y') . y') \\
+      &= (\lambda ((x, y), z) . \letexpr{(x', y')}{(x, (y, z))}{y'}) \\
+      &= (\lambda ((x, y), z) . (y, z)) 
+        = (\lambda (x, y) . y) \otimes B
+        \\
+      &= \rho_A \otimes B
+    \end{align*}
+    \item Hexagon equation: we have that
+    \begin{align*}
+      &\alpha_{A, B, C} ; \sigma_{A, B \otimes C} ; \alpha_{B, C, A} \\
+      &= (\lambda ((x_1, x_2), x_3) . (x_1, (x_2, x_3))) 
+        ; (\lambda (y_1, y_{23}) . (y_{23}, y_1))
+        ; (\lambda ((z_2, z_3), z_1) . (z_2, (z_3, z_1)))
+      \\
+      &= (\lambda ((x_1, x_2), x_3) . ((x_2, x_3), x_1)) 
+        ;  (\lambda ((z_2, z_3), z_1) . (z_2, (z_3, z_1))) 
+      \\
+      &= (\lambda ((x_1, x_2), x_3) . (x_2, (x_3, x_1))) \\
+      &= (\lambda ((x_1, x_2), x_3) . (x_2, (x_1, x_3)))
+        ; (\lambda (z_2, (z_1, z_3)) . (z_2, (z_3, z_1)))
+      \\
+      &= (\lambda ((x_1, x_2), x_3) . ((x_2, x_1), x_3)) 
+        ; (\lambda ((y_2, y_1), y_3) . (y_2, (y_1, y_3)))
+        ; (\lambda (z_2, (z_1, z_3)) . (z_2, (z_3, z_1)))
+      \\
+      &= \sigma_{A, B} \otimes C ; \alpha_{B, A, C} ; B \otimes \sigma_{A, C}
+    \end{align*}
   \end{itemize}
-  \item $\ms{Tm}(\mc{R})$ has chosen coproudcts and an initial object (\cmark):
+  \item $\ms{Tm}_\epsilon(\mc{R})$ has chosen coproudcts and an initial object (\cmark):
   \todo{this...}
-  \item $\ms{Tm}(\mc{R})$ is distributive: \todo{this...}
-  \item $\ms{Tm}(\mc{R})$ is a distributive effectful category: \todo{this...}
-  \item $\ms{Tm}(\mc{R})$ has an iteration operator: \todo{this...}
-  \item $\ms{Tm}(\mc{R})$ is an Elgot category: it suffices to show that our iteration operator
-  satisfies:
+  \item $\ms{Tm}_\epsilon(\mc{R})$ is distributive: we have that
+  \begin{align*}
+    \delta_{X, Y, Z} ; \delta^{-1}_{X, Y, Z}
+    &= [X \otimes \iota_l, X \otimes \iota_r] ; (\lambda (x, w) . 
+      \caseexpr{w}{y}{\linl{(x, y)}}{z}{\linr{(x, z)}}) \\
+    &= [
+      (\lambda (x, y) . (x, \linl{y})) 
+      ; (\lambda (x, w) . \caseexpr{w}{y}{\linl{(x, y)}}{z}{\linr{(x, z)}}), \\ & \quad\;\;
+      (\lambda (x, z) . (x, \linr{z})) 
+      ; (\lambda (x, w) . \caseexpr{w}{y}{\linl{(x, y)}}{z}{\linr{(x, z)}})
+    ] \\
+    &= [
+      (\lambda (x, y) . \caseexpr{\linl{y}}{y}{\linl{(x, y)}}{z}{\linr{(x, z)}}), \\ & \quad\;\;
+      (\lambda (x, z) . \caseexpr{\linr{z}}{y}{\linl{(x, y)}}{z}{\linr{(x, z)}})
+    ] \\
+    &= [
+      (\lambda (x, y) . \linl{(x, y)}),
+      (\lambda (x, z) . \linr{(x, z)})
+    ] = [\iota_l, \iota_r] = \ms{id}_{(X \otimes Y) + (X \otimes Z)}
+  \end{align*}
+  and
+  \begin{align*}
+    \delta^{-1}_{X, Y, Z} ; \delta_{X, Y, Z}
+    &= (\lambda (x, w) .  \caseexpr{w}{y}{\linl{(x, y)}}{z}{\linr{(x, z)}})
+      ; [X \otimes \iota_l, X \otimes \iota_r] \\
+    &= (\lambda (x, w) . \letexpr{w'}{\caseexpr{w}{y}{\linl{(x, y)}}{z}{\linr{(x, z)}}}{ 
+      \\ & \quad\;\;
+      \caseexpr{w'}{(x, y)}{(x, \linl{y})}{(x, z)}{(x, \linr{z})}}) \\
+    &= (\lambda (x, w) . \caseexpr{w}
+      {y}{\caseexpr{\linl{(x, y)}}{(x, y)}{(x, \linl{y})}{(x, z)}{(x, \linr{z})} \\ & \quad\;\;}
+      {z}{\caseexpr{\linr{(x, z)}}{(x, y)}{(x, \linl{y})}{(x, z)}{(x, \linr{z})}}
+    ) \\
+    &= (\lambda (x, w) . \caseexpr{w}{y}{(x, \linl{y})}{z}{(x, \linr{z})}) \\
+    &= (\lambda (x, w) . (x, \caseexpr{w}{y}{\linl{y}}{z}{\linr{z}}))
+    = (\lambda (x, w) . (x, w)) = \ms{id}_{X \otimes (Y + Z)}
+  \end{align*}
+  \item $\ms{Tm}_\epsilon(\mc{R})$ is a distributive effectful category: \todo{this...}
+  \item $\ms{Tm}_\epsilon(\mc{R})$ has an iteration operator: we have that
+  \begin{align*}
+    (\lambda x . a)^\dagger
+    &= (\lambda y . \liter{y}{x}{a}) \\
+    &= (\lambda y . \letexpr{x}{y}{\caseexpr{a}{z}{z}{y}{\liter{y}{x}{a}}}) \\
+    &= (\lambda x . \caseexpr{a}{z}{z}{y}{\liter{y}{x}{a}}) \\
+    &= (\lambda x . \letexpr{w}{a}{\caseexpr{w}{z}{z}{y}{\liter{y}{x}{a}}}) \\
+    &= (\lambda x . a) ; (\lambda w . \caseexpr{w}{z}{z}{y}{\liter{y}{x}{a}}) \\
+    &= (\lambda x . a) ; [(\lambda z.z), (\lambda x.a)^\dagger]
+    = (\lambda x.a) ; [\ms{id}, (\lambda x.a)^\dagger] \\
+  \end{align*}
+  \item $\ms{Tm}_\epsilon(\mc{R})$ is an Elgot category: it suffices to show that our iteration
+  operator satisfies:
   \begin{itemize}
-    \item Naturality: \todo{this}
-    \item Codiagonal: \todo{this}
-    \item Directed Uniformity: \todo{this}
-    \item Dinaturality:
-    We have that:
+    \item Naturality: we have that
+    \begin{align*}
+    ((\lambda x.a) ; (\lambda y.b) + (\lambda z.z))^\dagger 
+    &= (\lambda x.\caseexpr{a}{y}{\linl{b}}{z}{\linr{z}})^\dagger \\
+    &= (\lambda w.\liter{w}{x}{\caseexpr{a}{y}{\linl{b}}{z}{\linr{z}}}) \\
+    &= (\lambda w.\liter{w}{x}{\caseexpr{a}{y}{\linl{b}}{z}{\linr{z}}}) \\
+    &= (\lambda w.\letexpr{y}{\liter{w}{x}{a}}{b}) \\
+    &= (\lambda x.a)^\dagger ; (\lambda y.b)
+    \end{align*} 
+    \item Codiagonal: we have that
+    \begin{align*}
+    ((\lambda x.a)^\dagger)^\dagger
+    &= (\lambda z.\liter{z}{y}{\liter{y}{x}{a}}) \\
+    &= (\lambda z.\liter{z}{x}{\caseexpr{a}{y}{y}{w}{\linr{w}}}) \\
+    &= (\lambda x.\caseexpr{a}{y}{y}{w}{\linr{w}})^\dagger \\
+    &= ((\lambda x.a) ; [(\lambda y.y), (\lambda w.\linr{w})])^\dagger
+      = ((\lambda x.a) ; [\ms{id}, \iota_r])^\dagger
+    \end{align*}
+    \item Directed Uniformity: assume that
+    \begin{align*}
+    (\lambda x . a) ; (\lambda y . b) \cref^p (\lambda y . b') ; \ms{id} + (\lambda x . a)
+    \end{align*}
+    Unfolding both sides of this refinement, we hence have that
+    \begin{align*}
+    (\lambda x . \letexpr{y}{a}{b}) \cref^p
+    (\lambda y . \caseexpr{b'}{z}{\linl{z}}{x}{\linr{a}})
+    \end{align*}
+    We therefore, by \brle{unif$^p$}, have that
+    \begin{align*}
+    (\lambda x . a) ; (\lambda y . b)^\dagger 
+    &= (\lambda x. \liter{a}{y}{b}) 
+     = (\lambda z. \letexpr{x}{z}{\liter{a}{y}{b}})
+    \\
+    &\cref^p (\lambda z. \liter{z}{y}{b'}) = (\lambda y . b')^\dagger
+    \end{align*}
+    as desired.
+    \item Dinaturality: we have that
     \begin{proposition}
       If $(-)^\dagger$ is an iteration operator which satisfies naturality and codiagonal and is
       $\mc{K}$-uniform for $\mc{K}$ cocartesian, then it also satisfies dinaturality.
@@ -3454,6 +3570,22 @@ We now verify that:
     and $\ms{Tm}_\bot(\mc{R})$ is cocartesian, $\ms{Tm}_\epsilon(\mc{R})$ must in fact satisfy
     dinaturality as desired.
   \end{itemize}
+  \item Strength: we have that
+  \begin{align*}
+    &(C \otimes (\lambda z . a) ; \delta^{-1})^\dagger \\
+    &= (\lambda (x, z) . \letexpr{(x', w)}{(x, a)}
+      {\caseexpr{w}{w_l}{\linl{(x', w_l)}}{w_r}{\linr{(x', w_r)}}})^\dagger
+    \\
+    &= (\lambda (x, z) . \caseexpr{a}{w_l}{\linl{(x, w_l)}}{w_r}{\linr{(x, w_r)}})^\dagger
+    \\
+    &= (\lambda v . \liter{v}{(x, z)}{\caseexpr{a}{w_l}{\linl{(x, w_l)}}{w_r}{\linr{(x, w_r)}}})
+    \\
+    &= ... \\
+    &= (\lambda (x, y) . \liter{y}{z}{\caseexpr{a}{w_l}{\linl{(x, w_l)}}{w_r}{\linr{w_r}}}) \\
+    &= (\lambda (x, y) . \letexpr{u}{\liter{y}{z}{a}}{(x, u)}) \\
+    &= (\lambda (x, y) . (x, \liter{y}{z}{a})) \\
+    &= C \otimes (\lambda z . a)^\dagger
+  \end{align*}
 \end{itemize}
 Hence, to show that we have a valid \subiterexp{}-model, it suffices to prove that, given $(x, a) :
 \ms{Tm}_\epsilon(\mc{R})(A, B)$
