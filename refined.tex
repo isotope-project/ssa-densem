@@ -3500,7 +3500,6 @@ We now verify that:
     &= (\lambda w.\letexpr{y}{\liter{w}{x}{a}}{b}) \\
     &= (\lambda x.a)^\dagger ; (\lambda y.b)
     \end{align*} 
-    \TODO{this}
     \item Codiagonal: we have that
     \begin{align*}
     ((\lambda x.a)^\dagger)^\dagger
@@ -3525,7 +3524,7 @@ We now verify that:
     &= (\lambda x. \liter{a}{y}{b}) 
      = (\lambda z. \letexpr{x}{z}{\liter{a}{y}{b}})
     \\
-    &= (\lambda z. \liter{z}{y}{b'}) = (\lambda y . b')^\dagger
+    &\cref^p (\lambda z. \liter{z}{y}{b'}) = (\lambda y . b')^\dagger
     \end{align*}
     as desired.
     \item Dinaturality:
