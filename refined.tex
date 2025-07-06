@@ -3510,7 +3510,24 @@ We now verify that:
     &= ((\lambda x.a) ; [(\lambda y.y), (\lambda w.\linr{w})])^\dagger
       = ((\lambda x.a) ; [\ms{id}, \iota_r])^\dagger
     \end{align*}
-    \item Directed Uniformity: \todo{this}
+    \item Directed Uniformity: assume that
+    \begin{align*}
+    (\lambda x . a) ; (\lambda y . b) \cref^p (\lambda y . b') ; \ms{id} + (\lambda x . a)
+    \end{align*}
+    Unfolding both sides of this refinement, we hence have that
+    \begin{align*}
+    (\lambda x . \letexpr{y}{a}{b}) \cref^p
+    (\lambda y . \caseexpr{b'}{z}{\linl{z}}{x}{\linr{a}})
+    \end{align*}
+    We therefore, by \brle{unif$^p$}, have that
+    \begin{align*}
+    (\lambda x . a) ; (\lambda y . b)^\dagger 
+    &= (\lambda x. \liter{a}{y}{b}) 
+     = (\lambda z. \letexpr{x}{z}{\liter{a}{y}{b}})
+    \\
+    &= (\lambda z. \liter{z}{y}{b'}) = (\lambda y . b')^\dagger
+    \end{align*}
+    as desired.
     \item Dinaturality:
     We have that:
     \begin{proposition}
