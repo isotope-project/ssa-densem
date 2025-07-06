@@ -1421,13 +1421,13 @@ satisfies $\mc{R} \subseteq \ms{Th}(\mc{R})$, making it a closure operator.
       } \\
     \text{where} \qquad {\qsp{\Gamma}{\mb{q}}{\mb{q}_c}{\mb{q}_r}} \qquad
     {\qsp{\Gamma}{\mb{q}_c}{\mb{q}_l}{\mb{q}_m}} \qquad
-    \alquant(\Gamma^{\mb{q}_l}) = \top \qquad
+    \alquant(\Gamma^{\mb{q}_c}) = \top \qquad
     \einf{\epsilon}
     \\
     \qquad {\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A}}
     \qquad {\hasty{\Gamma^{\mb{q}_m}, x : A}{\eta}{s}{S}}
     \qquad {\hasty{\Gamma^{\mb{q}_l}, y : S}{\epsilon}{b}{B + A}}
-    \qquad {\hasty{\Gamma^{\mb{q}_c}, x : A}{\epsilon}{b'}{B + A}}
+    \qquad {\hasty{\Gamma^{\mb{q}_c}, x : A}{}{b'}{B + A}}
   \end{gather*}
   \caption{Iteration rules for \subiterexp{}}
   \Description{}
@@ -3527,8 +3527,7 @@ We now verify that:
     &\cref^p (\lambda z. \liter{z}{y}{b'}) = (\lambda y . b')^\dagger
     \end{align*}
     as desired.
-    \item Dinaturality:
-    We have that:
+    \item Dinaturality: we have that
     \begin{proposition}
       If $(-)^\dagger$ is an iteration operator which satisfies naturality and codiagonal and is
       $\mc{K}$-uniform for $\mc{K}$ cocartesian, then it also satisfies dinaturality.
@@ -3540,7 +3539,22 @@ We now verify that:
     and $\ms{Tm}_\bot(\mc{R})$ is cocartesian, $\ms{Tm}_\epsilon(\mc{R})$ must in fact satisfy
     dinaturality as desired.
   \end{itemize}
-  \item Strength: \todo{this}
+  \item Strength: we have that
+  \begin{align*}
+    &(C \otimes (\lambda z . a) ; \delta^{-1})^\dagger \\
+    &= (\lambda (x, z) . \letexpr{(x', w)}{(x, a)}
+      {\caseexpr{w}{w_l}{\linl{(x', w_l)}}{w_r}{\linr{(x', w_r)}}})^\dagger
+    \\
+    &= (\lambda (x, z) . \caseexpr{a}{w_l}{\linl{(x, w_l)}}{w_r}{\linr{(x, w_r)}})^\dagger
+    \\
+    &= (\lambda v . \liter{v}{(x, z)}{\caseexpr{a}{w_l}{\linl{(x, w_l)}}{w_r}{\linr{(x, w_r)}}})
+    \\
+    &= ... \\
+    &= (\lambda (x, y) . \liter{y}{z}{\caseexpr{a}{w_l}{\linl{(x, w_l)}}{w_r}{\linr{w_r}}}) \\
+    &= (\lambda (x, y) . \letexpr{u}{\liter{y}{z}{a}}{(x, u)}) \\
+    &= (\lambda (x, y) . (x, \liter{y}{z}{a})) \\
+    &= C \otimes (\lambda z . a)^\dagger
+  \end{align*}
 \end{itemize}
 Hence, to show that we have a valid \subiterexp{}-model, it suffices to prove that, given $(x, a) :
 \ms{Tm}_\epsilon(\mc{R})(A, B)$
