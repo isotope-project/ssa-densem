@@ -3028,30 +3028,61 @@ effect is not only eliminable, but also \emph{introducable}, since we do not hav
 
 \section{Discussion and Related Work}
 
-\TODO{talk about \citet{kelsey-95-cps} and \citet{appel-ssa}}
+\textbf{From SSA to FP} SSA was introduced as a compiler IR by
+\citet{alpern-ssa-original-88} and \citet{rosen-gvn-1988}, with the
+goal of simplifying reasoning about variable values. In three address
+code, a variable is mutable and can have a different value at each
+program point, whereas in SSA, each variable has a single abstract
+value, a fact which greatly simplifies optimizations like global value
+numbering. \citet{kelsey-95-cps} demonstrated a correspondence between
+SSA and a fragment of continuation-passing style, and
+\citet{appel-ssa} simplified this further and showed that an SSA
+program can be seen as a group of procedures mutually tail-calling
+each other. When the dominance tree is further made explicit in the
+syntax, we recover lexical scoping, and
+\citet{chakravarty-functional-ssa-2003} used this to show how to
+translate SSA programs into ANF. \citet{ghalayini-24-ssa-densem-arxiv}
+relaxed the ANF restriction to permit compound (pure)
+expressions, which gives a calculus with better substitution
+principles, but which still has explicit block definitions. In this
+work, we take the final step and give a fully expression-oriented
+syntax, which is still completely equivalent to traditional SSA.
 
-\TODO{when the dominance tree is made explicit in the syntax, we recover lexical scoping and in fact
-this corresponds to ANF \citet{chakravarty-functional-ssa-2003}}
+\noindent \textbf{Semantics of SSA} \citet{vellvm-12} is a mechanized semantics for LLVM's SSA dialect.
+Their syntax sticks very closely to LLVM, and so their operational semantics must compute
+$\phi$-nodes at each step, and furthermore they give several such semantics and
+prove refinements between them. Each operational semantics is further parameterized
+over a memory model, and so execution builds a tree of possible executions, resumption-style,
+which can then be made into concrete execution traces with an ``effect handler'' or
+free monad interpreter computing the effect of each memory action. 
 
-\TODO{subset of programs identified by \citet{appel-ssa} corresponds to...}
+\citet{garbuzov-structural-cfg-2018} exhibit a correspondence between
+an operational semantics for both SSA and a fragment of
+call-by-push-value~\cite{cpbv}, and then use the normal form
+bisimulations of \citet{lassen-bisim} to derive an equational theory
+for justifying optimizations.  This work considers nontermination as
+the only effect, and studies equivalence rather than refinement.
 
-\TODO{ 
-  %  
-  \citet{vellvm-12} is a mechanized semantics for LLVM; SSA-based. They give several operational
-  semantics for it. What they do is prove refinements between their semantics. Doing a lot of
-  painful things: operational semantics computes $\phi$-nodes as part of every step. Operational
-  semantics is also parametrized by a memory model (cite Cerberus and CN lore too, also cite
-  itrees). There's natural structure of work there: their operational semantics is morally a set of
-  traces, which we then interpret by the concrete memory model. 
-  %
-  They use the recipe of a resumption monad w/ continuations. We also pick a monad, get the
-  premonoidal category of interest. So the things they wanted to do are natural, and we prove in
-  some sense that it's the only thing that you can do. So what we're doing is in some sense the
-  limit of their approach; completeness says this style completely characterization SSA, so you
-  don't need to prove any fiddly simulation relations, you just need a monad with the right
-  structure. In some sense, this is ``everything that you could need.''
-  %
-}
+\noindent \textbf{Effect Systems and Linearity} \todo{Ohad, lipton, fuhrmann, plotkin-power, etc}
+
+
+% \TODO{ 
+%   %  
+%   \citet{vellvm-12} is a mechanized semantics for LLVM; SSA-based. They give several operational
+%   semantics for it. What they do is prove refinements between their semantics. Doing a lot of
+%   painful things: operational semantics computes $\phi$-nodes as part of every step. Operational
+%   semantics is also parametrized by a memory model (cite Cerberus and CN lore too, also cite
+%   itrees). There's natural structure of work there: their operational semantics is morally a set of
+%   traces, which we then interpret by the concrete memory model. 
+%   %
+%   They use the recipe of a resumption monad w/ continuations. We also pick a monad, get the
+%   premonoidal category of interest. So the things they wanted to do are natural, and we prove in
+%   some sense that it's the only thing that you can do. So what we're doing is in some sense the
+%   limit of their approach; completeness says this style completely characterization SSA, so you
+%   don't need to prove any fiddly simulation relations, you just need a monad with the right
+%   structure. In some sense, this is ``everything that you could need.''
+%   %
+% }
 
 \TODO{\citet{lipton-mover-75} for movers.}
 
