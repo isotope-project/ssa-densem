@@ -3501,7 +3501,15 @@ We now verify that:
     &= (\lambda x.a)^\dagger ; (\lambda y.b)
     \end{align*} 
     \TODO{this}
-    \item Codiagonal: \todo{this}
+    \item Codiagonal: we have that
+    \begin{align*}
+    ((\lambda x.a)^\dagger)^\dagger
+    &= (\lambda z.\liter{z}{y}{\liter{y}{x}{a}}) \\
+    &= (\lambda z.\liter{z}{x}{\caseexpr{a}{y}{y}{w}{\linr{w}}}) \\
+    &= (\lambda x.\caseexpr{a}{y}{y}{w}{\linr{w}})^\dagger \\
+    &= ((\lambda x.a) ; [(\lambda y.y), (\lambda w.\linr{w})])^\dagger
+      = ((\lambda x.a) ; [\ms{id}, \iota_r])^\dagger
+    \end{align*}
     \item Directed Uniformity: \todo{this}
     \item Dinaturality:
     We have that:
