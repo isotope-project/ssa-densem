@@ -891,6 +891,7 @@ particular,
 \end{itemize}
 
 \begin{figure}
+  \begin{adjustbox}{minipage=1.1\textwidth,scale=0.9}
   \begin{gather*}
     \prftree[r]{\rle{var}}
       {\cwk{\Gamma^{\mb{q}}}{x : A^\oneq}}
@@ -947,6 +948,7 @@ particular,
       {\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{b}{B + A}}
       {\hasty{\Gamma^{\mb{q}}}{\epsilon}{\liter{a}{x}{b}}{B}}
   \end{gather*}
+  \end{adjustbox}
   \caption{Typing rules for \subiterexp{}}
   \Description{}
   \label{fig:expr-typing}
@@ -993,6 +995,7 @@ be interpreted as follows:
 \end{itemize}
 
 \begin{figure}
+  \begin{adjustbox}{minipage=1.1\textwidth,scale=0.9}
   \begin{gather*}
     \prftree[r]{\rle{nil}}{\cwk{\Gamma^{\mb{q}}}{\cdot}}
                               {\issubst{\Gamma^{\mb{q}}}{\epsilon}{\cdot}{\cdot}} \qquad 
@@ -1010,6 +1013,7 @@ be interpreted as follows:
       {\issubst{\Gamma^{\mb{q}}}{\epsilon}{\sigma, x \mapsto a}
       {\Delta^{\mb{q}'}, x : A^q}}
   \end{gather*}
+  \end{adjustbox}
   \caption{Substitution rules for \subiterexp{}}
   \Description{}
   \label{fig:expr-subst}
@@ -1197,6 +1201,7 @@ satisfies $\mc{R} \subseteq \ms{Th}(\mc{R})$, making it a closure operator.
 
 
 \begin{figure}
+  \begin{adjustbox}{minipage=1.1\textwidth,scale=0.9}
   \begin{gather*}
     \prftree[r]{\rle{let-op}}
       {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
@@ -1288,12 +1293,14 @@ satisfies $\mc{R} \subseteq \ms{Th}(\mc{R})$, making it a closure operator.
       {\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{b}{B + A}}
       {\tmeq{\Gamma^{\mb{q}}}{\mc{R}}{\liter{a}{x}{b}}{\letexpr{y}{a}{\liter{y}{x}{b}}}{B}}
   \end{gather*}
+  \end{adjustbox}
   \caption{Binding rules for \subiterexp{}}
   \Description{}
   \label{fig:binding-rules}
 \end{figure}
 
 \begin{figure}
+  \begin{adjustbox}{minipage=1.1\textwidth,scale=0.9}
   \begin{gather*}
     \prftree[r]{\rle{term}}
       {\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{\mb{1}}}
@@ -1359,12 +1366,14 @@ satisfies $\mc{R} \subseteq \ms{Th}(\mc{R})$, making it a closure operator.
         \tmlep{\Gamma^{\mb{q}}}{\mc{R}}{\letexpr{x}{a}{b}}{[x/a]b}{B}{p}
       }
   \end{gather*}
+  \end{adjustbox}
   \caption{Reduction rules for \subiterexp{}}
   \Description{}
   \label{fig:reduction-rules}
 \end{figure}
 
 \begin{figure}
+  \begin{adjustbox}{minipage=1.1\textwidth,scale=0.9}
   \begin{gather*}
     \prftree[r]{\rle{iter-$\beta$}}
       {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
@@ -1404,6 +1413,26 @@ satisfies $\mc{R} \subseteq \ms{Th}(\mc{R})$, making it a closure operator.
       {\tmeq
         {\Gamma^{\mb{q}}}{\mc{R}}{\liter{a}{x}{\liter{x}{y}{b}}}
         {\liter{a}{y}{\caseexpr{b}{x}{x}{y}{\linr{y}}}}{B}} \\
+    \prftree[r]{\rle{dist}}
+      {
+      \prfStackPremises
+      {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_c}}
+      {\qsp{\Gamma}{\mb{q}_c}{\mb{q}_m}{\mb{q}_r}}
+      }
+      {\alquant(\Gamma^{\mb{q}_m}) = \top}
+      {\hasty{\Gamma^{\mb{q}_l}}{\epsilon}{a}{A}}
+      {\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{b}{B}}
+      {\hasty{\Gamma^{\mb{q}_m}, y : B}{\epsilon}{c}{C + B}}
+      {
+        % \prfStackPremises
+        % {\Gamma^{\mb{q}} \vdash_{\mc{R}} (a, \liter{b}{y}{c})}
+        % {\approx \liter{(a, b)}{(x, y)}{\caseexpr{c}{z}{\linl{(x, z)}}{w}{\linr{(x, w)}}} 
+        % : A \otimes C}
+        \tmeq{\Gamma^{\mb{q}}}{\mc{R}}
+          {(a, \liter{b}{y}{c})}
+          {\liter{(a, b)}{(x, y)}{\caseexpr{c}{z}{\linl{(x, z)}}{w}{\linr{(x, w)}}}}
+          {A \otimes C}
+      }
   \end{gather*}
   \begin{gather*}
     \prftree[r]{\rle{unif$^p$}}
@@ -1428,7 +1457,8 @@ satisfies $\mc{R} \subseteq \ms{Th}(\mc{R})$, making it a closure operator.
     \qquad {\hasty{\Gamma^{\mb{q}_m}, x : A}{\eta}{s}{S}}
     \qquad {\hasty{\Gamma^{\mb{q}_l}, y : S}{\epsilon}{b}{B + A}}
     \qquad {\hasty{\Gamma^{\mb{q}_c}, x : A}{}{b'}{B + A}}
-  \end{gather*}
+  \end{gather*} 
+  \end{adjustbox}
   \caption{Iteration rules for \subiterexp{}}
   \Description{}
   \label{fig:iteration-rules}
@@ -2062,6 +2092,7 @@ guaranteed to be of affine type), while context splitting duplicates variables u
 and right component contexts (which are guaranteed to be of relevant type).
 
 \begin{figure}
+  \begin{adjustbox}{minipage=1.1\textwidth,scale=0.9}
   \begin{gather*}
     \boxed{\dnt{\cwk{\Gamma^{\mb{q}}}{\Delta^{\mb{q}'}}} 
       : \mc{C}_\bot(\dnt{\Gamma^{\mb{q}}}, \dnt{\Delta^{\mb{q}'}})} \\
@@ -2094,6 +2125,7 @@ and right component contexts (which are guaranteed to be of relevant type).
     \end{cases}\right) 
     ; \sigma^{\ms{mid}}
   \end{gather*}
+  \end{adjustbox}
   \caption{Denotational semantics for structural \subiterexp{} judgements}
   \Description{}
   \label{fig:struct-sem}
@@ -2134,6 +2166,7 @@ property of the semantics: the same term with two different effect typings will 
 denotation.
 
 \begin{figure}
+  \begin{adjustbox}{minipage=1.1\textwidth,scale=0.9}
   \begin{gather*}
     \boxed{\dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}} 
       : \mc{C}_\epsilon(\dnt{\Gamma^{\mb{q}}}, \dnt{A})} \\
@@ -2201,6 +2234,7 @@ denotation.
     ; \dnt{\cwk{\Gamma^{\mb{q}_l}}{\cdot}} \otimes \dnt{B}
     ; \rho
   \end{align*}
+  \end{adjustbox}
   \caption{Denotational semantics for \subiterexp{} expressions}
   \Description{}
   \label{fig:expr-densem}
@@ -2229,6 +2263,7 @@ soundness of substitution in the following manner, which is standard except that
 of the substitution. 
 
 \begin{figure}
+  \begin{adjustbox}{minipage=1.1\textwidth,scale=0.9}
   \begin{gather*}
     \boxed{\dnt{\issubst{\Gamma^{\mb{q}}}{\epsilon}{\sigma}{\Delta^{\mb{q}'}}}
       : \mc{C}_\epsilon(\dnt{\Gamma^{\mb{q}}}, \dnt{\Delta^{\mb{q}'}})} \\
@@ -2244,6 +2279,7 @@ of the substitution.
       ; \lambda^{-1} \text{ otherwise}
     \end{cases}
   \end{gather*}
+  \end{adjustbox}
   \caption{Semantics of \subiterexp{} substitutions}
   \Description{}
   \label{fig:subst-den}
@@ -2506,25 +2542,28 @@ With this, we give typing rules for \isotopessa{}, which we do in Figure~\ref{fi
 \end{figure}
 
 \begin{figure}
-\begin{gather*}
-  \prftree[r]{\rle{nil}}{\lwk{\Gamma}{\cdot}{\cdot}} \qquad 
-  \prftree[r]{\rle{cons}}
-    {\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{K}^{\mb{Q}}}}
-    {\cwk{\Gamma^{\mb{q}'}}{\Gamma^{\mb{q}}}}
-    {\lwk{\Gamma}{\ms{L}^{\mb{Q}}, \lhyp{\ell}{A}^{\mb{q}}}
-    {\ms{K}^{\mb{Q}}, \lhyp{\ell}{A}^{\mb{q}'}}} \qquad
-  \prftree[r]{\rle{skip}}
-    {\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{K}^{\mb{Q}}}}
-    {|\Gamma| = |\mb{q}|}
-    {\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{K}^{\mb{Q}}, \lhyp{\ell}{A}^{\mb{q}}}}
-\end{gather*}
-\caption{Rules for weakening label contexts}
-\Description{}
-\label{fig:label-wk}
+  \begin{adjustbox}{minipage=1.1\textwidth,scale=0.9}
+  \begin{gather*}
+    \prftree[r]{\rle{nil}}{\lwk{\Gamma}{\cdot}{\cdot}} \qquad 
+    \prftree[r]{\rle{cons}}
+      {\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{K}^{\mb{Q}}}}
+      {\cwk{\Gamma^{\mb{q}'}}{\Gamma^{\mb{q}}}}
+      {\lwk{\Gamma}{\ms{L}^{\mb{Q}}, \lhyp{\ell}{A}^{\mb{q}}}
+      {\ms{K}^{\mb{Q}}, \lhyp{\ell}{A}^{\mb{q}'}}} \qquad
+    \prftree[r]{\rle{skip}}
+      {\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{K}^{\mb{Q}}}}
+      {|\Gamma| = |\mb{q}|}
+      {\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{K}^{\mb{Q}}, \lhyp{\ell}{A}^{\mb{q}}}}
+  \end{gather*}
+  \end{adjustbox}
+  \caption{Rules for weakening label contexts}
+  \Description{}
+  \label{fig:label-wk}
 \end{figure}
 
 
 \begin{figure}
+  \begin{adjustbox}{minipage=1.1\textwidth,scale=0.9}
   \begin{gather*}
     \prftree[r]{\rle{br}}
       {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
@@ -2575,6 +2614,7 @@ With this, we give typing rules for \isotopessa{}, which we do in Figure~\ref{fi
     {\haslb{\Gamma^{\mb{q}}}{\epsilon}{\cwhere{\kappa}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
       {\ms{L}^{\mb{Q}}}}
   \end{gather*}
+  \end{adjustbox}
   \caption{Typing rules for \isotopessa{}}
   \Description{}
   \label{fig:ssa-typing}
@@ -2631,6 +2671,7 @@ We can now give our semantics for regions in Figure~\ref{fig:ssa-densem}
 \end{itemize}
 
 \begin{figure}
+  \begin{adjustbox}{minipage=1.1\textwidth,scale=0.9}
   \begin{gather*}
     \boxed{\dnt{\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{K}^{\mb{Q}'}}} 
       : \mc{C}_\bot(\dnt{\ltoty{\Gamma}{\ms{L}^{\mb{Q}}}}, 
@@ -2646,12 +2687,14 @@ We can now give our semantics for regions in Figure~\ref{fig:ssa-densem}
       {\ms{K}^{\mb{Q}'}, \lhyp{\ell}{A}^{\mb{q}}}}
     = \dnt{\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{K}^{\mb{Q}'}}} ; \iota_l
   \end{gather*}
+  \end{adjustbox}
   \caption{Denotational semantics for label contexts and label weakenings}
   \Description{}
   \label{fig:lwk-densem}
 \end{figure}
 
 \begin{figure}
+  \begin{adjustbox}{minipage=1.1\textwidth,scale=0.9}
   \begin{gather*}
     \boxed{\dnt{\haslb{\Gamma}{\epsilon}{t}{\ms{L}^{\mb{Q}}}}
     : \mc{C}_\epsilon(\dnt{\Gamma^{\mb{q}}}, \ltoty{\Gamma}{\dnt{\ms{L}^{\mb{Q}}}})} \\
@@ -2725,6 +2768,7 @@ We can now give our semantics for regions in Figure~\ref{fig:ssa-densem}
       ]_{\ell_i(A_i)^{\mb{q}_i} \in \ms{R}^{\mb{Q}'}}^\dagger
     ]
   \end{gather*}
+  \end{adjustbox}
   \caption{Denotational semantics for \isotopessa{}}
   \Description{}
   \label{fig:ssa-densem}
@@ -2864,6 +2908,7 @@ Figure~\ref{fig:ub-rewrites}.
 \end{figure}
 
 \begin{figure}
+  \begin{adjustbox}{minipage=1.1\textwidth,scale=0.9}
   \begin{gather*}
     \prftree[r]{\rle{ub-then}}
       {\hasty{\Gamma, x : A}{\epsilon}{b}{B}}
@@ -2878,6 +2923,7 @@ Figure~\ref{fig:ub-rewrites}.
       {\hasty{\Gamma, y : B}{\epsilon}{c}{C}}
       {\tmeq{\Gamma}{}{\caseexpr{a}{x}{\ubeff}{y}{c}}{\letexpr{y}{\rho_r\;a}{c}}{C}}
   \end{gather*}
+  \end{adjustbox}
   \caption{
     Some of the usual rewrite rules for undefined behavior.
   }
@@ -2919,6 +2965,7 @@ This model of heaps is also rich enough
 to build a simple, high-level model implementing \emph{separation logic}, given in Appendix~\ref{apx:sep}.
 
 \begin{figure}
+  \begin{adjustbox}{minipage=1.1\textwidth,scale=0.9}
   \begin{gather*}
     \prftree[r]{\rle{st-ld}}
       {\hasty{\Gamma}{\bot}{p}{\nats}}
@@ -2954,6 +3001,7 @@ to build a simple, high-level model implementing \emph{separation logic}, given 
       {\tmeq{\Gamma}{}{\ms{st}\;(p, a) ; \ms{rm}\;p}{\ms{rm}\;p}{\mb{1}}}
     \\
   \end{gather*}
+  \end{adjustbox}
   \caption{Some properties of heaps}
   \label{fig:heap-eqns}
   \Description{}
@@ -2998,6 +3046,7 @@ model given above. Both the read and write effects are duplicable in this model,
 effect is not only eliminable, but also \emph{introducable}, since we do not have UB.
 
 \begin{figure}
+  \begin{adjustbox}{minipage=1.1\textwidth,scale=0.9}
   \begin{gather*}
     \prftree[r]{\rle{st-ld}}
       {\hasty{\Gamma}{\bot}{p}{\nats}}
@@ -3021,6 +3070,7 @@ effect is not only eliminable, but also \emph{introducable}, since we do not hav
       {\hasty{\Gamma}{\bot}{a}{\nats}}
       {\tmle{\Gamma}{}{\letexpr{x}{\ms{ld}\;p}{\ms{st}\;p\;(x + a) ; x}}{\ms{faa}\;(p, a)}{\nats}}
   \end{gather*}
+  \end{adjustbox}
   \caption{Some refinements valid in the release-acquire \subiterexp{}-model.}
   \label{fig:weak-refinements}
   \Description{}
@@ -3156,6 +3206,7 @@ We extend pattern binding to other binding forms, for $P \notin \ms{Var}$, in th
 \end{align*}
 
 \begin{figure}
+  \begin{adjustbox}{minipage=1.1\textwidth,scale=0.9}
   \begin{gather*}
     \prftree[r]{\rle{var}}
       {\cwk{\Gamma^{\mb{q}}}{x : A^q_\epsilon}}
@@ -3210,12 +3261,14 @@ We extend pattern binding to other binding forms, for $P \notin \ms{Var}$, in th
       {\tmle{\Gamma^{\mb{q}_l}, x : A}{\mc{R}}{b}{b'}{B + A}}
       {\tmle{\Gamma^{\mb{q}}}{\mc{R}}{\liter{a}{x}{b}}{\liter{a'}{x}{b'}}{B}}
   \end{gather*}
+  \end{adjustbox}
   \caption{\subiterexp{} congruence rules}
   \Description{}
   \label{fig:congruence-refinement}
 \end{figure}
 
 \begin{figure}
+  \begin{adjustbox}{minipage=1.1\textwidth,scale=0.9}
   \begin{gather*}
     \prftree[r]{\rle{op-bind}}
       {f : A \to B}
@@ -3254,6 +3307,7 @@ We extend pattern binding to other binding forms, for $P \notin \ms{Var}$, in th
       {\tmeq{\Gamma^{\mb{q}}}{\mc{R}}{\labort{a}}{\letexpr{x}{a}{\labort{x}}}{C}} 
       \\
   \end{gather*}
+  \end{adjustbox}
   \caption{Derivable binding rules for \subiterexp{}}
   \Description{}
   \label{fig:derivable-binding}
