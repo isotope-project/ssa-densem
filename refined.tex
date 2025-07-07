@@ -3413,8 +3413,9 @@ our denotational semantics.
 
 \label{apx:syn-model}
 
-We define the syntactic category of \subiterexp{}-models of a signature $\mc{S}$ quotiented by a set
-of primitive rewrites $\mc{R}$ as follows:
+
+We begin by defining the syntactic category $\ms{Tm}(\mc{R})$ of \subiterexp{}-models of a signature
+$\mc{S}$ quotiented by a set of primitive rewrites $\mc{R}$ as follows:
 \begin{itemize}
   \item Objects types $A, B, C \in \ms{Ty}(\mc{X})$
   \item Morphisms $\ms{Tm}_\epsilon(A, B) := \{(x, a) \mid \hasty{x : A}{\epsilon}{a}{B}\} /
@@ -3491,7 +3492,11 @@ of primitive rewrites $\mc{R}$ as follows:
   \item Discard and diagonal morphisms $!_A := (\lambda x. ())$ and $\Delta_A := (\lambda x. (x,
   x))$
 \end{itemize}
-
+We aim to prove the following lemma:
+\begin{lemma}
+  $\ms{Tm}(\mc{R})$ is a \subiterexp{}-model.
+\end{lemma}
+\begin{proof}
 We begin by noting that
 \begin{gather*}
   (\lambda x . a) ; (\lambda P . b) = (\lambda x . \letexpr{P}{a}{b})
@@ -3757,8 +3762,7 @@ Hence, to show that we have a valid \subiterexp{}-model, it suffices to prove th
   \item If $0 \leq \alquant^p(\epsilon)$ and $A$ relevant, $B$ affine, \todo{this}
   \item If $\omega^+ \leq \alquant^p(\epsilon)$ and $A, B$ relevant, \todo{this}
 \end{itemize}
-
-\TODO{this is indeed a model; partial Lean 4 formalization of this fact, rest goes here}
+\end{proof}
 
 \subsection{Packing and Unpacking}
 
