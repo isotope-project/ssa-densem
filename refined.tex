@@ -227,6 +227,7 @@
 \newcommand{\obind}{\mathbin{>\!\!>\mkern-6.7mu=}}
 \newcommand{\mbind}[3]{#2 \obind_{#1} #3}
 \newcommand{\tret}[2]{#1 \therefore #2}
+\newcommand{\letarr}[2]{\ms{let}\;#1\;\ms{in}\;#2}
 
 % Truth tables
 \newcommand{\cmark}{\ding{51}}%
@@ -3914,19 +3915,86 @@ To show completeness, it hence suffices to prove the following lemma:
   \end{equation*}
 \end{lemma}
 \begin{proof}
-  \;\TODO{define ``let arrow''}
-  \TODO{let-arrow associativity}
-  \TODO{let-arrow of tensors}
-  \TODO{let-arrow of units}
-  \TODO{let-arrow of variables}
-  \TODO{let-arrow of splits}
-  \TODO{let-arrow of pairs}
-  \TODO{let-arrow of unary and binary bindings}
-  \TODO{let-arrow of coproducts}
-  \TODO{let-arrow of cases}
-  \TODO{let-arrow of injections}
-  \TODO{let-arrow of abort}
-  \TODO{let-arrow of iteration}
+  Throughout this proof, given morphism $f \in \ms{Tm}(\mc{R})(A, B)$, we will use $f(x)$ as a
+  stand-in for an arbitrary member of the appropriate equivalence class. We note that (for arbitrary
+  types)
+  \begin{equation*}
+  \letexpr{x}{a}{(f ; g)(x)} \approx \letexpr{y}{(\letexpr{x}{a}{f(x)})}{g(y)}
+  \end{equation*}
+  We begin by noting that
+  \begin{equation*}
+    \dnt{\cwk{\Gamma^{\mb{q}}}{\cdot}} \approx \lambda x. ()
+  \end{equation*}
+  which we do by a straightforward induction on the derivation $\cwk{\Gamma^{\mb{q}}}{\cdot}$:
+  \begin{itemize}
+    \item \todo{this}
+    \item \todo{that}
+  \end{itemize}
+  It follows immediately that
+  \begin{equation*}
+  \Gamma^{\mb{q}} \vdash_\bot 
+    \letexpr{x}{\ms{pack}(\Gamma^{\mb{q}})}{\dnt{\cwk{\Gamma^{\mb{q}}}{\cdot}}(x)}
+    \approx \letexpr{x}{\ms{pack}(\Gamma^{\mb{q}})}{()}
+    \approx ()
+    : \mb{1}
+  \end{equation*}
+  We may therefore show that
+  \begin{equation*}
+  \Gamma^{\mb{q}} \vdash_\bot 
+    \letexpr{x}{\ms{pack}(\Gamma^{\mb{q}})}{\dnt{\cwk{\Gamma^{\mb{q}}}{y : A^1}}(x)}
+    \approx ((), y))
+    : [y : A^1]
+  \end{equation*}
+  We proceed by induction on the derivation $\cwk{\Gamma^{\mb{q}}}{y : A^1}$:
+  \begin{itemize}
+    \item \todo{this}
+    \item \todo{that}
+  \end{itemize}
+  Similarly, we have that
+  \begin{equation*}
+  \Gamma^{\mb{q}} \vdash_\bot 
+    \letexpr{x}{\ms{pack}(\Gamma^{\mb{q}})}{\dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q_r}}}(x)}
+    \approx (\ms{pack}(\Gamma^{\mb{q}_l}), \ms{pack}(\Gamma^{\mb{q}_r}))
+    : [\Gamma^{\mb{q}_l}] \otimes [\Gamma^{\mb{q}_r}]
+  \end{equation*}
+  We proceed by induction on the derivation $\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q_r}}$:
+  \begin{itemize}
+    \item $(\qsp{\cdot}{\cdot}{\cdot}{\cdot})$: we have that
+    \begin{align*}
+      \cdot &\vdash_\bot 
+        \letexpr{x}{\ms{pack}(\cdot)}{\dnt{\qsp{\cdot}{\cdot}{\cdot}{\cdot}}(x)} 
+        \approx \letexpr{x}{()}{\rho^{-1}(x)} \\
+        &\approx \letexpr{x}{()}{(x, ())}
+        \approx ((), ())
+        \approx (\ms{pack}(\cdot), \ms{pack}(\cdot))
+    \end{align*}
+    as desired.
+    \item $(\qsp{\Gamma, x : A}{\mb{q}, q}{q}{0})$: 
+    \TODO{left strike}
+    \item $(\qsp{\Gamma, x : A}{\mb{q}, q}{0}{q})$:  
+    \TODO{right strike}
+    \item $(\qsp{\Gamma, x : A}{\mb{q}, q}{q}{q})$:  
+    \TODO{split strike}
+  \end{itemize}
+  
+
+  We now wish to show that, given $f \in \ms{Tm}(\mc{R})(A, B)$,
+  \begin{equation*}
+    \tmeq{\Gamma^{\mb{q}}}{\mc{R
+    }}{\letexpr{x}{\ms{pack}(\Gamma^{\mb{q}})}
+                  {\dnt{\hasty{\Gamma^{\mb{q}}}{}{a}{A}}_{\ms{Tm}(\mc{R})}(x)}}{a}{A}
+  \end{equation*}
+  We proceed by induction on the derivation $\hasty{\Gamma^{\mb{q}}}{}{a}{A}$:
+  \begin{itemize}
+    \item $(\hasty{\Gamma^{\mb{q}}}{}{x}{A})$:
+    \item $(\hasty{\Gamma^{\mb{q}}}{}{\letexpr{x}{a}{b}}{B})$:
+    \item $(\hasty{\Gamma^{\mb{q}}}{}{()}{\mb{1}})$:
+    \item $(\hasty{\Gamma^{\mb{q}}}{}{(a, b)}{A \otimes B})$:
+    \item $(\hasty{\Gamma^{\mb{q}}}{}{\letexpr{(x, y)}{a}{c}}{C})$:
+    \item $(\hasty{\Gamma^{\mb{q}}}{}{\caseexpr{e}{x}{a}{y}{b}}{C})$:
+    \item $(\hasty{\Gamma^{\mb{q}}}{}{\labort{a}}{A})$:
+    \item $(\hasty{\Gamma^{\mb{q}}}{}{\liter{a}{x}{b}}{B})$:
+  \end{itemize}
 \end{proof}
 Completeness follows directly from the above lemma, since, given 
 \begin{align*}
