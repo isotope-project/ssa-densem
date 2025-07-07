@@ -1469,7 +1469,7 @@ satisfies $\mc{R} \subseteq \ms{Th}(\mc{R})$, making it a closure operator.
     \\
     \qquad {\hasty{\Gamma^{\mb{q}_c}, x : A}{\eta}{s}{S}}
     \qquad {\hasty{\Gamma^{\mb{q}_l}, y : S}{\epsilon}{b}{C + A}}
-    \qquad {\hasty{\Gamma^{\mb{q}_l}, x : A}{}{b'}{B + S}}
+    \qquad {\hasty{\Gamma^{\mb{q}_l}, x : A}{}{b'}{B + A}}
     \qquad {\hasty{\Gamma^{\mb{q}_c}, z : B}{}{c}{C}}
   \end{gather*} 
   \end{adjustbox}
@@ -3240,7 +3240,31 @@ derivable from the rest of \subiterexp{}'s refinement rules. We give these expli
 Figure~\ref{fig:derivable-binding}, along with the $\eta$-rule for unary let-bindings, which is
 similarly derived from \brle{let$_1$-$\beta$}. We note the commutativity requirement for
 \brle{pair-right-bind}, since on the left-hand side $a$ executes before $b$, while on the right-hand
-side $b$ executes before $a$, hence the requirement that their effects commute.
+side $b$ executes before $a$, hence the requirement that their effects commute. We can also derive a
+simplified rule for uniformity, given below, by simply choosing $q_l = q_c$ and $c = z$ in
+\brle{unif$^p$}:
+  \begin{gather*}
+    \prftree[r]{\rle{simp-unif$^p$}}
+      {\eta \rightmove \epsilon}
+      {\tmlep{\Gamma^{\mb{q}_l}, x : A}{\mc{R}}
+        {\letexpr{y}{s}{b}}
+        {\caseexpr{b'}{x}{\linl{x}}{x}{\linr{s}}}{B + S}{p}}
+      {
+        \tmlep{\Gamma^{\mb{q}}}
+          {\mc{R}}
+          {\letexpr{x}{a}{\liter{s}{y}{b}}}
+          {\liter{a}{x}{b'}}
+          {B}
+          {p}
+      } \\
+    \text{where} \qquad {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}} \qquad
+    \alquant(\Gamma^{\mb{q}_l}) = \top \qquad
+    \einf{\epsilon} \qquad {\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A}}
+    \\
+    \qquad {\hasty{\Gamma^{\mb{q}_l}, x : A}{\eta}{s}{S}}
+    \qquad {\hasty{\Gamma^{\mb{q}_l}, y : S}{\epsilon}{b}{B + A}}
+    \qquad {\hasty{\Gamma^{\mb{q}_l}, x : A}{}{b'}{B + A}}
+  \end{gather*}
 
 We define \emph{pattern binding} $\letexpr{P}{a}{b}$ of patterns $P ::= x \mid (P, P')$ inductively
 as follows (with bindings of variables $x$ and pairs $(x, y)$ defined as normally):
