@@ -3715,8 +3715,13 @@ We now verify that:
   \end{itemize}
   \item Strength: fix $\hasty{z : A}{}{a}{B + A}$. We have that
   \begin{align*}
-    x : C, z : A \vdash_{\mc{R}} a \approx 
+    x : C, y : A &
+      \vdash_{\mc{R}} 
+      \letexpr{(x, z)}{(x, y)}{\caseexpr{a}{w_l}{\linl{(x, w_l)}}{w_r}{\linr{(x, w_r)}}} \\
+      &\approx \caseexpr{(\letexpr{z}{y}{a})}{w_l}{\linl{(x, w_l)}}{w_r}{\linr{(x, w_r)}} \\
+      &\approx \caseexpr{(\letexpr{z}{y}{a})}{w_l}{\linl{(x, w_l)}}{y}{\linr{(x, y)}}
   \end{align*}
+  Hence, by uniformity, as $(v_l, v_r')$ is pure, we have
   \begin{align*}
     &(C \otimes (\lambda z . a) ; \delta^{-1})^\dagger \\
     &= (\lambda (x, z) . \letexpr{(x', w)}{(x, a)}
@@ -3726,10 +3731,9 @@ We now verify that:
     \\
     &= (\lambda v . \liter{v}{(x, z)}{\caseexpr{a}{w_l}{\linl{(x, w_l)}}{w_r}{\linr{(x, w_r)}}})
     \\
-    &= (\lambda (v_l, v_r) . \letexpr{v}{(v_l, v_r)}{\liter{v}{(x, z)}{\caseexpr{a}{w_l}
-      {\linl{(x, w_l)}}{w_r}{\linr{(x, w_r)}}}})
-    \\
-    &= ... \\
+    &= (\lambda (x, y) . \letexpr{y}{y}{\liter{(x, y)}{(x, z)}{\caseexpr{a}{w_l}
+      {\linl{(x, w_l)}}{w_r}{\linr{(x, w_r)}}}}) \\
+    &= (\lambda (x, y) . \letexpr{w}{\liter{y}{y}{\letexpr{z}{y}{a}}}{(x, w)}) \\
     &= (\lambda (x, y) . \letexpr{w}{\liter{y}{z}{a}}{(x, w)}) \\
     &= (\lambda (x, y) . (x, \liter{y}{z}{a})) \\
     &= C \otimes (\lambda z . a)^\dagger
