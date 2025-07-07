@@ -3885,8 +3885,48 @@ We prove that packing and unpacking are mutually inverse up to $\approx$ by indu
 \begin{proof}
   \;\TODO{suffering, absolute duhkha right here}
 \end{proof}
-\TODO{now, to show completeness, we need to show that packing and densem is the identity...}
-\TODO{because then unpacking gives us the strike rune!}
+To show completeness, it hence suffices to prove the following lemma:
+\begin{lemma}
+  Given $\hasty{\Gamma^{\mb{q}}}{}{a}{A}$, we have that, for all $(\lambda x. a_x) \in
+  \dnt{\hasty{\Gamma^{\mb{q}}}{}{a}{A}}_{\ms{Tm}(\mc{R})}$,
+  \begin{equation*}
+    \tmeq{\Gamma^{\mb{q}}}{\mc{R
+    }}{\letexpr{x}{\ms{pack}(\Gamma^{\mb{q}})}{a_x}}{a}{A}
+  \end{equation*}
+\end{lemma}
+\begin{proof}
+  \;\TODO{define ``let arrow''}
+  \TODO{let-arrow associativity}
+  \TODO{let-arrow of tensors}
+  \TODO{let-arrow of units}
+  \TODO{let-arrow of variables}
+  \TODO{let-arrow of splits}
+  \TODO{let-arrow of pairs}
+  \TODO{let-arrow of unary and binary bindings}
+  \TODO{let-arrow of coproducts}
+  \TODO{let-arrow of cases}
+  \TODO{let-arrow of injections}
+  \TODO{let-arrow of abort}
+  \TODO{let-arrow of iteration}
+\end{proof}
+Completeness follows directly from the above lemma, since, given 
+\begin{align*}
+  &\dnt{\hasty{\Gamma^{\mb{q}}}{}{a}{A}}_{\ms{Tm}(\mc{R})} \tref 
+  \dnt{\hasty{\Gamma^{\mb{q}}}{}{b}{A}}_{\ms{Tm}(\mc{R})} \\
+  &\implies
+  \forall (\lambda x. a_x) \in \dnt{\hasty{\Gamma^{\mb{q}}}{}{a}{A}}_{\ms{Tm}(\mc{R})},
+  (\lambda x. b_x) \in \dnt{\hasty{\Gamma^{\mb{q}}}{}{b}{A}}_{\ms{Tm}(\mc{R})} . 
+  \tmle{x : [\Gamma^{\mb{q}}]}{\mc{R}}{a_x}{b_x}{A} \\
+  &\implies \tmle{\Gamma^{\mb{q}}}{\mc{R}}
+    {\letexpr{x}{\ms{pack}(\Gamma^{\mb{q}})}{a_x}}
+    {\letexpr{x}{\ms{pack}(\Gamma^{\mb{q}})}{b_x}}
+    {A} \\
+  &\implies \tmle{\Gamma^{\mb{q}}}{\mc{R}}
+    {a}
+    {b}
+    {A}
+\end{align*}
+as desired.
 
 \section{Model Category}
 
