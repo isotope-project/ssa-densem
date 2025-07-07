@@ -3742,7 +3742,17 @@ We now verify that:
 Hence, to show that we have a valid \subiterexp{}-model, it suffices to prove that, given $(x, a) :
 \ms{Tm}_\epsilon(\mc{R})(A, B)$
 \begin{itemize}
-  \item If $A$ is relevant \todo{this}
+  \item If $A$ is relevant,
+  \begin{align*}
+  \Delta_A ; \Delta_A \otimes A ; \alpha
+  &= (\lambda x. (x, x)) 
+    ; (\lambda (y, z) . ((y, y), z) 
+    ; (\lambda ((w_1, w_2), w_3) . (w_1, (w_2, w_3))) \\
+  &= (\lambda x. ((x, x), x)) ; (\lambda ((w_1, w_2), w_3) . (w_1, (w_2, w_3))) \\
+  &= (\lambda x. (x, (x, x))) = (\lambda x. (x, x)) ; (\lambda (y, z) . (y, (z, z))) \\
+  &= \Delta_A ; A \otimes \Delta_A
+  \end{align*}
+  as desired
   \item If $0 \leq \alquant^p(\epsilon)$ and $A, B$ affine, \todo{this}
   \item If $0 \leq \alquant^p(\epsilon)$ and $A$ relevant, $B$ affine, \todo{this}
   \item If $\omega^+ \leq \alquant^p(\epsilon)$ and $A, B$ relevant, \todo{this}
