@@ -3713,7 +3713,10 @@ We now verify that:
     and $\ms{Tm}_\bot(\mc{R})$ is cocartesian, $\ms{Tm}_\epsilon(\mc{R})$ must in fact satisfy
     dinaturality as desired.
   \end{itemize}
-  \item Strength: we have that
+  \item Strength: fix $\hasty{z : A}{}{a}{B + A}$. We have that
+  \begin{align*}
+    x : C, z : A \vdash_{\mc{R}} a \approx 
+  \end{align*}
   \begin{align*}
     &(C \otimes (\lambda z . a) ; \delta^{-1})^\dagger \\
     &= (\lambda (x, z) . \letexpr{(x', w)}{(x, a)}
@@ -3723,9 +3726,11 @@ We now verify that:
     \\
     &= (\lambda v . \liter{v}{(x, z)}{\caseexpr{a}{w_l}{\linl{(x, w_l)}}{w_r}{\linr{(x, w_r)}}})
     \\
+    &= (\lambda (v_l, v_r) . \letexpr{v}{(v_l, v_r)}{\liter{v}{(x, z)}{\caseexpr{a}{w_l}
+      {\linl{(x, w_l)}}{w_r}{\linr{(x, w_r)}}}})
+    \\
     &= ... \\
-    &= (\lambda (x, y) . \liter{y}{z}{\caseexpr{a}{w_l}{\linl{(x, w_l)}}{w_r}{\linr{w_r}}}) \\
-    &= (\lambda (x, y) . \letexpr{u}{\liter{y}{z}{a}}{(x, u)}) \\
+    &= (\lambda (x, y) . \letexpr{w}{\liter{y}{z}{a}}{(x, w)}) \\
     &= (\lambda (x, y) . (x, \liter{y}{z}{a})) \\
     &= C \otimes (\lambda z . a)^\dagger
   \end{align*}
