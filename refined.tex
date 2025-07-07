@@ -273,7 +273,17 @@
 \orcid{0000-0003-2838-5865}
 
 \begin{abstract}
-  In this paper, we give a type-theoretic presentation of static single assignment (SSA) form, the dominant compiler intermediate representation. Our type theory is very rich one, with substructural types and an effect system, which enables us to give a syntactic presentation of refinement for SSA programs which validates the effect-dependent program transformations that compilers depend upon. We are also able to give a categorical semantics for our calculus, and we prove our calculus both sound and complete with respect to the categorical axiomatization. Completeness ensures that there are no missing refinements from our calculus, which lets compiler writers validate optimizations in a model-free way. On the other side, the fact that our axiomatization is sound gives us a syntax-free way of verifying that complex combinations of features such as undefined behaviour, nondeterminism, and weak memory still validate the program transformations compilers rely upon. 
+  In this paper, we give a type-theoretic presentation of static single assignment (SSA) form, the
+  dominant compiler intermediate representation. Our type theory is very rich one, with
+  substructural types and an effect system, which enables us to give a syntactic presentation of
+  refinement for SSA programs which validates the effect-dependent program transformations that
+  compilers depend upon. We are also able to give a categorical semantics for our calculus, and we
+  prove our calculus both sound and complete with respect to the categorical axiomatization.
+  Completeness ensures that there are no missing refinements from our calculus, which lets compiler
+  writers validate optimizations in a model-free way. On the other side, the fact that our
+  axiomatization is sound gives us a syntax-free way of verifying that complex combinations of
+  features such as undefined behaviour, nondeterminism, and weak memory still validate the program
+  transformations compilers rely upon. 
 \end{abstract}
 
 \begin{CCSXML}
@@ -2884,10 +2894,10 @@ we simply pick a representative
 $
   (x, a) \in 
   \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{r}{\ms{L}^{\mb{Q}}}}_{\ms{Th(\cdot)}}
-$. Since $\dnt{\Gamma^{\mb{q}}}_{\ms{Th}(\cdot)} = \etoty{\Gamma^{\mb{q}}}$, we may take
+$. Since $\dnt{\Gamma^{\mb{q}}}_{\ms{Th}(\cdot)} = \etoty{\Gamma^{\mb{q}}}$, we may simply define
 $
 \ms{Expr}(\haslb{\Gamma^{\mb{q}}}{\epsilon}{r}{\ms{L}^{\mb{Q}}}) := 
-  \letexpr{[x_1,...,x_n]}{x}{a}
+  \letexpr{\Gamma}{x}{a}
 $
 where the unpacking of a value $c : \etoty{\Gamma^{\mb{q}}}$ is defined in the obvious recursive
 manner (see Appendix~\ref{apx:packing} for details). 
@@ -3235,6 +3245,27 @@ with some useful lemmas and notational conventions:
   having the zero quantity $\zeroq$. In particular, we note that $\qsp{\Gamma}{\mb{q}}{0}{\mb{q}}$
   and $\qsp{\Gamma}{\mb{q}}{0}{\mb{q}}$ are always derivable.
 \end{itemize}
+Recall that we define $a ; b := \letexpr{x}{a}{b}$ for $x \notin \ms{fv}(b)$. The following typing
+rule is hence trivially derivable:
+\begin{equation*}
+  \prftree[r]{\rle{seq}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\hasty{\Gamma^{\mb{q}_l}}{\epsilon}{a}{A}}
+    {\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{b}{B}}
+    {\hasty{\Gamma^{\mb{q}}}{\epsilon}{a ; b}{B}}
+\end{equation*}
+We can easily convince ourselves that this satisfies some of the basic properties of sequencing; for
+example, we have
+\begin{equation*}
+  \prftree[r]{\rle{seq-assoc}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_c}}
+    {\qsp{\Gamma}{\mb{q}_c}{\mb{q}_r}{\mb{q}_m}}
+    {\hasty{\Gamma^{\mb{q}_l}}{\epsilon}{a}{A}}
+    {\hasty{\Gamma^{\mb{q}_m}}{\epsilon}{b}{B}}
+    {\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{c}{C}}
+    {\tmeq{\Gamma^{\mb{q}}}{\mc{R}}{(a ; b) ; c}{a ; (b ; c)}{C}}
+\end{equation*}
+
 As stated in Section~\ref{ssec:refinement-theory}, binding rules for the rest of our calculus are
 derivable from the rest of \subiterexp{}'s refinement rules. We give these explicitly in
 Figure~\ref{fig:derivable-binding}, along with the $\eta$-rule for unary let-bindings, which is
@@ -3768,11 +3799,80 @@ Hence, to show that we have a valid \subiterexp{}-model, it suffices to prove th
 
 \label{apx:packing}
 
-\TODO{$n$-ary packing, $n$-ary unpacking}
-
-\TODO{$n$-ary packing and $n$-ary unpacking are mutually inverse up to $\approx$}
-
-\TODO{$n$-ary packing is $\approx$ term-densem}
+Given an annotated context $\Gamma^{\mb{q}}$, we can recursively define the \emph{packing}
+$\hasty{\Gamma^{\mb{q}}}{\bot}{\ms{pack}(\Gamma^{\mb{q}})}{\etoty{\Gamma^{\mb{q}}}}$ of its
+variables in the obvious manner; namely
+\begin{equation*}
+  \ms{pack}(\cdot) := () \qquad
+  \ms{pack}(\Gamma^{\mb{q}}, x : A^q) = \begin{cases}
+    (\ms{pack}(\Gamma^{\mb{q}}), x) & \text{if } q \neq 0 \\
+    (\ms{pack}(\Gamma^{\mb{q}}), ()) & \text{otherwise}
+  \end{cases}
+\end{equation*}
+We can similarly \emph{unpack} a context's effective type $a : [\ms{\Gamma}^{\mb{q}}]$, which we
+write $\letexpr{\Gamma}{a}{b}$, inductively in the obvious manner:
+\begin{equation*}
+  (\letexpr{\cdot}{a}{b}) := (a ; b) \qquad
+  (\letexpr{\Gamma, x : A}{a}{b}) :=
+  (\letexpr{(g, x)}{a}{\letexpr{\Gamma}{g}{b}}) 
+\end{equation*}
+We can show this satisfies the following typing rule by induction on $\Delta^{\mb{q}'}$.
+\begin{equation*}
+  \prftree[r]{\rle{unpack}}
+    {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+    {\hasty{\Gamma^{\mb{q}_l}}{\epsilon}{a}{[\Delta^{\mb{q}'}]}}
+    {\hasty{\Gamma^{\mb{q}_r}, \Delta^{\mb{q}'}}{\epsilon}{b}{B}}
+    {\hasty{\Gamma^{\mb{q}}}{\epsilon}{\letexpr{\Gamma}{a}{b}}{B}}
+\end{equation*}
+In particular, we proceed as follows:
+\begin{itemize}
+  \item Given $a : \etoty{\cdot}$, this follows directly from the derived rule
+  \brle{seq}.
+  \item Given $a : \etoty{\Delta^{\mb{q}'}, x : A^q}$, we have that
+  $\hasty{\Gamma^{\mb{q}_r}, x : A^q, \Delta^{\mb{q}'}}{\epsilon}{b}{B}$. Hence,
+  \begin{itemize}
+    \item If $q \neq 0$, then $[A^q] = A$, so by weakening $\hasty{\Gamma^{\mb{q}}, x :
+    A}{\epsilon}{\letexpr{\Gamma}{a'}{b}}{B}$ and therefore $\hasty{\Gamma^{\mb{q}}, g:
+    [\Delta^{\mb{q}'}]^0, x : [A^q]}{\epsilon}{\letexpr{\Gamma}{a'}{b}}{B}$
+    \item If $q = 0$, then $x$ cannot be used in $b$, so
+    $\hasty{\Gamma^{\mb{q}}}{\epsilon}{\letexpr{\Gamma}{a'}{b}}{B}$, and hence, as $[A^0] = \mb{1}$
+    has unrestricted linearity, $\hasty{\Gamma^{\mb{q}}, g: [\Delta^{\mb{q}'}]^0, x :
+    [A^q]}{\epsilon}{\letexpr{\Gamma}{a'}{b}}{B}$ by weakening.
+  \end{itemize}
+  By induction, we may hence derive
+  \begin{equation*}
+  \prftree[r]{\rle{unpack}}
+    {\hasty{\Gamma^0, g: [\Delta^{\mb{q}'}], x : [A^q]^0}{\epsilon}{g}{[\Delta^{\mb{q}'}]}}
+    {\hasty{\Gamma^{\mb{q}_l}, g: [\Delta^{\mb{q}'}]^0, x : [A^q], \Delta^{\mb{q}'}}{\epsilon}{b}{B}}
+    {\hasty{\Gamma^{\mb{q}_l}, g: [\Delta^{\mb{q}'}], x : [A^q]}{\epsilon}{\letexpr{\Gamma}{g}{b}}{B}}
+  \end{equation*}
+  Therefore, since $[\Delta^{\mb{q}'}, x : A^q] = [\Delta^{\mb{q}'}] \otimes [A^q]$, we may derive
+  \begin{equation*}
+  \prftree[r]{\rle{let$_2$}}
+    {\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{[\Delta^{\mb{q}'}, x : A^q]}}
+    {\hasty{\Gamma^{\mb{q}_l}, g: [\Delta^{\mb{q}'}], x : [A^q]}{\epsilon}{\letexpr{\Gamma}{g}{b}}{B}}
+    {\hasty{\Gamma^{\mb{q}}}{\epsilon}{\letexpr{(g, x)}{a}{\letexpr{\Gamma}{g}{b}}}{B}}
+  \end{equation*}
+  as desired.
+\end{itemize}
+We prove that packing and unpacking are mutually inverse up to $\approx$ by induction:
+\begin{lemma}
+  The following rules are derivable:
+  \begin{gather*}
+  \prftree[r]{\rle{unpack-pack}}
+    {\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}}
+    {\tmeq{\Gamma^{\mb{q}}}{\mc{R}}{\letexpr{\Gamma}{\ms{pack}(\Gamma^{\mb{q}})}{a}}{a}{A}}
+    \\
+  \prftree[r]{\rle{pack-unpack}}
+    {\hasty{\Gamma^{\mb{q}}}{\epsilon}{b}{[\Delta^{\mb{q}'}]}}
+    {\tmeq{\Gamma^{\mb{q}}}{\mc{R}}{\letexpr{\Delta}{b}{\ms{pack}(\Delta^{\mb{q}'})}}{b}{[\Delta^{\mb{q}'}]}}
+  \end{gather*}
+\end{lemma}
+\begin{proof}
+  \;\TODO{suffering, absolute duhkha right here}
+\end{proof}
+\TODO{now, to show completeness, we need to show that packing and densem is the identity...}
+\TODO{because then unpacking gives us the strike rune!}
 
 \section{Model Category}
 
