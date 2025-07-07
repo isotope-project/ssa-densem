@@ -343,9 +343,38 @@ compilers want to do are not usually program equivalences, but merely refinement
 behaviours of the optimized program must be a subset of the possible behaviours of the original
 program.
 
-As a concrete example, consider the interaction of undefined behaviour and nontermination. 
+As a concrete example, consider the interaction of undefined behaviour and other effects. For
+example, consider an operation like \ms{div}, which exhibits \emph{undefined behavior} in both C and
+LLVM if we divide by zero. Let's say we have a program like $\letexpr{x}{\ms{div}\;y\;z}{e}$ (with
+$e$ having arbitrary effect), where the optimizer cannot deduce whether $z$ is nonzero; since
+$\ms{div}\;y\;z$ may exhibit UB, it is \emph{impure}, and hence, in general, this program is
+\emph{not} equivalent to $[\ms{div}\;y\;z/x]e$; for example, if $z = 0$ and $e = ()$,
+$\letexpr{x}{\ms{div}\;y\;z}{e}$ always exhibits UB, whereas $[\ms{div}\;y\;z/x]e \equiv ()$ simply
+does nothing!
 
-\TODO{UB refinements go here}
+It turns out, however, that it is always safe to rewrite $\letexpr{x}{\ms{div}\;y\;z}{e}$ to
+$[\ms{div}\;y\;z/x]e$, since
+\begin{itemize}
+  \item If $z$ is zero, then $\letexpr{x}{\ms{div}\;y\;z}{e}$ has UB, so we can rewrite it to
+  anything we want!
+  \item Otherwise, $\ms{div}\;y\;z$ is pure, so substitution is unconditionally valid
+\end{itemize}
+Such a substitution has the effect of moving an effect \emph{forward} in the program's execution, so
+we call UB a \emph{right-mover} with respect to all other effects. Since it is also always a
+refinement both to eliminate and to duplicate UB, it is \emph{eliminable} and \emph{duplicable}. In
+fact, we have that $(\ms{div}\;y\;z, \ms{div}\;y\;z) \approx \letexpr{x}{\ms{div}\;y\;z}{(x, x)}$,
+so UB is also \emph{fusable} and hence \emph{relevant}. On the other hand, UB is obviously not
+\emph{introducable}, since $() \not\tref \letexpr{x}{\ms{div}\;y\;z}{()}$, and so is therefore not
+\emph{affine}.
+
+We might also want to ask with respect to which effects UB is a \emph{left-mover}, i.e., for which
+effects of $e$ we have $(e, \ms{div}\;y\;z) \tref \letexpr{x}{\ms{div}\;y\;z}{(e, x)}$ (with pairs
+evaluated left-to-right). With some thought, we can see this refinement holds only when execution is
+guaranteed to continue after evaluating $e$, so this rules out effects like nontermination or
+exceptions, but effects like nondeterminism or memory access are fine. That is, UB is a
+\emph{left-mover} with respect to nondeterminism and memory access, but not in general. Since it is
+both a left and right mover w.r.t. these effects, we say UB \emph{commutes} with them. An effect
+that commutes with everything, like the empty effect $\bot$, is called \emph{central}.
 
 Because of this complexity, the old informal techniques are no longer sufficient, and we need to
 study SSA using more mathematically sophisticated techniques to understand and justify what modern
