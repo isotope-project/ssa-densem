@@ -333,39 +333,49 @@ improves the performance of many compiler optimizations.
 The correctness of SSA transformations has mostly been handled informally, because it was originally
 intended to be a simple, first-order imperative programming language. Unfortunately, in the decades
 since its introduction, computers have become much less simple, and the optimizations that compiler
-writers want to do have become much more ambitious. Modern hardware is highly concurrent, and
+writers want to do have become much more complicated. Modern hardware is highly concurrent, and
 exhibits user-visible non-sequentially-consistent behaviour: \emph{weak
 memory}~\cite{batty-compositional-17}. This means memory can no longer be correctly modelled as a
-global array of bytes. Furthermore, compilers like LLVM and GCC now make very aggressive
-optimizations exploiting knowledge of memory aliasing, undefined behaviour, and nondeterminism.
+global array of bytes. Furthermore, compilers like LLVM and GCC now perform very aggressive
+optimizations exploiting knowledge of memory aliasing and undefined behaviour.
 Because all these optimizations are all done in the presence of nondeterminism, the transformations
 compilers want to do are not usually program equivalences, but merely refinements: the possible
 behaviours of the optimized program must be a subset of the possible behaviours of the original
 program.
 
-As a concrete example, consider the interaction of undefined behaviour and other effects. For
-example, consider an operation like \ms{div}, which exhibits \emph{undefined behavior} in both C and
-LLVM if we divide by zero. Let's say we have a program like $\letexpr{x}{\ms{div}\;y\;z}{e}$ (with
-$e$ having arbitrary effect), where the optimizer cannot deduce whether $z$ is nonzero; since
-$\ms{div}\;y\;z$ may exhibit UB, it is \emph{impure}, and hence, in general, this program is
-\emph{not} equivalent to $[\ms{div}\;y\;z/x]e$; for example, if $z = 0$ and $e = ()$,
-$\letexpr{x}{\ms{div}\;y\;z}{e}$ always exhibits UB, whereas $[\ms{div}\;y\;z/x]e \equiv ()$ simply
-does nothing!
-
-It turns out, however, that it is always safe to rewrite $\letexpr{x}{\ms{div}\;y\;z}{e}$ to
-$[\ms{div}\;y\;z/x]e$, since
+As a concrete example, consider the interaction of undefined behaviour and other effects.
+The division operation $\ms{div}\;y\;z$ exhibits \emph{undefined behavior} (UB) in both C and
+LLVM if $z$ is zero, but otherwise has no side-effects. Therefore, the program 
+$\letexpr{x}{\ms{div}\;y\;z}{e}$ is equivalent to $[\ms{div}\;y\;z/x]e$ if $z$ is known
+to be nonzero, but not otherwise. For example, if $z = 0$ and $e = ()$,
+$\letexpr{x}{\ms{div}\;y\;0}{()}$ always exhibits UB, whereas $[\ms{div}\;y\;0/x]() \equiv ()$ simply
+does nothing! However, one direction of the rewrite -- turning $\letexpr{x}{\ms{div}\;y\;z}{e}$ into
+$[\ms{div}\;y\;z/x]e$ -- is always a safe transformation, since:
 \begin{itemize}
   \item If $z$ is zero, then $\letexpr{x}{\ms{div}\;y\;z}{e}$ has UB, so we can rewrite it to
   anything we want!
   \item Otherwise, $\ms{div}\;y\;z$ is pure, so substitution is unconditionally valid
 \end{itemize}
-Such a substitution has the effect of moving an effect \emph{forward} in the program's execution, so
-we call UB a \emph{right-mover} with respect to all other effects. Since it is also always a
-refinement both to eliminate and to duplicate UB, it is \emph{eliminable} and \emph{duplicable}. In
-fact, we have that $(\ms{div}\;y\;z, \ms{div}\;y\;z) \approx \letexpr{x}{\ms{div}\;y\;z}{(x, x)}$,
-so UB is also \emph{fusable} and hence \emph{relevant}. On the other hand, UB is obviously not
-\emph{introducable}, since $() \not\tref \letexpr{x}{\ms{div}\;y\;z}{()}$, and so is therefore not
-\emph{affine}.
+%
+% where the optimizer cannot deduce whether $z$ is nonzero; since
+% $\ms{div}\;y\;z$ may exhibit UB, it is \emph{impure}, and hence, in general, this program is
+% \emph{not} equivalent to $[\ms{div}\;y\;z/x]e$; For example, if $z = 0$ and $e = ()$,
+% $\letexpr{x}{\ms{div}\;y\;z}{e}$ always exhibits UB, whereas $[\ms{div}\;y\;z/x]e \equiv ()$ simply
+% does nothing!
+% 
+% It turns out, however, that it is always safe to rewrite $\letexpr{x}{\ms{div}\;y\;z}{e}$ to
+% $[\ms{div}\;y\;z/x]e$, since
+% \begin{itemize}
+%   \item If $z$ is zero, then $\letexpr{x}{\ms{div}\;y\;z}{e}$ has UB, so we can rewrite it to
+%   anything we want!
+%   \item Otherwise, $\ms{div}\;y\;z$ is pure, so substitution is unconditionally valid
+% \end{itemize}
+% 
+Note that this substitution moved a potentially-effectful operation \emph{forward} in the program's execution. Depending upon how often $x$ occurs inside of $e$, this substitution could also duplicate or drop the effectful operation. This observation gives rise to a categorization of effectful terms, based on how they interact with substitution. 
+
+Because it is always safe to move UB after any other effect, 
+we call it a \emph{right-mover} with respect to that effect. Furtheremore, since it is also always a
+refinement both to eliminate and to duplicate UB, we say UB is both an \emph{eliminable} and \emph{duplicable} effect. This is because eliminating UB reduces the set of possible behaviours, and duplicating occurences of UB does not increase the set of possible behaviours. We also have that $(\ms{div}\;y\;z, \ms{div}\;y\;z) \tref \letexpr{x}{\ms{div}\;y\;z}{(x, x)}$, so UB is also \emph{fusable}. When an effect is both fusable and duplicable, we also call it \emph{relevant}.  On the other hand, it is not a refinement to introduce UB, since $() \not\tref \letexpr{x}{\ms{div}\;y\;z}{()}$. Hence we say it is not \emph{introducible}. We say an effect which is both \emph{eliminable} and \emph{introducible} is \emph{affine}. 
 
 We might also want to ask with respect to which effects UB is a \emph{left-mover}, i.e., for which
 effects of $e$ we have $(e, \ms{div}\;y\;z) \tref \letexpr{x}{\ms{div}\;y\;z}{(e, x)}$ (with pairs
@@ -376,13 +386,16 @@ exceptions, but effects like nondeterminism or memory access are fine. That is, 
 both a left and right mover w.r.t. these effects, we say UB \emph{commutes} with them. An effect
 that commutes with everything, like the empty effect $\bot$, is called \emph{central}.
 
+The question of what rewrites are permitted in the presence of effects is one that compiler
+writers struggle with~\cite{llvm-github}, because the less conservative they are, the faster
+the code they can generate, but the more dependent the are on having a clear understanding of each
+effectful operation's semantics and interactions. 
+
 Because of this complexity, the old informal techniques are no longer sufficient, and we need to
 study SSA using more mathematically sophisticated techniques to understand and justify what modern
 hardware and compilers do. In this paper, we introduce a type-theoretic account of static single
 assigment form, and equip it with a semantics which explains and can be used to justify many program
-transformations even in the presence of state, undefined behaviour, and weak memory concurrency. 
-
-Concretely, our contributions are as follows:
+transformations even in the presence of effects like state, undefined behaviour, and weak memory concurrency. Concretely, our contributions are as follows:
 
 \begin{itemize}
 \item First, we give a pair of type theories for SSA. The first
