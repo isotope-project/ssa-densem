@@ -759,7 +759,7 @@ states that we may replace a variable quantity $q$ with another quantity $q'$ wh
 variable, the quantities $\cpyq$ allows \emph{less} usages than the quantity $\delq$, since only the
 latter allows deletion, but copying is never possible. This clearly induces a \emph{preorder} on
 contexts, with two contexts equivalent if their component variables can be used the same way.
-
+%
 We may then go on to define \emph{context splitting} $\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}$ as
 follows:
 \begin{gather*}
@@ -778,8 +778,7 @@ follows:
     {\qsp{\Gamma, x : A}{(\mb{q}, q)}{(\mb{q}_l, \zeroq)}{(\mb{q}_r, q)}}
 \end{gather*}
 The rules \brle{left} and \brle{right} allow us to use a variable, regardless of quantity, in either
-the choice of subexpression, whereas the rule \brle{both} states that for a variable to be usable in
-two separate subexpressions, it must be relevant.
+subexpression, whereas the rule \brle{both} states that, to be usable in both, it must be relevant.
 
 \subsubsection{Effects}
 Our language of effects is a bounded\footnote{has a maximum element $\top$ and minimum element
@@ -795,7 +794,7 @@ interact with each other. In particular, we need to know:
   \item What \emph{multiplicity} each effect has, and in particular, whether a given effect
   $\epsilon$ is \emph{duplicable}, \emph{fusable}, \emph{introducible}, or \emph{eliminable}.
   \item Which effects $\epsilon$ are \emph{left-movers} (i.e. can be moved before) or
-  \emph{right-movers} (i.e. can be moved after) other effects $\eta$
+  \emph{right-movers} (i.e. can be moved after) w.r.t. other effects $\eta$
 \end{enumerate}
 
 First, not all effects are stable under arbitrary iteration. For example, a pure, total computation
@@ -835,17 +834,13 @@ computation performing $\epsilon'$-effects without introducing new behaviour. We
 \rightmove \epsilon$ and $\epsilon \rightmove \bot$, to ensure that pure computations can be moved
 freely, and we also require that the relation in antitone, to model that decreasing the number of
 effects never loses rewrites. 
-
-As notational abbreviations, we write:
-\begin{itemize}
-  \item $\epsilon \leftmove \eta \iff \eta \rightmove \epsilon$
-  \item $\epsilon \slides \eta \iff \epsilon \rightmove \eta \land \epsilon \leftmove \eta$
-  \item $\epsilon \rightmove^+ \eta \iff \epsilon \rightmove \eta$
-  \item $\epsilon \rightmove^- \eta \iff \epsilon \leftmove \eta$
-\end{itemize}
-
-Putting all this together, we arrive at the following definition for an
-\emph{effect system}:
+%
+We introduce the syntax sugar $\epsilon \leftmove \eta \iff \eta \rightmove \epsilon$, $\epsilon
+\slides \eta \iff \epsilon \rightmove \eta \land \epsilon \leftmove \eta$. For polarities $p \in
+\{+, -\}$, we define $\rightmove^p$ in the obvious manner, with $\epsilon \rightmove^+ \eta \iff
+\epsilon \rightmove \eta$ and $\epsilon \rightmove^- \eta \iff \epsilon \leftmove \eta$.
+%
+Putting all this together, we may now define an \emph{effect system} as follows:
 \begin{definition}[Effect system]
   We define an \emph{effect system} $\mc{E}$ to be a bounded join-semilattice of effects $\mc{E}$
   equipped with:
@@ -864,13 +859,9 @@ Putting all this together, we arrive at the following definition for an
 
 We now have all the pieces we need to define a \subiterexp{}-\emph{signature}:
 \begin{definition}[\subiterexp-signature]
-  A \subiterexp signature $\mc{S} = (\mc{X}, \mc{I}, \mc{E})$ consists of:
-  \begin{itemize}
-    \item A set of \emph{base types} $X \in \mc{X}$
-    \item A set of \emph{instructions} $f \in \mc{I}$
-    \item An iterative effect system $\mc{E}$
-  \end{itemize}
-  such that we associate:
+  A \subiterexp signature $\mc{S} = (\mc{X}, \mc{I}, \mc{E})$ consists of a set of \emph{base types}
+  $X \in \mc{X}$, a set of \emph{instructions} $f \in \mc{I}$, and an iterative effect system
+  $\mc{E}$ such that we associate:
   \begin{itemize}
     \item Every base type $X$ type to a \emph{quantity} $\ms{q}(X) \in \{1, \delq, \cpyq, \topq\}$.
     \item Every instruction to a \emph{source type} $\ms{src}(f) = A$, a \emph{target type}
@@ -1046,8 +1037,8 @@ be interpreted as follows:
   \Description{}
   \label{fig:expr-subst}
 \end{figure}%
-We denote capture-avoiding substitution of $a$ by $\sigma$ as $[\sigma]a$ We can now state the
-substitution lemma for our calculus as follows:
+We denote capture-avoiding substitution of $a$ by $\sigma$ as $[\sigma]a$. We can now state
+substitution:
 \begin{lemma}[name=Substitution, restate=synmonsubst]
   The following rule is admissible:
   \begin{equation*}
@@ -1177,10 +1168,11 @@ satisfy the following properties:
 iteration behaves as a least fixpoint. That is, $\liter{a}{x}{b}$ evaluates to $a$, then to
 $b[a/x]$, and depending on the result of $b$, either exits with a value in the left branch or
 continues recursively with a value in the right branch. This unfolds the iteration into a case
-split:
-\[
-\liter{a}{x}{b} \quad \equiv \quad \letexpr{x}{a}{\caseexpr{b}{y}{y}{z}{\liter{z}{x}{b}}}
-\]
+split
+$
+%\liter{a}{x}{b} \equiv 
+\letexpr{x}{a}{\caseexpr{b}{y}{y}{z}{\liter{z}{x}{b}}}
+$
 capturing precisely one unfolding of the loop. This gives rise to an inductive account of iteration
 semantics that meshes naturally with refinement.
 %
@@ -1206,13 +1198,14 @@ infinite series (rather than only be valid for a finite number of terms).
 Note that we \emph{cannot} do this for an arbitrary $s$; we need it to \emph{commute} with the
 effect of the loop. For example, if the effect of the loop is (potential) nontermination, and $s$
 contains a print-statement, uniformity does \emph{not} apply, since while for any given iteration of
-the loop body we have, where $\ms{print}: \mb{1}$ and $\ms{expr}: \mb{1} + \mb{1}$,
-$$
-\letexpr{\cdot}{\ms{print}}{\ms{expr}} \approx
+the loop body we have, where $\ms{print}: \mb{1}$ and $\ms{expr}: \mb{1} + \mb{1}$ commutative with
+printing (e.g., reading and writing from memory),
+$
+\ms{print} ; \ms{expr} \approx
 \caseexpr{\ms{expr}}
   {x}{{\linl{\ms{print}}}}
   {y}{{\linl{\ms{print}}}}
-$$
+$
 but
 $$
 \liter{\ms{print}}{\cdot}{\ms{expr}} \not\approx
@@ -1637,9 +1630,8 @@ A good categorical semantics is one in which the semantics of a term is construc
 straightforward, compositional manner from the semantics of its subterms. Furthermore, we would like
 the equational properties of our term formers to correspond closely to the universal properties of
 the categorical structure used to interpret them. Thus, our goal is to pick categorical structures
-which correspond  one-to-one to the features of \subiterexp{}. In
-particular, we need to find categorical structures to model our three primary structured
-control-flow constructs, which are:
+which correspond  one-to-one to the features of \subiterexp{}. In particular, we need to find
+categorical structures to model our three primary structured control-flow constructs, which are:
 \begin{itemize}
   \item \emph{Sequencing} and \emph{binding}, which we will do using the structure of a
   \emph{premonoidal category}
@@ -1691,35 +1683,34 @@ Soundness of equivalence follows directly from antisymmetry of partial orders.\f
 $\mc{C}$ to be a poset-enriched category does not in fact rob us of any generality, since \emph{all}
 categories are poset-enriched under the identity ordering on hom-sets.}
 
-
-We can now proceed to give poset-enriched versions of the models for our three control-flow
-primitives, namely, seqencing, branching, and iteration. Premonoidal categories were introduced in
+We now wish to give poset-enriched versions of the models for our three control-flow primitives,
+namely, seqencing, branching, and iteration. Premonoidal categories were introduced in
 \citet{power-premonoidal-97} to model side-effectful, sequential computations with first-order
 binding. A premonoidal category can be viewed as a generalization of a monoidal category, in which
 \emph{sliding} does not necessarily hold; i.e., we have that, in general,
-$$
+$
 (f \otimes \ms{id}) ; (\ms{id} \otimes g) \neq
 (\ms{id} \otimes g) ; (f \otimes \ms{id})
-$$
-To better understand this in terms of programming languages, a premonoidal
-category may also be viewed as a generalization of the Moggi's \cite{moggi-91-monad} monadic
-semantics: if we consider a strong monad over a Cartesian category, then the Kleisli category is
-premonoidal with the Cartesian product in the underlying category as tensor product. The Kleisli
-category satisfies sliding when the underlying monad is
-\emph{commutative}: when the sequencing of
-side-effects does not matter (e.g., the reader monad). We need to generalize monoidal categories to premonoidal categories
-precisely to support monads for which sequencing does matter, such as printing or state. For
-example, given a function $\ms{print}: \ms{str} \to ()$,
-$$
+$.
+To better understand this in terms of programming languages, a premonoidal category may also be
+viewed as a generalization of the Moggi's \cite{moggi-91-monad} monadic semantics: if we consider a
+strong monad over a Cartesian category, then the Kleisli category is premonoidal with the Cartesian
+product in the underlying category as tensor product. 
+
+The Kleisli category satisfies sliding when the underlying monad is \emph{commutative}: when the
+sequencing of side-effects does not matter (e.g., the reader monad). We need to generalize monoidal
+categories to premonoidal categories precisely to support monads for which sequencing does matter,
+such as printing or state. For example, given a function $\ms{print}: \ms{str} \to ()$,
+$
 (\ms{print} \otimes \ms{id}) ; (\ms{id} \otimes \ms{print}) \neq
 (\ms{id} \otimes \ms{print}) ; (\ms{print} \otimes \ms{id}) 
-$$
-and input $(\mathtt{"hello"}, \mathtt{"world"})$, the left-hand side will print $\mathtt{hello
-world}$, while the right-hand side will print $\mathtt{world hello}$. Note that the sequencing in
-the induced premonoidal category corresponds precisely to the bind of the underlying monad.
+$
+since, given input $(\mathtt{"hello"}, \mathtt{"world"})$, the left-hand side will print
+$\mathtt{hello world}$, while the right-hand side will print $\mathtt{world hello}$. Note that the
+sequencing in the induced premonoidal category corresponds precisely to the bind of the underlying
+monad.
 
-We give a precise definition of a premonoidal category, adapted to the poset-enriched setting,
-below:
+We give a precise definition of a (\emph{poset-enriched}) premonoidal category below:
 \begin{definition}[Symmetric Premonoidal Category]
   We define a \emph{binoidal category} to be a category $\mc{C}$ equipped with a binary operation
   $\otimes : |\mc{C}| \times |\mc{C}| \to |\mc{C}|$ on the objects of $\mc{C}$ and, for each $A, B
@@ -1757,21 +1748,18 @@ below:
   = \sigma_{A, B} \otimes C ; \alpha_{B, A, C} ; B \otimes \sigma_{A, C}
   $$
 \end{definition}
-This gives us a nice alternate characterization of (poset-enriched) monoidal categories as well:
-\begin{definition}[(Symmetric) Monoidal Category]
-  We say a (symmetric) premonoidal category is \emph{(symmetric) monoidal} if every morphism is
-  central.
-\end{definition}
+% This gives us a nice alternate characterization of (poset-enriched) monoidal categories as well:
+% \begin{definition}[(Symmetric) Monoidal Category]
+%   We say a (symmetric) premonoidal category is \emph{(symmetric) monoidal} if every morphism is
+%   central.
+% \end{definition}
 One theorem of note about premonoidal categories is \emph{coherence}, which we state as follows:
 \begin{theorem}
   For any premonoidal category $\mc{C}$, the subcategory $\mc{C}_\mc{A}$ generated by associators,
   unitors, and their tensor products is an equivalence relation, i.e., for all $A, B :
   |\mc{C}_\mc{A}|$, if $f, g : A \to B$ can be constructed using only identity, composition,
-  associators, unitors, and their tensor products, then:
-  \begin{enumerate}[label=(\alph*)]
-    \item $f = g$
-    \item $f, g$ are isomorphisms in $\mc{C}_\mc{A}$
-  \end{enumerate}
+  associators, unitors, and their tensor products, then $f = g$, and $f, g$ are isomorphisms in
+  $\mc{C}_\mc{A}$.
   \label{thm:monoidal-coherence}
 \end{theorem}
 We will hence sometimes abuse notation and write $\alpha_B : \mc{C}(A, B)$ or simply $\alpha$ for
@@ -1782,8 +1770,8 @@ $\alpha: \mc{C}(A, A) := \ms{id}_A$.
 We model branching control-flow using the coproduct $A + B$ as a primitive, whose definition is
 unchanged in the poset-enriched setting. Given morphisms $f : A \to C$ and $g : B \to C$, their
 coproduct $[f, g] : A + B \to C$ quite naturally models a case-statement which executes $f$ given an
-$A$ and executes $g$ given a $B$. We can implement a more traditional if-statement as a
-case-statement on the object $\mb{2} = I + I$.
+$A$ and executes $g$ given a $B$. We can then implement an if-statement as a case-statement on
+$\mb{2} = I + I$.
 
 Since coproducts induce a monoidal structure on a category, we will also write $\alpha^+_B :
 \mc{C}(A, B)$ or simply $\alpha^+$ to denote the unique morphism from $A$ to $B$ with analogy to the
@@ -1798,8 +1786,8 @@ $$
 $$
 While our input context corresponds to the object $\mbb{Z} \otimes (\mbb{Z} + \ms{str})$, we need to
 somehow get to $(\mbb{Z} \otimes \mbb{Z}) + (\mbb{Z} \otimes \ms{str})$ to be able to evaluate our
-branches. Categorically, what we require is that our coproduct is \emph{distributive} over our
-tensor product; we define a \emph{distributive category} for which this is the case as follows:
+branches. Categorically, what we require is that our tensor product \emph{distributes} over our
+coproduct; in which case we say our category is \emph{distributive}:
 \begin{definition}[Distributive Category]
   We say a premonoidal category is \emph{distributive} if:
   \begin{itemize}
@@ -2089,25 +2077,21 @@ To be able to do that effectively, we need to introduce the concept of a \emph{\
 iteration operator} as follows:
 \begin{definition}[Uniformity]
   Given a wide subcategory $\mc{K} \subseteq \mc{C}$ of a category equipped with a Conway iteration
-  operator, we say $\mc{C}$ is \emph{$\mc{K}^+$-uniform} if, for all $h : A \to_{\mc{K}} B$, $f : B
-  \to C + B$, and $g : A \to C + A$, we have that
-  $$
-  h ; f \cref g ; C + h \implies h ; f^\dagger \cref g^\dagger 
-  $$
-  and \emph{$\mc{K}^-$-uniform} if
-  $$
-  h ; f \anticref g ; C + h \implies h ; f^\dagger \anticref g^\dagger 
-  $$
-  This corresponds precisely to the ability to perform the rewrites shown in
-  Figure~\ref{fig:unif-cfg} (setting $c = \ms{id}_C$) whenever $s$ is in $\mc{K}$ and $b$ is in
-  $\mc{C}$. We say a category $\mc{K}$ is \emph{$\mc{K}$-uniform} if it is both $\mc{K}^+$- and
+  operator, we say $\mc{C}$ is \emph{$\mc{K}^p$-uniform} for $p \in \{+, -\}$ if, for all $h : A
+  \to_{\mc{K}} B$, $f : B \to C + B$, and $g : A \to C + A$, we have that
+  $
+  h ; f \cref^p g ; C + h \implies h ; f^\dagger \cref^p g^\dagger 
+  $.
+  We say a category $\mc{K}$ is \emph{$\mc{K}$-uniform} if it is both $\mc{K}^+$- and
   $\mc{K}^-$-uniform, which implies in particular that
-  $$
+  $
   h ; f = g ; C + h \implies h ; f^\dagger = g^\dagger 
-  $$
+  $.
 \end{definition}
-Requiring that substitution is compatible with loops is then equivalent to requiring that the
-subcategories of morphisms having commutative effects are uniform with respect to each other. We
+We note that this definition corresponds precisely to the ability to perform the rewrites shown in
+Figure~\ref{fig:unif-cfg} (setting $c = \ms{id}_C$) whenever $s$ is in $\mc{K}$ and $b$ is in
+$\mc{C}$. Requiring that substitution is compatible with loops is then equivalent to requiring that
+the subcategories of morphisms having commutative effects are uniform with respect to each other. We
 call this notion an (effectful) Elgot category:
 \begin{definition}[Elgot category]
   We say a distributive effectful category $\mc{C}$ is \emph{Elgot} if it has an iterative effect
@@ -2127,7 +2111,7 @@ subcategory corresponding to that effect. Following this idea, we can now define
 as follows: \subiterexp{}:
 \begin{definition}[\subiterexp-model]
   A model $\mc{M} = (\mc{C}, (\cdot)^\dagger, \dnt{\cdot}, \dmor{}, \tmor{})$ of a
-  \subiterexp-signature $\mc{S} = (\mc{X}, \mc{I}, \mc{E})$ is composed of:
+  \subiterexp-signature $\mc{S} = (\mc{X}, \mc{I}, \mc{E})$ is:
   \begin{itemize}
     \item An effectful Elgot category ($\mc{C}$, $(\cdot)^\dagger$) over $(\mc{E},
     \mc{E}^\infty)$
@@ -2289,7 +2273,7 @@ denotation.
       = \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
       ; \dnt{\hasty{\Gamma^{\mb{q}_l}}{\epsilon}{a}{A}}
       \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{b}{B}}
-    \\
+    \qquad
     \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{()}{\mb{1}}}
       = \dnt{\cwk{\Gamma^{\mb{q}}}{\cdot}}
   \end{gather*}
@@ -2298,8 +2282,8 @@ denotation.
     = & \; \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
       ; \dnt{\Gamma^{\mb{q}_l}}
       \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A \otimes B}}
-    \\ & 
-    ; \alpha_{\Gamma^{\mb{q}_r} \otimes A \otimes B}
+    %\\ & 
+    %; \alpha_{\Gamma^{\mb{q}_r} \otimes A \otimes B}
     ; \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A, y : B}{\epsilon}{c}{C}}
   \end{align*}
   \begin{align*}
@@ -2561,18 +2545,16 @@ typing rules and denotational semantics for \isotopessa{}. Recall that the primi
 element of an \isotopessa{} program is a \emph{region} $r$, which can be viewed as a program 
 fragment with a single entry point and multiple exit points. Consequently, our primitive typing 
 judgement will be of the form
-$$
-\boxed{\haslb{\Gamma^{\mb{q}}}{\epsilon}{r}{\ms{L}^{\mb{Q}}}}
-$$
-which means that
-\begin{itemize}
-  \item \emph{If} the variables in $\Gamma$ are live on entry, with quantity $\mb{q}$
-  \item \emph{Then} executing the region $r$ jumps to one of the labels in $\ms{L}$, with 
-  \emph{leftover} quantities $\mb{Q}$.
-\end{itemize}
-Here, $\ms{L}$ is a list of labels $\ell_i$, annotated with a single parameter type 
-(multiple parameters are implemented as a single tuple parameter), and $\mb{Q}$ is a list of 
-quantity vectors $\mb{q}_i$ which we call the \emph{quantity matrix}.
+$
+%\boxed{
+  \haslb{\Gamma^{\mb{q}}}{\epsilon}{r}{\ms{L}^{\mb{Q}}}
+%}
+$,
+which we will read as stating  that ``\emph{if} the variables in $\Gamma$ are live on entry, with
+quantity $\mb{q}$, \emph{then} executing the region $r$ jumps to one of the labels in $\ms{L}$, with
+\emph{leftover} quantities $\mb{Q}$." Here, $\ms{L}$ is a list of labels $\ell_i$, annotated with a
+single parameter type (multiple parameters are implemented as a single tuple parameter), and
+$\mb{Q}$ is a list of quantity vectors $\mb{q}_i$ which we call the \emph{quantity matrix}.
 
 We may define a weakening judgement on annotated label contexts using the rules in
 Figure~\ref{fig:label-wk}; the judgement is with respect to a particular context $\Gamma$ used to
@@ -2980,6 +2962,8 @@ These satisfy the usual rewrite rules for UB, some of which are given in
 Figure~\ref{fig:ub-rewrites}.
 
 \begin{figure}
+  \begin{adjustbox}{minipage=1.1\textwidth,scale=0.9}
+  \centering
   \begin{tabular}{l|ccccccccc}
     & $\infty$ & $\ubeff$ & $?$ & $\infty\ubeff$ & $\infty?$ & $\ubeff?$ & $\infty\ubeff?$ 
     & $\ms{q}^+$ & $\ms{q}^-$ \\
@@ -3002,6 +2986,7 @@ Figure~\ref{fig:ub-rewrites}.
     & $\rightmove$ & $\slides$ & $\slides$ & $\rightmove$ & $\rightmove$ & $\slides$ & $\rightmove$ 
     & $\oneq$ & $\cpyq$ \\
   \end{tabular}
+  \end{adjustbox}
   \caption{
     Submonads of $\ms{UB}$, along with their commutativity information 
     (i.e. whether they are a left or right mover w.r.t. other effects) and lineary information
