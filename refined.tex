@@ -4120,8 +4120,56 @@ To show completeness, it hence suffices to prove the following lemma:
         : [\Gamma^{\mb{q}_l}, x : A^q] \otimes [\Gamma^{\mb{q}_r}, x : A^0]
     \end{align*}
     as desired.
-    \item $(\qsp{\Gamma, x : A}{\mb{q}, q}{\mb{q}_l, 0}{\mb{q}_r, q})$:  
-    \TODO{right strike}
+    \item $(\qsp{\Gamma, x : A}{\mb{q}, q}{\mb{q}_l, 0}{\mb{q}_r, q})$: we have that
+    \begin{align*}
+      \Gamma^{\mb{q}}, x : A^q &\vdash_\bot
+        \letexpr{w}{\ms{pack}(\Gamma^{\mb{q}}, x : A^q)}
+          {\dnt{\qsp{\Gamma, x : A}{\mb{q}, q}{\mb{q}_l, 0}{\mb{q}_r, q}}(w)} \\
+        &\approx
+        \letexpr{w}{(\ms{pack}(\Gamma^{\mb{q}}), x^q)}{
+          (\dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}} \otimes \lambda^{-1} 
+            ; \sigma^{\ms{mid}})(w)
+        } \\
+        &\approx
+        \letexpr{w}{(\ms{pack}(\Gamma^{\mb{q}}), x^q)}{
+          ((\lambda (y, z) . (\dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}(y), ((), z))) 
+            ; \sigma^{\ms{mid}})(w)
+        } \\
+        &\approx
+        \letexpr{y}{\ms{pack}(\Gamma^{\mb{q}})}{
+          \letexpr{z}{x^q}{
+            \letexpr{u}{(\dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}(y), ((), z))}
+              {\sigma^{\ms{mid}}(u)}
+          }
+        }
+        \\
+        &\approx
+        \letexpr{y}{\ms{pack}(\Gamma^{\mb{q}})}{
+          \letexpr{u}{(\dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}(y), ((), x^q))}
+            {\sigma^{\ms{mid}}(u)}
+        }
+        \\
+        &\approx
+        \letexpr{u}{
+          ((\letexpr{y}{\ms{pack}(\Gamma^{\mb{q}})}
+            {(\dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}(y)}), ((), x^q))
+          }
+          {\sigma^{\ms{mid}}(u)}
+        \\
+        &\approx
+        \letexpr{((u_1, u_2), (u_3, u_4)}{
+          ((\ms{pack}(\Gamma^{\mb{q}_l}), \ms{pack}(\Gamma^{\mb{q}_r})), ((), x^q))
+          }
+          {((u_1, u_3), (u_2, u_4))}
+        \\
+        &\approx
+          (\ms{pack}(\Gamma^{\mb{q}_l}), ()), (\ms{pack}(\Gamma^{\mb{q}_r}), x^q))
+        \\
+        &\approx
+          (\ms{pack}(\Gamma^{\mb{q}_l}, x : A^0), \ms{pack}(\Gamma^{\mb{q}_r}, x : A^q))
+        : [\Gamma^{\mb{q}_l}, x : A^0] \otimes [\Gamma^{\mb{q}_r}, x : A^q]
+    \end{align*}
+    as desired.
     \item $(\qsp{\Gamma, x : A}{\mb{q}, q}{\mb{q}_l, q}{\mb{q}_r, q})$:  
     \TODO{split strike}
   \end{itemize}
