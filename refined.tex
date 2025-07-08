@@ -3709,7 +3709,7 @@ We now verify that:
       &= \sigma_{A, B} \otimes C ; \alpha_{B, A, C} ; B \otimes \sigma_{A, C}
     \end{align*}
   \end{itemize}
-  \item $\ms{Tm}_\epsilon(\mc{R})$ has chosen coproudcts and an initial object (\cmark):
+  \item $\ms{Tm}_\epsilon(\mc{R})$ has chosen coproducts and an initial object (\cmark):
   \todo{this...}
   \item $\ms{Tm}_\epsilon(\mc{R})$ is distributive: we have that
   \begin{align*}
@@ -3881,6 +3881,11 @@ x.a) : \ms{Tm}_\epsilon(\mc{R})(A, B)$
   \end{align*}
 \end{itemize}
 \end{proof}
+Now that we have shown that $\ms{Tm}(\mc{R})$ is a valid \subiterexp{}-model, we proceed to list
+some further useful identities:
+\begin{itemize}
+  \item $\sigma^{\ms{mid}}_{A, B, C, D} = (\lambda ((x, y), (z, w)) . ((x, z), (y, w)))$
+\end{itemize}
 
 \subsection{Packing and Unpacking}
 
@@ -4063,11 +4068,57 @@ To show completeness, it hence suffices to prove the following lemma:
         \approx (\ms{pack}(\cdot), \ms{pack}(\cdot))
     \end{align*}
     as desired.
-    \item $(\qsp{\Gamma, x : A}{\mb{q}, q}{q}{0})$: 
-    \TODO{left strike}
-    \item $(\qsp{\Gamma, x : A}{\mb{q}, q}{0}{q})$:  
+    \item $(\qsp{\Gamma, x : A}{\mb{q}, q}{\mb{q}_l, q}{\mb{q}_r, 0})$: we have that
+    \begin{align*}
+      \Gamma^{\mb{q}}, x : A^q &\vdash_\bot
+        \letexpr{w}{\ms{pack}(\Gamma^{\mb{q}}, x : A^q)}
+          {\dnt{\qsp{\Gamma, x : A}{\mb{q}, q}{\mb{q}_l, q}{\mb{q}_r, 0}}(w)} \\
+        &\approx
+        \letexpr{w}{(\ms{pack}(\Gamma^{\mb{q}}), x^q)}{
+          (\dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}} \otimes \rho^{-1} ; \sigma^{\ms{mid}})(w)
+        } \\
+        &\approx
+        \letexpr{w}{(\ms{pack}(\Gamma^{\mb{q}}), x^q)}{
+          ((\lambda (y, z) . (\dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}(y), (z, ()))) 
+            ; \sigma^{\ms{mid}})(w)
+        } \\
+        &\approx
+        \letexpr{y}{\ms{pack}(\Gamma^{\mb{q}})}{
+          \letexpr{z}{x^q}{
+            \letexpr{u}{(\dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}(y), (z, ()))}
+              {\sigma^{\ms{mid}}(u)}
+          }
+        }
+        \\
+        &\approx
+        \letexpr{y}{\ms{pack}(\Gamma^{\mb{q}})}{
+          \letexpr{u}{(\dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}(y), (x^q, ()))}
+            {\sigma^{\ms{mid}}(u)}
+        }
+        \\
+        &\approx
+        \letexpr{u}{
+          ((\letexpr{y}{\ms{pack}(\Gamma^{\mb{q}})}
+            {(\dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}(y)}), (x^q, ()))
+          }
+          {\sigma^{\ms{mid}}(u)}
+        \\
+        &\approx
+        \letexpr{((u_1, u_2), (u_3, u_4)}{
+          ((\ms{pack}(\Gamma^{\mb{q}_l}), \ms{pack}(\Gamma^{\mb{q}_r})), (x^q, ()))
+          }
+          {((u_1, u_3), (u_2, u_4))}
+        \\
+        &\approx
+          (\ms{pack}(\Gamma^{\mb{q}_l}), x^q), (\ms{pack}(\Gamma^{\mb{q}_r}), ()))
+        \\
+        &\approx
+          (\ms{pack}(\Gamma^{\mb{q}_l}, x : A^q), \ms{pack}(\Gamma^{\mb{q}_r}, x : A^0))
+    \end{align*}
+    as desired.
+    \item $(\qsp{\Gamma, x : A}{\mb{q}, q}{\mb{q}_l, 0}{\mb{q}_r, q})$:  
     \TODO{right strike}
-    \item $(\qsp{\Gamma, x : A}{\mb{q}, q}{q}{q})$:  
+    \item $(\qsp{\Gamma, x : A}{\mb{q}, q}{\mb{q}_l, q}{\mb{q}_r, q})$:  
     \TODO{split strike}
   \end{itemize}
   
