@@ -372,11 +372,21 @@ $[\ms{div}\;y\;z/x]e$ -- is always a safe transformation, since:
 %   \item Otherwise, $\ms{div}\;y\;z$ is pure, so substitution is unconditionally valid
 % \end{itemize}
 % 
-Note that this substitution moved a potentially-effectful operation \emph{forward} in the program's execution. Depending upon how often $x$ occurs inside of $e$, this substitution could also duplicate or drop the effectful operation. This observation gives rise to a categorization of effectful terms, based on how they interact with substitution. 
+Note that this substitution moved a potentially-effectful operation \emph{forward} in the program's
+execution. Depending upon how often $x$ occurs inside of $e$, this substitution could also duplicate
+or drop the effectful operation. This observation gives rise to a categorization of effectful terms,
+based on how they interact with substitution. 
 
-Because it is always safe to move UB after any other effect, 
-we call it a \emph{right-mover} with respect to that effect. Furtheremore, since it is also always a
-refinement both to eliminate and to duplicate UB, we say UB is both an \emph{eliminable} and \emph{duplicable} effect. This is because eliminating UB reduces the set of possible behaviours, and duplicating occurences of UB does not increase the set of possible behaviours. We also have that $(\ms{div}\;y\;z, \ms{div}\;y\;z) \tref \letexpr{x}{\ms{div}\;y\;z}{(x, x)}$, so UB is also \emph{fusable}. When an effect is both fusable and duplicable, we also call it \emph{relevant}.  On the other hand, it is not a refinement to introduce UB, since $() \not\tref \letexpr{x}{\ms{div}\;y\;z}{()}$. Hence we say it is not \emph{introducible}. We say an effect which is both \emph{eliminable} and \emph{introducible} is \emph{affine}. 
+Because it is always safe to move UB after any other effect, we call it a \emph{right-mover} with
+respect to that effect. Furtheremore, since it is also always a refinement both to eliminate and to
+duplicate UB, we say UB is both an \emph{eliminable} and \emph{duplicable} effect. This is because
+eliminating UB reduces the set of possible behaviours, and duplicating occurences of UB does not
+increase the set of possible behaviours. We also have that $(\ms{div}\;y\;z, \ms{div}\;y\;z) \tref
+\letexpr{x}{\ms{div}\;y\;z}{(x, x)}$, so UB is also \emph{fusable}. When an effect is both fusable
+and duplicable, we also call it \emph{relevant}.  On the other hand, it is not a refinement to
+introduce UB, since $() \not\tref \letexpr{x}{\ms{div}\;y\;z}{()}$. Hence we say it is not
+\emph{introducible}. We say an effect which is both \emph{eliminable} and \emph{introducible} is
+\emph{affine}. 
 
 We might also want to ask with respect to which effects UB is a \emph{left-mover}, i.e., for which
 effects of $e$ we have $(e, \ms{div}\;y\;z) \tref \letexpr{x}{\ms{div}\;y\;z}{(e, x)}$ (with pairs
@@ -2153,20 +2163,20 @@ as follows: \subiterexp{}:
   \begin{itemize}
     \item If $A$ relevant, 
       $\dmor{A} ; \dmor{A} \otimes \dnt{A} ; \alpha = \dmor{A} ; \dnt{A} \otimes \dmor{A}$
-    \item If $\zeroq \leq \alquant^p(\epsilon)$ and $A, B$ affine, $f ; !_B \cref^p !_A$
+      and
+      $\dmor{A} ; \sigma_{A, A} = \dmor{A}$
+    \item If $\zeroq \leq \alquant^p(\epsilon)$ and $A, B$ affine, $f ; \tmor{B} \cref^p \tmor{A}$
     \item If $\zeroq \leq \alquant^p(\epsilon)$ and $A$ relevant, $B$ affine, 
-      $\dmor{A} ; (f ; !_B) \otimes \dnt{A} \cref^p \rho^{-1}$
+      $\dmor{A} ; (f ; \tmor{B}) \otimes \dnt{A} \cref^p \rho^{-1}$
     \item If $\cpyq \leq \alquant^p(\epsilon)$ and $A, B$ relevant, 
     $f ; \dmor{B} \cref^p \dmor{A} ; f \ltimes f = \dmor{A} ; f \rtimes f$
   \end{itemize}
   where
   \begin{itemize}
     \item $\dnt{\mb{1}} = I$, $\dnt{A \otimes B} = \dnt{A} \otimes \dnt{B}$, 
-          $!_{\mb{1}} = \ms{id}_I$, and $\Delta_{\mb{1}} = \lambda^{-1} = \rho^{-1}$
-    \item For $A, B$ affine, $!_{A \otimes B} = !_A \otimes !_B ; \lambda$, and for $A, B$ relevant, 
-    $\Delta_{A \otimes B} 
-      = \dmor{A} \otimes \dmor{B}
-      ; \sigma^{\ms{mid}}
+          $\tmor{\mb{1}} = \ms{id}_I$, and $\dmor{\mb{1}} = \lambda^{-1} = \rho^{-1}$
+    \item For $A, B$ affine, $\tmor{A \otimes B} = \tmor{A} \otimes \tmor{B} ; \lambda$, and for $A,
+    B$ relevant, $\dmor{A \otimes B} = \dmor{A} \otimes \dmor{B} ; \sigma^{\ms{mid}}
     $
     where we define
     $
@@ -2181,22 +2191,20 @@ as follows: \subiterexp{}:
       )
     $
     \item $\dnt{\mb{0}} = \mb{0}$, $\dnt{A + B} = \dnt{A} + \dnt{B}$, 
-          $!_{\mb{0}} = 0_{I}$, and $\Delta_{\mb{0}} = 0_{0 + 0}$
-    \item For $A, B$ affine, $!_{A + B} = [!_A, !_B]$, and for $A, B$ relevant, 
-    $\Delta_{A + B} 
-      = [\dmor{A} ; \iota_l \otimes \iota_l, \dmor{B} ; \iota_r \otimes \iota_r]
+          $\tmor{\mb{0}} = 0_{I}$, and $\dmor{\mb{0}} = 0_{0 + 0}$
+    \item For $A, B$ affine, $\tmor{A + B} = [\tmor{A}, \tmor{B}]$, and for $A, B$ relevant,
+    $\dmor{A + B} = [\dmor{A} ; \iota_l \otimes \iota_l, \dmor{B} ; \iota_r \otimes \iota_r]
     $
   \end{itemize}
 \end{definition}
 We define the \emph{effective type} of an annotated type $A^q$, $\etoty{A^q}$ to be $\mb{1}$ if
 $q = 0$, and $A$ otherwise. We can then proceed to define the effective type of an annotated context
 $\Gamma^{\mb{q}}$ to be the tensor product of its variables, i.e., $\etoty{\cdot} = \mb{1}$ and
-$\etoty{\Gamma, x : A^q} = \etoty{\Gamma} \otimes \etoty{A^q}$. 
-We will abuse notation slightly and extend $\dnt{\cdot}$ to quantity 
-annotated types $A^q$ by taking $\dnt{A^q} = \dnt{\etoty{A^q}}$; likewise, we define $!_{A^q} =
-!_{\etoty{A^q}}$ and $\Delta_{A^q} = \Delta_{\etoty{A^q}}$, where the \emph{effective type} of an 
-annotated type $A^q$, $\etoty{A^q}$, is $\mb{1}$ if $q = 0$, and $A$ otherwise. 
-Likewise, we proceed to define the semantics of an annotated context 
+$\etoty{\Gamma, x : A^q} = \etoty{\Gamma} \otimes \etoty{A^q}$. We will abuse notation slightly and
+extend $\dnt{\cdot}$ to quantity annotated types $A^q$ by taking $\dnt{A^q} = \dnt{\etoty{A^q}}$;
+likewise, we define $\tmor{A^q} = \tmor{\etoty{A^q}}$ and $\dmor{A^q} = \dmor{\etoty{A^q}}$,
+where the \emph{effective type} of an annotated type $A^q$, $\etoty{A^q}$, is $\mb{1}$ if $q = 0$,
+and $A$ otherwise. Likewise, we proceed to define the semantics of an annotated context
 $\dnt{\Gamma^{\mb{q}}} : |\mc{C}|$ as $\dnt{\etoty{\Gamma^{\mb{q}}}}$.
 
 We can now define the semantics of our structural judgements, weakenings and context splitting, in
@@ -2211,14 +2219,14 @@ and right component contexts (which are guaranteed to be of relevant type).
       : \mc{C}_\bot(\dnt{\Gamma^{\mb{q}}}, \dnt{\Delta^{\mb{q}'}})} \\
     \dnt{\cwk{\cdot}{\cdot}} = \ms{id}_I \qquad
     \dnt{\cwk{\Gamma^{\mb{q}}, x : A^q_\epsilon}{\Delta^{\mb{q}'}}}
-      = \dnt{\Gamma^{\mb{q}}} \otimes !_{A^q}
+      = \dnt{\Gamma^{\mb{q}}} \otimes \tmor{A^q}
       ; \lambda
       ; \dnt{\cwk{\Gamma^{\mb{q}}}{\Delta^{\mb{q}'}}} \\
     \dnt{\cwk{\Gamma^{\mb{q}}, x : A^q_\epsilon}
               {\Delta^{\mb{q}'}, x : A^{q'}_{\epsilon'}}}
       = \dnt{\cwk{\Gamma^{\mb{q}}}{\Delta^{\mb{q}'}}} \otimes \begin{cases}
         \ms{id}_{\dnt{A}} & \text{if } q, q' \neq 0 \\
-        !_{A^q} & \text{otherwise} \\
+        \tmor{A^q} & \text{otherwise} \\
       \end{cases}
   \end{gather*}
 
@@ -2234,7 +2242,7 @@ and right component contexts (which are guaranteed to be of relevant type).
     \left(\begin{cases}
       \lambda^{-1} & \text{if } q_l = 0 \text{ else} \\
       \rho^{-1} & \text{if } q_r = 0 \text{ else} \\
-      \Delta_A & \text{otherwise}
+      \dmor{A} & \text{otherwise}
     \end{cases}\right) 
     ; \sigma^{\ms{mid}}
   \end{gather*}
@@ -3532,6 +3540,12 @@ $\mc{S}$ quotiented by a set of primitive rewrites $\mc{R}$ as follows:
   \qquad
   A \otimes (\lambda z. b) := (\lambda (y, z). (y, b)))
   $$
+  In partiuclar, we hence have that
+  $$
+  (\lambda x.a) \ltimes (\lambda y.b) = (\lambda (x, y) . (a, b)) \qquad
+  (\lambda x.a) \rtimes (\lambda y.b) = (\lambda (x, y) . 
+    \letexpr{y'}{b}{\letexpr{x'}{a}{(x', y')}})
+  $$
   \item Associators, unitors, and symmetries
   \begin{gather*}
     \alpha := (\lambda ((x, y), z) . (x, (y, z))) \qquad
@@ -3567,8 +3581,8 @@ $\mc{S}$ quotiented by a set of primitive rewrites $\mc{R}$ as follows:
   $
     (\lambda x. a)^\dagger := (\lambda y. \liter{y}{x}{a})
   $
-  \item Discard and diagonal morphisms $!_A := (\lambda x. ())$ and $\Delta_A := (\lambda x. (x,
-  x))$
+  \item Discard and diagonal morphisms $\tmor{A} := (\lambda x. ())$ and $\dmor{A} := (\lambda x.
+  (x, x))$
 \end{itemize}
 We aim to prove the following lemma:
 \begin{lemma}
@@ -3827,13 +3841,18 @@ x.a) : \ms{Tm}_\epsilon(\mc{R})(A, B)$
 \begin{itemize}
   \item If $A$ is relevant,
   \begin{align*}
-  \Delta_A ; \Delta_A \otimes A ; \alpha
+  \dmor{A} ; \dmor{A} \otimes A ; \alpha
   &= (\lambda x. (x, x)) 
     ; (\lambda (y, z) . ((y, y), z) 
     ; (\lambda ((w_1, w_2), w_3) . (w_1, (w_2, w_3))) \\
   &= (\lambda x. ((x, x), x)) ; (\lambda ((w_1, w_2), w_3) . (w_1, (w_2, w_3))) \\
   &= (\lambda x. (x, (x, x))) = (\lambda x. (x, x)) ; (\lambda (y, z) . (y, (z, z))) \\
-  &= \Delta_A ; A \otimes \Delta_A
+  &= \dmor{A} ; A \otimes \dmor{A}
+  \end{align*}
+  and
+  \begin{align*}
+  \dmor{A} ; \sigma_{A, A} &= (\lambda x. (x, x)) ; (\lambda (y, z) . (z, y)) \\
+  &= (\lambda x. \letexpr{(y, z)}{(x, x)}{(z, y)}) = (\lambda x.(x, x)) = \dmor{A}
   \end{align*}
   as desired
   \item If $0 \leq \alquant^p(\epsilon)$ and $A, B$ affine, by \brle{let$_1$-$\beta^p$}, 
@@ -3842,14 +3861,24 @@ x.a) : \ms{Tm}_\epsilon(\mc{R})(A, B)$
   \end{align*}
   \item If $0 \leq \alquant^p(\epsilon)$ and $A$ relevant, $B$ affine, by \brle{elim$^p$}, 
   \begin{align*}
-  \Delta_A ; (f ; !_B) \otimes A &= (\lambda x. 
+  \dmor{A} ; (f ; \tmor{B}) \otimes A &= (\lambda x. 
     \letexpr{(y, z)}{(x, x)}{(\letexpr{w}{f(y)}{()}, z)})
     \\
     &= (\lambda x. (f(x) ; (), x)) = (\lambda x . \letexpr{y}{(f(x) ; ())}{((), x)}) \\
     & \cref^p (\lambda x. \letexpr{y}{()}{((), x)})
       = (\lambda x. ((), x)) = \rho^{-1}
   \end{align*}
-  \item If $\omega^+ \leq \alquant^p(\epsilon)$ and $A, B$ relevant, \todo{this}
+  \item If $\omega^+ \leq \alquant^p(\epsilon)$ and $A, B$ relevant, by \brle{let$_1$-$\beta^p$}, 
+  \begin{align*}
+    (\lambda x.a) ; \dmor{B} &= (\lambda x.a) ; (\lambda y.(y, y)) 
+    = (\lambda x.\letexpr{y}{a}{(y, y)})
+    = (\lambda x. (a, a)) \\
+    &= (\lambda x. (\letexpr{y}{x}{[y/x]a}, \letexpr{z}{x}{[z/x]a})) \\
+    &= (\lambda x. \letexpr{y}{x}{\letexpr{z}{x}{([y/x]a, [z/x]a)}}) \\
+    &= (\lambda x . \letexpr{(y, z)}{(x, x)}{([y/x]a, [z/x]a)}) \\
+    &= (\lambda x. (x, x)) ; (\lambda (y, z). ([y/x]a, [z/x]a)) 
+     = \dmor{A} ; (\lambda x.a) \ltimes (\lambda x.a)
+  \end{align*}
 \end{itemize}
 \end{proof}
 
@@ -3956,7 +3985,7 @@ To show completeness, it hence suffices to prove the following lemma:
     \item ($\cwk{\Gamma^{\mb{q}}, x : A^q}{\cdot}$): we have that
     \begin{align*}
       \dnt{\cwk{\Gamma^{\mb{q}}, x : A^q}{\cdot}}
-      &= [\Gamma^{\mb{q}}] \otimes !_{A^q}
+      &= [\Gamma^{\mb{q}}] \otimes \tmor{A^q}
     \end{align*}
   \end{itemize}
   It follows immediately that
