@@ -2305,7 +2305,7 @@ denotation.
     \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{(a, b)}{A \otimes B}}
       = \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
       ; \dnt{\hasty{\Gamma^{\mb{q}_l}}{\epsilon}{a}{A}}
-      \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{b}{B}}
+      \ltimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{b}{B}}
     \qquad
     \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{()}{\mb{1}}}
       = \dnt{\cwk{\Gamma^{\mb{q}}}{\cdot}}
@@ -4248,7 +4248,34 @@ To show completeness, it hence suffices to prove the following lemma:
     as desired.
     \item $(\hasty{\Gamma^{\mb{q}}}{}{\letexpr{x}{a}{b}}{B})$: \todo{whack}
     \item $(\hasty{\Gamma^{\mb{q}}}{}{()}{\mb{1}})$: \todo{click}
-    \item $(\hasty{\Gamma^{\mb{q}}}{}{(a, b)}{A \otimes B})$: \todo{crack}
+    \item $(\hasty{\Gamma^{\mb{q}}}{}{(a, b)}{A \otimes B})$: we have that
+    \begin{align*}
+    \Gamma^{\mb{q}} &\vdash_\bot
+      \letexpr{x}{\ms{pack}(\Gamma^{\mb{q}})}{\dnt{\hasty{\Gamma^{\mb{q}}}{}
+        {(a, b)}{A \otimes B}}(x)} \\
+      &\approx 
+      \letexpr{x}{\ms{pack}(\Gamma^{\mb{q}})}{(
+        \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+        ; \dnt{\hasty{\Gamma^{\mb{q}_l}}{}{a}{A}} \ltimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{}{b}{B}}
+      )(x)
+      } \\
+      &\approx
+      \letexpr{x}
+      {(\letexpr{y}{\ms{pack}(\Gamma^{\mb{q}})}{\dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}})}
+      {(\dnt{\hasty{\Gamma^{\mb{q}_l}}{}{a}{A}} \ltimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{}{b}{B}})(x)}
+      \\
+      &\approx
+      \letexpr{x}
+      {(\ms{pack}(\Gamma^{\mb{q}_l}), \ms{pack}(\Gamma^{\mb{q}_r}))}
+      {(\dnt{\hasty{\Gamma^{\mb{q}_l}}{}{a}{A}} \ltimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{}{b}{B}})(x)}
+      \\
+      &\approx
+      (
+        \letexpr{x}{\ms{pack}(\Gamma^{\mb{q}_l})}{\dnt{\hasty{\Gamma^{\mb{q}_l}}{}{a}{A}}},
+        \letexpr{x}{\ms{pack}(\Gamma^{\mb{q}_r})}{\dnt{\hasty{\Gamma^{\mb{q}_r}}{}{b}{B}}}
+      )
+      \approx (a, b) : A \otimes B
+    \end{align*}
     \item $(\hasty{\Gamma^{\mb{q}}}{}{\letexpr{(x, y)}{a}{c}}{C})$: \todo{tick}
     \item $(\hasty{\Gamma^{\mb{q}}}{}{\linl{a}}{A + B}):$ \todo{:(}
     \item $(\hasty{\Gamma^{\mb{q}}}{}{\linr{b}}{A + B})$: \todo{:(}
