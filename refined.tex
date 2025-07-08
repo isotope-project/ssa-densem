@@ -3985,7 +3985,9 @@ To show completeness, it hence suffices to prove the following lemma:
     \item ($\cwk{\Gamma^{\mb{q}}, x : A^q}{\cdot}$): we have that
     \begin{align*}
       \dnt{\cwk{\Gamma^{\mb{q}}, x : A^q}{\cdot}}
-      &= [\Gamma^{\mb{q}}] \otimes \tmor{A^q}
+      &= [\Gamma^{\mb{q}}] \otimes \tmor{A^q} ; \rho ; \dnt{\cwk{\Gamma^{\mb{q}}}{\cdot}} 
+       = (\lambda (x, y) . ((), ())) ; (\lambda (z, w) . z) ; (\lambda u . ()) \\
+      &= (\lambda (x, y) . ()) ; (\lambda u . ()) = (\lambda (x, y) . ()) = (\lambda u . ())
     \end{align*}
   \end{itemize}
   It follows immediately that
