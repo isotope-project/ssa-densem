@@ -4025,23 +4025,24 @@ To show completeness, it hence suffices to prove the following lemma:
       &\approx \letexpr{(z, w)}{(\ms{pack}(\Gamma^{\mb{q}}, y))}{((), w)} \\
       &\approx ((), y)
     \end{align*}
-    \item ($\cwk{\Gamma^{\mb{q}}, x : B^q}{y : A^1}$): we have that
+    \item ($\cwk{\Gamma^{\mb{q}}, z : B^q}{y : A^1}$): we have that
     \begin{align*}
-    \dnt{\cwk{\Gamma^{\mb{q}}, x : B^q}{y : A^1}}
+    \dnt{\cwk{\Gamma^{\mb{q}}, z : B^q}{y : A^1}}
     &= [\Gamma^{\mb{q}}] \otimes \tmor{B^q} ; \rho ; \dnt{\cwk{\Gamma^{\mb{q}}}{y : A^1}} \\
     &= (\lambda (x, y) . (x, ())) ; (\lambda (z, w) . z) ; \dnt{\cwk{\Gamma^{\mb{q}}}{y : A^1}} \\
     &= (\lambda (x, y) . x) ; \dnt{\cwk{\Gamma^{\mb{q}}}{y : A^1}} \\
     &= (\lambda (x, y) . \dnt{\cwk{\Gamma^{\mb{q}}}{y : A^1}}(x))
     \end{align*}
-    It follows that
+    It follows by induction that
     \begin{align*}
-    \Gamma^{\mb{q}}, x : B^q & \vdash_\bot
-    \letexpr{x}{\ms{pack}(\Gamma^{\mb{q}}, x)}  
+    \Gamma^{\mb{q}}, z : B^q & \vdash_\bot
+    \letexpr{x}{\ms{pack}(\Gamma^{\mb{q}}, z : B^q)}  
       {\dnt{\cwk{\Gamma^{\mb{q}}, y : A^q}{y : A^1}}(x)} \\
-    ...
+    &\approx \letexpr{x}{\ms{pack}(\Gamma^{\mb{q}}, z^q)}  
+        {\lambda (w, u) . \dnt{\cwk{\Gamma^{\mb{q}}}{y : A^1}}(w)} \\
+    &\approx \letexpr{w}{\ms{pack}(\Gamma^{\mb{q}})}{\dnt{\cwk{\Gamma^{\mb{q}}}{y : A^1}}(w)}
+      \approx (y, ())
     \end{align*}
-    \TODO{for lo, the enemies of mankind are many, but the greatest of these is the left strike --
-    Github Copilot}
   \end{itemize}
   Similarly, we have that
   \begin{equation*}
