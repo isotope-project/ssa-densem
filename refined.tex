@@ -4029,6 +4029,7 @@ To show completeness, it hence suffices to prove the following lemma:
       &\approx \letexpr{x}{(\ms{pack}(\Gamma^{\mb{q}}, y))}{(\lambda (z, w) . ((), w))(x)} \\
       &\approx \letexpr{(z, w)}{(\ms{pack}(\Gamma^{\mb{q}}, y))}{((), w)} \\
       &\approx ((), y)
+      : [y : A^1]
     \end{align*}
     \item ($\cwk{\Gamma^{\mb{q}}, z : B^q}{y : A^1}$): we have that
     \begin{align*}
@@ -4046,7 +4047,8 @@ To show completeness, it hence suffices to prove the following lemma:
     &\approx \letexpr{x}{\ms{pack}(\Gamma^{\mb{q}}, z^q)}  
         {\lambda (w, u) . \dnt{\cwk{\Gamma^{\mb{q}}}{y : A^1}}(w)} \\
     &\approx \letexpr{w}{\ms{pack}(\Gamma^{\mb{q}})}{\dnt{\cwk{\Gamma^{\mb{q}}}{y : A^1}}(w)}
-      \approx (y, ())
+      \approx ((), y)
+      : [y : A^1]
     \end{align*}
   \end{itemize}
   Similarly, we have that
@@ -4066,6 +4068,7 @@ To show completeness, it hence suffices to prove the following lemma:
         &\approx \letexpr{x}{()}{(x, ())}
         \approx ((), ())
         \approx (\ms{pack}(\cdot), \ms{pack}(\cdot))
+        : [\ms{pack}(\cdot)] \otimes [\ms{pack}(\cdot)]
     \end{align*}
     as desired.
     \item $(\qsp{\Gamma, x : A}{\mb{q}, q}{\mb{q}_l, q}{\mb{q}_r, 0})$: we have that
@@ -4114,6 +4117,7 @@ To show completeness, it hence suffices to prove the following lemma:
         \\
         &\approx
           (\ms{pack}(\Gamma^{\mb{q}_l}, x : A^q), \ms{pack}(\Gamma^{\mb{q}_r}, x : A^0))
+        : [\Gamma^{\mb{q}_l}, x : A^q] \otimes [\Gamma^{\mb{q}_r}, x : A^0]
     \end{align*}
     as desired.
     \item $(\qsp{\Gamma, x : A}{\mb{q}, q}{\mb{q}_l, 0}{\mb{q}_r, q})$:  
@@ -4131,7 +4135,21 @@ To show completeness, it hence suffices to prove the following lemma:
   \end{equation*}
   We proceed by induction on the derivation $\hasty{\Gamma^{\mb{q}}}{}{a}{A}$:
   \begin{itemize}
-    \item $(\hasty{\Gamma^{\mb{q}}}{}{x}{A})$: \todo{smack}
+    \item $(\hasty{\Gamma^{\mb{q}}}{}{x}{A})$: we have that
+    \begin{align*}
+    \Gamma^{\mb{q}} &\vdash_\bot 
+      \letexpr{y}{\ms{pack}(\Gamma^{\mb{q}})}{\dnt{\hasty{\Gamma^{\mb{q}}}{}{x}{A}}(y)} \\
+      &\approx 
+      \letexpr{y}{\ms{pack}(\Gamma)^{\mb{q}}}{(\dnt{\cwk{\Gamma^{\mb{q}}}{x : A^1}} ; \lambda)(y)} \\
+      &\approx
+      \letexpr{y}{
+        (\letexpr{z}
+          {\ms{pack}(\Gamma^{\mb{q}})}{\dnt{\cwk{\Gamma^{\mb{q}}}{x : A^1}}(z)})}
+        {(\lambda (w, u) . u)(y)} \\
+      &\approx
+      \letexpr{(w, u)}{(x, ())}{u} \approx x : A
+    \end{align*}
+    as desired.
     \item $(\hasty{\Gamma^{\mb{q}}}{}{\letexpr{x}{a}{b}}{B})$: \todo{whack}
     \item $(\hasty{\Gamma^{\mb{q}}}{}{()}{\mb{1}})$: \todo{click}
     \item $(\hasty{\Gamma^{\mb{q}}}{}{(a, b)}{A \otimes B})$: \todo{crack}
