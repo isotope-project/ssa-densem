@@ -3891,9 +3891,11 @@ $\hasty{\Gamma^{\mb{q}}}{\bot}{\ms{pack}(\Gamma^{\mb{q}})}{\etoty{\Gamma^{\mb{q}
 variables in the obvious manner; namely
 \begin{equation*}
   \ms{pack}(\cdot) := () \qquad
-  \ms{pack}(\Gamma^{\mb{q}}, x : A^q) = \begin{cases}
-    (\ms{pack}(\Gamma^{\mb{q}}), x) & \text{if } q \neq 0 \\
-    (\ms{pack}(\Gamma^{\mb{q}}), ()) & \text{otherwise}
+  \ms{pack}(\Gamma^{\mb{q}}, x : A^q) = (\ms{pack}(\Gamma^{\mb{q}}), x^q) \qquad
+  x^q :=
+  \begin{cases}
+    x & \text{if } q \neq 0 \\
+    () & \text{otherwise}
   \end{cases}
 \end{equation*}
 We can similarly \emph{unpack} a context's effective type $a : [\ms{\Gamma}^{\mb{q}}]$, which we
@@ -4007,8 +4009,39 @@ To show completeness, it hence suffices to prove the following lemma:
   \end{equation*}
   We proceed by induction on the derivation $\cwk{\Gamma^{\mb{q}}}{y : A^1}$:
   \begin{itemize}
-    \item \todo{this}
-    \item \todo{that}
+    \item ($\cwk{\Gamma^{\mb{q}}, y : A^q}{y : A^1}$): we have that
+    \begin{align*}
+    \dnt{\cwk{\Gamma^{\mb{q}}, y : A^q}{y : A^1}}
+    &= \dnt{\cwk{\Gamma^{\mb{q}}}{\cdot}} \otimes \ms{id}
+     = (\lambda x.()) \otimes (\lambda y.y)
+     = (\lambda (x, y) . ((), y))
+    \end{align*}
+    It follows that
+    \begin{align*}
+    \Gamma^{\mb{q}}, y : A^q & \vdash_\bot
+      \letexpr{x}{\ms{pack}(\Gamma^{\mb{q}}, y : A^q)}  
+        {\dnt{\cwk{\Gamma^{\mb{q}}, y : A^q}{y : A^1}}(x)} \\
+      &\approx \letexpr{x}{(\ms{pack}(\Gamma^{\mb{q}}, y))}{(\lambda (z, w) . ((), w))(x)} \\
+      &\approx \letexpr{(z, w)}{(\ms{pack}(\Gamma^{\mb{q}}, y))}{((), w)} \\
+      &\approx ((), y)
+    \end{align*}
+    \item ($\cwk{\Gamma^{\mb{q}}, x : B^q}{y : A^1}$): we have that
+    \begin{align*}
+    \dnt{\cwk{\Gamma^{\mb{q}}, x : B^q}{y : A^1}}
+    &= [\Gamma^{\mb{q}}] \otimes \tmor{B^q} ; \rho ; \dnt{\cwk{\Gamma^{\mb{q}}}{y : A^1}} \\
+    &= (\lambda (x, y) . (x, ())) ; (\lambda (z, w) . z) ; \dnt{\cwk{\Gamma^{\mb{q}}}{y : A^1}} \\
+    &= (\lambda (x, y) . x) ; \dnt{\cwk{\Gamma^{\mb{q}}}{y : A^1}} \\
+    &= (\lambda (x, y) . \dnt{\cwk{\Gamma^{\mb{q}}}{y : A^1}}(x))
+    \end{align*}
+    It follows that
+    \begin{align*}
+    \Gamma^{\mb{q}}, x : B^q & \vdash_\bot
+    \letexpr{x}{\ms{pack}(\Gamma^{\mb{q}}, x)}  
+      {\dnt{\cwk{\Gamma^{\mb{q}}, y : A^q}{y : A^1}}(x)} \\
+    ...
+    \end{align*}
+    \TODO{for lo, the enemies of mankind are many, but the greatest of these is the left strike --
+    Github Copilot}
   \end{itemize}
   Similarly, we have that
   \begin{equation*}
