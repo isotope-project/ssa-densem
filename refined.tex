@@ -3201,21 +3201,31 @@ work, we take the final step and give a fully expression-oriented
 syntax, which is still completely equivalent to traditional SSA.
 
 \noindent \textbf{Semantics of SSA} \citet{vellvm-12} is a mechanized semantics for LLVM's SSA dialect.
-Their syntax sticks very closely to LLVM, and so their operational semantics must compute
-$\phi$-nodes at each step, and furthermore they give several such semantics and
-prove refinements between them. Each operational semantics is further parameterized
+Their syntax closely follows LLVM's, and so their operational semantics must compute
+$\phi$-nodes at each step. Furthermore, they give several such semantics and
+prove refinements between them. Each semantics is further parameterized
 over a memory model, and so execution builds a tree of possible executions, resumption-style,
 which can then be made into concrete execution traces with an ``effect handler'' or
 free monad interpreter computing the effect of each memory action. 
-
 \citet{garbuzov-structural-cfg-2018} exhibit a correspondence between
 an operational semantics for both SSA and a fragment of
 call-by-push-value~\cite{cbpv}, and then use the normal form
 bisimulations of \citet{lassen-bisim} to derive an equational theory
 for justifying optimizations.  This work considers nontermination as
 the only effect, and studies equivalence rather than refinement.
+\citet{ghalayini-24-ssa-densem-arxiv} give a denotational semantics
+similar to this paper's, but their model is not in enriched categories and
+hence does not model refinement, nor does it model an effect system or
+linear types. 
 
-\noindent \textbf{Effect Systems and Linearity} \todo{Ohad, lipton, fuhrmann, plotkin-power, etc}
+\noindent \textbf{Effect Systems and Linearity} Effect systems were introduced by \citet{gifford86}, which introduced a type system with a lattice of effects to track which effects a program could potentially perform, with the idea was to gain reasoning principles by restricting effects. \citet{fuhrmann-direct-1999} introduced the idea of categorizing effects in terms of linearity (i.e., whether effects can be moved, duplicated or dropped), which reverses the conceptual priority: effects are classified not by their intension, but by which equations they validate. \citet{kammar-effect-12} build on this idea, and give a Gifford-style type-and-effect system for a variant of call-by-push-value, an effect-dependent equational, and  conditions on the semantics monad to ensure each equation holds.
+%
+% This can be contrasted with the line of work on algebraic effects pioneered by \citet{plotkin-power-2001}, which views the signature of an effect as giving rise to a free monad, which can then be interpreted by a suitable monad morphism. Here, the natural emphasis is on finding equational theories which completely characterize a given kind of effect; for example, see the work of \citet{staton-state-10} on the equational properties of local state. 
+% 
+We build on this work by integrating the idea of linearity of effects with an old idea of \citet{lipton-mover-75}. By simply classifying effects by whether they can commute to the left or right of another effect, we gain a very rich (in)equational theory very cheaply. 
+
+
+
 
 
 % \TODO{ 
@@ -3236,16 +3246,12 @@ the only effect, and studies equivalence rather than refinement.
 %   %
 % }
 
-\TODO{\citet{lipton-mover-75} for movers.}
+% \TODO{\citet{lipton-mover-75} for movers.}
+% \TODO{\citet{kammar-effect-12}: you don't need a complete theory for an effect, you can do a lot
+% just knowing what commutes with what. A good idea that is under-exploited.}
+%
+% \TODO{maybe take a peek at \citet{jiang-stack-25}; probably don't need to cite}
 
-\TODO{\citet{kammar-effect-12}: you don't need a complete theory for an effect, you can do a lot
-just knowing what commutes with what. A good idea that is under-exploited.}
-
-\TODO{maybe take a peek at \citet{jiang-stack-25}; probably don't need to cite}
-
-\TODO{
-  we extend \citet{ghalayini-24-ssa-densem-arxiv} to be substructural and have a full effect system
-}
 
 \subsection*{Acknowledgements}
 
