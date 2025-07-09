@@ -3981,7 +3981,7 @@ To show completeness, it hence suffices to prove the following lemma:
     \begin{equation*}
       \letexpr{z}{(a, b)}{((f \otimes g) ; h)(z)} \approx \letexpr{z}{(a', b')}{h(z)}
     \end{equation*}
-    \item For $\hasty{\Gamma^{\mb{q}}}{}{a}{A}$ pure with $\Gamma^{\mb{q}}$ relevant,
+    \item Given $a$ pure,
     \begin{align*} 
     &\letexpr{z}{(a, b)}{(\delta^{-1} ; f)(z)} 
     \\ &\approx \caseexpr{b}
@@ -4465,8 +4465,20 @@ To show completeness, it hence suffices to prove the following lemma:
           \dnt{\hasty{\Gamma^{\mb{q}_l}, y : B}{\epsilon}{b}{C}}
         ])(z)}
       \\ &\approx
+      \caseexpr{e \\ & \qquad\;}
+        {x}{\letexpr{w}{(\ms{pack}(\Gamma^{\mb{q}_l}), x)}{
+          \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{a}{C}}(w)} \\ & \qquad}
+        {y}{\letexpr{}{(\ms{pack}(\Gamma^{\mb{q}_l}), y)}{
+          \dnt{\hasty{\Gamma^{\mb{q}_l}, y : B}{\epsilon}{b}{C}}}}
+      \\ &\approx
+      \caseexpr{e \\ & \qquad}
+        {x}{\letexpr{w}{\ms{pack}(\Gamma^{\mb{q}_l}, x : A))}{
+          \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{a}{C}}(w)} \\ & \qquad}
+        {y}{\letexpr{}{\ms{pack}(\Gamma^{\mb{q}_l}), y : B)}{
+          \dnt{\hasty{\Gamma^{\mb{q}_l}, y : B}{\epsilon}{b}{C}}}}
+      \\ &\approx
+      \caseexpr{e}{x}{a}{y}{b} : C
     \end{align*}
-    \todo{tock}
     \item $(\hasty{\Gamma^{\mb{q}}}{}{\labort{a}}{A})$: we have that
     \begin{align*}
     \Gamma^{\mb{q}} &\vdash_\bot
@@ -4570,24 +4582,25 @@ To show completeness, it hence suffices to prove the following lemma:
         \dnt{\cwk{\Gamma^{\mb{q}_l}}{\cdot}} \otimes B
         ; \rho
       )(z)}
-      \\ &\approx 
-      \letexpr{z}{
-          (\letexpr{y}{\ms{pack}(\Gamma^{\mb{q}})}{\dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}})}
-        {(
-          [\Gamma^{\mb{q}_l}] \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A}} ;
-      \\ & \qquad    
-        (
-          \dnt{\qsp{\Gamma}{\mb{q}_l}{\mb{q}_l}{\mb{q}_l}} \otimes A 
-          ; \alpha
-          ; [\Gamma^{\mb{q}_l}] 
-            \otimes \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{b}{B + A}}
-          ; \delta^{-1}
-        )^\dagger  
-        ;
-      \\ & \qquad
-        \dnt{\cwk{\Gamma^{\mb{q}_l}}{\cdot}} \otimes B
-        ; \rho
-      )(z)}
+      % \\ &\approx 
+      % \letexpr{z}{
+      %     (\letexpr{y}{\ms{pack}(\Gamma^{\mb{q}})}
+      %        {\dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}})}
+      %   {(
+      %     [\Gamma^{\mb{q}_l}] \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A}} ;
+      % \\ & \qquad    
+      %   (
+      %     \dnt{\qsp{\Gamma}{\mb{q}_l}{\mb{q}_l}{\mb{q}_l}} \otimes A 
+      %     ; \alpha
+      %     ; [\Gamma^{\mb{q}_l}] 
+      %       \otimes \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{b}{B + A}}
+      %     ; \delta^{-1}
+      %   )^\dagger  
+      %   ;
+      % \\ & \qquad
+      %   \dnt{\cwk{\Gamma^{\mb{q}_l}}{\cdot}} \otimes B
+      %   ; \rho
+      % )(z)}
       \\ &\approx 
       \letexpr{z}{
           (\ms{pack}(\Gamma^{\mb{q}_l}), \ms{pack}(\Gamma^{\mb{q}_r}))}
@@ -4606,25 +4619,25 @@ To show completeness, it hence suffices to prove the following lemma:
         \dnt{\cwk{\Gamma^{\mb{q}_l}}{\cdot}} \otimes B
         ; \rho
       )(z)}
-      \\ &\approx 
-      \letexpr{z}{
-          (\ms{pack}(\Gamma^{\mb{q}_l}), 
-            \letexpr{y}{\ms{pack}(\Gamma^{\mb{q}_r})}
-              {\dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A}}})}
-        {(
-      \\ & \qquad    
-        (
-          \dnt{\qsp{\Gamma}{\mb{q}_l}{\mb{q}_l}{\mb{q}_l}} \otimes A 
-          ; \alpha
-          ; [\Gamma^{\mb{q}_l}] 
-            \otimes \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{b}{B + A}}
-          ; \delta^{-1}
-        )^\dagger  
-        ;
-      \\ & \qquad
-        \dnt{\cwk{\Gamma^{\mb{q}_l}}{\cdot}} \otimes B
-        ; \rho
-      )(z)}
+      % \\ &\approx 
+      % \letexpr{z}{
+      %     (\ms{pack}(\Gamma^{\mb{q}_l}), 
+      %       \letexpr{y}{\ms{pack}(\Gamma^{\mb{q}_r})}
+      %         {\dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A}}})}
+      %   {(
+      % \\ & \qquad    
+      %   (
+      %     \dnt{\qsp{\Gamma}{\mb{q}_l}{\mb{q}_l}{\mb{q}_l}} \otimes A 
+      %     ; \alpha
+      %     ; [\Gamma^{\mb{q}_l}] 
+      %       \otimes \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{b}{B + A}}
+      %     ; \delta^{-1}
+      %   )^\dagger  
+      %   ;
+      % \\ & \qquad
+      %   \dnt{\cwk{\Gamma^{\mb{q}_l}}{\cdot}} \otimes B
+      %   ; \rho
+      % )(z)}
       \\ &\approx 
       \letexpr{z}{
           (\ms{pack}(\Gamma^{\mb{q}_l}), a)}
