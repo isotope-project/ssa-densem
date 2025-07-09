@@ -3958,7 +3958,13 @@ To show completeness, it hence suffices to prove the following lemma:
   \begin{equation*}
   \letexpr{x}{a}{(f ; g)(x)} \approx \letexpr{y}{(\letexpr{x}{a}{f(x)})}{g(y)}
   \end{equation*}
-  We begin by noting that
+  and hence that, if $\letexpr{x}{a}{f(x)} \approx a'$, $\letexpr{x}{a}{(f ; g)(x)} =
+  \letexpr{x}{a'}{g(x)}$. In particular, if $b$ is pure and $\letexpr{x}{a}{f(x)} = a'$,
+  $\letexpr{y}{b}{g(y)} = b'$, we have
+  \begin{equation*}
+    \letexpr{z}{(a, b)}{((f \otimes g) ; h)(z)} \approx \letexpr{z}{(a', b')}{h(z)}
+  \end{equation*} 
+  We begin by showing that
   \begin{equation*}
     \dnt{\cwk{\Gamma^{\mb{q}}}{\cdot}} \approx (\lambda x. ())
   \end{equation*}
@@ -4198,8 +4204,6 @@ To show completeness, it hence suffices to prove the following lemma:
     \end{align*}
     as desired.
   \end{itemize}
-  
-
   We now wish to show that, given $f \in \ms{Tm}(\mc{R})(A, B)$,
   \begin{equation*}
     \tmeq{\Gamma^{\mb{q}}}{\mc{R
@@ -4223,7 +4227,50 @@ To show completeness, it hence suffices to prove the following lemma:
       \letexpr{(w, u)}{(x, ())}{u} \approx x : A
     \end{align*}
     as desired.
-    \item $(\hasty{\Gamma^{\mb{q}}}{}{\letexpr{x}{a}{b}}{B})$: \todo{whack}
+    \item $(\hasty{\Gamma^{\mb{q}}}{}{\letexpr{x}{a}{b}}{B})$: we have
+    \begin{align*}
+    \Gamma^{\mb{q}} &\vdash_\bot 
+      \letexpr{y}{\ms{pack}(\Gamma^{\mb{q}})}
+        {\dnt{\hasty{\Gamma^{\mb{q}}}{}{\letexpr{x}{a}{b}}{B}}(y)} \\
+      &\approx
+      \letexpr{y}{\ms{pack}(\Gamma^{\mb{q}})}{
+        (
+          \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+          ; [\Gamma^{\mb{q}_l}] \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A}}
+          ; \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{b}{B}}
+        )(y)
+      } \\
+      &\approx
+      \letexpr{y}{(\ms{pack}(\Gamma^{\mb{q}_l}), \ms{pack}(\Gamma^{\mb{q}_r}))}{
+        (
+          [\Gamma^{\mb{q}_l}] \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A}}
+          ; \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{b}{B}}
+        )(y)
+      }
+      \\
+      &\approx
+      \letexpr{y}{(\ms{pack}(\Gamma^{\mb{q}_l}), a))}{
+        (
+          \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{b}{B}}
+        )(y)
+      }
+      \\
+      &\approx
+      \letexpr{x}{a}{\letexpr{y}{(\ms{pack}(\Gamma^{\mb{q}_l}), x))}{
+        (
+          \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{b}{B}}
+        )(y)
+      }}
+      \\
+      &\approx
+      \letexpr{x}{a}{\letexpr{y}{(\ms{pack}(\Gamma^{\mb{q}_l}, x : A)))}{
+        (
+          \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{b}{B}}
+        )(y)
+      }}
+      \\
+      &\approx \letexpr{x}{a}{b} : B
+    \end{align*}
     \item $(\hasty{\Gamma^{\mb{q}}}{}{()}{\mb{1}})$: we have
     \begin{align*}
     \Gamma^{\mb{q}} &\vdash_\bot 
