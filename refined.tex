@@ -4290,7 +4290,19 @@ To show completeness, it hence suffices to prove the following lemma:
       \\ &\approx
       \letexpr{x}{a}{\linl{x}} \approx \linl{a} : A + B
     \end{align*}
-    \item $(\hasty{\Gamma^{\mb{q}}}{}{\linr{b}}{A + B})$: \todo{:(}
+    \item $(\hasty{\Gamma^{\mb{q}}}{}{\linr{b}}{A + B})$: we have that
+    \begin{align*}
+    \Gamma^{\mb{q}} &\vdash_\bot
+      \letexpr{x}{\ms{pack}(\Gamma^{\mb{q}})}{\dnt{\hasty{\Gamma^{\mb{q}}}{}{\linr{b}}{A + B}}(x)}
+      \\ &\approx 
+      \letexpr{x}{\ms{pack}(\Gamma^{\mb{q}})}
+        {(\dnt{\hasty{\Gamma^{\mb{q}}}{}{b}{B}} ; \iota_r)(x)}
+      \\ &\approx
+      \letexpr{x}{(\letexpr{y}{\ms{pack}(\Gamma^{\mb{q}})}{\dnt{\hasty{\Gamma^{\mb{q}}}{}{b}{B}}})}
+        {\linr{x}} 
+      \\ &\approx
+      \letexpr{x}{b}{\linr{x}} \approx \linr{b} : A + B
+    \end{align*}
     \item $(\hasty{\Gamma^{\mb{q}}}{}{\caseexpr{e}{x}{a}{y}{b}}{C})$: \todo{tock}
     \item $(\hasty{\Gamma^{\mb{q}}}{}{\labort{a}}{A})$: \todo{on the}
     \item $(\hasty{\Gamma^{\mb{q}}}{}{\liter{a}{x}{b}}{B})$: \todo{clock}
