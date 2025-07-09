@@ -2294,6 +2294,7 @@ denotation.
       \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A \otimes B}}
     %\\ & 
     %; \alpha_{\Gamma^{\mb{q}_r} \otimes A \otimes B}
+    ; \alpha
     ; \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A, y : B}{\epsilon}{c}{C}}
   \end{align*}
   \begin{align*}
@@ -4309,7 +4310,63 @@ To show completeness, it hence suffices to prove the following lemma:
       )
       \approx (a, b) : A \otimes B
     \end{align*}
-    \item $(\hasty{\Gamma^{\mb{q}}}{}{\letexpr{(x, y)}{a}{c}}{C})$: \todo{tick}
+    \item $(\hasty{\Gamma^{\mb{q}}}{}{\letexpr{(x, y)}{a}{c}}{C})$: we have that
+    \begin{align*}
+    \Gamma^{\mb{q}} &\vdash_\bot
+      \letexpr{z}{\ms{pack}(\Gamma^{\mb{q}})}
+        {\dnt{\hasty{\Gamma^{\mb{q}}}{}{\letexpr{(x, y)}{a}{c}}{C}}(z)} \\
+      &\approx
+      \letexpr{z}{\ms{pack}(\Gamma^{\mb{q}})}{
+        (\dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+        ; \dnt{\Gamma^{\mb{q}_l}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A \otimes B}}
+        ; \alpha
+        ; \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A, y : B}{\epsilon}{c}{C}}
+        )(z)
+      } \\
+      &\approx
+      \letexpr{z}{(\ms{pack}(\Gamma^{\mb{q}_l}), \ms{pack}(\Gamma^{\mb{q}_r}))}{(
+        \dnt{\Gamma^{\mb{q}_l}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A \otimes B}}
+        ; \alpha
+        ; \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A, y : B}{\epsilon}{c}{C}}
+        )(z)
+      } \\
+      &\approx
+      \letexpr{z}{(\ms{pack}(\Gamma^{\mb{q}_l}), 
+        \letexpr{w}{\ms{pack}(\Gamma^{\mb{q}_r})}
+          {
+            \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A \otimes B}(w)}
+          }
+        )
+        }{(
+        \alpha
+        ; \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A, y : B}{\epsilon}{c}{C}}
+        )(z)
+      } \\
+      &\approx
+      \letexpr{z}{(\ms{pack}(\Gamma^{\mb{q}_l}), a)
+        }{(
+        \alpha
+        ; \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A, y : B}{\epsilon}{c}{C}}
+        )(z)
+      }\\
+      &\approx
+      \letexpr{(z_1, (z_2, z_3))}{(\ms{pack}(\Gamma^{\mb{q}_l}), a)
+        }{\letexpr{z}{((z_1, z_2), z_3)}  
+          {\dnt{\hasty{\Gamma^{\mb{q}_l}, x : A, y : B}{\epsilon}{c}{C}}(z)}
+      } \\
+      &\approx
+      \letexpr{(z_2, z_3)}{a}{\letexpr{z}{((\ms{pack}(\Gamma^{\mb{q}_l}), z_2), z_3)}  
+          {\dnt{\hasty{\Gamma^{\mb{q}_l}, x : A, y : B}{\epsilon}{c}{C}}(z)}
+      } \\
+      &\approx
+      \letexpr{(z_2, z_3)}{a}{\letexpr{z}{\ms{pack}(\Gamma^{\mb{q}_l}, z_2 : A, z_3 : B)}  
+          {\dnt{\hasty{\Gamma^{\mb{q}_l}, x : A, y : B}{\epsilon}{c}{C}}(z)}
+      }\\
+      &\approx
+      \letexpr{(z_2, z_3)}{a}{[z_3/y][z_2/x]c}
+      \approx
+      \letexpr{(x, y)}{a}{c} : C
+    \end{align*}
     \item $(\hasty{\Gamma^{\mb{q}}}{}{\linl{a}}{A + B})$: we have that
     \begin{align*}
     \Gamma^{\mb{q}} &\vdash_\bot
