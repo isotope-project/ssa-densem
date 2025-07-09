@@ -2335,7 +2335,7 @@ denotation.
       \dnt{\qsp{\Gamma}{\mb{q}_l}{\mb{q}_l}{\mb{q}_l}} \otimes \dnt{A} 
       ; \alpha
       ; \dnt{\Gamma^{\mb{q}_l}} 
-        \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}, x : A}{\epsilon}{b}{B + A}}
+        \otimes \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{b}{B + A}}
       ; \delta^{-1}
     )^\dagger \\ &
     ; \dnt{\cwk{\Gamma^{\mb{q}_l}}{\cdot}} \otimes \dnt{B}
@@ -4319,7 +4319,7 @@ To show completeness, it hence suffices to prove the following lemma:
           \dnt{\qsp{\Gamma}{\mb{q}_l}{\mb{q}_l}{\mb{q}_l}} \otimes A 
           ; \alpha
           ; [\Gamma^{\mb{q}_l}] 
-            \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}, x : A}{\epsilon}{b}{B + A}}
+            \otimes \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{b}{B + A}}
           ; \delta^{-1}
         )^\dagger  
         ;
@@ -4337,7 +4337,7 @@ To show completeness, it hence suffices to prove the following lemma:
           \dnt{\qsp{\Gamma}{\mb{q}_l}{\mb{q}_l}{\mb{q}_l}} \otimes A 
           ; \alpha
           ; [\Gamma^{\mb{q}_l}] 
-            \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}, x : A}{\epsilon}{b}{B + A}}
+            \otimes \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{b}{B + A}}
           ; \delta^{-1}
         )^\dagger  
         ;
@@ -4355,7 +4355,7 @@ To show completeness, it hence suffices to prove the following lemma:
           \dnt{\qsp{\Gamma}{\mb{q}_l}{\mb{q}_l}{\mb{q}_l}} \otimes A 
           ; \alpha
           ; [\Gamma^{\mb{q}_l}] 
-            \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}, x : A}{\epsilon}{b}{B + A}}
+            \otimes \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{b}{B + A}}
           ; \delta^{-1}
         )^\dagger  
         ;
@@ -4374,7 +4374,7 @@ To show completeness, it hence suffices to prove the following lemma:
           \dnt{\qsp{\Gamma}{\mb{q}_l}{\mb{q}_l}{\mb{q}_l}} \otimes A 
           ; \alpha
           ; [\Gamma^{\mb{q}_l}] 
-            \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}, x : A}{\epsilon}{b}{B + A}}
+            \otimes \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{b}{B + A}}
           ; \delta^{-1}
         )^\dagger  
         ;
@@ -4391,7 +4391,7 @@ To show completeness, it hence suffices to prove the following lemma:
           \dnt{\qsp{\Gamma}{\mb{q}_l}{\mb{q}_l}{\mb{q}_l}} \otimes A 
           ; \alpha
           ; [\Gamma^{\mb{q}_l}] 
-            \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}, x : A}{\epsilon}{b}{B + A}}
+            \otimes \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{b}{B + A}}
           ; \delta^{-1}
         )^\dagger  
         ;
@@ -4407,10 +4407,26 @@ To show completeness, it hence suffices to prove the following lemma:
               \dnt{\qsp{\Gamma}{\mb{q}_l}{\mb{q}_l}{\mb{q}_l}} \otimes A 
               ; \alpha
               ; [\Gamma^{\mb{q}_l}] 
-                \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}, x : A}{\epsilon}{b}{B + A}}
+                \otimes \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{b}{B + A}}
               ; \delta^{-1}
-            )^\dagger  
+            )^\dagger(y)
           }
+        )}
+        { \\ & \qquad (
+        \dnt{\cwk{\Gamma^{\mb{q}_l}}{\cdot}} \otimes B
+        ; \rho
+      )(z)}
+      \\ &\approx 
+      \letexpr{z}{(
+          \letexpr{y}{a}{\liter{(\ms{pack}(\Gamma^{\mb{q}_l}), y)}{w}{ \\ & \qquad \qquad
+            (
+              \dnt{\qsp{\Gamma}{\mb{q}_l}{\mb{q}_l}{\mb{q}_l}} \otimes A 
+              ; \alpha
+              ; [\Gamma^{\mb{q}_l}] 
+                \otimes \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{b}{B + A}}
+              ; \delta^{-1}
+            )(w)
+          }}
         )}
         { \\ & \qquad (
         \dnt{\cwk{\Gamma^{\mb{q}_l}}{\cdot}} \otimes B
