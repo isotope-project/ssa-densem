@@ -4318,7 +4318,31 @@ To show completeness, it hence suffices to prove the following lemma:
       \\ &\approx
       \letexpr{x}{a}{\labort{x}} \approx \labort{a} : A
     \end{align*}
-    \item $(\hasty{\Gamma^{\mb{q}}}{}{\liter{a}{x}{b}}{B})$: \todo{clock}
+    \item $(\hasty{\Gamma^{\mb{q}}}{}{\liter{a}{x}{b}}{B})$: we have that
+    \begin{align*}
+    \Gamma^{\mb{q}} &\vdash_\bot
+      \letexpr{x}{\ms{pack}(\Gamma^{\mb{q}})}{\dnt{\hasty{\Gamma^{\mb{q}}}{}{\liter{a}{x}{b}}{B}}(x)}
+      \\ &\approx 
+      \letexpr{x}{\ms{pack}(\Gamma^{\mb{q}})}
+        {(
+          \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+          ; [\Gamma^{\mb{q}_l}] \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A}}
+          ;
+      \\ & \qquad    
+        (
+          \dnt{\qsp{\Gamma}{\mb{q}_l}{\mb{q}_l}{\mb{q}_l}} \otimes A 
+          ; \alpha
+          ; [\Gamma^{\mb{q}_l}] 
+            \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}, x : A}{\epsilon}{b}{B + A}}
+          ; \delta^{-1}
+        )^\dagger  
+        ;
+      \\ & \qquad
+        \dnt{\cwk{\Gamma^{\mb{q}_l}}{\cdot}} \otimes B
+        ; \rho
+      )(x)}
+    \end{align*}
+    \TODO{lo and behold, this is a lot of work! -- GitHub Copilot}
   \end{itemize}
 \end{proof}
 Completeness follows directly from the above lemma, since, given 
