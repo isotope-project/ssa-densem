@@ -3974,11 +3974,31 @@ To show completeness, it hence suffices to prove the following lemma:
   \letexpr{x}{a}{(f ; g)(x)} \approx \letexpr{y}{(\letexpr{x}{a}{f(x)})}{g(y)}
   \end{equation*}
   and hence that, if $\letexpr{x}{a}{f(x)} \approx a'$, $\letexpr{x}{a}{(f ; g)(x)} =
-  \letexpr{x}{a'}{g(x)}$. In particular, if $b$ is pure and $\letexpr{x}{a}{f(x)} = a'$,
-  $\letexpr{y}{b}{g(y)} = b'$, we have
-  \begin{equation*}
-    \letexpr{z}{(a, b)}{((f \otimes g) ; h)(z)} \approx \letexpr{z}{(a', b')}{h(z)}
-  \end{equation*} 
+  \letexpr{x}{a'}{g(x)}$. In particular, we hence have that 
+  \begin{itemize}
+    \item Given $b$ pure and $\letexpr{x}{a}{f(x)} = a'$,
+    $\letexpr{y}{b}{g(y)} = b'$, we have
+    \begin{equation*}
+      \letexpr{z}{(a, b)}{((f \otimes g) ; h)(z)} \approx \letexpr{z}{(a', b')}{h(z)}
+    \end{equation*}
+    \item For $\hasty{\Gamma^{\mb{q}}}{}{a}{A}$ pure with $\Gamma^{\mb{q}}$ relevant,
+    \begin{align*} 
+    &\letexpr{z}{(a, b)}{(\delta^{-1} ; f)(z)} 
+    \\ &\approx \caseexpr{b}
+      {y_l}{\letexpr{z_l}{\linl{(a, y_l)}}{f(z_l)}}
+      {y_r}{\letexpr{z_r}{\linr{(a, y_r)}}{f(z_r)}}
+    \\ &\approx \caseexpr{b}
+      {y_l}{\letexpr{z_l}{(a, y_l)}{\iota_l ; f(z_l)}}
+      {y_r}{\letexpr{z_r}{(a, y_r)}{\iota_r ; f(z_r)}}
+    \end{align*}
+    In particular, this implies that
+    \begin{align*} 
+    &\letexpr{z}{(a, b)}{(\delta^{-1} ; [f, g])(z)} 
+    \\ &\approx \caseexpr{b}
+      {y_l}{\letexpr{z_l}{(a, y_l)}{f(z_l)}}
+      {y_r}{\letexpr{z_r}{(a, y_r)}{g(z_r)}}
+    \end{align*}
+  \end{itemize} 
   We begin by showing that
   \begin{equation*}
     \dnt{\cwk{\Gamma^{\mb{q}}}{\cdot}} \approx (\lambda x. ())
@@ -4407,7 +4427,46 @@ To show completeness, it hence suffices to prove the following lemma:
       \\ &\approx
       \letexpr{x}{b}{\linr{x}} \approx \linr{b} : A + B
     \end{align*}
-    \item $(\hasty{\Gamma^{\mb{q}}}{}{\caseexpr{e}{x}{a}{y}{b}}{C})$: \todo{tock}
+    \item $(\hasty{\Gamma^{\mb{q}}}{}{\caseexpr{e}{x}{a}{y}{b}}{C})$: we have that
+    \begin{align*}
+    \Gamma^{\mb{q}} &\vdash_\bot
+      \letexpr{z}{\ms{pack}(\Gamma^{\mb{q}})}
+        {\dnt{\hasty{\Gamma^{\mb{q}}}{}{\caseexpr{e}{x}{a}{y}{b}}{C}}(z)}
+      \\ &\approx 
+      \letexpr{z}{\ms{pack}(\Gamma^{\mb{q}})}{(\dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+        ; \dnt{\Gamma^{\mb{q}_l}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{e}{A + B}}
+        ; \delta^{-1} \\ & \qquad
+        ; [
+          \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{a}{C}},
+          \dnt{\hasty{\Gamma^{\mb{q}_l}, y : B}{\epsilon}{b}{C}}
+        ])(z)}
+      \\ &\approx
+      \letexpr{z}{(\ms{pack}(\Gamma^{\mb{q}_l}), \ms{pack}(\Gamma^{\mb{q}_r}))}{(
+        \dnt{\Gamma^{\mb{q}_l}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{e}{A + B}}
+        ; \delta^{-1} \\ & \qquad
+        ; [
+          \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{a}{C}},
+          \dnt{\hasty{\Gamma^{\mb{q}_l}, y : B}{\epsilon}{b}{C}}
+        ])(z)}
+      \\ &\approx
+      \letexpr{z}{(\ms{pack}(\Gamma^{\mb{q}_l}), 
+        \letexpr{w}{\ms{pack}(\Gamma^{\mb{q}_r})}{
+          \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{e}{A + B}}(w)})}{(  \\ & \qquad
+        \delta^{-1}
+        ; [
+          \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{a}{C}},
+          \dnt{\hasty{\Gamma^{\mb{q}_l}, y : B}{\epsilon}{b}{C}}
+        ])(z)}
+      \\ &\approx
+      \letexpr{z}{(\ms{pack}(\Gamma^{\mb{q}_l}), e)}{(
+        \delta^{-1}
+        ; [
+          \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{a}{C}},
+          \dnt{\hasty{\Gamma^{\mb{q}_l}, y : B}{\epsilon}{b}{C}}
+        ])(z)}
+      \\ &\approx
+    \end{align*}
+    \todo{tock}
     \item $(\hasty{\Gamma^{\mb{q}}}{}{\labort{a}}{A})$: we have that
     \begin{align*}
     \Gamma^{\mb{q}} &\vdash_\bot
