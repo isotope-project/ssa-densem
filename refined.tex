@@ -4304,7 +4304,73 @@ To show completeness, it hence suffices to prove the following lemma:
       \\ &\approx
       \letexpr{x}{a}{\labort{x}} \approx \labort{a} : A
     \end{align*}
-    \item $(\hasty{\Gamma^{\mb{q}}}{}{\liter{a}{x}{b}}{B})$: we have that
+    \item $(\hasty{\Gamma^{\mb{q}}}{}{\liter{a}{x}{b}}{B})$: we begin by noting that
+    \begin{align*}
+    \Gamma^{\mb{q}_l}, y : A &\vdash_\bot
+      \letexpr{w}{(\ms{pack}(\Gamma^{\mb{q}_l}), y)}{ \\ & \qquad
+        (
+          \dnt{\qsp{\Gamma}{\mb{q}_l}{\mb{q}_l}{\mb{q}_l}} \otimes A 
+          ; \alpha
+          ; [\Gamma^{\mb{q}_l}] 
+            \otimes \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{b}{B + A}}
+          ; \delta^{-1}
+        )(w)
+      } \\
+      % &\approx
+      % \letexpr{w}{(\letexpr{z}{(\ms{pack}(\Gamma^{\mb{q}_l}), y)}
+      %   {(\dnt{\qsp{\Gamma}{\mb{q}_l}{\mb{q}_l}{\mb{q}_l}} \otimes A)(z)})}{ \\ & \qquad (
+      %   \alpha
+      %   ; [\Gamma^{\mb{q}_l}] 
+      %     \otimes \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{b}{B + A}}
+      %   ; \delta^{-1}
+      % )(w)} \\      
+      &\approx
+      \letexpr{w}{((\ms{pack}(\Gamma^{\mb{q}_l}), \ms{pack}(\Gamma^{\mb{q}_l})), y)}{ (
+        \alpha
+        ; [\Gamma^{\mb{q}_l}] 
+          \otimes \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{b}{B + A}}
+        ; \delta^{-1}
+      )(w)} \\  
+      &\approx
+      \letexpr{w}{(\ms{pack}(\Gamma^{\mb{q}_l}), (\ms{pack}(\Gamma^{\mb{q}_l}), y))}{ (
+        [\Gamma^{\mb{q}_l}] \otimes \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{b}{B + A}}
+        ; \delta^{-1}
+      )(w)} \\  
+      &\approx
+      \letexpr{w}{(\ms{pack}(\Gamma^{\mb{q}_l}), 
+          \letexpr{z}{(\ms{pack}(\Gamma^{\mb{q}_l}), y)}
+            {\dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{b}{B + A}}(z)}
+        )}{\delta^{-1}(w)} \\
+      &\approx
+      \caseexpr{(\letexpr{z}{(\ms{pack}(\Gamma^{\mb{q}_l}), y)}
+            {\dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{b}{B + A}}(z)}
+        )) \\ & \qquad}{w_l}{\linl{(\ms{pack}(\Gamma^{\mb{q}_l}), w_l)}}
+                       {w_r}{(\ms{pack}(\Gamma^{\mb{q}_l}), w_r)} \\
+      &\approx
+      \caseexpr{(\letexpr{z}{(\ms{pack}(\Gamma^{\mb{q}_l}, y : A^q)}
+            {\dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{b}{B + A}}(z)}
+        )) \\ & \qquad}{w_l}{\linl{(\ms{pack}(\Gamma^{\mb{q}_l}), w_l)}}
+                       {w_r}{(\ms{pack}(\Gamma^{\mb{q}_l}), w_r)} \\
+      &\approx
+      \caseexpr{[y/x]b}{w_l}{\linl{(\ms{pack}(\Gamma^{\mb{q}_l}), w_l)}}
+                       {w_r}{(\ms{pack}(\Gamma^{\mb{q}_l}), w_r)}
+    \end{align*}
+    It follows by uniformity, since $(\ms{pack}(\Gamma^{\mb{q}_l}), y)$ is pure, that
+    \begin{align*}
+      \Gamma^{\mb{q}} &\vdash_\bot
+      \letexpr{y}{a}{\liter{(\ms{pack}(\Gamma^{\mb{q}_l}), y)}{w}{ \\ & \qquad
+        (
+          \dnt{\qsp{\Gamma}{\mb{q}_l}{\mb{q}_l}{\mb{q}_l}} \otimes A 
+          ; \alpha
+          ; [\Gamma^{\mb{q}_l}] 
+            \otimes \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{b}{B + A}}
+          ; \delta^{-1}
+        )(w)
+      }} \\
+      &\approx
+      \letexpr{u}{\liter{a}{x}{b}}{(\ms{pack}(\Gamma^{\mb{q}_l}), u)}
+    \end{align*}
+    and therefore that
     \begin{align*}
     \Gamma^{\mb{q}} &\vdash_\bot
       \letexpr{x}{\ms{pack}(\Gamma^{\mb{q}})}{\dnt{\hasty{\Gamma^{\mb{q}}}{}{\liter{a}{x}{b}}{B}}(x)}
@@ -4432,8 +4498,26 @@ To show completeness, it hence suffices to prove the following lemma:
         \dnt{\cwk{\Gamma^{\mb{q}_l}}{\cdot}} \otimes B
         ; \rho
       )(z)}
+      \\ &\approx 
+      \letexpr{z}{(
+          \letexpr{u}{\liter{a}{x}{b}}{(\ms{pack}(\Gamma^{\mb{q}_l}), u)}
+        )}
+        {(
+        \dnt{\cwk{\Gamma^{\mb{q}_l}}{\cdot}} \otimes B
+        ; \rho
+      )(z)}
+      \\ &\approx 
+      \letexpr{u}{\liter{a}{x}{b}}{\letexpr{z}{(\ms{pack}(\Gamma^{\mb{q}_l}), u)}{(
+        \dnt{\cwk{\Gamma^{\mb{q}_l}}{\cdot}} \otimes B
+        ; \rho
+      )(z)}}
+      \\ &\approx 
+      \letexpr{u}{\liter{a}{x}{b}}{\letexpr{z}{((), u)}{\rho(z)}}
+      \\ &\approx 
+      \letexpr{u}{\liter{a}{x}{b}}{u}
+      \approx \liter{a}{x}{b} : B
     \end{align*}
-    \TODO{lo and behold, this is a lot of work! -- GitHub Copilot}
+    as desired.
   \end{itemize}
 \end{proof}
 Completeness follows directly from the above lemma, since, given 
