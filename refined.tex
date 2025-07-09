@@ -900,23 +900,19 @@ particular,
     \item $a$ is well-typed and has effect $\epsilon$ in the \emph{right} component
     $\Gamma^{\mb{q}_r}$, and $b$ is well-typed in $\Gamma^{\mb{q}_l}$ plus an unrestricted parameter $x: A^\top$.
   \end{itemize}
-  \item \brle{case} and \brle{let$_2$} are the same, except that \brle{let$_2$}'s body requires two
+  \item \brle{case} and \brle{let$_2$} are similar, except that \brle{let$_2$}'s body requires two
   parameters (one for each component of the tensor product), while both branches of a case-statement
   share the \emph{same} left-component $\Gamma^{\mb{q}_l}$ (since exactly one branch is executed.)
   \item \brle{unit} is well-typed and pure (and therefore can be assigned an arbitrary effect
   $\epsilon$) in any context composed solely of affine variables, i.e. satisfying
   $\cwk{\Gamma^{\mb{q}}}{\cdot}$.
-  \item \brle{pair} allows us to type pairs in the obvious manner by splitting the context between
-  the left and right component of the pair.
-  \item Finally, the \brle{iter} rule is a little bit more complicated: we split the context into a
+  \item \brle{pair} splits the context between
+  the left and right components and checks each one,
+  \item The \brle{iter} rule is the most complex: we split the context into a
   component $\mb{q}_r$ for the initial value and a component $\mb{q}_l$ for the body. The initial
-  value is then evaluated and passed in as an additional parameter of type $A$ to the body. We
-  require that the body's context has unrestricted quantity since the loop may execute any number of
-  times; while one could argue that we should only require the body's context to have quantity
-  $\cpyq$ (since the loop body is guaranteed to execute at least once, as long as $a$ terminates),
-  this would make our semantics more complicated, and such variables can be passed in as arguments
-  to the loop body. Our final requirement is that the effect of a loop must be iterative, i.e.,
-  stable under infinite repetitions.
+  value is then evaluated and passed in as an additional parameter of type $A$ to the body. 
+  $\mb{q}_l$ must be unrestricted, since the loop may execute any number of
+  times. Finally, the effect of the loop body must be an iterative effect.
 \end{itemize}
 
 \begin{figure}
@@ -985,42 +981,39 @@ particular,
 
 \subsection{Syntactic Metatheory}
 
-As a basic sanity check for our calculus, we can verify that it satisfies \emph{weakening}, stated
-as follows:
+As a basic sanity check, we can verify that our calculus admits \emph{weakening}:
 \begin{lemma}[name=Weakening, restate=synmonwk]
-  The following rule is admissible:
-  \begin{equation*}
-    \prftree[r]{\rle{wk}}
-      {\cwk{\Gamma'^{\mb{q}'}}{\Gamma^{\mb{q}}}}
-      {\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}}
-      {\hasty{\Gamma'^{\mb{q}'}}{\epsilon}{a}{A}}
-  \end{equation*}
+  If ${\cwk{\Gamma'^{\mb{q}'}}{\Gamma^{\mb{q}}}}$ and ${\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}}$ then
+  ${\hasty{\Gamma'^{\mb{q}'}}{\epsilon}{a}{A}}$. 
+%   \begin{equation*}
+%     \prftree[r]{\rle{wk}}
+%       {\cwk{\Gamma'^{\mb{q}'}}{\Gamma^{\mb{q}}}}
+%       {\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}}
+%       {\hasty{\Gamma'^{\mb{q}'}}{\epsilon}{a}{A}}
+%   \end{equation*}
 \end{lemma}
 
-We now attempt to define what substitution looks like in the substructural, effectful context. We
-begin by defining a typing judgement $\issubst{\Gamma^{\mb{q}}}{\epsilon}{\sigma}{\Delta^{\mb{q}'}}$
-for substitutions (viewed as a duplicate-fre list of mappings $x \mapsto a$ from variables to
-terms), with rules in Figure~\ref{fig:expr-subst}. This may be read as ``$\sigma$ takes the
+We now define substitution for effectful terms. First, we define a judgement $\issubst{\Gamma^{\mb{q}}}{\epsilon}{\sigma}{\Delta^{\mb{q}'}}$
+for substitutions, with rules in Figure~\ref{fig:expr-subst}. This may be read as ``$\sigma$ takes the
 context $\Gamma^{\mb{q}}$ to the context $\Delta^{\mb{q}'}$ with effect $\epsilon$.'' Our rules may
 be interpreted as follows:
 \begin{itemize}
-  \item \brle{nil} simply states that the empty substitution $\cdot$ takes any affine context
-  $\Gamma^{\mb{q}}$ to the empty context $\cdot$; this is equivalent to the observation that any
-  well-typed term in the empty context is also well-typed in any affine context. We allow an
-  arbitrary effect $\epsilon$ here, since the empty substitution is always pure.
-  \item Our \brle{zero} rule is a bit unusual, but required as a consequence of the fact that we
-  allow unused variables to appear in our contexts. It states that if a variable $x : A^0$ is
-  unused, then we can map it to an arbitrary (potentially even ill-typed) term $a$; this makes sense
-  because, since $x$ will never appear in well-typed terms, $a$ will never appear in their
-  substitutions, and therefore does not need to be restricted. our contexts. We leave the effect of
-  $\sigma$ unchanged.
+  \item \brle{nil} says that the empty substitution $\cdot$ takes any affine context
+  $\Gamma^{\mb{q}}$ to the empty context $\cdot$. This holds because a
+  well-typed term in the empty context is also well-typed in any affine context. The effect is an
+  arbitrary $\epsilon$, since the empty substitution is always pure.
+  \item  \brle{zero} rule says that if a variable $x : A^0$ is
+  unused, then we can map it to an arbitrary (even ill-typed) term $a$. Since $x$ will 
+  never appear in a well-typed term, $a$ will never appear in their
+  substitutions, and therefore needs no restrictions. The effect $\epsilon$ of
+  $\sigma$ is unchanged.
   \item \brle{cons}: to type a substitution $\sigma, x \mapsto a$ taking  $\Gamma^{\mb{q}}$ to
   $\Delta^{\mb{q}'}, x: A^q$ with effect $\epsilon$, we split the input context into a context
   $\Gamma^{\mb{q}_l}$, used to type $\sigma$ with effect $\epsilon_l \leq \epsilon$, and
-  $\Gamma^{\mb{q}_r}$, used to type $a$ with effect $\epsilon_r \leq \epsilon$. We additionally
-  require that $\Gamma^{\mb{q}_r}$ can be used with quantity $q$; i.e., is relevant if $q$ is
-  relevant and affine if $q$ is affine. Finally, we require that the effect of $\sigma$
-  ($\epsilon_l$) and the effect of $a$ ($\epsilon_r$) commute.
+  $\Gamma^{\mb{q}_r}$, used to type $a$ with effect $\epsilon_r \leq \epsilon$.  $\Gamma^{\mb{q}_r}$
+  must be useable with quantity $q$; i.e., is relevant if $q$ is
+  relevant and affine if $q$ is affine. Finally, the effect of $\sigma$
+  ($\epsilon_l$) and the effect of $a$ ($\epsilon_r$) must commute.
 \end{itemize}
 
 \begin{figure}
@@ -1047,29 +1040,31 @@ be interpreted as follows:
   \Description{}
   \label{fig:expr-subst}
 \end{figure}%
-We denote capture-avoiding substitution of $a$ by $\sigma$ as $[\sigma]a$. We can now state
+We write $[\sigma]$ for the action of substitution $\sigma$ on term $a$. We can now state
 substitution:
 \begin{lemma}[name=Substitution, restate=synmonsubst]
-  The following rule is admissible:
-  \begin{equation*}
-    \prftree[r]{\rle{subst}}
-      {\issubst{\Gamma'^{\mb{q}'}}{\epsilon}{\sigma}{\Gamma^{\mb{q}}}}
-      {\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}}
-      {\hasty{\Gamma'^{\mb{q}'}}{\epsilon}{[\sigma]a}{A}}
-  \end{equation*}
+  If ${\issubst{\Gamma'^{\mb{q}'}}{\epsilon}{\sigma}{\Gamma^{\mb{q}}}}$
+  and ${\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}}$
+  then ${\hasty{\Gamma'^{\mb{q}'}}{\epsilon}{[\sigma]a}{A}}$. 
+%   The following rule is admissible:
+%   \begin{equation*}
+%     \prftree[r]{\rle{subst}}
+%       {\issubst{\Gamma'^{\mb{q}'}}{\epsilon}{\sigma}{\Gamma^{\mb{q}}}}
+%       {\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}}
+%       {\hasty{\Gamma'^{\mb{q}'}}{\epsilon}{[\sigma]a}{A}}
+%   \end{equation*}
 \end{lemma}
 
 \subsection{Refinement Theory}
 
 \label{ssec:refinement-theory}
 
-Now that we have established basic metatheoretic properties, we define our core notion of
-refinement. The judgment
+We now define our core notion of refinement. The judgment
 \begin{equation*}
   \tmle{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A}
 \end{equation*}
-is read as: ``term $a$ is refined by $b$ in the context $\Gamma^{\mb{q}}$, modulo rewrites
-$\mc{R}$.'' Intuitively, this expresses that $b$ is at least as defined or deterministic as $a$,
+means  $a$ is refined by $b$ in the context $\Gamma^{\mb{q}}$, modulo rewrites
+$\mc{R}$. Intuitively, this expresses that $b$ is at least as defined or deterministic as $a$,
 possibly after applying known rewrites in $\mc{R}$. We define equivalence of terms as mutual
 refinement:
 \begin{equation}
@@ -1077,8 +1072,8 @@ refinement:
   \iff \tmle{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A} 
   \land \tmle{\Gamma^{\mb{q}}}{\mc{R}}{b}{a}{A}
 \end{equation}
-For notational convenience when stating directed rules, we also introduce polarity-marked notation
-for the refinement relation as follows:
+For notational convenience, we also use a polarity-marked notation
+for refinement relation:
 \begin{equation*}
   \tmlep{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A}{+} \iff \tmle{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A} \qquad
   \tmlep{\Gamma^{\mb{q}}}{\mc{R}}{a}{b}{A}{-} \iff \tmle{\Gamma^{\mb{q}}}{\mc{R}}{b}{a}{A}
@@ -1095,8 +1090,7 @@ substitution $\sigma$, we have that
 \end{equation*}
 We will often describe a rewrite system as that \emph{generated} by a set of equations with free
 variables; e.g., the system generated by $\tmle{x : \nats, y : \nats}{}{\ms{add}\;(x,
-y)}{\ms{add}\;(y, x)}{\nats}$. Our goal is to construct a refinement relation $\tref$ at every
-context and type satisfying the following properties: 
+y)}{\ms{add}\;(y, x)}{\nats}$. Our goal is to construct a refinement relation $\tref$ satisfying the following properties: 
 \begin{enumerate}
   \item \textbf{Inclusion of $\mc{R}$:} all given rewrites are valid refinements.
   \label{item:includes-rewrites}
@@ -1105,8 +1099,7 @@ context and type satisfying the following properties:
   \item \textbf{Let-normalization:} $\tref$ abstracts away syntactic associativity of let-bindings.
   \label{item:abstracts-syntax}
   \item \textbf{Universal properties:} $\tref$ validates the $\beta$- and $\eta$-laws of the
-  language; this ensures that our tensor product $\otimes$ and our coproduct $+$ satisfy the
-  relevant universal properties.
+  language. %; this ensures that our tensor product $\otimes$ and our coproduct $+$ satisfy the   relevant universal properties.
   \label{item:does-computation}
   \item \textbf{Iteration semantics:} $\tref$ captures fixpoint and control-flow behavior of
   iteration.
@@ -1127,10 +1120,8 @@ satisfies property~\ref{item:includes-rewrites}, by the following rules:
     {\tmle{\Gamma^{\mb{q}}}{\mc{R}}{b}{c}{A}}
     {\tmle{\Gamma^{\mb{q}}}{\mc{R}}{a}{c}{A}}
 \end{gather*}
-The rest of the congruence rules (given in the appendix in Figure~\ref{fig:congruence-refinement})
-correspond one-to-one with our term formers to ensure property~\ref{item:is-congruence}. We note
-that property~\ref{item:is-congruence} implies that the induced equivalence $\approx$ is a
-congruence as well.
+The other congruence rules (in the appendix in Figure~\ref{fig:congruence-refinement})
+correspond one-to-one with our term formers to ensure property~\ref{item:is-congruence}. Property~\ref{item:is-congruence} means that the induced equivalence $\approx$ is also a congruence.
 
 To satisfy property~\ref{item:abstracts-syntax}, we introduce the binding rules
 (Figure~\ref{fig:binding-rules}), which are stated as equivalences. These rules express syntactic
@@ -3259,12 +3250,14 @@ We build on this work by integrating the idea of linearity of effects with an ol
 % \TODO{maybe take a peek at \citet{jiang-stack-25}; probably don't need to cite}
 
 
-\subsection*{Acknowledgements}
+% UNCOMMENT THIS AFTER UNBLINDING!!! 
 
-This work was supported in part by a European Research Council (ERC) Consolidator Grant for the
-project ``TypeFoundry'', funded under the European Union's Horizon 2020 Framework Programme (grant
-agreement no. 101002277).
-
+% \subsection*{Acknowledgements}
+% 
+% This work was supported in part by a European Research Council (ERC) Consolidator Grant for the
+% project ``TypeFoundry'', funded under the European Union's Horizon 2020 Framework Programme (grant
+% agreement no. 101002277).
+% 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references}
 
