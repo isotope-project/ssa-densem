@@ -4233,7 +4233,16 @@ To show completeness, it hence suffices to prove the following lemma:
     \end{align*}
     as desired.
     \item $(\hasty{\Gamma^{\mb{q}}}{}{\letexpr{x}{a}{b}}{B})$: \todo{whack}
-    \item $(\hasty{\Gamma^{\mb{q}}}{}{()}{\mb{1}})$: \todo{click}
+    \item $(\hasty{\Gamma^{\mb{q}}}{}{()}{\mb{1}})$: we have
+    \begin{align*}
+    \Gamma^{\mb{q}} &\vdash_\bot 
+      \letexpr{x}{\ms{pack}(\Gamma^{\mb{q}})}{\dnt{\hasty{\Gamma^{\mb{q}}}{}{()}{\mb{1}}}(x)} \\
+      &\approx 
+      \letexpr{x}{\ms{pack}(\Gamma^{\mb{q}})}{(\dnt{\cwk{\Gamma^{\mb{q}}}{\cdot}})(x)} \\
+      &\approx
+      \letexpr{x}{\ms{pack}(\Gamma^{\mb{q}})}{()}
+      \approx ()
+    \end{align*}
     \item $(\hasty{\Gamma^{\mb{q}}}{}{(a, b)}{A \otimes B})$: we have that
     \begin{align*}
     \Gamma^{\mb{q}} &\vdash_\bot
