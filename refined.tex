@@ -4304,7 +4304,20 @@ To show completeness, it hence suffices to prove the following lemma:
       \letexpr{x}{b}{\linr{x}} \approx \linr{b} : A + B
     \end{align*}
     \item $(\hasty{\Gamma^{\mb{q}}}{}{\caseexpr{e}{x}{a}{y}{b}}{C})$: \todo{tock}
-    \item $(\hasty{\Gamma^{\mb{q}}}{}{\labort{a}}{A})$: \todo{on the}
+    \item $(\hasty{\Gamma^{\mb{q}}}{}{\labort{a}}{A})$: we have that
+    \begin{align*}
+    \Gamma^{\mb{q}} &\vdash_\bot
+      \letexpr{x}{\ms{pack}(\Gamma^{\mb{q}})}{\dnt{\hasty{\Gamma^{\mb{q}}}{}{\labort{a}}{A}}(x)}
+      \\ &\approx 
+      \letexpr{x}{\ms{pack}(\Gamma^{\mb{q}})}
+        {(\dnt{\hasty{\Gamma^{\mb{q}}}{}{a}{\mb{0}}} ; 0_A)(x)}
+      \\ &\approx
+      \letexpr{x}{(\letexpr{y}{\ms{pack}(\Gamma^{\mb{q}})}
+          {\dnt{\hasty{\Gamma^{\mb{q}}}{}{a}{\mb{0}}}})}
+        {\labort{x}} 
+      \\ &\approx
+      \letexpr{x}{a}{\labort{x}} \approx \labort{a} : A
+    \end{align*}
     \item $(\hasty{\Gamma^{\mb{q}}}{}{\liter{a}{x}{b}}{B})$: \todo{clock}
   \end{itemize}
 \end{proof}
