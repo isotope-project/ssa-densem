@@ -3214,11 +3214,25 @@ similar to this paper's, but their model is not in enriched categories and
 hence does not model refinement, nor does it model an effect system or
 linear types. 
 
-\noindent \textbf{Effect Systems and Linearity} Effect systems were introduced by \citet{gifford86}, which introduced a type system with a lattice of effects to track which effects a program could potentially perform, with the idea was to gain reasoning principles by restricting effects. \citet{fuhrmann-direct-1999} introduced the idea of categorizing effects in terms of linearity (i.e., whether effects can be moved, duplicated or dropped), which reverses the conceptual priority: effects are classified not by their intension, but by which equations they validate. \citet{kammar-effect-12} build on this idea, and give a Gifford-style type-and-effect system for a variant of call-by-push-value, an effect-dependent equational, and  conditions on the semantics monad to ensure each equation holds.
+\noindent \textbf{Effect Systems and Linearity} Effect systems were introduced by \citet{gifford86},
+which introduced a type system with a lattice of effects to track which effects a program could
+potentially perform, with the idea of gaining reasoning principles by restricting effects.
+\citet{fuhrmann-direct-1999} introduced the idea of categorizing effects in terms of linearity
+(i.e., whether effects can be moved, duplicated or dropped), which reverses the conceptual priority:
+effects are classified not by their intension, but by which equations they validate.
+\citet{kammar-effect-12} build on this idea, and give a Gifford-style type-and-effect system for a
+variant of call-by-push-value, an effect-dependent equational, and conditions on the semantics monad
+to ensure each equation holds.
 %
-% This can be contrasted with the line of work on algebraic effects pioneered by \citet{plotkin-power-2001}, which views the signature of an effect as giving rise to a free monad, which can then be interpreted by a suitable monad morphism. Here, the natural emphasis is on finding equational theories which completely characterize a given kind of effect; for example, see the work of \citet{staton-state-10} on the equational properties of local state. 
-% 
-We build on this work by integrating the idea of linearity of effects with an old idea of \citet{lipton-mover-75}. By simply classifying effects by whether they can commute to the left or right of another effect, we gain a very rich (in)equational theory very cheaply. 
+% This can be contrasted with the line of work on algebraic effects pioneered by
+% \citet{plotkin-power-2001}, which views the signature of an effect as giving rise to a free monad,
+% which can then be interpreted by a suitable monad morphism. Here, the natural emphasis is on
+% finding equational theories which completely characterize a given kind of effect; for example, see
+% the work of \citet{staton-state-10} on the equational properties of local state. 
+%
+We build on this work by integrating the idea of linearity of effects with an old idea of
+\citet{lipton-mover-75}. By simply classifying effects by whether they can commute to the left or
+right of another effect, we gain a very rich (in)equational theory very cheaply. 
 
 
 
