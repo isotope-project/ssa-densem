@@ -4830,7 +4830,34 @@ proving each branch correct as we define it:
     ; \iota_r
   \end{align*}
   as desired.
-  \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{f\;a}{B}$): \todo{tock}
+  \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{f\;a}{B}$): we define
+  \begin{equation*}
+    \ms{SSA}_\ell(\hasty{\Gamma^{\mb{q}}}{\epsilon}{f\;a}{B}) 
+      := \haslb{\Gamma^{\mb{q}}}{\epsilon}{
+          \letstmt{x}{a}{\ms{SSA}_\ell(\hasty{\Gamma^0, x : A}{\epsilon}{f\;x}{B}})}{\ell^0(B)}
+  \end{equation*}
+  We verify by induction that this satisfies the desired property:
+  \begin{align*}
+  & \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{
+          \letstmt{x}{a}{\ms{SSA}_\ell(\hasty{\Gamma^0, x : A}{\epsilon}{f\;x}{B}})}{\ell^0(B)}} \\
+  &= \dnt{\qsp{\Gamma}{\mb{q}}{0}{\mb{q}}} 
+    ; \dnt{\Gamma^0} \otimes \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}}
+    ; \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}
+        {\ms{SSA}_\ell(\hasty{\Gamma^0, x : A}{\epsilon}{f\;x}{B})}{\ell^0(B)}} \\
+  &= \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}} 
+  ; \alpha
+  ; \dnt{\hasty{\Gamma^0, x : A}{\epsilon}{f\;x}{B}}
+  ; \alpha
+  ; \iota_r \\
+  &= \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}} 
+  ; \alpha
+  ; \dnt{\hasty{\Gamma^0, x : A}{\epsilon}{x}{A}}
+  ; \dnt{f : A \to_\epsilon B}
+  ; \alpha
+  ; \iota_r \\
+  &= \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}} ; \alpha ; \iota_r
+  \end{align*}
+  as desired.
   \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{\letexpr{x}{a}{b}}{A}$): \todo{tock}
   \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{()}{\mb{1}}$): \todo{on the}
   \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{(a, b)}{A \otimes B}$): \todo{on the}
