@@ -4872,14 +4872,25 @@ $$
 \dnt{
   \haslb{\Gamma^{\mb{q}}}{\epsilon}{\tossa{\ell}{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}}}
   {\ell(A)^{\mb{0}}}
-}_{\mc{M}} = \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}}_{\mc{M}} ; \alpha ; \iota_r
+} = \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}} ; \alpha ; \iota_r
 $$
 Here, the associator $\alpha$ takes $\dnt{A}$ to $\dnt{\Gamma^{\mb{0}}} \otimes \dnt{A}$ (the latter
 being a tensor product of monoidal units), which $\iota_r$ then takes to
-$\dnt{\ltoty{\Gamma}{\ell(A)^{\mb{0}}}} = \mb{0} + \dnt{\Gamma^{\mb{0}}} \otimes \dnt{A}$. As this
-transformation is complicated to state and verify for general expressions, we will instead define
-\emph{ANF}, and, after showing how every expression can be compiled to an equivalent expression in
-ANF, define $\ms{SSA}_\ell$ by induction over such expressions.
+$\dnt{\ltoty{\Gamma}{\ell(A)^{\mb{0}}}} = \mb{0} + \dnt{\Gamma^{\mb{0}}} \otimes \dnt{A}$. We will
+do so by requiring the slightly stronger property that, for all
+$\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}$, we have
+$$
+  \dnt{
+    \haslb{\Gamma^{\mb{q}}}{\epsilon}{\tossa{\ell}{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A}}}
+    {\ell(A)^{\mb{q}_l}}
+  } 
+  = \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+  ; \dnt{\Gamma^{\mb{q}_l}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A}} 
+  ; \iota_r
+$$ 
+As this transformation is complicated to state and verify for general expressions, we will instead
+define \emph{ANF}, and, after showing how every expression can be compiled to an equivalent
+expression in ANF, define $\ms{SSA}_\ell$ by induction over such expressions.
 
 \subsection{ANF Expressions}
 
@@ -5071,12 +5082,16 @@ We may now define $\tossa{\ell}{P}$ by induction on ANF programs $P$ as follows:
           \ms{id}, \\ & \quad \qquad
           \dnt{
             \haslb{\Gamma^{\mb{q}_{12}}, y : A}{\epsilon}{\tossa{\ell_o}{P}}
-                  {\ell(D)^{\mb{0}, 0}, \ell_o(C)^{\mb{q}_1, 0}}
-          } ; \alpha^\downarrow, \\ & \quad \qquad
+                  {\ell_o(C)^{\mb{q}_1, 0}}
+          } ; \alpha^\downarrow ; \dnt{
+            \lwk{\Gamma}{\ell_o(C)^{\mb{q}_1}}{\ell(D)^{\mb{0}}, \ell_o(C)^{\mb{q}_1}}
+          }, \\ & \quad \qquad
           \dnt{
             \haslb{\Gamma^{\mb{q}_{12}}, z : B}{\epsilon}{\tossa{\ell_o}{Q}}
-                  {\ell(D)^{\mb{0}, 0}, \ell_o(C)^{\mb{q}_1, 0}} 
-          } ; \alpha^\downarrow
+                  {\ell_o(C)^{\mb{q}_1, 0}} 
+          } ; \alpha^\downarrow ; \dnt{
+            \lwk{\Gamma}{\ell_o(C)^{\mb{q}_1}}{\ell(D)^{\mb{0}}, \ell_o(C)^{\mb{q}_1}}
+          }
         ] 
         ; \\ & \quad
         [
