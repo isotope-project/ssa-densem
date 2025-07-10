@@ -5212,11 +5212,11 @@ We may now define $\tossa{\ell}{P}$ by induction on ANF programs $P$ as follows:
       &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{123}}{\mb{q}_4}} 
       ; \dnt{\Gamma^{\mb{q}_{123}}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_4}}{\epsilon}{o}{A + B}}
       ; \delta^{-1} ;[ \\ & \qquad
-          \dnt{\qsp{\Gamma}{\mb{q}_{123}, \omega}{\mb{q}_{12}}{\mb{q}_3}} \otimes \dnt{A}
+          \dnt{\qsp{\Gamma}{\mb{q}_{123}}{\mb{q}_{12}}{\mb{q}_3}} \otimes \dnt{A}
           ; \alpha
           ; \dnt{\Gamma^{\mb{q}_{12}}} 
             \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}, y : A}{\epsilon}{P}{C}}, \\ & \qquad
-          \dnt{\qsp{\Gamma}{\mb{q}_{123}, \omega}{\mb{q}_{12}}{\mb{q}_3}} \otimes \dnt{B}
+          \dnt{\qsp{\Gamma}{\mb{q}_{123}}{\mb{q}_{12}}{\mb{q}_3}} \otimes \dnt{B}
           ; \alpha
           ; \dnt{\Gamma^{\mb{q}_{12}}} 
             \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}, z : B}{\epsilon}{Q}{C}}
@@ -5229,7 +5229,7 @@ We may now define $\tossa{\ell}{P}$ by induction on ANF programs $P$ as follows:
       ; \iota_r
       \\
       &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{123}}{\mb{q}_4}} 
-      ; \dnt{\qsp{\Gamma}{\mb{q}_{123}, \omega}{\mb{q}_{12}}{\mb{q}_3}} 
+      ; \dnt{\qsp{\Gamma}{\mb{q}_{123}}{\mb{q}_{12}}{\mb{q}_3}} 
         \otimes \dnt{\Gamma^{\mb{q}_4}}
       ; \alpha
       ; \dnt{\Gamma^{\mb{q}_{12}}} \otimes ( \\ & \qquad
