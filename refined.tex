@@ -4848,9 +4848,48 @@ verifying that
 as desired. We will define $\ms{let}_{\ms{SSA}}$ by induction on terms $a$; for each branch, we will
 then inductively verify that the typing rule and the desired semantic property holds.
 \begin{itemize}
-  \item (Valid instructions $o$): \todo{tick}
+  \item (Valid instructions $o$): we define $(\ssalet{x}{o}{s}) := (\letstmt{x}{o}{s})$, which
+  trivially has the desired typing and semantics.
   \item (Operations $f\;a$, unreachable expressions $\labort{a}$, and injections $\linl{a},
-  \linr{b}$): \todo{tock}
+  \linr{b}$): we define
+  \begin{align*}
+  (\ssalet{x}{f\;a}{s}) := \ssalet{x_a}{a}{\letstmt{x}{f\;x_a}{s}}
+  \end{align*}
+  This is well-typed by induction, since, given $\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}$,
+  $\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{f\;a}{B}$ and
+  $\haslb{\Gamma^{\mb{q}_l}}{\epsilon}{s}{\ms{L}}$
+  \begin{itemize}
+    \item By inversion, we have $f : A \to_\epsilon B$, $\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}$,
+    \item By \brle{op}, we have $\hasty{\Gamma^0, x_a : A}{\epsilon}{f\;x_a}{B}$
+    \item By \brle{let$_1$} and weakening, we have $\haslb{\Gamma^{\mb{q}_l}, x_a :
+    A}{\epsilon}{\letstmt{x}{f\;x_a}{s}}{\ms{L}}$
+    \item Therefore, by induction, we have
+    $\haslb{\Gamma^{\mb{q}}}{\epsilon}{\ssalet{x_a}{a}{\letstmt{x}{f\;x_a}{s}}}{\ms{L}}$ as desired.
+  \end{itemize}
+  This has the desired semantics, since by induction
+  \begin{align*}
+  &\dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{\ssalet{x_a}{a}{\letstmt{x}{f\;x_a}{s}}}{\ms{L}}} \\
+  &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}} 
+  ; \dnt{\Gamma^{\mb{q}_l}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A}}
+  \\ & \qquad
+  ; \dnt{\qsp{\Gamma, x_a : A}{\mb{q}_l, \omega}{\mb{q}_l, 0}{\mb{0}, \omega}} 
+  ; (\dnt{\Gamma^{\mb{q}_l}} \otimes I) \otimes 
+    \dnt{\hasty{\Gamma^{\mb{q}_l}, x_a : A}{\epsilon}{f\;x_a}{B}}
+  \\ & \qquad
+  ; \dnt{\haslb{\Gamma^{\mb{q}_l}, x_a : A^0}{\epsilon}{s}{\ms{L}}} \\
+  &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}} 
+  ; \dnt{\Gamma^{\mb{q}_l}} \otimes 
+    (\dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A}} ; \dnt{f : A \to_\epsilon B})
+  ; \alpha
+  ; \dnt{\haslb{\Gamma^{\mb{q}_l}, x_a : A^0}{\epsilon}{s}{\ms{L}}} 
+  \\
+  &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}} 
+  ; \dnt{\Gamma^{\mb{q}_l}} \otimes 
+    \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{f\;a}{B}}
+  ; \dnt{\haslb{\Gamma^{\mb{q}_l}}{\epsilon}{s}{\ms{L}}} 
+  \end{align*}
+  as desired. The cases for unreachable expressions $\labort{a}$ and injections $\linl{a}, \linr{b}$
+  are exactly analogous.
   \item (Let-bindings $\letexpr{x}{a}{b}$): \todo{on}
   \item (Binary let-bindings $\letexpr{(x, y)}{a}{b}$): \todo{the}
   \item (Pairs $(a, b)$): \todo{clock}
