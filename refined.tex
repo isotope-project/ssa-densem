@@ -4823,10 +4823,39 @@ faithful? full?}}
 
 \TODO{\emph{the} initial model of SSA: tfw is it just partial functions on bitvectors?}
 
-\section{SSA Metatheory}
+% \section{SSA Metatheory}
 
-In this section, we give some basic metatheoretic properties of SSA used in
-Appendix~\ref{apx:ssa-roundtrip}.
+% In this section, we give some basic metatheoretic properties of SSA used in
+% Appendix~\ref{apx:ssa-roundtrip}. We begin by introducing syntax for \emph{generalized
+% \isotopessa{}} in Figure~\ref{fig:gen-ssa-syntax}, which has the same syntax as \isotopessa{} except
+% that: 
+% \begin{itemize}
+%   \item The syntactic categories of regions, where-blocks, and terminators are collapsed
+%   \item Instructions are replaced with arbitrary expressions
+% \end{itemize}
+% A quick glance at the grammar in Figure~\ref{fig:ssa-syntax} shows that this is a strict superset of
+% SSA. We simply give generalized \isotopessa{} the same typing rules (namely, those in
+% Figure~\ref{fig:ssa-typing}) and semantics as \isotopessa{} (namely, that in
+% Figure~\ref{fig:ssa-densem}).
+
+% All our metatheoretic results about \isotopessa{} carry over to generalized \isotopessa{}; we will
+% make use of this fact to 
+
+% \begin{figure}
+%   \begin{grammar}
+%     <\(r, s, t, \kappa, \tau\)> ::=
+%       \;|\; \(\letstmt{x}{a}{t}\)
+%       \;|\; \(\letstmt{(x, y)}{a}{t}\)
+%       \alt \(\awhere{s}{L}\) \;|\; \(\cwhere{s}{L}\)
+%       \alt \(\brb{\ell}{a}\)
+%       \;|\; \(\casestmt{a}{y}{s}{z}{t}\)
+
+%     <\(L\)> ::= \(\cdot\) \;|\; \(L, \wbranch{\ell}{x}{A}\)
+%   \end{grammar}
+%   \caption{Grammar for generalized \isotopessa{} programs.}
+%   \Description{}
+%   \label{fig:gen-ssa-syntax}
+% \end{figure}
 
 \TODO{SSA weakening}
 
@@ -4847,237 +4876,268 @@ $$
 $$
 Here, the associator $\alpha$ takes $\dnt{A}$ to $\dnt{\Gamma^0} \otimes \dnt{A}$ (the latter being
 a tensor product of monoidal units), which $\iota_r$ then takes to $\dnt{\ltoty{\Gamma}{\ell(A)^0}}
-= \mb{0} + \dnt{\Gamma^0} \otimes \dnt{A}$.
+= \mb{0} + \dnt{\Gamma^0} \otimes \dnt{A}$. As this transformation is complicated to state and
+verify for general expressions, we will instead define \emph{ANF}, and, after showing how every
+expression can be compiled to an equivalent expression in ANF, define $\ms{SSA}_\ell$ by induction
+over such expressions.
 
-Rather than define this function directly, it is simpler to define an operation on terms
-$\ssalet{x}{a}{s}$ which, given a term $a$ and an SSA program $s$, returns a new SSA program which
-evaluates $a$, binds it to $x$, and then runs $s$. We will then show that $\ms{let}_{\ms{SSA}}$
-satisfies the following typing rule:
-$$
-\prftree[r]{\rle{let-ssa}}
-  {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
-  {\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A}}
-  {\haslb{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{s}{\ms{L}}}
-  {\haslb{\Gamma^{\mb{q}}}{\epsilon}{\ssalet{x}{a}{s}}{\ms{L}}}
-$$
-and has the expected semantics
-$$
-\dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{\ssalet{x}{a}{s}}{\ms{L}}} =
-  \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}} 
-  ; \dnt{\Gamma^{\mb{q}_l}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A}} 
-  ; \dnt{\haslb{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{s}{\ms{L}}}
-$$
-We may then simply define
-$$
-\ms{SSA}_\ell(\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}) := 
-  (\ssalet{x}{a}{\brb{\ell}{x}})
-$$
-verifying that
-\begin{align*}
-  &\dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{\letexpr{x}{a}{\brb{\ell}{x}}}{\ell(A)^0}} \\
-  &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{0}}{\mb{q}}} 
-  ; \dnt{\Gamma^\mb{0}} \otimes \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}}
-  ; \dnt{\haslb{\Gamma^{\mb{0}}, x : A}{\epsilon}{\brb{\ell}{x}}{\ell(A)^0}} \\
-  &= \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}} ; \alpha
-  ; \dnt{\qsp{\Gamma, x : A}{\mb{0}, \omega}{\mb{0}, 0}{\mb{0}, \omega}}
-  ; (\dnt{\Gamma^{\mb{0}}} \otimes I) \otimes \dnt{\hasty{\Gamma^{\mb{0}}, x : A}{\epsilon}{x}{A}}
-  ; \iota_r
-  ; \cancel{\dnt{\lwk{\Gamma}{\ell(A)^0}{\ell(A)^0}}} 
-  \\
-  &= \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}} ; \alpha
-  ; \iota_r
-\end{align*}
-as desired. We will define $\ms{let}_{\ms{SSA}}$ by induction on terms $a$; for each branch, we will
-then inductively verify that the typing rule and the desired semantic property holds.
-\begin{itemize}
-  \item (Valid instructions $o$): we define $(\ssalet{x}{o}{s}) := (\letstmt{x}{o}{s})$, which
-  trivially has the desired typing and semantics.
-  \item (Operations $f\;a$, unreachable expressions $\labort{a}$, and injections $\linl{a},
-  \linr{b}$): we define
-  \begin{align*}
-  (\ssalet{x}{f\;a}{s}) := \ssalet{x_a}{a}{\letstmt{x}{f\;x_a}{s}}
-  \end{align*}
-  This is well-typed by induction, since, given $\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}$,
-  $\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{f\;a}{B}$ and
-  $\haslb{\Gamma^{\mb{q}_l}}{\epsilon}{s}{\ms{L}}$
-  \begin{itemize}
-    \item By inversion, we have $f : A \to_\epsilon B$, $\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}$,
-    \item By \brle{op}, we have $\hasty{\Gamma^0, x_a : A}{\epsilon}{f\;x_a}{B}$
-    \item By \brle{let$_1$} and weakening, we have $\haslb{\Gamma^{\mb{q}_l}, x_a :
-    A}{\epsilon}{\letstmt{x}{f\;x_a}{s}}{\ms{L}}$
-    \item Therefore, by induction, we have
-    $\haslb{\Gamma^{\mb{q}}}{\epsilon}{\ssalet{x_a}{a}{\letstmt{x}{f\;x_a}{s}}}{\ms{L}}$ as desired.
-  \end{itemize}
-  This has the desired semantics, since by induction
-  \begin{align*}
-  &\dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{\ssalet{x_a}{a}{\letstmt{x}{f\;x_a}{s}}}{\ms{L}}} \\
-  &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}} 
-  ; \dnt{\Gamma^{\mb{q}_l}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A}}
-  \\ & \qquad
-  ; \dnt{\qsp{\Gamma, x_a : A}{\mb{q}_l, \omega}{\mb{q}_l, 0}{\mb{0}, \omega}} 
-  ; (\dnt{\Gamma^{\mb{q}_l}} \otimes I) \otimes 
-    \dnt{\hasty{\Gamma^{\mb{q}_l}, x_a : A}{\epsilon}{f\;x_a}{B}}
-  \\ & \qquad
-  ; \dnt{\haslb{\Gamma^{\mb{q}_l}, x_a : A^0}{\epsilon}{s}{\ms{L}}} \\
-  &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}} 
-  ; \dnt{\Gamma^{\mb{q}_l}} \otimes 
-    (\dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A}} ; \dnt{f : A \to_\epsilon B})
-  ; \alpha
-  ; \dnt{\haslb{\Gamma^{\mb{q}_l}, x_a : A^0}{\epsilon}{s}{\ms{L}}} 
-  \\
-  &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}} 
-  ; \dnt{\Gamma^{\mb{q}_l}} \otimes 
-    \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{f\;a}{B}}
-  ; \dnt{\haslb{\Gamma^{\mb{q}_l}}{\epsilon}{s}{\ms{L}}} 
-  \end{align*}
-  as desired. The cases for unreachable expressions $\labort{a}$ and injections $\linl{a}, \linr{b}$
-  are exactly analogous.
-  \item (Let-bindings $\letexpr{x}{a}{b}$): we define
-  \begin{align*}
-  (\ssalet{x}{\letexpr{y}{a}{b}}{s}) := \ssalet{y}{a}{\ssalet{x}{b}{s}}
-  \end{align*}
-  This is well-typed by induction, since given $\qsp{\Gamma}{\mb{q}}{\mb{q}_1}{\mb{q}_{23}}$,
-  $\haslb{\Gamma^{\mb{q}_{23}}}{\epsilon}{\letexpr{x}{a}{b}}{B}$, and $\haslb{\Gamma^{\mb{q}_1}, x :
-  B}{\epsilon}{s}{\ms{L}}$, we have
-  \begin{itemize}
-    \item By inversion, we have $\qsp{\Gamma}{\mb{q}_{23}}{\mb{q}_2}{\mb{q}_3}$,
-    $\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{a}{A}$, and
-    $\hasty{\Gamma^{\mb{q}_2, y : A}}{\epsilon}{b}{B}$.
-    \item By weakening, we have $\haslb{\Gamma^{\mb{q}_1}, y : A^0, x : B}{\epsilon}{s}{\ms{L}}$
-    \item By split associativity, we have $\qsp{\Gamma}{\mb{q}}{\mb{q}_{12}}{\mb{q}_3}$,
-    $\qsp{\Gamma}{\mb{q}_{12}}{\mb{q}_1}{\mb{q}_2}$
-    \item By induction, we have that
-    $
-    \haslb{\Gamma^{\mb{q}}}{\epsilon}{\ssalet{y}{a}{\ssalet{x}{b}{s}}}{\ms{L}}
-    $
-    as desired.
-  \end{itemize}
-  This has the desired semantics, since by induction
-  \begin{align*}
-  &\dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{\ssalet{y}{a}{\ssalet{x}{b}{s}}}{\ms{L}}} \\
-  &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{12}}{\mb{q}_{3}}}
-  ; \dnt{\Gamma^{\mb{q}_{12}}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{a}{A}}
-  ; \\ &\qquad 
-    \dnt{\qsp{\Gamma, y : A}{\mb{q}_{12}, \omega}{\mb{q}_1, 0}{\mb{q}_2, \omega}}
-  ; \dnt{\Gamma^{\mb{q}_1}} \otimes 
-    \dnt{\hasty{\Gamma^{\mb{q}_2}, y : A}{\epsilon}{b}{B}}
-  ; \dnt{\haslb{\Gamma^{\mb{q}_1}, y : A^0, x : B}{\epsilon}{s}{\ms{L}}} \\
-  &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{12}}{\mb{q}_{3}}}
-  ; \dnt{\qsp{\Gamma}{\mb{q}_{12}}{\mb{q}_1}{\mb{q}_2}} \otimes \dnt{\Gamma^{\mb{q}_3}}
-  ; (\dnt{\Gamma^{\mb{q}_1}} \otimes \dnt{\Gamma^{\mb{q}_2}}) 
-    \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{a}{A}}
-  ; \\ &\qquad
-    \alpha ; \dnt{\Gamma^{\mb{q}_1}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_2}, y : A}{\epsilon}{b}{B}}
-  ; \alpha ; \dnt{\haslb{\Gamma^{\mb{q}_1}, y : A^0, x : B}{\epsilon}{s}{\ms{L}}} \\
-  &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{1}}{\mb{q}_{23}}}
-  ; \dnt{\Gamma^{\mb{q}_1}} \otimes (\dnt{\qsp{\Gamma}{\mb{q}_{23}}{\mb{q}_2}{\mb{q}_3}}
-  ; \dnt{\Gamma^{\mb{q}_2}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{a}{A}})
-  ; \dnt{\hasty{\Gamma^{\mb{q}_2}, y : A}{\epsilon}{b}{B}}
-  )
-  ; \\ &\qquad
-    \dnt{\haslb{\Gamma^{\mb{q}_1}, x : B}{\epsilon}{s}{\ms{L}}} \\
-  &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{1}}{\mb{q}_{23}}}
-  ; \dnt{\Gamma^{\mb{q}_1}} \otimes 
-    \dnt{\hasty{\Gamma^{\mb{q}_{23}}}{\epsilon}{\letexpr{y}{a}{b}}{B}}
-  ; \dnt{\haslb{\Gamma^{\mb{q}_1}, x : B}{\epsilon}{s}{\ms{L}}}
-  \end{align*}
-  as desired.
-  \item (Binary let-bindings $\letexpr{(x, y)}{a}{b}$): we define
-  \begin{align*}
-  (\ssalet{x}{\letexpr{(y, z)}{a}{b}}{s}) := \ssalet{w}{a}{\letexpr{(y, z)}{w}{\ssalet{x}{b}{s}}}
-  \end{align*}
-  This is well-typed by induction, since given $\qsp{\Gamma}{\mb{q}}{\mb{q}_1}{\mb{q}_{23}}$,
-  $\haslb{\Gamma^{\mb{q}_{23}}}{\epsilon}{\letexpr{(y, z)}{a}{b}}{C}$, and
-  $\haslb{\Gamma^{\mb{q}_1}, x : B}{\epsilon}{s}{\ms{L}}$, we have
-  \begin{itemize}
-    \item By inversion, we have $\qsp{\Gamma}{\mb{q}_{23}}{\mb{q}_2}{\mb{q}_3}$,
-    $\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{a}{A \otimes B}$, and $\hasty{\Gamma^{\mb{q}_2, y : A, z :
-    B}}{\epsilon}{b}{B}$.
-    \item By weakening, we have $\haslb{\Gamma^{\mb{q}_1}, w : (A \otimes B)^0, y : A^0, z : B^0, x
-    : C}{\epsilon}{s}{\ms{L}}$
-    \item By split associativity, we have $\qsp{\Gamma}{\mb{q}}{\mb{q}_{12}}{\mb{q}_3}$,
-    $\qsp{\Gamma}{\mb{q}_{12}}{\mb{q}_1}{\mb{q}_2}$
-    \item By induction, we have that
-    $
-    \haslb{\Gamma^{\mb{q}}}{\epsilon}{\ssalet{w}{a}{\letstmt{(y, z)}{w}{\ssalet{x}{b}{s}}}}{\ms{L}}
-    $
-    as desired.
-  \end{itemize}
-  This has the desired semantics, since by induction
-  \begin{align*}
-  &\dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{\ssalet{w}{a}{\letstmt{(y, z)}{w}{\ssalet{x}{b}{s}}}}
-    {\ms{L}}} \\
-  &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{12}}{\mb{q}_{3}}}
-  ; \dnt{\Gamma^{\mb{q}_{12}}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{a}{A \otimes B}}
-  ; \dnt{\qsp{\Gamma, w : A \otimes B}{\mb{q}_{12}, \omega}{\mb{q}_{12}, 0}{\mb{0}, \omega}}
-  ; \\ &\qquad 
-    (\dnt{\Gamma^{\mb{q}_{12}}} \otimes I) 
-      \otimes \dnt{\hasty{\Gamma^{\mb{0}}, w : A \otimes B}{\epsilon}{w}{A \otimes B}}
-  ; \\ &\qquad
-    \dnt{\qsp{\Gamma, w : A \otimes B, y : A, z : B}
-      {\mb{q}_{12}, 0, \omega, \omega}
-      {\mb{q}_1, 0, 0, 0}{\mb{q}_2, 0, \omega, \omega}} 
-  ; \\ &\qquad
-    (\dnt{\Gamma^{\mb{q}_1}} \otimes I \otimes I \otimes I)
-      \otimes \dnt{\hasty{\Gamma^{\mb{q}_2}, w : (A \otimes B)^0, y : A, z : B}
-      {\epsilon}{b}{C}}
-  ; \\ &\qquad 
-    \dnt{\haslb{\Gamma^{\mb{q}_1}, w : (A \otimes B)^0, y : A^0, z : B^0, x : C}
-    {\epsilon}{s}{\ms{L}}} \\
-  &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{12}}{\mb{q}_{3}}}
-  ; \dnt{\Gamma^{\mb{q}_{12}}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{a}{A \otimes B}}
-  ; \alpha
-  ; \dnt{\qsp{\Gamma, y : A, z : B}
-      {\mb{q}_{12}, \omega, \omega}
-      {\mb{q}_1, 0, 0}{\mb{q}_2, \omega, \omega}} 
-  ; \\ &\qquad
-    (\dnt{\Gamma^{\mb{q}_1}} \otimes I \otimes I)
-      \otimes \dnt{\hasty{\Gamma^{\mb{q}_2}, y : A, z : B}
-      {\epsilon}{b}{C}}
-  ; \dnt{\haslb{\Gamma^{\mb{q}_1}, y : A^0, z : B^0, x : C}
-    {\epsilon}{s}{\ms{L}}} \\
-  &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{12}}{\mb{q}_{3}}}
-  ; \dnt{\qsp{\Gamma}{\mb{q}_{12}}{\mb{q}_1}{\mb{q}_2}} 
-    \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{a}{A \otimes B}}
-  ; \alpha
-  ; \\ &\qquad
-    (\dnt{\Gamma^{\mb{q}_1}} \otimes I \otimes I)
-      \otimes \dnt{\hasty{\Gamma^{\mb{q}_2}, y : A, z : B}
-      {\epsilon}{b}{C}}
-  ; \dnt{\haslb{\Gamma^{\mb{q}_1}, y : A^0, z : B^0, x : C}
-    {\epsilon}{s}{\ms{L}}} \\
-  &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{12}}{\mb{q}_{3}}}
-  ; \dnt{\qsp{\Gamma}{\mb{q}_{12}}{\mb{q}_1}{\mb{q}_2}} 
-    \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{a}{A \otimes B}}
-  ; \alpha
-  ; \\ &\qquad
-    \dnt{\Gamma^{\mb{q}_1}}
-      \otimes \dnt{\hasty{\Gamma^{\mb{q}_2}, y : A, z : B}
-      {\epsilon}{b}{C}}
-  ; \dnt{\haslb{\Gamma^{\mb{q}_1}, x : C}
-    {\epsilon}{s}{\ms{L}}} \\
-  &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{1}}{\mb{q}_{23}}}
-  ; \\ & \qquad \dnt{\Gamma^{\mb{q}_1}} \otimes (
-      \dnt{\qsp{\Gamma}{\mb{q}_{23}}{\mb{q}_2}{\mb{q}_3}} 
-    ; \dnt{\Gamma^{\mb{q}_2}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{a}{A \otimes B}}
-    ; \alpha
-    ; \dnt{\hasty{\Gamma^{\mb{q}_2}, y : A, z : B}{\epsilon}{b}{C}}
-  )
-  ; \\ &\qquad
-    \dnt{\haslb{\Gamma^{\mb{q}_1}, x : C}
-    {\epsilon}{s}{\ms{L}}} \\
-  &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{1}}{\mb{q}_{23}}}
-  ; \dnt{\Gamma^{\mb{q}_1}} \otimes (
-      \dnt{\hasty{\Gamma^{\mb{q}_{23}}}{\epsilon}{\letexpr{(y, z)}{a}{b}}{C}}
-  )
-  ; \dnt{\haslb{\Gamma^{\mb{q}_1}, x : C}
-    {\epsilon}{s}{\ms{L}}}
-  \end{align*}
-  as desired.
-  \item (Pairs $(a, b)$): \todo{clock}
-  \item (Case-statements $\caseexpr{e}{x}{a}{y}{b}$): \todo{it never stops?}
-  \item (Loops $\liter{a}{x}{b}$): \todo{yet it does}
-\end{itemize}
+\subsection{ANF Expressions}
+
+\TODO{compilation to ANF}
+
+\subsection{ANF to SSA}
+
+\TODO{ANF to SSA}
+
+% Rather than define this function directly, it is simpler to define an operation on terms
+% $\ssalet{x}{a}{s}$ which, given a term $a$ and an SSA program $s$, returns a new SSA program which
+% evaluates $a$, binds it to $x$, and then runs $s$. We will then show that $\ms{let}_{\ms{SSA}}$
+% satisfies the following typing rule:
+% $$
+% \prftree[r]{\rle{let-ssa}}
+%   {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+%   {\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A}}
+%   {\haslb{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{s}{\ms{L}^{\mb{Q}}}}
+%   {\haslb{\Gamma^{\mb{q}}}{\epsilon}{\ssalet{x}{a}{s}}{\ms{L}^{\mb{Q}}}}
+% $$
+% and has the expected semantics
+% $$
+% \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{\ssalet{x}{a}{s}}{\ms{L}^{\mb{Q}}}} =
+%   \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}} 
+%   ; \dnt{\Gamma^{\mb{q}_l}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A}} 
+%   ; \dnt{\haslb{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{s}{\ms{L}^{\zeroqv{\mb{Q}}}}}
+%   ; \alpha^\downarrow
+% $$
+% We may then simply define
+% $$
+% \ms{SSA}_\ell(\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}) := 
+%   (\ssalet{x}{a}{\brb{\ell}{x}})
+% $$
+% verifying that
+% \begin{align*}
+%   &\dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{\letexpr{x}{a}{\brb{\ell}{x}}}{\ell(A)^0}} \\
+%   &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{0}}{\mb{q}}} 
+%   ; \dnt{\Gamma^\mb{0}} \otimes \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}}
+%   ; \dnt{\haslb{\Gamma^{\mb{0}}, x : A}{\epsilon}{\brb{\ell}{x}}{\ell(A)^{\mb{0}}}}
+%   ; \alpha^\downarrow \\
+%   &= \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}} ; \alpha
+%   ; \dnt{\qsp{\Gamma, x : A}{\mb{0}, \omega}{\mb{0}, 0}{\mb{0}, \omega}} \\ &\qquad
+%   ; (\dnt{\Gamma^{\mb{0}}} \otimes I) \otimes \dnt{\hasty{\Gamma^{\mb{0}}, x : A}{\epsilon}{x}{A}}
+%   ; \alpha^\downarrow
+%   ; \iota_r
+%   ; \cancel{\dnt{\lwk{\Gamma}{\ell(A)^{\mb{0}}}{\ell(A)^{\mb{0}}}}} 
+%   \\
+%   &= \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}} ; \alpha
+%   ; \iota_r
+% \end{align*}
+% as desired. We will define $\ms{let}_{\ms{SSA}}$ by induction on terms $a$; for each branch, we will
+% then inductively verify that the typing rule and the desired semantic property holds.
+% \begin{itemize}
+%   \item (Valid instructions $o$): we define $(\ssalet{x}{o}{s}) := (\letstmt{x}{o}{s})$, which
+%   trivially has the desired typing and semantics.
+%   \item (Operations $f\;a$, unreachable expressions $\labort{a}$, and injections $\linl{a},
+%   \linr{b}$): we define
+%   \begin{align*}
+%   (\ssalet{x}{f\;a}{s}) := \ssalet{x_a}{a}{\letstmt{x}{f\;x_a}{s}}
+%   \end{align*}
+%   This is well-typed by induction, since, given $\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}$,
+%   $\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{f\;a}{B}$ and
+%   $\haslb{\Gamma^{\mb{q}_l}}{\epsilon}{s}{\ms{L}}$
+%   \begin{itemize}
+%     \item By inversion, we have $f : A \to_\epsilon B$, $\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}$,
+%     \item By \brle{op}, we have $\hasty{\Gamma^0, x_a : A}{\epsilon}{f\;x_a}{B}$
+%     \item By \brle{let$_1$} and weakening, we have $\haslb{\Gamma^{\mb{q}_l}, x_a :
+%     A}{\epsilon}{\letstmt{x}{f\;x_a}{s}}{\ms{L}}$
+%     \item Therefore, by induction, we have
+%     $\haslb{\Gamma^{\mb{q}}}{\epsilon}{\ssalet{x_a}{a}{\letstmt{x}{f\;x_a}{s}}}{\ms{L}}$ as desired.
+%   \end{itemize}
+%   This has the desired semantics, since by induction
+%   \begin{align*}
+%   &\dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{\ssalet{x_a}{a}{\letstmt{x}{f\;x_a}{s}}}{\ms{L}}} \\
+%   &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}} 
+%   ; \dnt{\Gamma^{\mb{q}_l}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A}}
+%   \\ & \qquad
+%   ; \dnt{\qsp{\Gamma, x_a : A}{\mb{q}_l, \omega}{\mb{q}_l, 0}{\mb{0}, \omega}} 
+%   ; (\dnt{\Gamma^{\mb{q}_l}} \otimes I) \otimes 
+%     \dnt{\hasty{\Gamma^{\mb{q}_l}, x_a : A}{\epsilon}{f\;x_a}{B}}
+%   \\ & \qquad
+%   ; \dnt{\haslb{\Gamma^{\mb{q}_l}, x_a : A^0}{\epsilon}{s}{\ms{L}}} \\
+%   &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}} 
+%   ; \dnt{\Gamma^{\mb{q}_l}} \otimes 
+%     (\dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A}} ; \dnt{f : A \to_\epsilon B})
+%   ; \alpha
+%   ; \dnt{\haslb{\Gamma^{\mb{q}_l}, x_a : A^0}{\epsilon}{s}{\ms{L}}} 
+%   \\
+%   &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}} 
+%   ; \dnt{\Gamma^{\mb{q}_l}} \otimes 
+%     \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{f\;a}{B}}
+%   ; \dnt{\haslb{\Gamma^{\mb{q}_l}}{\epsilon}{s}{\ms{L}}} 
+%   \end{align*}
+%   as desired. The cases for unreachable expressions $\labort{a}$ and injections $\linl{a}, \linr{b}$
+%   are exactly analogous.
+%   \item (Let-bindings $\letexpr{x}{a}{b}$): we define
+%   \begin{align*}
+%   (\ssalet{x}{\letexpr{y}{a}{b}}{s}) := \ssalet{y}{a}{\ssalet{x}{b}{s}}
+%   \end{align*}
+%   This is well-typed by induction, since given $\qsp{\Gamma}{\mb{q}}{\mb{q}_1}{\mb{q}_{23}}$,
+%   $\haslb{\Gamma^{\mb{q}_{23}}}{\epsilon}{\letexpr{x}{a}{b}}{B}$, and $\haslb{\Gamma^{\mb{q}_1}, x :
+%   B}{\epsilon}{s}{\ms{L}}$, we have
+%   \begin{itemize}
+%     \item By inversion, we have $\qsp{\Gamma}{\mb{q}_{23}}{\mb{q}_2}{\mb{q}_3}$,
+%     $\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{a}{A}$, and
+%     $\hasty{\Gamma^{\mb{q}_2, y : A}}{\epsilon}{b}{B}$.
+%     \item By weakening, we have $\haslb{\Gamma^{\mb{q}_1}, y : A^0, x : B}{\epsilon}{s}{\ms{L}}$
+%     \item By split associativity, we have $\qsp{\Gamma}{\mb{q}}{\mb{q}_{12}}{\mb{q}_3}$,
+%     $\qsp{\Gamma}{\mb{q}_{12}}{\mb{q}_1}{\mb{q}_2}$
+%     \item By induction, we have that
+%     $
+%     \haslb{\Gamma^{\mb{q}}}{\epsilon}{\ssalet{y}{a}{\ssalet{x}{b}{s}}}{\ms{L}}
+%     $
+%     as desired.
+%   \end{itemize}
+%   This has the desired semantics, since by induction
+%   \begin{align*}
+%   &\dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{\ssalet{y}{a}{\ssalet{x}{b}{s}}}{\ms{L}}} \\
+%   &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{12}}{\mb{q}_{3}}}
+%   ; \dnt{\Gamma^{\mb{q}_{12}}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{a}{A}}
+%   ; \\ &\qquad 
+%     \dnt{\qsp{\Gamma, y : A}{\mb{q}_{12}, \omega}{\mb{q}_1, 0}{\mb{q}_2, \omega}}
+%   ; \dnt{\Gamma^{\mb{q}_1}} \otimes 
+%     \dnt{\hasty{\Gamma^{\mb{q}_2}, y : A}{\epsilon}{b}{B}}
+%   ; \dnt{\haslb{\Gamma^{\mb{q}_1}, y : A^0, x : B}{\epsilon}{s}{\ms{L}}} \\
+%   &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{12}}{\mb{q}_{3}}}
+%   ; \dnt{\qsp{\Gamma}{\mb{q}_{12}}{\mb{q}_1}{\mb{q}_2}} \otimes \dnt{\Gamma^{\mb{q}_3}}
+%   ; (\dnt{\Gamma^{\mb{q}_1}} \otimes \dnt{\Gamma^{\mb{q}_2}}) 
+%     \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{a}{A}}
+%   ; \\ &\qquad
+%     \alpha ; \dnt{\Gamma^{\mb{q}_1}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_2}, y : A}{\epsilon}{b}{B}}
+%   ; \alpha ; \dnt{\haslb{\Gamma^{\mb{q}_1}, y : A^0, x : B}{\epsilon}{s}{\ms{L}}} \\
+%   &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{1}}{\mb{q}_{23}}}
+%   ; \dnt{\Gamma^{\mb{q}_1}} \otimes (\dnt{\qsp{\Gamma}{\mb{q}_{23}}{\mb{q}_2}{\mb{q}_3}}
+%   ; \dnt{\Gamma^{\mb{q}_2}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{a}{A}})
+%   ; \dnt{\hasty{\Gamma^{\mb{q}_2}, y : A}{\epsilon}{b}{B}}
+%   )
+%   ; \\ &\qquad
+%     \dnt{\haslb{\Gamma^{\mb{q}_1}, x : B}{\epsilon}{s}{\ms{L}}} \\
+%   &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{1}}{\mb{q}_{23}}}
+%   ; \dnt{\Gamma^{\mb{q}_1}} \otimes 
+%     \dnt{\hasty{\Gamma^{\mb{q}_{23}}}{\epsilon}{\letexpr{y}{a}{b}}{B}}
+%   ; \dnt{\haslb{\Gamma^{\mb{q}_1}, x : B}{\epsilon}{s}{\ms{L}}}
+%   \end{align*}
+%   as desired.
+%   \item (Binary let-bindings $\letexpr{(x, y)}{a}{b}$): we define
+%   \begin{align*}
+%   (\ssalet{x}{\letexpr{(y, z)}{a}{b}}{s}) := \ssalet{w}{a}{\letexpr{(y, z)}{w}{\ssalet{x}{b}{s}}}
+%   \end{align*}
+%   This is well-typed by induction, since given $\qsp{\Gamma}{\mb{q}}{\mb{q}_1}{\mb{q}_{23}}$,
+%   $\haslb{\Gamma^{\mb{q}_{23}}}{\epsilon}{\letexpr{(y, z)}{a}{b}}{C}$, and
+%   $\haslb{\Gamma^{\mb{q}_1}, x : B}{\epsilon}{s}{\ms{L}}$, we have
+%   \begin{itemize}
+%     \item By inversion, we have $\qsp{\Gamma}{\mb{q}_{23}}{\mb{q}_2}{\mb{q}_3}$,
+%     $\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{a}{A \otimes B}$, and $\hasty{\Gamma^{\mb{q}_2, y : A, z :
+%     B}}{\epsilon}{b}{B}$.
+%     \item By weakening, we have $\haslb{\Gamma^{\mb{q}_1}, w : (A \otimes B)^0, y : A^0, z : B^0, x
+%     : C}{\epsilon}{s}{\ms{L}}$
+%     \item By split associativity, we have $\qsp{\Gamma}{\mb{q}}{\mb{q}_{12}}{\mb{q}_3}$,
+%     $\qsp{\Gamma}{\mb{q}_{12}}{\mb{q}_1}{\mb{q}_2}$
+%     \item By induction, we have that
+%     $
+%     \haslb{\Gamma^{\mb{q}}}{\epsilon}{\ssalet{w}{a}{\letstmt{(y, z)}{w}{\ssalet{x}{b}{s}}}}{\ms{L}}
+%     $
+%     as desired.
+%   \end{itemize}
+%   This has the desired semantics, since by induction
+%   \begin{align*}
+%   &\dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{\ssalet{w}{a}{\letstmt{(y, z)}{w}{\ssalet{x}{b}{s}}}}
+%     {\ms{L}}} \\
+%   &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{12}}{\mb{q}_{3}}}
+%   ; \dnt{\Gamma^{\mb{q}_{12}}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{a}{A \otimes B}}
+%   ; \dnt{\qsp{\Gamma, w : A \otimes B}{\mb{q}_{12}, \omega}{\mb{q}_{12}, 0}{\mb{0}, \omega}}
+%   ; \\ &\qquad 
+%     (\dnt{\Gamma^{\mb{q}_{12}}} \otimes I) 
+%       \otimes \dnt{\hasty{\Gamma^{\mb{0}}, w : A \otimes B}{\epsilon}{w}{A \otimes B}}
+%   ; \\ &\qquad
+%     \dnt{\qsp{\Gamma, w : A \otimes B, y : A, z : B}
+%       {\mb{q}_{12}, 0, \omega, \omega}
+%       {\mb{q}_1, 0, 0, 0}{\mb{q}_2, 0, \omega, \omega}} 
+%   ; \\ &\qquad
+%     (\dnt{\Gamma^{\mb{q}_1}} \otimes I \otimes I \otimes I)
+%       \otimes \dnt{\hasty{\Gamma^{\mb{q}_2}, w : (A \otimes B)^0, y : A, z : B}
+%       {\epsilon}{b}{C}}
+%   ; \\ &\qquad 
+%     \dnt{\haslb{\Gamma^{\mb{q}_1}, w : (A \otimes B)^0, y : A^0, z : B^0, x : C}
+%     {\epsilon}{s}{\ms{L}}} \\
+%   &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{12}}{\mb{q}_{3}}}
+%   ; \dnt{\Gamma^{\mb{q}_{12}}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{a}{A \otimes B}}
+%   ; \alpha
+%   ; \dnt{\qsp{\Gamma, y : A, z : B}
+%       {\mb{q}_{12}, \omega, \omega}
+%       {\mb{q}_1, 0, 0}{\mb{q}_2, \omega, \omega}} 
+%   ; \\ &\qquad
+%     (\dnt{\Gamma^{\mb{q}_1}} \otimes I \otimes I)
+%       \otimes \dnt{\hasty{\Gamma^{\mb{q}_2}, y : A, z : B}
+%       {\epsilon}{b}{C}}
+%   ; \dnt{\haslb{\Gamma^{\mb{q}_1}, y : A^0, z : B^0, x : C}
+%     {\epsilon}{s}{\ms{L}}} \\
+%   &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{12}}{\mb{q}_{3}}}
+%   ; \dnt{\qsp{\Gamma}{\mb{q}_{12}}{\mb{q}_1}{\mb{q}_2}} 
+%     \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{a}{A \otimes B}}
+%   ; \alpha
+%   ; \\ &\qquad
+%     (\dnt{\Gamma^{\mb{q}_1}} \otimes I \otimes I)
+%       \otimes \dnt{\hasty{\Gamma^{\mb{q}_2}, y : A, z : B}
+%       {\epsilon}{b}{C}}
+%   ; \dnt{\haslb{\Gamma^{\mb{q}_1}, y : A^0, z : B^0, x : C}
+%     {\epsilon}{s}{\ms{L}}} \\
+%   &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{12}}{\mb{q}_{3}}}
+%   ; \dnt{\qsp{\Gamma}{\mb{q}_{12}}{\mb{q}_1}{\mb{q}_2}} 
+%     \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{a}{A \otimes B}}
+%   ; \alpha
+%   ; \\ &\qquad
+%     \dnt{\Gamma^{\mb{q}_1}}
+%       \otimes \dnt{\hasty{\Gamma^{\mb{q}_2}, y : A, z : B}
+%       {\epsilon}{b}{C}}
+%   ; \dnt{\haslb{\Gamma^{\mb{q}_1}, x : C}
+%     {\epsilon}{s}{\ms{L}}} \\
+%   &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{1}}{\mb{q}_{23}}}
+%   ; \\ & \qquad \dnt{\Gamma^{\mb{q}_1}} \otimes (
+%       \dnt{\qsp{\Gamma}{\mb{q}_{23}}{\mb{q}_2}{\mb{q}_3}} 
+%     ; \dnt{\Gamma^{\mb{q}_2}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{a}{A \otimes B}}
+%     ; \alpha
+%     ; \dnt{\hasty{\Gamma^{\mb{q}_2}, y : A, z : B}{\epsilon}{b}{C}}
+%   )
+%   ; \\ &\qquad
+%     \dnt{\haslb{\Gamma^{\mb{q}_1}, x : C}
+%     {\epsilon}{s}{\ms{L}}} \\
+%   &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{1}}{\mb{q}_{23}}}
+%   ; \dnt{\Gamma^{\mb{q}_1}} \otimes (
+%       \dnt{\hasty{\Gamma^{\mb{q}_{23}}}{\epsilon}{\letexpr{(y, z)}{a}{b}}{C}}
+%   )
+%   ; \dnt{\haslb{\Gamma^{\mb{q}_1}, x : C}
+%     {\epsilon}{s}{\ms{L}}}
+%   \end{align*}
+%   as desired.
+%   \item (Pairs $(a, b)$): we define
+%   \begin{align*}
+%   (\ssalet{x}{(a, b)}{s}) := (\ssalet{x_a}{a}{\ssalet{x_b}{b}{\letstmt{x}{(x_a, x_b)}{s}}})
+%   \end{align*}
+%   \TODO{well typed}
+%   \TODO{good semantics}
+%   \item (Case-statements $\caseexpr{e}{x}{a}{y}{b}$): we define
+%   \begin{align*}
+%   (\ssalet{x}{\caseexpr{e}{y}{a}{z}{b}}{s}) &:= (
+%     \ssalet{x_e}{e}{\awhere{\awhere{\caseexpr{x_e}{y}{\brb{\ell_l}{y}}{z}{\brb{\ell_r}{z}}
+%       \\ & \qquad}{
+%         \wbranch{ \\ & \qquad \qquad \ell_l}{y}{\ssalet{x_a}{a}{\brb{\ell_o}{x_a}}},
+%         \wbranch{ \\ & \qquad \qquad \ell_r}{z}{\ssalet{x_b}{b}{\brb{\ell_o}{x_b}}}
+%       } 
+%       \\ & \qquad}{
+%         \wbranch{\\ & \qquad \qquad \ell_o}{x}{s}
+%       }}
+%   )
+%   \end{align*}
+%   \item (Loops $\liter{a}{x}{b}$): \todo{yet it does}
+% \end{itemize}
 
 \section{Models}
 
