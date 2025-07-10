@@ -225,6 +225,7 @@
 \newcommand{\varcount}[2]{\sharp(#1, #2)}
 \newcommand{\ubeff}{\lightning}
 \newcommand{\obind}{\mathbin{>\!\!>\mkern-6.7mu=}}
+\newcommand{\mpure}[1]{\eta_#1}
 \newcommand{\mbind}[3]{#2 \obind_{#1} #3}
 \newcommand{\tret}[2]{#1 \therefore #2}
 \newcommand{\letarr}[2]{\ms{let}\;#1\;\ms{in}\;#2}
@@ -4906,33 +4907,38 @@ features of our formalization. Using the machinery developed in Appendix~\ref{ap
 also construct some relationships between models, allowing us to use higher level models as
 ``analysis passes'' for lower-level ones.
 
-\subsection{Ordered Elgot Monads}
+\subsection{Poset-Enriched Elgot Monads}
 
-\TODO{an \emph{ordred monad} lets us poset-enrich the Kleisli category as follows}
+\TODO{introduction, working over $\mb{Set}$}
+
+\begin{definition}[Poset-Enriched Monad]
+  We say a monad $T$ over $\mb{Set}$ is \emph{poset-enriched} if $T\;A$ is equipped with a partial
+  order compatible with $\mbind{T}{\cdot}{\cdot}$, i.e., such that, for $a \leq b$ and $f \leq g$,
+  we have $\mbind{T}{a}{f} \leq \mbind{T}{b}{g}$, where functions $f, g : A \to T\;B$ are given the
+  pointwise partial order.
+\end{definition}
+
+\TODO{in particular, \emph{every} monad is poset-enriched with the identity order on $T\;A$}
+
+\TODO{simplest poset-enriched monad is $\top$-monad}
+
+\TODO{a good example of a nontrivial poset-enriched monad is nondeterminism $\mc{P}$, $\mc{P}^+$}
+
+\TODO{every poset-enriched monad yields a distributive effectful category}
  
-\TODO{an \emph{Elgot monad}... an \emph{ordered Elgot monad} is the obvious thing...}
+\TODO{Elgot monad; poset-enrichment is the obvious thing}
 
-\TODO{NT is an ordered Elgot monad}
+\TODO{simplest Elgot monad is nontermination}
 
-\subsection{Nondeterminism}
+\TODO{nondeterminism is a poset-enriched Elgot monad}
 
-\TODO{ND is an ordered Elgot monad}
+\TODO{as is $\top$}
 
-\TODO{ND + NT is an ordered Elgot monad, again with \emph{two} Elgot structures}
+\TODO{as is $\top$-NT}
 
-\subsection{UB}
+\TODO{as is $\top$-NT-ND}
 
-\label{apx:ub}
-
-\TODO{UB is an ordered Elgot monad}
-
-\TODO{acts like \emph{symbolic} nondeterminism}
-
-\TODO{UB + NT is an ordered Elgot monad, with \emph{two} Elgot structures}
-
-\TODO{UB + ND + NT is an ordered Elgot monad}
-
-\subsection{Ordered Monad Transformers}
+\subsection{Monad Transformers}
 
 \TODO{readerT preserves order}
 
