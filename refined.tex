@@ -4971,9 +4971,23 @@ We may now define $\tossa{\ell}{P}$ by induction on ANF programs $P$ as follows:
   \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{\letexpr{(x, y)}{o}{P}}{A}$): we define
   $(\tossa{\ell}{\letexpr{(x, y)}{o}{P}}) := \letstmt{(x, y)}{o}{\tossa{\ell}{P}}$, which is
   trivially correct by induction.
-  \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{\letexpr{x}{\caseexpr{o}{x}{P}{y}{Q}}{R}}{C}$): 
-  \todo{till you}
-  \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{\letexpr{x}{\liter{o}{x}{P}}{Q}}{B}$): \todo{DROPL}
+  \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{\letexpr{x}{\caseexpr{o}{y}{P}{z}{Q}}{R}}{C}$): we
+  define
+  \begin{align*}
+    (\tossa{\ell}{\letexpr{x}{\caseexpr{o}{y}{P}{z}{Q}}{R}})
+    & := \awhere{\awhere{\casestmt{o}{y}{\brb{\ell_l}{y}}{z}{\brb{\ell_r}{z}} \\ & \qquad }{
+      \\ & \quad \qquad
+      \wbranch{\ell_l}{y}{\tossa{\ell_o}{P}},
+      \\ & \quad \qquad
+      \wbranch{\ell_r}{z}{\tossa{\ell_o}{Q}}
+    } \\ & \quad }{
+      \\ & \qquad
+      \wbranch{\ell_o}{x}{\tossa{\ell}{R}}
+    }
+  \end{align*}
+  \TODO{in the burning heart of the moment, I can't figure out how to write this -- GitHub Copilot}
+  \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{\letexpr{x}{\liter{o}{x}{P}}{Q}}{B}$): 
+  \TODO{DROPL}
 \end{itemize}
 
 % Rather than define this function directly, it is simpler to define an operation on terms
