@@ -5282,7 +5282,7 @@ We may now define $\tossa{\ell}{P}$ by induction on ANF programs $P$ as follows:
     }
   \end{align*}
   We verify the semantics by induction as follows, where $\ms{R}^{\mb{Q}} := 
-  \ell_r(A)^{\mb{q}_{12}, 0}, \ell_h(A + B)^{\mb{q}_{12}, 0}, \ell_o(B)^{\mb{q}_{12}, 0}$:
+  \ell_r(A)^{\mb{q}_{12}}, \ell_h(B + A)^{\mb{q}_{12}}, \ell_o(B)^{\mb{q}_{12}}$:
   \begin{align*}
   & \dnt{
     \haslb{\Gamma^{\mb{q}}}{\epsilon}{\tossa{\ell}{\letexpr{x}{\liter{o}{y}{P}}{Q}}}
@@ -5291,27 +5291,27 @@ We may now define $\tossa{\ell}{P}$ by induction on ANF programs $P$ as follows:
   &= \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{\brb{\ell_r}{o}}
         { 
           \ell(C)^{\mb{q}_1}, 
-          \ms{R}^{\mb{Q}}
+          \ms{R}^{\zeroqv{\mb{Q}}}
         }
       } ; [\ms{id}_{\dnt{\Gamma^{\mb{q}_1}} \otimes \dnt{C}}, [\\ & \qquad
       \dnt{\haslb{\Gamma^{\mb{q}_{12}}, y : A}{\epsilon}{\tossa{\ell_h}{P}}
         {
           \ell(C)^{\mb{q}_1, 0}, 
-          \ms{R}^{\mb{Q}}
+          \ms{R}^{\zeroqv{\mb{Q}}}
         }
       } ; \alpha^\downarrow ; \alpha^+, \\ & \qquad
       \dnt{\haslb{\Gamma^{\mb{q}_{12}}, w : A + B}{\epsilon}
         {\caseexpr{w}{x}{\brb{\ell_o}{x}}{y}{\brb{\ell_b}{y}}}
         {
           \ell(C)^{\mb{q}_1, 0}, 
-          \ms{R}^{\mb{Q}}
+          \ms{R}^{\zeroqv{\mb{Q}}}
         }
       } ; \alpha^\downarrow ; \alpha^+, \\ & \qquad
       \dnt{\haslb{\Gamma^{\mb{q}_{12}}, x : B}{\epsilon}
         {\tossa{\ell}{Q}}
         {
           \ell(C)^{\mb{q}_1, 0}, 
-          \ms{R}^{\mb{Q}}
+          \ms{R}^{\zeroqv{\mb{Q}}}
         }
       } ; \alpha^\downarrow ; \alpha^+
     ]^\dagger] \\
@@ -5326,12 +5326,12 @@ We may now define $\tossa{\ell}{P}$ by induction on ANF programs $P$ as follows:
           \ms{R}^{\mb{Q}}
         }
       } ; \alpha^\downarrow ; \alpha^+, \\ & \qquad
-      \delta^{-1} ; [\iota_r ; \iota_r, \iota_l ; \iota_l ; \iota_r], \\ & \qquad
+      \delta^{-1} ; [\iota_r, \iota_r ; \iota_l] ; \iota_r, \\ & \qquad
       \dnt{\haslb{\Gamma^{\mb{q}_{12}}, x : B}{\epsilon}
         {\tossa{\ell}{Q}}
         {
           \ell(C)^{\mb{q}_1, 0}, 
-          \ms{R}^{\mb{Q}}
+          \ms{R}^{\zeroqv{\mb{Q}}}
         }
       } ; \alpha^\downarrow ; \alpha^+
     ]^\dagger] \\
@@ -5340,23 +5340,135 @@ We may now define $\tossa{\ell}{P}$ by induction on ANF programs $P$ as follows:
         \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{o}{A}}
       ; \iota_l ; \iota_l
       ; [\\ & \qquad
-      \dnt{\haslb{\Gamma^{\mb{q}_{12}}, y : A}{\epsilon}{\tossa{\ell_h}{P}}
-        {
-          \ell(C)^{\mb{q}_1, 0}, 
-          \ms{R}^{\mb{Q}}
-        }
-      } ; \alpha^\downarrow ; \alpha^+, \text{\todo{unfold}} \\ & \qquad
-      \delta^{-1} ; [\iota_r ; \iota_r, \iota_l ; \iota_l ; \iota_r], \\ & \qquad
-      \dnt{\haslb{\Gamma^{\mb{q}_{12}}, x : B}{\epsilon}
-        {\tossa{\ell}{Q}}
-        {
-          \ell(C)^{\mb{q}_1, 0}, 
-          \ms{R}^{\mb{Q}}
-        }
-      } ; \alpha^\downarrow ; \alpha^+ \text{\todo{unfold}}
+      \dnt{
+        \haslb{\Gamma^{\mb{q}_{12}}, y : A}{\epsilon}{\tossa{\ell_h}{P}}
+          {\ell_h(B + A)^{\mb{q}_{12}, 0}}
+      }
+      ; \dnt{\lwk{\Gamma}{\ell_h(B + A)^{\mb{q}_{12}, 0}}
+              {\ell(C)^{\mb{q}_1, 0}, \ms{R}^{\zeroqv{\mb{Q}}}}} 
+      ; \alpha^\downarrow ; \alpha^+,
+      \\ & \qquad
+      \delta^{-1} ; [\iota_r, \iota_r ; \iota_l] ; \iota_r, \\ & \qquad
+      \dnt{
+        \haslb{\Gamma^{\mb{q}_{12}}, z : B}{\epsilon}{\tossa{\ell_h}{Q}}{\ell(C)^{\mb{q}_1, 0}}
+      }
+      ; \dnt{\lwk{\Gamma}{\ell(C)^{\mb{q}_1, 0}}\ell(C)^{\mb{q}_1, 0}, {\ms{R}^{\zeroqv{\mb{Q}}}}} 
+      ; \alpha^\downarrow ; \alpha^+
     ]^\dagger \\
+  &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{12}}{\mb{q}_3}}
+      ; \dnt{\Gamma^{\mb{q}_{12}}} 
+        \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{o}{A}}
+      ; \iota_l ; \iota_l
+      ; [\\ & \qquad
+      \dnt{\qsp{\Gamma}{\mb{q}_{12}}{\mb{q}_{12}}{\mb{q}_r}} \otimes \dnt{A}
+      ; \alpha
+      ; \dnt{\Gamma^{\mb{q}_{12}}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}, y : A}{\epsilon}
+            {P}{B + A}}
+      ; \iota_r ; \iota_r
+      ,
+      \\ & \qquad
+      \delta^{-1} ; [\iota_r, \iota_r ; \iota_l] ; \iota_r, \\ & \qquad
+      \dnt{\qsp{\Gamma}{\mb{q}_{12}}{\mb{q}_1}{\mb{q}_2}} \otimes \dnt{B}
+      ; \alpha
+      ; \dnt{\Gamma^{\mb{q}_1}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_2}, x : B}{\epsilon}{Q}{C}}
+      ; \iota_r ; \iota_l
+    ]^\dagger \\
+  &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{12}}{\mb{q}_3}}
+      ; \dnt{\Gamma^{\mb{q}_{12}}} 
+        \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{o}{A}}
+      ; ( \\ & \qquad
+        \dnt{\qsp{\Gamma}{\mb{q}_{12}}{\mb{q}_{12}}{\mb{q}_r}} \otimes \dnt{A}
+        ; \alpha
+        ; \dnt{\Gamma^{\mb{q}_{12}}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}, y : A}{\epsilon}
+              {P}{B + A}}
+        ; \delta^{-1} ; 
+        \\ & \qquad 
+        ( 
+          \dnt{\qsp{\Gamma}{\mb{q}_{12}}{\mb{q}_1}{\mb{q}_2}} \otimes \dnt{B}
+          ; \alpha
+          ; \dnt{\Gamma^{\mb{q}_1}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_2}, x : B}{\epsilon}{Q}{C}
+          ; \iota_r}
+        ) + (\dnt{\Gamma^{\mb{q}_{12}}} \otimes \dnt{A})
+      )^\dagger \\
+  &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{12}}{\mb{q}_3}}
+      ; \dnt{\Gamma^{\mb{q}_{12}}} 
+        \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{o}{A}}
+      ; ( \\ & \qquad
+        \dnt{\qsp{\Gamma}{\mb{q}_{12}}{\mb{q}_{12}}{\mb{q}_r}} \otimes \dnt{A}
+        ; \alpha
+        ; \dnt{\Gamma^{\mb{q}_{12}}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}, y : A}{\epsilon}
+              {P}{B + A}}
+        ; \delta^{-1}
+        \\ & \quad 
+      )^\dagger 
+      ; \dnt{\qsp{\Gamma}{\mb{q}_{12}}{\mb{q}_1}{\mb{q}_2}} \otimes \dnt{B}
+      ; \alpha
+      ; \dnt{\Gamma^{\mb{q}_1}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_2}, x : B}{\epsilon}{Q}{C}}
+      ; \iota_r \\
+  % TODO: justify a spot more?
+  &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{12}}{\mb{q}_3}}
+      ; \dnt{\qsp{\Gamma}{\mb{q}_{12}}{\mb{q}_{12}}{\mb{q}_r}} 
+        \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{o}{A}}
+      ; \alpha 
+      ; (\dnt{\Gamma^{\mb{q}_{12}}} \otimes ( \\ & \qquad
+        \dnt{\qsp{\Gamma}{\mb{q}_r}{\mb{q}_r}{\mb{q}_r}} \otimes \dnt{A}
+        ; \alpha
+        ; \dnt{\Gamma^{\mb{q}_r}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}, y : A}{\epsilon}
+              {P}{B + A}}
+        ; \\ & \qquad \delta^{-1}
+        ; (\dnt{\cwk{\Gamma^{\mb{q}_r}}{\cdot}} \otimes \dnt{B} ; \lambda) 
+          + \dnt{\Gamma^{\mb{q}_r}} \otimes \dnt{A}
+        \\ & \quad 
+      )^\dagger)
+      ; \alpha
+      ; \dnt{\qsp{\Gamma}{\mb{q}_{12}}{\mb{q}_1}{\mb{q}_2}} \otimes \dnt{B}
+      ; \alpha
+      ; \dnt{\Gamma^{\mb{q}_1}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_2}, x : B}{\epsilon}{Q}{C}}
+      ; \iota_r \\
+  &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{12}}{\mb{q}_{3r}}}
+      ; \dnt{\qsp{\Gamma}{\mb{q}_{12}}{\mb{q}_1}{\mb{q}_2}} \otimes (
+        \dnt{\qsp{\Gamma}{\mb{q}_{3r}}{\mb{q}_r}{\mb{q}_3}}
+        ; \dnt{\Gamma^{\mb{q}_r}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_{3}}}{\epsilon}{o}{A}}
+        ; ( \\ & \qquad
+          \dnt{\qsp{\Gamma}{\mb{q}_r}{\mb{q}_r}{\mb{q}_r}} \otimes \dnt{A}
+          ; \alpha
+          ; \dnt{\Gamma^{\mb{q}_r}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}, y : A}{\epsilon}
+                {P}{B + A}}
+        )^\dagger
+        ; \dnt{\cwk{\Gamma^{\mb{q}_r}}{\cdot}} \otimes \dnt{B} ; \lambda \\ &\quad
+      ) 
+      ; \alpha
+      ; \dnt{\Gamma^{\mb{q}_1}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_2}, x : B}{\epsilon}{Q}{C}}
+      ; \iota_r \\
+  &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{12}}{\mb{q}_{3r}}}
+      ; \dnt{\qsp{\Gamma}{\mb{q}_{12}}{\mb{q}_1}{\mb{q}_2}} \otimes
+        \dnt{\hasty{\Gamma^{\mb{q}_{3r}}}{\epsilon}{\liter{o}{y}{P}}{B}}
+      ; \alpha
+      ; \dnt{\Gamma^{\mb{q}_1}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_2}, x : B}{\epsilon}{Q}{C}}
+      ; \iota_r \\
+  &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{12}}{\mb{q}_{3r}}}
+      ; \dnt{\qsp{\Gamma}{\mb{q}_{12}}{\mb{q}_1}{\mb{q}_2}} \otimes
+        \dnt{\hasty{\Gamma^{\mb{q}_{3r}}}{\epsilon}{\liter{o}{y}{P}}{B}}
+      ; \alpha
+      ; \dnt{\Gamma^{\mb{q}_1}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_2}, x : B}{\epsilon}{Q}{C}}
+      ; \iota_r \\
+  &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{1}}{\mb{q}_{23r}}}
+      ; \dnt{\Gamma^{\mb{q}_1}} \otimes ( \\ & \qquad
+        \dnt{\qsp{\Gamma}{\mb{q}_{23r}}{\mb{q}_{2}}{\mb{q}_{3r}}} 
+        ; \dnt{\Gamma^{\mb{q}_2}} 
+          \otimes \dnt{\hasty{\Gamma^{\mb{q}_{3r}}}{\epsilon}{\liter{o}{y}{P}}{B}}
+        ; \dnt{\hasty{\Gamma^{\mb{q}_2}, x : B}{\epsilon}{Q}{C}}
+      )
+      ; \iota_r\\
   \end{align*}
-  \TODO{DROPL}
+  \begin{align*}
+  &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{1}}{\mb{q}_{23r}}}
+      ; \dnt{\Gamma^{\mb{q}_1}} \otimes \dnt{
+        \hasty{\Gamma^{\mb{q}_{23r}}}{\epsilon}{\letexpr{x}{\liter{o}{y}{P}}{Q}}{C}
+      }
+      ; \iota_r
+  \end{align*}
+  as desired.
 \end{itemize}
 
 % Rather than define this function directly, it is simpler to define an operation on terms
