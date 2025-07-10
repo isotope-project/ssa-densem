@@ -155,7 +155,7 @@
 \newcommand{\tossa}[2]{\ms{SSA}_{#1}(#2)}
 \newcommand{\ssalet}[3]{\ms{let}_{\ms{SSA}}\;#1 = #2; #3}
 \newcommand{\toanf}[1]{\ms{ANF}(#1)}
-\newcommand{\anflet}[3]{\ms{ANF}_{\ms{let}}(#1, #2, #3)}
+\newcommand{\anflet}[3]{\ms{let}_{\ms{ANF}}\;#1 = #2; #3}
 \newcommand{\toterm}[1]{\ms{Term}(#1)}
 \newcommand{\etoty}[1]{[#1]}
 \newcommand{\ctoty}[1]{[#1]}
@@ -4883,11 +4883,82 @@ over such expressions.
 
 \subsection{ANF Expressions}
 
-\TODO{compilation to ANF}
+We begin by defining ANF expressions $P, Q, R$ using the grammar in Figure~\ref{fig:anf-syntax};
+these are treated as a subset of \subiterexp{} expressions. In particular, an ANF program consists
+of a sequence of instructions of the form $\letexpr{x}{I}{P}$ (along with destructurings
+$\letexpr{(x, y)}{o}{P}$), where each instruction $I$ either calls into a sub-program or returns the
+value of an operation $o$. Our goal is to define a function $\toanf{a}$ on terms such that, for
+all well-typed terms $a$,
+\begin{equation*}
+  \tmeq{\Gamma^{\mb{q}}}{\mc{R}}{\toanf{a}}{a}{A}
+\end{equation*}
+Rather than do so directly, we will instead define a transformation $\anflet{x}{a}{P}$ which, given
+an ANF program $P$ and a term $a$, returns an ANF program such that
+\begin{equation*}
+  \tmeq{\Gamma^{\mb{q}}}{\mc{R}}{\anflet{x}{a}{P}}{\letexpr{x}{a}{P}}{A}
+\end{equation*}
+We can then define $\toanf{a} := \anflet{x}{a}{x}$; note that we trivially have that, for any $a$,
+$\anflet{x}{a}{x} \approx \letexpr{x}{a}{x} \approx a \implies \toanf{x} \approx a$ by definition.
+We can now proceed to define $\anflet{x}{a}{P}$ by induction on terms $a$ as follows:
+\begin{align*}
+  (\anflet{x}{o}{P}) &:= (\letexpr{x}{o}{P}) \text{ where } o \text{ is a valid instruction} \\
+  (\anflet{x}{f\;a}{P}) &:= (\anflet{x_a}{a}{\letexpr{x}{f\;x}{P}}) \\
+  (\anflet{x}{\letexpr{y}{a}{b}}{P}) &:= (\anflet{y}{a}{\anflet{x}{b}{P}}) \\
+  (\anflet{x}{(a, b)}{P}) &:= (\anflet{x_a}{a}{\anflet{x_b}{b}{\letexpr{x}{(a, b)}{P}}}) \\
+  (\anflet{x}{\linl{a}}{P}) &:= (\anflet{x_a}{a}{\letexpr{x}{\linl{x_a}}{P}}) \\
+  (\anflet{x}{\linr{a}}{P}) &:= (\anflet{x_a}{a}{\letexpr{x}{\linr{x_a}}{P}}) \\
+  (\anflet{x}{\caseexpr{e}{y}{a}{z}{b}}{P}) 
+    &:= (\anflet{x_e}{e}{\letexpr{x}{\caseexpr{x_e \\ & \qquad}{y}{\toanf{a}}{z}{\toanf{b}}}}{P}) \\
+  (\anflet{x}{\labort{a}}{P}) &:= (\anflet{x_a}{a}{\letexpr{x}{\labort{x_a}}{P}}) \\
+  (\anflet{x}{\liter{a}{y}{b}}{P}) 
+    &:= (\anflet{x_a}{a}{\letexpr{x}{\liter{x_a}{y}{\toanf{b}}}{P}})
+\end{align*}
+We can trivially verify each case by simply applying the binding rule for each term-former, followed
+by the inductive hypothesis. For example, we have that
+\begin{align*}
+  \Gamma^{\mb{q}} & \vdash_\bot
+    \letexpr{x}{\liter{a}{y}{b}}{P} \approx \letexpr{x}{(\letexpr{x_a}{a}{\liter{x_a}{y}{b}})}{P} 
+      & (\brle{iter-bind}) \\
+    &\approx \letexpr{x_a}{a}{\letexpr{x}{\liter{x_a}{y}{b}}{P}}
+      & (\brle{let-let$_1$}) \\
+    & \approx \anflet{x_a}{a}{\letexpr{x}{\liter{x_a}{y}{b}}{P}} & (\text{by induction}) \\
+    & \approx \anflet{x_a}{a}{\letexpr{x}{\liter{x_a}{y}{\toanf{b}}}{P}} & (\text{by induction}) \\
+    & \approx \anflet{x}{\liter{a}{y}{b}}{P} & (\text{by definition})
+\end{align*}
+
+\begin{figure}
+  \begin{grammar}
+    <\(I, J\)> ::= 
+    \(o\)
+    \;|\; \(\caseexpr{o}{x}{P}{y}{Q}\)
+    \;|\; \(\liter{o}{x}{P}\)
+
+    <\(P, Q, R\)> ::=
+    \(o\)
+    \;|\; \(\letexpr{x}{I}{P}\)
+    \;|\; \(\letexpr{(x, y)}{o}{P}\)
+    
+    <\(q\)> ::= \(\zeroq\) | \(\oneq\) | \(\cpyq\) | \(\delq\) | \(\topq\)
+
+    <\(\Gamma\)> ::= \(\cdot\) \;|\; \(\Gamma, x : A\)
+
+    <\(\mb{q}\)> ::= \(\cdot\) \;|\; \(\mb{q}, q\)
+  \end{grammar}
+  \caption{Syntax for \subiterexp{} terms in ANF} \Description{}
+  \label{fig:anf-syntax}
+\end{figure}
 
 \subsection{ANF to SSA}
 
-\TODO{ANF to SSA}
+We may now define $\tossa{\ell}{P}$ by induction on ANF programs $P$ as follows:
+\begin{itemize}
+  \item (Valid operations $\hasty{\Gamma^{\mb{q}}}{\epsilon}{o}{A}$): \todo{don't stop}
+  \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{\letexpr{x}{o}{P}}{A}$): \todo{till you drop}
+  \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{\letexpr{(x, y)}{o}{P}}{A}$): \todo{POPL}
+  \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{\letexpr{x}{\caseexpr{o}{x}{P}{y}{Q}}{R}}{C}$): 
+  \todo{till you}
+  \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{\letexpr{x}{\liter{o}{x}{P}}{Q}}{B}$): \todo{DROPL}
+\end{itemize}
 
 % Rather than define this function directly, it is simpler to define an operation on terms
 % $\ssalet{x}{a}{s}$ which, given a term $a$ and an SSA program $s$, returns a new SSA program which
