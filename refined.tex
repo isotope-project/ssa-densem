@@ -4988,11 +4988,11 @@ We begin by stating the following metatheoretic result:
     \begin{align*}
     &\dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{\brb{\ell}{a}}{\ms{L}'^{\mb{Q}'}}} \\
     &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}} 
-      ; \dnt{\Gamma^{\mb{q}_r}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A}} 
+      ; \dnt{\Gamma^{\mb{q}_l}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A}} 
       ; \iota_r
       ; \dnt{\lwk{\Gamma}{\ell(A)^{\mb{q}_l}}{\ms{L}'^{\mb{q'}}}} \\ 
     &\approx \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}} 
-      ; \dnt{\Gamma^{\mb{q}_r}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A}} 
+      ; \dnt{\Gamma^{\mb{q}_l}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A}} 
       ; \iota_r
       ; \dnt{\lwk{\Gamma}{\ell(A)^{\mb{q}_l}}{\ms{L}^{\mb{q}}}}
       ; \dnt{\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{L}'^{\mb{Q}'}}} \\
@@ -5000,9 +5000,33 @@ We begin by stating the following metatheoretic result:
       ; \dnt{\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{L}'^{\mb{Q}'}}}
     \end{align*}
     \item ($\haslb{\Gamma^{\mb{q}}}{\epsilon}{\letstmt{x}{o}{t}}{\ms{L}^{\mb{Q}}}$):
-    \todo{just}
+    we have by induction that
+    \begin{align*}
+    &\dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{\letstmt{x}{o}{t}}{\ms{L}'^{\mb{Q}'}}} \\
+    &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}} 
+      ; \dnt{\Gamma^{\mb{q}_l}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{o}{A}}
+      ; \dnt{\haslb{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{t}{\ms{L}'^{\mb{Q}'}}}\\
+    &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}} 
+      ; \dnt{\Gamma^{\mb{q}_l}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{o}{A}}
+      ; \dnt{\haslb{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{t}{\ms{L}^{\mb{Q}}}}
+      ; \dnt{\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{L}'^{\mb{Q}'}}} \\
+    &= \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{\letstmt{x}{o}{t}}{\ms{L}^{\mb{Q}}}}
+      ; \dnt{\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{L}'^{\mb{Q}'}}}
+    \end{align*}
     \item ($\haslb{\Gamma^{\mb{q}}}{\epsilon}{\letstmt{(x, y)}{o}{t}}{\ms{L}^{\mb{Q}}}$):
-    \todo{keeps}
+    we have by induction that
+    \begin{align*}
+    &\dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{\letstmt{x}{o}{t}}{\ms{L}'^{\mb{Q}'}}} \\
+    &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}} 
+      ; \dnt{\Gamma^{\mb{q}_l}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{o}{A \otimes B}}
+      ; \alpha ; \dnt{\haslb{\Gamma^{\mb{q}_l}, x : A, y : B}{\epsilon}{t}{\ms{L}'^{\mb{Q}'}}}\\
+    &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}} 
+      ; \dnt{\Gamma^{\mb{q}_l}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{o}{A \otimes B}}
+      ; \alpha ; \dnt{\haslb{\Gamma^{\mb{q}_l}, x : A, y : B}{\epsilon}{t}{\ms{L}^{\mb{Q}}}}
+      ; \dnt{\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{L}'^{\mb{Q}'}}} \\
+    &= \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{\letstmt{(x, y)}{o}{t}}{\ms{L}^{\mb{Q}}}}
+      ; \dnt{\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{L}'^{\mb{Q}'}}}
+    \end{align*}
     \item
     ($\haslb{\Gamma^{\mb{q}}}{\epsilon}{\casestmt{o}{x}{\tau_l}{y}{\tau_r}}{\ms{L}^{\mb{Q}}}$):
     \todo{coming}
