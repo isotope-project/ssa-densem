@@ -4932,7 +4932,56 @@ then inductively verify that the typing rule and the desired semantic property h
   \end{align*}
   as desired. The cases for unreachable expressions $\labort{a}$ and injections $\linl{a}, \linr{b}$
   are exactly analogous.
-  \item (Let-bindings $\letexpr{x}{a}{b}$): \todo{on}
+  \item (Let-bindings $\letexpr{x}{a}{b}$): we define
+  \begin{align*}
+  (\ssalet{x}{\letexpr{y}{a}{b}}{s}) := \ssalet{y}{a}{\ssalet{x}{b}{s}}
+  \end{align*}
+  This is well-typed by induction, since given $\qsp{\Gamma}{\mb{q}}{\mb{q}_1}{\mb{q}_{23}}$,
+  $\haslb{\Gamma^{\mb{q}_{23}}}{\epsilon}{\letexpr{x}{a}{b}}{B}$, and $\haslb{\Gamma^{\mb{q}_1}, x :
+  B}{\epsilon}{s}{\ms{L}}$, we have
+  \begin{itemize}
+    \item By inversion, we have $\qsp{\Gamma}{\mb{q}_{23}}{\mb{q}_2}{\mb{q}_3}$,
+    $\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{a}{A}$, and
+    $\hasty{\Gamma^{\mb{q}_2, y : A}}{\epsilon}{b}{B}$.
+    \item By weakening, we have $\haslb{\Gamma^{\mb{q}_1}, y : A^0, x : B}{\epsilon}{s}{\ms{L}}$
+    \item By split associativity, we have $\qsp{\Gamma}{\mb{q}}{\mb{q}_{12}}{\mb{q}_3}$,
+    $\qsp{\Gamma}{\mb{q}_{12}}{\mb{q}_1}{\mb{q}_2}$
+    \item By induction, we have that
+    $
+    \haslb{\Gamma^{\mb{q}}}{\epsilon}{\ssalet{y}{a}{\ssalet{x}{b}{s}}}{\ms{L}}
+    $
+    as desired.
+  \end{itemize}
+  This has the desired semantics, since by induction
+  \begin{align*}
+  &\dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{\ssalet{y}{a}{\ssalet{x}{b}{s}}}{\ms{L}}} \\
+  &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{12}}{\mb{q}_{3}}}
+  ; \dnt{\Gamma^{\mb{q}_{12}}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{a}{A}}
+  ; \\ &\qquad 
+    \dnt{\qsp{\Gamma, y : A}{\mb{q}_{12}, \omega}{\mb{q}_1, 0}{\mb{q}_2, \omega}}
+  ; \dnt{\Gamma^{\mb{q}_1}} \otimes 
+    \dnt{\hasty{\Gamma^{\mb{q}_2}, y : A}{\epsilon}{b}{B}}
+  ; \dnt{\haslb{\Gamma^{\mb{q}_1}, y : A^0, x : B}{\epsilon}{s}{\ms{L}}} \\
+  &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{12}}{\mb{q}_{3}}}
+  ; \dnt{\qsp{\Gamma}{\mb{q}_{12}}{\mb{q}_1}{\mb{q}_2}} \otimes \dnt{\Gamma^{\mb{q}_3}}
+  ; (\dnt{\Gamma^{\mb{q}_1}} \otimes \dnt{\Gamma^{\mb{q}_2}}) 
+    \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{a}{A}}
+  ; \\ &\qquad
+    \alpha ; \dnt{\Gamma^{\mb{q}_1}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_2}, y : A}{\epsilon}{b}{B}}
+  ; \alpha ; \dnt{\haslb{\Gamma^{\mb{q}_1}, y : A^0, x : B}{\epsilon}{s}{\ms{L}}} \\
+  &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{1}}{\mb{q}_{23}}}
+  ; \dnt{\Gamma^{\mb{q}_1}} \otimes (\dnt{\qsp{\Gamma}{\mb{q}_{23}}{\mb{q}_2}{\mb{q}_3}}
+  ; \dnt{\Gamma^{\mb{q}_2}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{a}{A}})
+  ; \dnt{\hasty{\Gamma^{\mb{q}_2}, y : A}{\epsilon}{b}{B}}
+  )
+  ; \\ &\qquad
+    \dnt{\haslb{\Gamma^{\mb{q}_1}, x : B}{\epsilon}{s}{\ms{L}}} \\
+  &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{1}}{\mb{q}_{23}}}
+  ; \dnt{\Gamma^{\mb{q}_1}} \otimes 
+    \dnt{\hasty{\Gamma^{\mb{q}_{23}}}{\epsilon}{\letexpr{y}{a}{b}}{B}}
+  ; \dnt{\haslb{\Gamma^{\mb{q}_1}, x : B}{\epsilon}{s}{\ms{L}}}
+  \end{align*}
+  as desired.
   \item (Binary let-bindings $\letexpr{(x, y)}{a}{b}$): \todo{the}
   \item (Pairs $(a, b)$): \todo{clock}
   \item (Case-statements $\caseexpr{e}{x}{a}{y}{b}$): \todo{it never stops?}
