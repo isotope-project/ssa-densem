@@ -4973,6 +4973,7 @@ We begin by stating the following metatheoretic result:
   $$
 \end{lemma}
 \begin{proof}
+  \TODO{label weakening composition}
   We begin by noting that, via a straightforward induction,
   \begin{equation*}
   \dnt{\lwk{\Gamma, x : A}{\ms{L}^{\zeroqv{\mb{Q}}}}{\ms{L}'^{\zeroqv{\mb{Q}'}}}} 
@@ -5089,21 +5090,19 @@ We may now define $\tossa{\ell}{P}$ by induction on ANF programs $P$ as follows:
           {\ell(D)^{\mb{0}, 0}, 
             \ell_o(C)^{\mb{q}_1, 0}, \ell_l(A)^{\mb{q}_{12}, 0}}, \ell_r(B)^{\mb{q}_{12}, 0}} 
           ; \alpha^\downarrow
-      ]
-      ; \\ & \quad
-      [
-        \ms{id}, \\ & \quad \qquad
+      \\ & \quad
+      ];[
+        \ms{id}, \\ & \qquad
         \dnt{
           \haslb{\Gamma^{\mb{q}_{12}}, y : A}{\epsilon}{\tossa{\ell_o}{P}}
                 {\ell(D)^{\mb{0}, 0}, \ell_o(C)^{\mb{q}_1, 0}}
-        } ; \alpha^\downarrow, \\ & \quad \qquad
+        } ; \alpha^\downarrow, \\ & \qquad
         \dnt{
           \haslb{\Gamma^{\mb{q}_{12}}, z : B}{\epsilon}{\tossa{\ell_o}{Q}}
                 {\ell(D)^{\mb{0}, 0}, \ell_o(C)^{\mb{q}_1, 0}} 
         } ; \alpha^\downarrow
-      ] 
-      ; \\ & \quad
-      [
+      \\ & \quad
+      ];[
         \ms{id}, 
         \dnt{\haslb{\Gamma^{\mb{q}_{1}}, x : C}{\epsilon}{\tossa{\ell}{R}}
               {\ell(D)^{\mb{0}, 0}}} ; \alpha^\downarrow
@@ -5113,28 +5112,115 @@ We may now define $\tossa{\ell}{P}$ by induction on ANF programs $P$ as follows:
         ; \delta^{-1} ; [ \iota_l ; \iota_r , \iota_r ] 
         ; \\ & \quad
         [
-          \ms{id}, \\ & \quad \qquad
+          \ms{id}, \\ & \qquad
           \dnt{
             \haslb{\Gamma^{\mb{q}_{12}}, y : A}{\epsilon}{\tossa{\ell_o}{P}}
                   {\ell_o(C)^{\mb{q}_1, 0}}
           } ; \alpha^\downarrow ; \dnt{
             \lwk{\Gamma}{\ell_o(C)^{\mb{q}_1}}{\ell(D)^{\mb{0}}, \ell_o(C)^{\mb{q}_1}}
-          }, \\ & \quad \qquad
+          }, \\ & \qquad
           \dnt{
             \haslb{\Gamma^{\mb{q}_{12}}, z : B}{\epsilon}{\tossa{\ell_o}{Q}}
-                  {\ell_o(C)^{\mb{q}_1, 0}} 
+                  {\ell_o(C)^{\mb{q}_2, 0}} 
           } ; \alpha^\downarrow ; \dnt{
             \lwk{\Gamma}{\ell_o(C)^{\mb{q}_1}}{\ell(D)^{\mb{0}}, \ell_o(C)^{\mb{q}_1}}
           }
-        ] 
+        \\ & \quad
+        ];[
+          \ms{id}, 
+          \dnt{\hasty{\Gamma^{\mb{q}_1}, x : C}{\epsilon}{R}{D}} ; \alpha ; \iota_r
+        ] \\
+      & = \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{12}}{\mb{q}_3}} 
+        ; \dnt{\Gamma^{\mb{q}_{12}}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{o}{A + B}}
+        ; \delta^{-1} ; [ \iota_l ; \iota_r , \iota_r ] 
         ; \\ & \quad
         [
+          \ms{id}, \\ & \qquad
+          \dnt{\qsp{\Gamma, y : A}{\mb{q}_{12}, \omega}{\mb{q}_1, 0}{\mb{q}_2, \omega}}
+          ; (\dnt{\Gamma^{\mb{q}_1}} \otimes I) \otimes \dnt{
+            \hasty{\Gamma^{\mb{q}_2}, y : A}{\epsilon}{P}{C}
+          } ; \alpha, \\ & \qquad
+          \dnt{\qsp{\Gamma, z : B}{\mb{q}_{12}, \omega}{\mb{q}_1, 0}{\mb{q}_2, \omega}}
+          ; (\dnt{\Gamma^{\mb{q}_1}} \otimes I) \otimes \dnt{
+            \hasty{\Gamma^{\mb{q}_2}, z : B}{\epsilon}{Q}{C} 
+          } ; \alpha
+         \\ & \quad
+        ];  \iota_r
+        ;  \dnt{
+            \lwk{\Gamma}{\ell_o(C)^{\mb{q}_1}}{\ell(D)^{\mb{0}}, \ell_o(C)^{\mb{q}_1}}
+          }
+        ; [
           \ms{id}, 
-          \dnt{\haslb{\Gamma^{\mb{q}_{1}}, x : C}{\epsilon}{\tossa{\ell}{R}}
-                {\ell(D)^{\mb{0}, 0}}} ; \alpha^\downarrow
+          \dnt{\hasty{\Gamma^{\mb{q}_1}, x : C}{\epsilon}{R}{D}} ; \alpha ; \iota_r
         ] \\
+      & = \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{12}}{\mb{q}_3}} 
+        ; \dnt{\Gamma^{\mb{q}_{12}}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{o}{A + B}}
+        ; \delta^{-1}
+        ; \\ & \quad
+        [ \\ & \qquad
+          \dnt{\qsp{\Gamma}{\mb{q}_{12}}{\mb{q}_1}{\mb{q}_2}} \otimes \dnt{A}
+          ; \alpha
+          ; \dnt{\Gamma^{\mb{q}_1}} \otimes \dnt{
+            \hasty{\Gamma^{\mb{q}_2}, y : A}{\epsilon}{P}{C}
+          }, \\ & \qquad
+          \dnt{\qsp{\Gamma}{\mb{q}_{12}}{\mb{q}_1}{\mb{q}_2}} \otimes \dnt{B}
+          ; \alpha
+          ; \dnt{\Gamma^{\mb{q}_1}} \otimes \dnt{
+            \hasty{\Gamma^{\mb{q}_2}, z : B}{\epsilon}{Q}{C} 
+          }
+         \\ & \quad
+        ];  \dnt{\hasty{\Gamma^{\mb{q}_1}, x : C}{\epsilon}{R}{D}} ; \alpha ; \iota_r
+        \\
+      & = \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{12}}{\mb{q}_3}} 
+        ; \dnt{\qsp{\Gamma}{\mb{q}_{12}}{\mb{q}_1}{\mb{q}_2}} 
+        \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{o}{A + B}}
+        ; \delta^{-1}
+        ; \\ & \quad
+        [
+          \alpha
+          ; \dnt{\Gamma^{\mb{q}_1}} \otimes \dnt{
+            \hasty{\Gamma^{\mb{q}_2}, y : A}{\epsilon}{P}{C}
+          },
+          \alpha
+          ; \dnt{\Gamma^{\mb{q}_1}} \otimes \dnt{
+            \hasty{\Gamma^{\mb{q}_2}, z : B}{\epsilon}{Q}{C} 
+          }
+        \\ & \quad
+        ];  \dnt{\hasty{\Gamma^{\mb{q}_1}, x : C}{\epsilon}{R}{D}} ; \alpha ; \iota_r \\
+      & = \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{12}}{\mb{q}_3}} 
+        ; \dnt{\qsp{\Gamma}{\mb{q}_{12}}{\mb{q}_1}{\mb{q}_2}} \otimes \dnt{\Gamma^{\mb{q}_3}}
+        ; \alpha
+        ; \\ & \quad
+          \dnt{\Gamma^{\mb{q}_1}} \otimes (
+          \dnt{\Gamma^{\mb{q}_2}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{o}{A + B}}
+          ; \delta^{-1}
+          ; [
+            \hasty{\Gamma^{\mb{q}_2}, y : A}{\epsilon}{P}{C},
+            \hasty{\Gamma^{\mb{q}_2}, z : B}{\epsilon}{Q}{C} 
+          ]
+        ) 
+        ; \\ & \quad
+        \dnt{\hasty{\Gamma^{\mb{q}_1}, x : C}{\epsilon}{R}{D}} ; \alpha ; \iota_r \\
+      & = \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_1}{\mb{q}_{23}}}  
+      \\ & \quad
+          \dnt{\Gamma^{\mb{q}_1}} \otimes (
+          \dnt{\qsp{\Gamma}{\mb{q}_{23}}{\mb{q}_2}{\mb{q}_3}} 
+          ; \dnt{\Gamma^{\mb{q}_2}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{o}{A + B}}
+          ; \delta^{-1}
+          ; [
+            \hasty{\Gamma^{\mb{q}_2}, y : A}{\epsilon}{P}{C},
+            \hasty{\Gamma^{\mb{q}_2}, z : B}{\epsilon}{Q}{C} 
+          ]
+        ) 
+        ; \\ & \quad
+        \dnt{\hasty{\Gamma^{\mb{q}_1}, x : C}{\epsilon}{R}{D}} ; \alpha ; \iota_r \\
+      & = \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_1}{\mb{q}_{23}}} 
+        ; \dnt{\Gamma^{\mb{q}_1}} \otimes 
+            \dnt{\hasty{\Gamma^{\mb{q}_{23}}}{\epsilon}
+              {\caseexpr{o}{y}{P}{z}{Q}}{C}} 
+        ; \dnt{\hasty{\Gamma^{\mb{q}_1}, x : C}{\epsilon}{R}{D}} ; \alpha ; \iota_r
   \end{align*}
-  \TODO{}
+  \TODO{nope, gotta redo this, because the output is not shunted through, ELAS}
   \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{\letexpr{x}{\liter{o}{x}{P}}{Q}}{C}$): 
   \begin{align*}
     (\tossa{\ell}{\letexpr{x}{\liter{o}{y}{P}}{Q}})
