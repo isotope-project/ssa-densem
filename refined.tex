@@ -4261,6 +4261,7 @@ To show completeness, it hence suffices to prove the following lemma:
       \letexpr{(w, u)}{(x, ())}{u} \approx x : A
     \end{align*}
     as desired.
+    \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{f\;a}{B}$): \todo{oops}
     \item $(\hasty{\Gamma^{\mb{q}}}{}{\letexpr{x}{a}{b}}{B})$: we have
     \begin{align*}
     \Gamma^{\mb{q}} &\vdash_\bot 
@@ -4802,10 +4803,21 @@ $$
   {\ell(A)^0}
 }_{\mc{M}} = \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}}_{\mc{M}} ; \alpha^+ 
 $$
-We begin by giving an inductive definition of $\ms{SSA}_\ell$ as follows:
-\TODO{this}
-
-\TODO{proof by induction that it is in fact semantics preserving}
+We define $\ms{SSA}_\ell$ by induction on derivations $\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}$,
+proving each branch correct as we define it:
+\begin{itemize}
+  \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{x}{A}$): \todo{tick}
+  \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{f\;a}{B}$): \todo{tock}
+  \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{\letexpr{x}{a}{b}}{A}$): \todo{tock}
+  \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{()}{\mb{1}}$): \todo{on the}
+  \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{(a, b)}{A \otimes B}$): \todo{on the}
+  \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{\letexpr{(x, y)}{a}{c}}{C}$): \todo{stutter}
+  \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{\iota_l(a)}{A + B}$): \todo{mumble}
+  \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{\iota_r(b)}{A + B}$): \todo{mumble}
+  \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{\caseexpr{e}{x}{a}{y}{b}}{C}$): \todo{but don't}
+  \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{\labort(a)}{A}$): \todo{but don't}
+  \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{\liter{a}{x}{b}}{B}$): \todo{metastutter}
+\end{itemize}
 
 \section{Models}
 
