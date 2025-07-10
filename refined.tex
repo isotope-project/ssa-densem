@@ -152,8 +152,8 @@
 \newcommand{\lbseq}[5]{\lbsubst{#1 \teqv #2}{#3}{#4}{#5}}
 \newcommand{\brle}[1]{{\textsf{#1}}}
 
-\newcommand{\tossa}[2]{\ms{SSA}(#1 \Rightarrow #2)}
-\newcommand{\ssalet}[3]{\ms{SSA}_{\ms{let}}(#1, #2, #3)}
+\newcommand{\tossa}[2]{\ms{SSA}_{#1}(#2)}
+\newcommand{\ssalet}[3]{\ms{let}_{\ms{SSA}}\;#1 = #2; #3}
 \newcommand{\toanf}[1]{\ms{ANF}(#1)}
 \newcommand{\anflet}[3]{\ms{ANF}_{\ms{let}}(#1, #2, #3)}
 \newcommand{\toterm}[1]{\ms{Term}(#1)}
@@ -2886,7 +2886,7 @@ When we say that \isotopessa{} and \subiterexp{} are \emph{equivalent}, what we 
 are \emph{semantics-preserving} functions $\ms{SSA}$, $\ms{Expr}$ on derivations satisfying
 \begin{align*}
 \dnt{
-  \haslb{\Gamma^{\mb{q}}}{\epsilon}{\ms{SSA}_\ell(\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A})}
+  \haslb{\Gamma^{\mb{q}}}{\epsilon}{\tossa{ell}{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}}}
   {\ell(A)^0}
 }_{\mc{M}} &= \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}}_{\mc{M}} ; \alpha ; \iota_r \\
 \dnt{
@@ -4799,7 +4799,7 @@ to an SSA program returning its result as an argument to output label $\ell$. We
 that this function is \emph{semantics-preserving}, i.e. that it satisfies the following property:
 $$
 \dnt{
-  \haslb{\Gamma^{\mb{q}}}{\epsilon}{\ms{SSA}_\ell(\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A})}
+  \haslb{\Gamma^{\mb{q}}}{\epsilon}{\tossa{\ell}{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}}}
   {\ell(A)^0}
 }_{\mc{M}} = \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}}_{\mc{M}} ; \alpha ; \iota_r
 $$
@@ -4807,66 +4807,55 @@ Here, the associator $\alpha$ takes $\dnt{A}$ to $\dnt{\Gamma^0} \otimes \dnt{A}
 a tensor product of monoidal units), which $\iota_r$ then takes to $\dnt{\ltoty{\Gamma}{\ell(A)^0}}
 = \mb{0} + \dnt{\Gamma^0} \otimes \dnt{A}$.
 
-We define $\ms{SSA}_\ell$ by induction on derivations $\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}$,
-proving each branch correct as we define it:
+Rather than define this function directly, it is simpler to define an operation on terms
+$\ssalet{x}{a}{s}$ which, given a term $a$ and an SSA program $s$, returns a new SSA program which
+evaluates $a$, binds it to $x$, and then runs $s$. We will then show that $\ms{let}_{\ms{SSA}}$
+satisfies the following typing rule:
+$$
+\prftree[r]{\rle{let-ssa}}
+  {\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
+  {\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A}}
+  {\haslb{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{s}{\ms{L}}}
+  {\haslb{\Gamma^{\mb{q}}}{\epsilon}{\ssalet{x}{a}{s}}{\ms{L}}}
+$$
+and has the expected semantics
+$$
+\dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{\ssalet{x}{a}{s}}{\ms{L}}} =
+  \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}} 
+  ; \dnt{\Gamma^{\mb{q}_l}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A}} 
+  ; \dnt{\haslb{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{s}{\ms{L}}}
+$$
+We may then simply define
+$$
+\ms{SSA}_\ell(\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}) := 
+  \ssalet{x}{a}{\brb{\ell}{x}}
+$$
+verifying that
+\begin{align*}
+  &\dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{\letexpr{x}{a}{\brb{\ell}{x}}}{\ell(A)^0}} \\
+  &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{0}}{\mb{q}}} 
+  ; \dnt{\Gamma^\mb{0}} \otimes \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}}
+  ; \dnt{\haslb{\Gamma^{\mb{0}}, x : A}{\epsilon}{\brb{\ell}{x}}{\ell(A)^0}} \\
+  &= \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}} ; \alpha
+  ; \dnt{\qsp{\Gamma, x : A}{\mb{0}, \omega}{\mb{0}, 0}{\mb{0}, \omega}}
+  ; (\dnt{\Gamma^{\mb{0}}} \otimes I) \otimes \dnt{\hasty{\Gamma^{\mb{0}}, x : A}{\epsilon}{x}{A}}
+  ; \iota_r
+  ; \cancel{\dnt{\lwk{\Gamma}{\ell(A)^0}{\ell(A)^0}}} 
+  \\
+  &= \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}} ; \alpha
+  ; \iota_r
+\end{align*}
+as desired. We will define $\ms{let}_{\ms{SSA}}$ by induction on terms $a$; for each branch, we will
+then inductively verify that the typing rule and the desired semantic property holds.
 \begin{itemize}
-  \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{o}{A}$, for a valid operation $o$): we define
-  \begin{equation*}
-    \ms{SSA}_\ell(\hasty{\Gamma^{\mb{q}}}{\epsilon}{o}{A}) 
-      := \haslb{\Gamma^{\mb{q}}}{\epsilon}{\brb{\ell}{o}}{\ell(A)^0}
-  \end{equation*}
-  Note that this case includes variables $x$, as well as, e.g., pairs of variables $(x, y)$. This
-  case satisfies the desired property, since
-  \begin{align*}
-    \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{\brb{\ell}{o}}{\ell(A)^0}}
-    &= 
-    \dnt{\qsp{\Gamma}{\mb{q}}{0}{\mb{q}}} 
-    ; \dnt{\Gamma^{0}} \otimes \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{o}{A}}
-    ; \iota_r
-    ; \cancel{\dnt{\lwk{\Gamma}{\ell(A)^0}{\ell(A)^0}}} \\
-    &=
-    \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{o}{A}}
-    ; \alpha
-    ; \iota_r
-  \end{align*}
-  as desired.
-  \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{f\;a}{B}$): we define
-  \begin{equation*}
-    \ms{SSA}_\ell(\hasty{\Gamma^{\mb{q}}}{\epsilon}{f\;a}{B}) 
-      := \haslb{\Gamma^{\mb{q}}}{\epsilon}{
-          \letstmt{x}{a}{\ms{SSA}_\ell(\hasty{\Gamma^0, x : A}{\epsilon}{f\;x}{B}})}{\ell^0(B)}
-  \end{equation*}
-  We verify by induction that this satisfies the desired property:
-  \begin{align*}
-  & \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{
-          \letstmt{x}{a}{\ms{SSA}_\ell(\hasty{\Gamma^0, x : A}{\epsilon}{f\;x}{B}})}{\ell^0(B)}} \\
-  &= \dnt{\qsp{\Gamma}{\mb{q}}{0}{\mb{q}}} 
-    ; \dnt{\Gamma^0} \otimes \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}}
-    ; \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}
-        {\ms{SSA}_\ell(\hasty{\Gamma^0, x : A}{\epsilon}{f\;x}{B})}{\ell^0(B)}} \\
-  &= \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}} 
-  ; \alpha
-  ; \dnt{\hasty{\Gamma^0, x : A}{\epsilon}{f\;x}{B}}
-  ; \alpha
-  ; \iota_r \\
-  &= \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}} 
-  ; \alpha
-  ; \dnt{\hasty{\Gamma^0, x : A}{\epsilon}{x}{A}}
-  ; \dnt{f : A \to_\epsilon B}
-  ; \alpha
-  ; \iota_r \\
-  &= \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}} ; \alpha ; \iota_r
-  \end{align*}
-  as desired.
-  \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{\letexpr{x}{a}{b}}{A}$): \todo{tock}
-  \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{()}{\mb{1}}$): \todo{on the}
-  \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{(a, b)}{A \otimes B}$): \todo{on the}
-  \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{\letexpr{(x, y)}{a}{c}}{C}$): \todo{stutter}
-  \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{\iota_l(a)}{A + B}$): \todo{mumble}
-  \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{\iota_r(b)}{A + B}$): \todo{mumble}
-  \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{\caseexpr{e}{x}{a}{y}{b}}{C}$): \todo{but don't}
-  \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{\labort(a)}{A}$): \todo{but don't}
-  \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{\liter{a}{x}{b}}{B}$): \todo{metastutter}
+  \item (Valid instructions $o$): \todo{tick}
+  \item (Operations $f\;a$, unreachable expressions $\labort{a}$, and injections $\linl{a},
+  \linr{b}$): \todo{tock}
+  \item (Let-bindings $\letexpr{x}{a}{b}$): \todo{on}
+  \item (Binary let-bindings $\letexpr{(x, y)}{a}{b}$): \todo{the}
+  \item (Pairs $(a, b)$): \todo{clock}
+  \item (Case-statements $\caseexpr{e}{x}{a}{y}{b}$): \todo{it never stops?}
+  \item (Loops $\liter{a}{x}{b}$): \todo{yet it does}
 \end{itemize}
 
 \section{Models}
