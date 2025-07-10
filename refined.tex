@@ -2888,7 +2888,7 @@ are \emph{semantics-preserving} functions $\ms{SSA}$, $\ms{Expr}$ on derivations
 \dnt{
   \haslb{\Gamma^{\mb{q}}}{\epsilon}{\ms{SSA}_\ell(\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A})}
   {\ell(A)^0}
-}_{\mc{M}} &= \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}}_{\mc{M}} ; \alpha^+ \\
+}_{\mc{M}} &= \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}}_{\mc{M}} ; \alpha ; \iota_r \\
 \dnt{
   \hasty{\Gamma^{\mb{q}}}{\epsilon}
     {\ms{Expr}(\haslb{\Gamma^{\mb{q}}}{\epsilon}{r}{\ms{L}^{\mb{Q}}})}
@@ -4801,12 +4801,35 @@ $$
 \dnt{
   \haslb{\Gamma^{\mb{q}}}{\epsilon}{\ms{SSA}_\ell(\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A})}
   {\ell(A)^0}
-}_{\mc{M}} = \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}}_{\mc{M}} ; \alpha^+ 
+}_{\mc{M}} = \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}}_{\mc{M}} ; \alpha ; \iota_r
 $$
+Here, the associator $\alpha$ takes $\dnt{A}$ to $\dnt{\Gamma^0} \otimes \dnt{A}$ (the latter being
+a tensor product of monoidal units), which $\iota_r$ then takes to $\dnt{\ltoty{\Gamma}{\ell(A)^0}}
+= \mb{0} + \dnt{\Gamma^0} \otimes \dnt{A}$.
+
 We define $\ms{SSA}_\ell$ by induction on derivations $\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}$,
 proving each branch correct as we define it:
 \begin{itemize}
-  \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{x}{A}$): \todo{tick}
+  \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{o}{A}$, for a valid operation $o$): we define
+  \begin{equation*}
+    \ms{SSA}_\ell(\hasty{\Gamma^{\mb{q}}}{\epsilon}{o}{A}) 
+      := \haslb{\Gamma^{\mb{q}}}{\epsilon}{\brb{\ell}{o}}{\ell(A)^0}
+  \end{equation*}
+  Note that this case includes variables $x$, as well as, e.g., pairs of variables $(x, y)$. This
+  case satisfies the desired property, since
+  \begin{align*}
+    \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{\brb{\ell}{o}}{\ell(A)^0}}
+    &= 
+    \dnt{\qsp{\Gamma}{\mb{q}}{0}{\mb{q}}} 
+    ; \dnt{\Gamma^{0}} \otimes \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{o}{A}}
+    ; \iota_r
+    ; \cancel{\dnt{\lwk{\Gamma}{\ell(A)^0}{\ell(A)^0}}} \\
+    &=
+    \dnt{\hasty{\Gamma^{\mb{q}}}{\epsilon}{o}{A}}
+    ; \alpha
+    ; \iota_r
+  \end{align*}
+  as desired.
   \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{f\;a}{B}$): \todo{tock}
   \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{\letexpr{x}{a}{b}}{A}$): \todo{tock}
   \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{()}{\mb{1}}$): \todo{on the}
