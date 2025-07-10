@@ -4950,6 +4950,46 @@ by the inductive hypothesis. For example, we have that
 
 \subsection{ANF to SSA}
 
+We begin by stating the following metatheoretic result:
+\begin{lemma}[Label Weakening]
+  Given $\haslb{\Gamma^{\mb{q}}}{\epsilon}{s}{\ms{L}^{\mb{Q}}}$ and 
+  $\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{L}'^{\mb{Q}'}}$, we have that
+  $\haslb{\Gamma^{\mb{q}}}{\epsilon}{s}{\ms{L}'^{\mb{Q}'}}$ with
+  $$
+  \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{s}{\ms{L}'^{\mb{Q}'}}}
+  = \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{s}{\ms{L}^{\mb{Q}}}}
+  ; \dnt{\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{L}'^{\mb{Q}'}}}
+  $$
+\end{lemma}
+\begin{proof}
+  We begin by noting that, via a straightforward induction,
+  \begin{equation*}
+  \dnt{\lwk{\Gamma, x : A}{\ms{L}^{\zeroqv{\mb{Q}}}}{\ms{L}'^{\zeroqv{\mb{Q}'}}}} 
+  ; \alpha^\downarrow
+  =
+  \alpha^\downarrow ; \dnt{\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{L}'^{\mb{Q}'}}}
+  \end{equation*}
+  We now proceed by induction on the derivation of
+  $\haslb{\Gamma^{\mb{q}}}{\epsilon}{s}{\ms{L}^{\mb{Q}}}$:
+  \begin{itemize}
+    \item ($\haslb{\Gamma^{\mb{q}}}{\epsilon}{\brb{\ell}{a}}{\ms{L}^{\mb{Q}}}$):
+    \todo{it}
+    \item ($\haslb{\Gamma^{\mb{q}}}{\epsilon}{\letstmt{x}{o}{t}}{\ms{L}^{\mb{Q}}}$):
+    \todo{just}
+    \item ($\haslb{\Gamma^{\mb{q}}}{\epsilon}{\letstmt{(x, y)}{o}{t}}{\ms{L}^{\mb{Q}}}$):
+    \todo{keeps}
+    \item
+    ($\haslb{\Gamma^{\mb{q}}}{\epsilon}{\casestmt{o}{x}{\tau_l}{y}{\tau_r}}{\ms{L}^{\mb{Q}}}$):
+    \todo{coming}
+    \item ($\haslb{\Gamma^{\mb{q}}}{\epsilon}{\awhere{\kappa}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
+      {\ms{L}^{\mb{Q}}}$):
+    \todo{and yet}
+    \item ($\haslb{\Gamma^{\mb{q}}}{\epsilon}{\cwhere{\kappa}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
+      {\ms{L}^{\mb{Q}}}$):
+    \todo{I remain}
+  \end{itemize}
+\end{proof}
+
 We may now define $\tossa{\ell}{P}$ by induction on ANF programs $P$ as follows:
 \begin{itemize}
   \item (Valid operations $\hasty{\Gamma^{\mb{q}}}{\epsilon}{o}{A}$): we define
@@ -4965,28 +5005,87 @@ We may now define $\tossa{\ell}{P}$ by induction on ANF programs $P$ as follows:
       ; \alpha
       ; \iota_r
   \end{align*}
-  \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{\letexpr{x}{o}{P}}{A}$): we define
+  \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{\letexpr{x}{o}{P}}{B}$): we define
   $(\tossa{\ell}{\letexpr{x}{o}{P}}) := \letstmt{x}{o}{\tossa{\ell}{P}}$, which is trivially correct
   by induction.
-  \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{\letexpr{(x, y)}{o}{P}}{A}$): we define
+  \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{\letexpr{(x, y)}{o}{P}}{C}$): we define
   $(\tossa{\ell}{\letexpr{(x, y)}{o}{P}}) := \letstmt{(x, y)}{o}{\tossa{\ell}{P}}$, which is
   trivially correct by induction.
-  \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{\letexpr{x}{\caseexpr{o}{y}{P}{z}{Q}}{R}}{C}$): we
+  \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{\letexpr{x}{\caseexpr{o}{y}{P}{z}{Q}}{R}}{D}$): we
   define
   \begin{align*}
     (\tossa{\ell}{\letexpr{x}{\caseexpr{o}{y}{P}{z}{Q}}{R}})
-    & := \awhere{\awhere{\casestmt{o}{y}{\brb{\ell_l}{y}}{z}{\brb{\ell_r}{z}} \\ & \qquad }{
+    & := \awhere{(\awhere{\casestmt{o}{y}{\brb{\ell_l}{y}}{z}{\brb{\ell_r}{z}} \\ & \qquad }{
       %\\ & \quad \qquad
       \wbranch{\ell_l}{y}{\tossa{\ell_o}{P}},
       % \\ & \quad \qquad
-      \wbranch{\ell_r}{z}{\tossa{\ell_o}{Q}}
+      \wbranch{\ell_r}{z}{\tossa{\ell_o}{Q}})
     } \\ & \quad }{
       %\\ & \qquad
       \wbranch{\ell_o}{x}{\tossa{\ell}{R}}
     }
   \end{align*}
-  \TODO{in the burning heart of the moment, I can't figure out how to write this -- GitHub Copilot}
-  \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{\letexpr{x}{\liter{o}{x}{P}}{Q}}{B}$): 
+  We verify the semantics by induction as follows:
+  \begin{align*}
+    & \dnt{
+      \haslb{\Gamma^{\mb{q}}}{\epsilon}{\tossa{\ell}{\letexpr{x}{\caseexpr{o}{y}{P}{z}{Q}}{R}}}
+      {\ell(D)^{\mb{0}}}
+    } \\
+    & = \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{12}}{\mb{q}_3}} 
+      ; \dnt{\Gamma^{\mb{q}_{12}}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{o}{A + B}}
+      ; \delta^{-1} ; [
+      \\ & \quad \qquad
+        \dnt{\haslb{\Gamma^{\mb{q}_{12}}, y : A}{\epsilon}{\brb{\ell_l}{y}}
+          {\ell(D)^{\mb{0}, 0}, 
+            \ell_o(C)^{\mb{q}_1, 0}, \ell_l(A)^{\mb{q}_{12}, 0}}, \ell_r(B)^{\mb{q}_{12}, 0}} 
+          ; \alpha^\downarrow,
+      \\ & \quad \qquad
+        \dnt{\haslb{\Gamma^{\mb{q}_{12}}, z : B}{\epsilon}{\brb{\ell_r}{z}}
+          {\ell(D)^{\mb{0}, 0}, 
+            \ell_o(C)^{\mb{q}_1, 0}, \ell_l(A)^{\mb{q}_{12}, 0}}, \ell_r(B)^{\mb{q}_{12}, 0}} 
+          ; \alpha^\downarrow
+      ]
+      ; \\ & \quad
+      [
+        \ms{id}, \\ & \quad \qquad
+        \dnt{
+          \haslb{\Gamma^{\mb{q}_{12}}, y : A}{\epsilon}{\tossa{\ell_o}{P}}
+                {\ell(D)^{\mb{0}, 0}, \ell_o(C)^{\mb{q}_1, 0}}
+        } ; \alpha^\downarrow, \\ & \quad \qquad
+        \dnt{
+          \haslb{\Gamma^{\mb{q}_{12}}, z : B}{\epsilon}{\tossa{\ell_o}{Q}}
+                {\ell(D)^{\mb{0}, 0}, \ell_o(C)^{\mb{q}_1, 0}} 
+        } ; \alpha^\downarrow
+      ] 
+      ; \\ & \quad
+      [
+        \ms{id}, 
+        \dnt{\haslb{\Gamma^{\mb{q}_{1}}, x : C}{\epsilon}{\tossa{\ell}{R}}
+              {\ell(D)^{\mb{0}, 0}}} ; \alpha^\downarrow
+      ] \\
+      & = \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{12}}{\mb{q}_3}} 
+        ; \dnt{\Gamma^{\mb{q}_{12}}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{o}{A + B}}
+        ; \delta^{-1} ; [ \iota_l ; \iota_r , \iota_r ] 
+        ; \\ & \quad
+        [
+          \ms{id}, \\ & \quad \qquad
+          \dnt{
+            \haslb{\Gamma^{\mb{q}_{12}}, y : A}{\epsilon}{\tossa{\ell_o}{P}}
+                  {\ell(D)^{\mb{0}, 0}, \ell_o(C)^{\mb{q}_1, 0}}
+          } ; \alpha^\downarrow, \\ & \quad \qquad
+          \dnt{
+            \haslb{\Gamma^{\mb{q}_{12}}, z : B}{\epsilon}{\tossa{\ell_o}{Q}}
+                  {\ell(D)^{\mb{0}, 0}, \ell_o(C)^{\mb{q}_1, 0}} 
+          } ; \alpha^\downarrow
+        ] 
+        ; \\ & \quad
+        [
+          \ms{id}, 
+          \dnt{\haslb{\Gamma^{\mb{q}_{1}}, x : C}{\epsilon}{\tossa{\ell}{R}}
+                {\ell(D)^{\mb{0}, 0}}} ; \alpha^\downarrow
+        ] \\
+  \end{align*}
+  \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{\letexpr{x}{\liter{o}{x}{P}}{Q}}{C}$): 
   \begin{align*}
     (\tossa{\ell}{\letexpr{x}{\liter{o}{y}{P}}{Q}})
     & := \cwhere{\brb{\ell_r}{o}}{ \\ & \qquad
