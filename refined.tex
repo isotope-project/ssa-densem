@@ -5192,25 +5192,59 @@ We may now define $\tossa{\ell}{P}$ by induction on ANF programs $P$ as follows:
       ; \delta^{-1} ;[ \\ & \qquad
           \dnt{\qsp{\Gamma, y : A}{\mb{q}_{123}, \omega}{\mb{q}_{12}, 0}{\mb{q}_3, \omega}}
           ; (\dnt{\Gamma^{\mb{q}_{12}}} \otimes I) 
-              \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}, y : A}{\epsilon}{P}{D}}
+              \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}, y : A}{\epsilon}{P}{C}}
           ; \iota_r
           ; \alpha^\downarrow, \\ & \qquad
           \dnt{\qsp{\Gamma, z : B}{\mb{q}_{123}, \omega}{\mb{q}_{12}, 0}{\mb{q}_3, \omega}}
           ; (\dnt{\Gamma^{\mb{q}_{12}}} \otimes I) 
-              \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}, z : B}{\epsilon}{Q}{D}}
+              \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}, z : B}{\epsilon}{Q}{C}}
           ; \iota_r
           ; \alpha^\downarrow
       \\ & \quad
       ];[
         \ms{id}, 
-        \dnt{\qsp{\Gamma^{\mb{q}_{12}}, x : C}{\mb{q}_1, \omega}{\mb{q}_1, 0}{\mb{q}_2, \omega}}
-            ; (\dnt{\Gamma^{\mb{q}_1}} \otimes I) 
+        \dnt{\qsp{\Gamma^{\mb{q}_{12}}}{\mb{q}_1}{\mb{q}_1}{\mb{q}_2}} \otimes \dnt{C}
+            ; \alpha
+            ; \dnt{\Gamma^{\mb{q}_1}} 
               \otimes \dnt{\hasty{\Gamma^{\mb{q}_2}, x : C}{\epsilon}{R}{D}}
             ; \iota_r
-            ; \alpha^\downarrow
       ] \\
-      &= ... \text{\todo{handle the down-associators, pull back the splits, and kill injections}} \\
-      &= ... \text{\todo{de-distribute the splits}} \\
+      &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{123}}{\mb{q}_4}} 
+      ; \dnt{\Gamma^{\mb{q}_{123}}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_4}}{\epsilon}{o}{A + B}}
+      ; \delta^{-1} ;[ \\ & \qquad
+          \dnt{\qsp{\Gamma}{\mb{q}_{123}, \omega}{\mb{q}_{12}}{\mb{q}_3}} \otimes \dnt{A}
+          ; \alpha
+          ; \dnt{\Gamma^{\mb{q}_{12}}} 
+            \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}, y : A}{\epsilon}{P}{C}}, \\ & \qquad
+          \dnt{\qsp{\Gamma}{\mb{q}_{123}, \omega}{\mb{q}_{12}}{\mb{q}_3}} \otimes \dnt{B}
+          ; \alpha
+          ; \dnt{\Gamma^{\mb{q}_{12}}} 
+            \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}, z : B}{\epsilon}{Q}{C}}
+      \\ & \quad
+      ]
+      ; \dnt{\qsp{\Gamma^{\mb{q}_{12}}}{\mb{q}_1}{\mb{q}_1}{\mb{q}_2}} \otimes \dnt{C}
+      ; \alpha
+      ; \dnt{\Gamma^{\mb{q}_1}} 
+        \otimes \dnt{\hasty{\Gamma^{\mb{q}_2}, x : C}{\epsilon}{R}{D}}
+      ; \iota_r
+      \\
+      &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{123}}{\mb{q}_4}} 
+      ; \dnt{\qsp{\Gamma}{\mb{q}_{123}, \omega}{\mb{q}_{12}}{\mb{q}_3}} 
+        \otimes \dnt{\Gamma^{\mb{q}_4}}
+      ; \alpha
+      ; \dnt{\Gamma^{\mb{q}_{12}}} \otimes ( \\ & \qquad
+          \dnt{\Gamma^{\mb{q}_3}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_4}}{\epsilon}{o}{A + B}}
+          ; \delta^{-1} ; [
+          \dnt{\hasty{\Gamma^{\mb{q}_3}, y : A}{\epsilon}{P}{C}},
+          \dnt{\hasty{\Gamma^{\mb{q}_3}, z : B}{\epsilon}{Q}{C}}
+      \\ & \quad
+      ])
+      ; \dnt{\qsp{\Gamma^{\mb{q}_{12}}}{\mb{q}_1}{\mb{q}_1}{\mb{q}_2}} \otimes \dnt{C}
+      ; \alpha
+      ; \dnt{\Gamma^{\mb{q}_1}} 
+        \otimes \dnt{\hasty{\Gamma^{\mb{q}_2}, x : C}{\epsilon}{R}{D}}
+      ; \iota_r
+      \\
       &= ... \text{\todo{re-associate}} \\
       &= ... \text{\todo{finish this, ELAS -- GitHub Copilot}}
   \end{align*}
