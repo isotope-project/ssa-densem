@@ -5203,7 +5203,7 @@ We may now define $\tossa{\ell}{P}$ by induction on ANF programs $P$ as follows:
       \\ & \quad
       ];[
         \ms{id}, 
-        \dnt{\qsp{\Gamma^{\mb{q}_{12}}}{\mb{q}_1}{\mb{q}_1}{\mb{q}_2}} \otimes \dnt{C}
+        \dnt{\qsp{\Gamma}{\mb{q}_{12}}{\mb{q}_1}{\mb{q}_2}} \otimes \dnt{C}
             ; \alpha
             ; \dnt{\Gamma^{\mb{q}_1}} 
               \otimes \dnt{\hasty{\Gamma^{\mb{q}_2}, x : C}{\epsilon}{R}{D}}
@@ -5222,7 +5222,7 @@ We may now define $\tossa{\ell}{P}$ by induction on ANF programs $P$ as follows:
             \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}, z : B}{\epsilon}{Q}{C}}
       \\ & \quad
       ]
-      ; \dnt{\qsp{\Gamma^{\mb{q}_{12}}}{\mb{q}_1}{\mb{q}_1}{\mb{q}_2}} \otimes \dnt{C}
+      ; \dnt{\qsp{\Gamma}{\mb{q}_{12}}{\mb{q}_1}{\mb{q}_2}} \otimes \dnt{C}
       ; \alpha
       ; \dnt{\Gamma^{\mb{q}_1}} 
         \otimes \dnt{\hasty{\Gamma^{\mb{q}_2}, x : C}{\epsilon}{R}{D}}
@@ -5241,13 +5241,37 @@ We may now define $\tossa{\ell}{P}$ by induction on ANF programs $P$ as follows:
       ])
       ; \dnt{\qsp{\Gamma^{\mb{q}_{12}}}{\mb{q}_1}{\mb{q}_1}{\mb{q}_2}} \otimes \dnt{C}
       ; \alpha
-      ; \dnt{\Gamma^{\mb{q}_1}} 
-        \otimes \dnt{\hasty{\Gamma^{\mb{q}_2}, x : C}{\epsilon}{R}{D}}
+      ; \dnt{\Gamma^{\mb{q}_1}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_2}, x : C}{\epsilon}{R}{D}}
       ; \iota_r
       \\
-      &= ... \text{\todo{re-associate}} \\
-      &= ... \text{\todo{finish this, ELAS -- GitHub Copilot}}
+      &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{12}}{\mb{q}_{34}}} 
+      ; \dnt{\qsp{\Gamma}{\mb{q}_{12}}{\mb{q}_1}{\mb{q}_2}} \otimes ( 
+          \dnt{\qsp{\Gamma}{\mb{q}_{34}}{\mb{q}_3}{\mb{q}_4}} ;
+          \dnt{\Gamma^{\mb{q}_3}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_4}}{\epsilon}{o}{A + B}}
+          ; \\ & \qquad \delta^{-1} ; [
+          \dnt{\hasty{\Gamma^{\mb{q}_3}, y : A}{\epsilon}{P}{C}},
+          \dnt{\hasty{\Gamma^{\mb{q}_3}, z : B}{\epsilon}{Q}{C}}
+      ])
+      ; \alpha
+      ; \dnt{\Gamma^{\mb{q}_1}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_2}, x : C}{\epsilon}{R}{D}}
+      ; \iota_r
+      \\
+      &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{1}}{\mb{q}_{234}}}
+      ; (\dnt{\Gamma^{\mb{q}_1}} \otimes (
+          \dnt{\qsp{\Gamma}{\mb{q}_{234}}{\mb{q}_{2}}{\mb{q}_{34}}}  
+          ; \\ & \qquad 
+            \dnt{\Gamma^{\mb{q}_2}} 
+            \otimes (\dnt{\hasty{\Gamma^{\mb{q}_{34}}}{\epsilon}{\caseexpr{o}{y}{P}{z}{Q}}{C}}
+          ; \dnt{\hasty{\Gamma^{\mb{q}_2}, x : C}{\epsilon}{R}{D}}
+      ))) 
+      ; \iota_r
+      \\
+      &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{1}}{\mb{q}_{234}}}
+      ; \dnt{\Gamma^{\mb{q}_1}} \otimes \dnt{
+        \hasty{\Gamma^{\mb{q}_{234}}}{\epsilon}{\letexpr{x}{\caseexpr{o}{y}{P}{z}{Q}}{R}}{D}
+      } ; \iota_r
   \end{align*}
+  as desired.
   \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{\letexpr{x}{\liter{o}{x}{P}}{Q}}{C}$): 
   \begin{align*}
     (\tossa{\ell}{\letexpr{x}{\liter{o}{y}{P}}{Q}})
