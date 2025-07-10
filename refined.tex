@@ -2779,10 +2779,10 @@ The semantics for regions is in Figure~\ref{fig:ssa-densem}:
   \item The denotation of let- and case-statements is exactly the same as for expressions,
   except that we need to re-associate the output object from 
   $\dnt{\ms{L}^{\zeroqv{Q}}}(\Gamma, -)$ to $\dnt{\ms{L}^{\mb{Q}}}$.
-  \item Non-recursive \ms{where}-subtrees are interpreted by the denotation of their
-  entry subtree, reassociated to the sum of the exit labels $\ms{L}^{\mb{Q}}$ and sublabels 
-  $\ms{R}^{\mb{Q}'}$. The exit labels are passed through as-is, and the sublabels $\ell_i$ 
-  are piped to the appropriate subregion $t_i$.
+  \item Non-recursive \ms{where}-subtrees are interpreted by the denotation of their entry subtree,
+  reassociated to the sum of the exit labels $\ms{L}^{\mb{Q}}$ and sublabels $\ms{R}^{\mb{Q}'}$. The
+  exit labels are passed through as-is, and the sublabels $\ell_i$ are piped to the appropriate
+  subregion $t_i$.
   \item Recursive \ms{where}-subtree is as above, except that we take the \emph{fixpoint} of the sum
   of the denotations of the subregions viewed as morphisms from $\dnt{\ms{R}^{\mb{Q}}}(\Gamma)$
   to $\dnt{\ms{L}^{\mb{Q}}}(\Gamma) + \dnt{\ms{R}^{\mb{Q}}}(\Gamma)$, feeding recursive
@@ -2863,7 +2863,7 @@ The semantics for regions is in Figure~\ref{fig:ssa-densem}:
       {\ms{L}^{\mb{Q}}}}
     =
     \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{\kappa}
-      {\ms{L}^{\mb{Q}}, \ms{R}^{\mb{Q}'}}}
+      {\ms{L}^{\mb{Q}}, \ms{R}^{\mb{Q}'}}} ; \alpha^+
     \\ 
     \qquad ; [
       \ms{id}_{\dnt{\ltoty{\Gamma}{\ms{L}^{\mb{Q}}}}},
@@ -2877,7 +2877,7 @@ The semantics for regions is in Figure~\ref{fig:ssa-densem}:
     {\haslb{\Gamma^{\mb{q}}}{\epsilon}{\cwhere{\kappa}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
       {\ms{L}^{\mb{Q}}}}
     = \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{\kappa}
-      {\ms{L}^{\mb{Q}}, \ms{R}^{\mb{Q}'}}}
+      {\ms{L}^{\mb{Q}}, \ms{R}^{\mb{Q}'}}} ; \alpha^+
     \\
     \qquad ; [
       \ms{id}_{\dnt{\ltoty{\Gamma}{\ms{L}^{\mb{Q}}}}},
@@ -5275,11 +5275,47 @@ We may now define $\tossa{\ell}{P}$ by induction on ANF programs $P$ as follows:
   \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{\letexpr{x}{\liter{o}{x}{P}}{Q}}{C}$): 
   \begin{align*}
     (\tossa{\ell}{\letexpr{x}{\liter{o}{y}{P}}{Q}})
-    & := \cwhere{\brb{\ell_r}{o}}{ \\ & \qquad
-      \wbranch{\ell_r}{y}{\tossa{\ell_o}{P}},
+    & := \cwhere{\brb{\ell_b}{o}}{ \\ & \qquad
+      \wbranch{\ell_b}{y}{\tossa{\ell_h}{P}}, \\ & \qquad
+      \wbranch{\ell_h}{w}{\caseexpr{w}{x}{\brb{\ell_o}{x}}{y}{\brb{\ell_b}{y}}}, \\ & \qquad
       \wbranch{\ell_o}{x}{\tossa{\ell}{Q}}
     }
   \end{align*}
+  We verify the semantics by induction as follows:
+  \begin{align*}
+  & \dnt{
+    \haslb{\Gamma^{\mb{q}}}{\epsilon}{\tossa{\ell}{\letexpr{x}{\liter{o}{y}{P}}{Q}}}
+    {\ell(C)^{\mb{q}_1}}
+  } \\
+  &= \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{\brb{\ell_r}{o}}
+        { 
+          \ell(C)^{\mb{q}_1}, 
+          (\ell_r(A)^{\mb{q}_{12}}, \ell_h(A + B)^{\mb{q}_{12}}, \ell_o(B)^{\mb{q}_{12}})
+        }
+      } ; [\ms{id}_{\dnt{\Gamma^{\mb{q}_1}} \otimes \dnt{C}}, [\\ & \qquad
+      \dnt{\haslb{\Gamma^{\mb{q}_{12}}}{\epsilon}{\tossa{\ell_h}{P}}
+        {
+          \ell(C)^{\mb{q}_1}, 
+          (\ell_r(A)^{\mb{q}_{12}}, \ell_h(A + B)^{\mb{q}_{12}}, \ell_o(B)^{\mb{q}_{12}})
+        }
+      }, \\ & \qquad
+      \dnt{\haslb{\Gamma^{\mb{q}_{12}}}{\epsilon}
+        {\caseexpr{w}{x}{\brb{\ell_o}{x}}{y}{\brb{\ell_b}{y}}}
+        {
+          \ell(C)^{\mb{q}_1}, 
+          (\ell_r(A)^{\mb{q}_{12}}, \ell_h(A + B)^{\mb{q}_{12}}, \ell_o(B)^{\mb{q}_{12}})
+        }
+      }, \\ & \qquad
+      \dnt{\haslb{\Gamma^{\mb{q}_{12}}}{\epsilon}
+        {\tossa{\ell}{Q}}
+        {
+          \ell(C)^{\mb{q}_1}, 
+          (\ell_r(A)^{\mb{q}_{12}}, \ell_h(A + B)^{\mb{q}_{12}}, \ell_o(B)^{\mb{q}_{12}})
+        }
+      }
+    ]^\dagger]
+  \end{align*}
+
   \TODO{DROPL}
 \end{itemize}
 
