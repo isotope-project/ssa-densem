@@ -4976,17 +4976,24 @@ We may now define $\tossa{\ell}{P}$ by induction on ANF programs $P$ as follows:
   \begin{align*}
     (\tossa{\ell}{\letexpr{x}{\caseexpr{o}{y}{P}{z}{Q}}{R}})
     & := \awhere{\awhere{\casestmt{o}{y}{\brb{\ell_l}{y}}{z}{\brb{\ell_r}{z}} \\ & \qquad }{
-      \\ & \quad \qquad
+      %\\ & \quad \qquad
       \wbranch{\ell_l}{y}{\tossa{\ell_o}{P}},
-      \\ & \quad \qquad
+      % \\ & \quad \qquad
       \wbranch{\ell_r}{z}{\tossa{\ell_o}{Q}}
     } \\ & \quad }{
-      \\ & \qquad
+      %\\ & \qquad
       \wbranch{\ell_o}{x}{\tossa{\ell}{R}}
     }
   \end{align*}
   \TODO{in the burning heart of the moment, I can't figure out how to write this -- GitHub Copilot}
   \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{\letexpr{x}{\liter{o}{x}{P}}{Q}}{B}$): 
+  \begin{align*}
+    (\tossa{\ell}{\letexpr{x}{\liter{o}{y}{P}}{Q}})
+    & := \cwhere{\brb{\ell_r}{o}}{ \\ & \qquad
+      \wbranch{\ell_r}{y}{\tossa{\ell_o}{P}},
+      \wbranch{\ell_o}{x}{\tossa{\ell}{Q}}
+    }
+  \end{align*}
   \TODO{DROPL}
 \end{itemize}
 
