@@ -4982,7 +4982,98 @@ then inductively verify that the typing rule and the desired semantic property h
   ; \dnt{\haslb{\Gamma^{\mb{q}_1}, x : B}{\epsilon}{s}{\ms{L}}}
   \end{align*}
   as desired.
-  \item (Binary let-bindings $\letexpr{(x, y)}{a}{b}$): \todo{the}
+  \item (Binary let-bindings $\letexpr{(x, y)}{a}{b}$): we define
+  \begin{align*}
+  (\ssalet{x}{\letexpr{(y, z)}{a}{b}}{s}) := \ssalet{w}{a}{\letexpr{(y, z)}{w}{\ssalet{x}{b}{s}}}
+  \end{align*}
+  This is well-typed by induction, since given $\qsp{\Gamma}{\mb{q}}{\mb{q}_1}{\mb{q}_{23}}$,
+  $\haslb{\Gamma^{\mb{q}_{23}}}{\epsilon}{\letexpr{(y, z)}{a}{b}}{C}$, and
+  $\haslb{\Gamma^{\mb{q}_1}, x : B}{\epsilon}{s}{\ms{L}}$, we have
+  \begin{itemize}
+    \item By inversion, we have $\qsp{\Gamma}{\mb{q}_{23}}{\mb{q}_2}{\mb{q}_3}$,
+    $\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{a}{A \otimes B}$, and $\hasty{\Gamma^{\mb{q}_2, y : A, z :
+    B}}{\epsilon}{b}{B}$.
+    \item By weakening, we have $\haslb{\Gamma^{\mb{q}_1}, w : (A \otimes B)^0, y : A^0, z : B^0, x
+    : C}{\epsilon}{s}{\ms{L}}$
+    \item By split associativity, we have $\qsp{\Gamma}{\mb{q}}{\mb{q}_{12}}{\mb{q}_3}$,
+    $\qsp{\Gamma}{\mb{q}_{12}}{\mb{q}_1}{\mb{q}_2}$
+    \item By induction, we have that
+    $
+    \haslb{\Gamma^{\mb{q}}}{\epsilon}{\ssalet{w}{a}{\letstmt{(y, z)}{w}{\ssalet{x}{b}{s}}}}{\ms{L}}
+    $
+    as desired.
+  \end{itemize}
+  This has the desired semantics, since by induction
+  \begin{align*}
+  &\dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{\ssalet{w}{a}{\letstmt{(y, z)}{w}{\ssalet{x}{b}{s}}}}
+    {\ms{L}}} \\
+  &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{12}}{\mb{q}_{3}}}
+  ; \dnt{\Gamma^{\mb{q}_{12}}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{a}{A \otimes B}}
+  ; \dnt{\qsp{\Gamma, w : A \otimes B}{\mb{q}_{12}, \omega}{\mb{q}_{12}, 0}{\mb{0}, \omega}}
+  ; \\ &\qquad 
+    (\dnt{\Gamma^{\mb{q}_{12}}} \otimes I) 
+      \otimes \dnt{\hasty{\Gamma^{\mb{0}}, w : A \otimes B}{\epsilon}{w}{A \otimes B}}
+  ; \\ &\qquad
+    \dnt{\qsp{\Gamma, w : A \otimes B, y : A, z : B}
+      {\mb{q}_{12}, 0, \omega, \omega}
+      {\mb{q}_1, 0, 0, 0}{\mb{q}_2, 0, \omega, \omega}} 
+  ; \\ &\qquad
+    (\dnt{\Gamma^{\mb{q}_1}} \otimes I \otimes I \otimes I)
+      \otimes \dnt{\hasty{\Gamma^{\mb{q}_2}, w : (A \otimes B)^0, y : A, z : B}
+      {\epsilon}{b}{C}}
+  ; \\ &\qquad 
+    \dnt{\haslb{\Gamma^{\mb{q}_1}, w : (A \otimes B)^0, y : A^0, z : B^0, x : C}
+    {\epsilon}{s}{\ms{L}}} \\
+  &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{12}}{\mb{q}_{3}}}
+  ; \dnt{\Gamma^{\mb{q}_{12}}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{a}{A \otimes B}}
+  ; \alpha
+  ; \dnt{\qsp{\Gamma, y : A, z : B}
+      {\mb{q}_{12}, \omega, \omega}
+      {\mb{q}_1, 0, 0}{\mb{q}_2, \omega, \omega}} 
+  ; \\ &\qquad
+    (\dnt{\Gamma^{\mb{q}_1}} \otimes I \otimes I)
+      \otimes \dnt{\hasty{\Gamma^{\mb{q}_2}, y : A, z : B}
+      {\epsilon}{b}{C}}
+  ; \dnt{\haslb{\Gamma^{\mb{q}_1}, y : A^0, z : B^0, x : C}
+    {\epsilon}{s}{\ms{L}}} \\
+  &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{12}}{\mb{q}_{3}}}
+  ; \dnt{\qsp{\Gamma}{\mb{q}_{12}}{\mb{q}_1}{\mb{q}_2}} 
+    \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{a}{A \otimes B}}
+  ; \alpha
+  ; \\ &\qquad
+    (\dnt{\Gamma^{\mb{q}_1}} \otimes I \otimes I)
+      \otimes \dnt{\hasty{\Gamma^{\mb{q}_2}, y : A, z : B}
+      {\epsilon}{b}{C}}
+  ; \dnt{\haslb{\Gamma^{\mb{q}_1}, y : A^0, z : B^0, x : C}
+    {\epsilon}{s}{\ms{L}}} \\
+  &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{12}}{\mb{q}_{3}}}
+  ; \dnt{\qsp{\Gamma}{\mb{q}_{12}}{\mb{q}_1}{\mb{q}_2}} 
+    \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{a}{A \otimes B}}
+  ; \alpha
+  ; \\ &\qquad
+    \dnt{\Gamma^{\mb{q}_1}}
+      \otimes \dnt{\hasty{\Gamma^{\mb{q}_2}, y : A, z : B}
+      {\epsilon}{b}{C}}
+  ; \dnt{\haslb{\Gamma^{\mb{q}_1}, x : C}
+    {\epsilon}{s}{\ms{L}}} \\
+  &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{1}}{\mb{q}_{23}}}
+  ; \\ & \qquad \dnt{\Gamma^{\mb{q}_1}} \otimes (
+      \dnt{\qsp{\Gamma}{\mb{q}_{23}}{\mb{q}_2}{\mb{q}_3}} 
+    ; \dnt{\Gamma^{\mb{q}_2}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{a}{A \otimes B}}
+    ; \alpha
+    ; \dnt{\hasty{\Gamma^{\mb{q}_2}, y : A, z : B}{\epsilon}{b}{C}}
+  )
+  ; \\ &\qquad
+    \dnt{\haslb{\Gamma^{\mb{q}_1}, x : C}
+    {\epsilon}{s}{\ms{L}}} \\
+  &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{1}}{\mb{q}_{23}}}
+  ; \dnt{\Gamma^{\mb{q}_1}} \otimes (
+      \dnt{\hasty{\Gamma^{\mb{q}_{23}}}{\epsilon}{\letexpr{(y, z)}{a}{b}}{C}}
+  )
+  ; \dnt{\haslb{\Gamma^{\mb{q}_1}, x : C}
+    {\epsilon}{s}{\ms{L}}}
+  \end{align*}
+  as desired.
   \item (Pairs $(a, b)$): \todo{clock}
   \item (Case-statements $\caseexpr{e}{x}{a}{y}{b}$): \todo{it never stops?}
   \item (Loops $\liter{a}{x}{b}$): \todo{yet it does}
