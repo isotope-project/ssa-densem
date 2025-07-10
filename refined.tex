@@ -398,6 +398,28 @@ exceptions, but effects like nondeterminism or memory access are fine. That is, 
 both a left and right mover w.r.t. these effects, we say UB \emph{commutes} with them. An effect
 that commutes with everything, like the empty effect $\bot$, is called \emph{central}.
 
+% Ye olde freeze miscompilations:
+% https://github.com/llvm/llvm-project/issues/144780
+% https://github.com/llvm/llvm-project/issues/58321
+% https://github.com/llvm/llvm-project/issues/141622
+% https://github.com/llvm/llvm-project/issues/91178
+
+% Also:
+% UB with infinite loop even if well-formed: https://github.com/llvm/llvm-project/issues/62057
+% Arguments about fences being forward progress: https://github.com/llvm/llvm-project/issues/96702
+% Ditto for `printf("")': https://github.com/llvm/llvm-project/issues/96703
+
+% Also:
+% UB on reordering checks, due to branching on `poison': 
+% https://github.com/llvm/llvm-project/issues/57523
+% Introduction of loads in writeonly functions, more UB:
+% https://github.com/llvm/llvm-project/issues/51248
+% ScalarEvolution branches on poison:
+% https://github.com/llvm/llvm-project/issues/47113
+% fabs fmul optimization incorrect due to undef:
+% https://github.com/llvm/llvm-project/issues/47287
+
+
 The question of what rewrites are permitted in the presence of effects is one that compiler
 writers struggle with~\cite{llvm-github}, because the less conservative they are, the faster
 the code they can generate, but the more dependent the are on having a clear understanding of each
@@ -3481,6 +3503,16 @@ We extend pattern binding to other binding forms, for $P \notin \ms{Var}$, in th
   \label{fig:derivable-binding}
 \end{figure}
 
+\section{Formalization}
+
+In this section, we go over some of the lemmas and theorems in the paper which we have formally
+verified in Lean 4. Some of these are used in the paper proofs in later sections of the appendix.
+
+\TODO{checkmark everything, and talk about it?}
+
+\TODO{restate: weakening, substitution, weakening composition, splitting, coherence, soundness of
+(weakening/substitution)}
+
 \section{Completeness}
 
 \label{apx:completeness}
@@ -4790,6 +4822,15 @@ $(\mc{S}, \mc{R})$}
 faithful? full?}}
 
 \TODO{\emph{the} initial model of SSA: tfw is it just partial functions on bitvectors?}
+
+\section{SSA Metatheory}
+
+In this section, we give some basic metatheoretic properties of SSA used in
+Appendix~\ref{apx:ssa-roundtrip}.
+
+\TODO{SSA weakening}
+
+\TODO{SSA semantic weakening}
 
 \section{Compiling Expressions to SSA}
 
