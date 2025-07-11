@@ -5050,7 +5050,42 @@ We begin by stating a few metatheoretic results:
     \end{align*}
     \item
     ($\haslb{\Gamma^{\mb{q}}}{\epsilon}{\casestmt{o}{x}{\tau_l}{y}{\tau_r}}{\ms{L}^{\mb{Q}}}$):
-    \todo{coming}
+    we have by induction that
+    \begin{align*}
+    &\dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{\casestmt{o}{x}{\tau_l}{y}{\tau_r}}{\ms{L}'^{\mb{Q}'}}} 
+      \\
+    &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}} 
+      ; \dnt{\Gamma^{\mb{q}_l}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{o}{A + B}}
+      ; [
+      \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{\tau_l}{\ms{L}'^{\zeroqv{\mb{Q}'}}}}
+        ; \alpha^\downarrow,
+      \dnt{\hasty{\Gamma^{\mb{q}_l}, y : B}{\epsilon}{\tau_r}{\ms{L}'^{\zeroqv{\mb{Q}'}}}}
+        ; \alpha^\downarrow
+    ] \\
+    &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}} 
+      ; \dnt{\Gamma^{\mb{q}_l}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{o}{A + B}}
+      ; [ \\ & \qquad
+      \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{\tau_l}{\ms{L}^{\zeroqv{\mb{Q}}}}}
+        ; \dnt{\lwk{\Gamma, x : A}{\ms{L}^{\zeroqv{\mb{Q}}}}{{\ms{L}'^{\zeroqv{\mb{Q}'}}}}}
+        ; \alpha^\downarrow, \\ & \qquad
+      \dnt{\hasty{\Gamma^{\mb{q}_l}, y : B}{\epsilon}{\tau_r}{\ms{L}^{\zeroqv{\mb{Q}}}}}
+        ; \dnt{\lwk{\Gamma, y : B}{\ms{L}^{\zeroqv{\mb{Q}}}}{{\ms{L}'^{\zeroqv{\mb{Q}'}}}}}
+        ; \alpha^\downarrow
+    ]\\
+    &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}} 
+      ; \dnt{\Gamma^{\mb{q}_l}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{o}{A + B}}
+      ; [ \\ & \qquad
+      \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{\tau_l}{\ms{L}^{\zeroqv{\mb{Q}}}}}
+        ; \alpha^\downarrow
+        ; \dnt{\lwk{\Gamma}{\ms{L}^{\zeroqv{\mb{Q}}}}{{\ms{L}^{\zeroqv{\mb{Q}'}}}}}, 
+      \dnt{\hasty{\Gamma^{\mb{q}_l}, y : B}{\epsilon}{\tau_r}{\ms{L}^{\zeroqv{\mb{Q}}}}}
+        ; \alpha^\downarrow
+        ; \dnt{\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{{\ms{L}'^{\mb{Q}'}}}}
+    ] \\
+    &= \dnt{
+      \haslb{\Gamma^{\mb{q}}}{\epsilon}{\casestmt{o}{x}{\tau_l}{y}{\tau_r}}{\ms{L}^{\mb{Q}}}
+    } ; \dnt{\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{{\ms{L}'^{\mb{Q}'}}}}
+    \end{align*}
     \item ($\haslb{\Gamma^{\mb{q}}}{\epsilon}{\awhere{\kappa}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
       {\ms{L}^{\mb{Q}}}$):
     \todo{and yet}
