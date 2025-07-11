@@ -3983,16 +3983,51 @@ We prove that packing and unpacking are mutually inverse up to $\approx$ by indu
   The following rules are derivable:
   \begin{gather*}
   \prftree[r]{\rle{unpack-pack}}
-    {\hasty{\Gamma^{\mb{q}}}{\epsilon}{a}{A}}
-    {\tmeq{\Gamma^{\mb{q}}}{\mc{R}}{\letexpr{\Gamma}{\ms{pack}(\Gamma^{\mb{q}})}{a}}{a}{A}}
+    {\hasty{\Gamma^{\mb{q}}, \Delta^{\mb{q}'}}{\epsilon}{a}{A}}
+    {\tmeq{\Gamma^{\mb{q}}, \Delta^{\mb{q}'}}{\mc{R}} 
+      {\letexpr{\Delta}{\ms{pack}(\Delta^{\mb{q}'})}{a}}{a}{A}}
     \\
   \prftree[r]{\rle{pack-unpack}}
     {\hasty{\Gamma^{\mb{q}}}{\epsilon}{b}{[\Delta^{\mb{q}'}]}}
-    {\tmeq{\Gamma^{\mb{q}}}{\mc{R}}{\letexpr{\Delta}{b}{\ms{pack}(\Delta^{\mb{q}'})}}{b}{[\Delta^{\mb{q}'}]}}
+    {\tmeq{\Gamma^{\mb{q}}}{\mc{R}}{\letexpr{\Delta}{b}{\ms{pack}(\Delta^{\mb{q}'})}}{b}
+      {[\Delta^{\mb{q}'}]}}
   \end{gather*}
 \end{lemma}
 \begin{proof}
-  \;\TODO{suffering, absolute duhkha right here}
+  We proceed by $\Delta^{\mb{q}'}$
+  \begin{itemize}
+    \item $(\cdot)$: the results follow by \brle{elim} and \brle{term}, respectively.
+    \item $(\Gamma^{\mb{q}}, x : B^q)$: we have by induction that
+    \begin{itemize}
+      \item We have
+      \begin{align*}
+      \Gamma^{\mb{q}}, \Delta^{\mb{q}'}, x : B^q 
+      & \vdash_{\mc{R}} \letexpr{\Delta^{\mb{q}'}, x : B^q}
+        {\ms{pack}((\Delta^{\mb{q}'}, x : B^q)}{a} \\
+      & \approx \letexpr{(g, y)}{(\ms{pack}(\Delta^{\mb{q}'}), x^q)}{[y/x]a} \\
+      & \approx \letexpr{g}{\ms{pack}(\Delta^{\mb{q}'})}{\letexpr{y}{x^q}{[y/x]a}} \\
+      & \approx \letexpr{y}{x^q}{[y/x]a} \approx a : A
+      \end{align*}
+      since if $q \neq 0$, $\letexpr{y}{x^q}{[y/x]a} \approx \letexpr{y}{x}{[y/x]a} \approx a$,
+      whereas if $q = 0$ $x \notin \ms{fv}(a)$ so $\letexpr{y}{x^q}{[y/x]a} \approx
+      \letexpr{y}{x}{a} \approx a$.
+      \item We have
+      \begin{align*}
+      \Gamma^{\mb{q}}
+      & \vdash_{\mc{R}} \letexpr{\Delta^{\mb{q}'}, x : A^q}{b}{\ms{pack}(\Delta^{\mb{q}'}, x : B^q)} 
+      \\
+      & \approx \letexpr{(g, x)}{b}{\letexpr{\Delta^{\mb{q}'}}{g}
+        {(\ms{pack}(\Delta^{\mb{q}'}), x^q)}} \\
+      & \approx \letexpr{(g, x)}{b}{\letexpr{w}{
+          (\letexpr{\Delta^{\mb{q}'}}{g}{\ms{pack}(\Delta^{\mb{q}'})})
+        }{(w, x^q)}} \\
+      & \approx \letexpr{(g, x)}{b}{\letexpr{w}{g}{(w, x^q)}} \approx \letexpr{(g, x)}{b}{(g, x^q)}
+      & \approx (g, x)
+      \end{align*}
+      since if $q \neq 0$ $(g, x^q) := (g, x)$, whereas if $q = 0$ since $x$ is pure and of type
+      $\mb{1}$, by $\mb{term}$, $(g, x^q) := (g, ()) \approx (g, x)$.
+    \end{itemize}
+  \end{itemize}
 \end{proof}
 To show completeness, it hence suffices to prove the following lemma:
 \begin{lemma}
