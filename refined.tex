@@ -5108,10 +5108,39 @@ We may now define $\tossa{\ell}{P}$ by induction on ANF programs $P$ as follows:
   $(\tossa{\ell}{\letexpr{x}{o}{P}}) := \letstmt{x}{o}{\tossa{\ell}{P}}$; we verify this has
   the correct semantics by induction as follows:
   \begin{align*}
-  \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{\tossa{\ell}{\letexpr{x}{o}{P}}}{\ell(B)^{\mb{0}}}}
-  ...
+  & \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{\tossa{\ell}{\letexpr{x}{o}{P}}}{\ell(B)^{\mb{q}_1}}} \\
+  & = \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{12}}{\mb{q}_3}} 
+    ; \dnt{\Gamma^{\mb{q}_{12}}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{o}{A}}
+    ; \dnt{\haslb{\Gamma^{\mb{q}_{12}}, x : A}{\epsilon}{\tossa{\ell}{P}}{\ell(B)^{\mb{q}_1, 0}}}
+    ; \alpha^\downarrow \\
+  & = \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{12}}{\mb{q}_3}} 
+    ; \dnt{\Gamma^{\mb{q}_{12}}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{o}{A}}\
+    ; \dnt{\qsp{\Gamma}{\mb{q}_{12}, x : A}{\mb{q}_1, 0}{\mb{q}_2, \omega}}
+  \\ & \quad
+    ; (\dnt{\Gamma^{\mb{q}_1}} \otimes I) \otimes 
+      \dnt{\hasty{\Gamma^{\mb{q}_2}, x : A}{\epsilon}{P}{B}}
+    ; \iota_r
+    ; \alpha^\downarrow \\ 
+  & = \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{12}}{\mb{q}_3}} 
+    ; \dnt{\qsp{\Gamma}{\mb{q}_{12}}{\mb{q}_1}{\mb{q}_2}} 
+      \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{o}{A}}
+    ; \alpha
+    ; \dnt{\Gamma^{\mb{q}_1}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_2}, x : A}{\epsilon}{P}{B}}
+    ; \iota_r \\
+  & = \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_1}{\mb{q}_{23}}}
+    ; \dnt{\Gamma^{\mb{q}_1}} \otimes (
+      \dnt{\qsp{\Gamma}{\mb{q}_{23}}{\mb{q}_2}{\mb{q}_3}}
+      ; \dnt{\Gamma^{\mb{q}_{3}}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{o}{A}}
+      ; \dnt{\hasty{\Gamma^{\mb{q}_2}, x : A}{\epsilon}{P}{B}}
+    )
+    ; \iota_r \\
+  & = \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_1}{\mb{q}_{23}}}
+    ; \dnt{\Gamma^{\mb{q}_1}} \otimes (
+      \dnt{\hasty{\Gamma^{\mb{q}_{23}}}{\epsilon}{\letexpr{x}{o}{P}}{A}}
+    )
+    ; \iota_r
   \end{align*}
-  \TODO{not so trivial anymore, buster}
+  as desired.
   \item ($\letexpr{(x, y)}{o}{P}$): we define
   $(\tossa{\ell}{\letexpr{(x, y)}{o}{P}}) := \letstmt{(x, y)}{o}{\tossa{\ell}{P}}$
   \TODO{not so trivial anymore, buster2}
