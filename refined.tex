@@ -5136,14 +5136,52 @@ We may now define $\tossa{\ell}{P}$ by induction on ANF programs $P$ as follows:
     ; \iota_r \\
   & = \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_1}{\mb{q}_{23}}}
     ; \dnt{\Gamma^{\mb{q}_1}} \otimes (
-      \dnt{\hasty{\Gamma^{\mb{q}_{23}}}{\epsilon}{\letexpr{x}{o}{P}}{A}}
+      \dnt{\hasty{\Gamma^{\mb{q}_{23}}}{\epsilon}{\letexpr{x}{o}{P}}{B}}
     )
     ; \iota_r
   \end{align*}
   as desired.
   \item ($\letexpr{(x, y)}{o}{P}$): we define
-  $(\tossa{\ell}{\letexpr{(x, y)}{o}{P}}) := \letstmt{(x, y)}{o}{\tossa{\ell}{P}}$
-  \TODO{not so trivial anymore, buster2}
+  $(\tossa{\ell}{\letexpr{(x, y)}{o}{P}}) := \letstmt{(x, y)}{o}{\tossa{\ell}{P}}$; we verify this
+  has the correct semantics by induction as follows:
+  \begin{align*}
+  & \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}
+    {\tossa{\ell}{\letexpr{(x, y)}{o}{P}}}{\ell(B)^{\mb{q}_1}}} \\
+  & = \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{12}}{\mb{q}_3}} 
+    ; \dnt{\Gamma^{\mb{q}_{12}}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{o}{A \otimes B}}
+    ; \dnt{\haslb{\Gamma^{\mb{q}_{12}}, x : A, y : B}{\epsilon}{\tossa{\ell}{P}}
+      {\ell(C)^{\mb{q}_1, 0, 0}}}
+    ; \alpha^\downarrow ; \alpha^\downarrow \\
+  & = \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{12}}{\mb{q}_3}} 
+    ; \dnt{\Gamma^{\mb{q}_{12}}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{o}{A \otimes B}}\
+    ; \dnt{\qsp{\Gamma}{\mb{q}_{12}, x : A, y : B}{\mb{q}_1, 0, 0}{\mb{q}_2, \omega, \omega}}
+  \\ & \quad
+    ; (\dnt{\Gamma^{\mb{q}_1}} \otimes I \otimes I) \otimes 
+      \dnt{\hasty{\Gamma^{\mb{q}_2}, x : A, y : B}{\epsilon}{P}{C}}
+    ; \iota_r
+    ; \alpha^\downarrow
+    ; \alpha^\downarrow \\ 
+  & = \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{12}}{\mb{q}_3}} 
+    ; \dnt{\qsp{\Gamma}{\mb{q}_{12}}{\mb{q}_1}{\mb{q}_2}} 
+      \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{o}{A \otimes B}}
+    ; \alpha  \\ & \quad
+    ; \dnt{\Gamma^{\mb{q}_1}} \otimes 
+      \dnt{\hasty{\Gamma^{\mb{q}_2}, x : A, y : B}{\epsilon}{P}{C}}
+    ; \iota_r \\
+  & = \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_1}{\mb{q}_{23}}}
+    ; \dnt{\Gamma^{\mb{q}_1}} \otimes \\ & \qquad (
+      \dnt{\qsp{\Gamma}{\mb{q}_{23}}{\mb{q}_2}{\mb{q}_3}}
+      ; \dnt{\Gamma^{\mb{q}_{3}}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_3}}{\epsilon}{o}{A \otimes B}}
+      ; \alpha
+      ; \dnt{\hasty{\Gamma^{\mb{q}_2}, x : A, y : B}{\epsilon}{P}{C}}
+    )
+    ; \iota_r \\
+  & = \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_1}{\mb{q}_{23}}}
+    ; \dnt{\Gamma^{\mb{q}_1}} \otimes (
+      \dnt{\hasty{\Gamma^{\mb{q}_{23}}}{\epsilon}{\letexpr{x}{o}{P}}{C}}
+    )
+    ; \iota_r
+  \end{align*}
   \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{\letexpr{x}{\caseexpr{o}{y}{P}{z}{Q}}{R}}{D}$): we
   define
   \begin{align*}
