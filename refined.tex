@@ -5868,48 +5868,117 @@ $\ms{c}_A(X) := \ms{c} \circ X$. It is hence easy to check that this gives a clo
   say a Brookes monad is \emph{standard} if $T = S^*$ is the monoid of finite sequences of
   \emph{states} $S$.
 \end{definition}
+We note that this definition gives us a Kleisli category which is not only poset-enriched, but in
+fact compatible with countable unions: with the usual definition $\cup_i f_i := \lambda a . \cup_i
+f_i(a)$, we have
+\begin{align*}
+  ((\bigcup_i f_i) ; g)(a) &:= \ms{c}_C(\{
+    \tret{t \cdot t'}{c} \mid \exists b . \tret{t}{b} \in \bigcup_i f_i(a), \tret{t'}{c} \in g(b)
+  \}) \\
+  &= \ms{c}(\bigcup_i \{
+      \tret{t \cdot t'}{c} \mid \exists b . \tret{t}{b} \in f_i(a), \tret{t'}{c} \in g(b)
+    \}) \\
+  &= \bigcup_i \ms{c}(\{
+      \tret{t \cdot t'}{c} \mid \exists b . \tret{t}{b} \in f_i(a), \tret{t'}{c} \in g(b)
+    \}) \\
+  &= \bigcup_i (f_i ; g)(a)
+  \\
+  f ; (\bigcup_i g_i)(a) &:= \ms{c}(\{
+    \tret{t \cdot t'}{c} \mid \exists b . \tret{t}{b} \in f(a), \tret{t'}{c} \in \bigcup_i g_i(b)
+  \}) \\
+  &= \ms{c}(\bigcup_i \{
+    \tret{t \cdot t'}{c} \mid \exists b . \tret{t}{b} \in f(a), \tret{t'}{c} \in g_i(b)
+  \}) \\
+  &= \bigcup_i \ms{c}(\{
+    \tret{t \cdot t'}{c} \mid \exists b . \tret{t}{b} \in f(a), \tret{t'}{c} \in g_i(b)
+  \}) \\
+  &= \bigcup_i (f ; g_i)(a)
+\end{align*}
+and likewise for coproducts.
+
 We can always equip $\ms{B}_{\ms{c}}$ with a (poset-enriched) Elgot structure $(\cdot)^\dagger$ by,
 for $f: A \to \ms{B}_{\ms{c}}(B + A)$, defining
 \begin{equation*}
-  f^\dagger(a) := \ms{c}_B(\bigcup_{i \in \nats}f_i(a))
+  f^\dagger := \bigcup_{i \in \nats}f_i
 \end{equation*}
-where $f_i : A \to \ms{B}_{\mc{C}}(B)$ are the \emph{iterates} of $f$, defined inductively as follows
+where $f_i : A \to \ms{B}_{\mc{C}}(B)$ are the \emph{iterates} of $f$, defined inductively as
+follows
 \begin{equation*}
-  f_0 := (\lambda x . \varnothing) \qquad
+  f_0 := 0_{A, B} = (\lambda x . \varnothing) \qquad
   f_{i + 1} := f ; [\ms{id}_B, f_{i}]
 \end{equation*}
-We can think of analysis using this structure as corresponding to \emph{partial correctness}, since
-any infinite traces are simply discarded (a program which always diverges will have denotation
-$\varnothing$). It is straightforward to check that this is indeed an Elgot structure, since it
-satisfies:
+We note in particular that $\forall i . f_i \subseteq f_{i + 1}$; similarly, if $g \subseteq f$, we
+have that $g_i \subseteq f_i$. We can think of analysis using this structure as corresponding to
+\emph{partial correctness}, since any infinite traces are simply discarded (a program which always
+diverges will have denotation $\varnothing$). It is straightforward to check that this is indeed an
+Elgot structure, since it satisfies:
 \begin{itemize}
-  \item \emph{Fixpoint}: we have, since $f_0(a) = \varnothing$,
-  \begin{align*}
-      f^\dagger(a)
-      & = \ms{c}_B(\bigcup_{i \in \nats}f_i(a))
-        = \ms{c}_B(\bigcup_{i \in \nats}f_{i + 1}(a)) \\
-      & = \ms{c}_B(\bigcup_{i \in \nats}(f ; [\ms{id}_B, f_i])(a)) \\
-      & = \ms{c}_B(\bigcup_{i \in \nats}\ms{c}_B(\{
-        \tret{t \cdot t'}{b} \mid 
-          \exists c . \tret{t}{c} \in f(a), \tret{t'}{b} \in [\ms{id}_B, f_i](c)
-      \})) \\
-      & = \ms{c}_B(\{
-        \tret{t \cdot t'}{b} \mid 
-          \exists c . \tret{t}{c} \in f(a), \tret{t'}{b} \in [\ms{id}_B, \bigcup_{i \in \nats}f_i](c)
-      \}) \\
-      & = \ms{c}_B(\{
-        \tret{t \cdot t'}{b} \mid 
-          \exists c . \tret{t}{c} \in f(a), \tret{t'}{b} \in [\ms{id}_B, f^\dagger](c)
-      \}) \\
-      & = f ; [\ms{id}_B, f^\dagger](a)
-  \end{align*}
+  \item \emph{Fixpoint}: we have, since $f_0 \cup g = g$,
+  \begin{equation*}
+    f^\dagger = \bigcup_{i \in \nats}f_i 
+               = \bigcup_{i \in \nats}f_{i + 1} 
+               = \bigcup_{i \in \nats}(f ; [\ms{id}_B, f_i]) 
+               = f ; [\ms{id}_B, \bigcup_{i \in \nats}f_i] 
+               = f ; [\ms{id}_B, f^\dagger]
+  \end{equation*}
   as desired.
-  \item \emph{Naturality}: we have
-  \TODO{this}
-  \item \emph{Codiagonal}: we have
-  \TODO{this}
-  \item \emph{Uniformity}: we have
-  \TODO{this}
+  \item \emph{Naturality}: by induction, we show that $(f ; g + A)_i = f_i ; g$, since 
+  $(f ; g + A)_0 = 0_{A, C} = 0_{A, B} ; g$ and
+  \begin{equation*}
+    (f ; g + A)_{i + 1} = f ; g + A ; [\ms{id}_C, (f ; g + A)_i] 
+                        = f ; [g, f_i ; g] = f ; [\ms{id}_B, f_i] ; g = f_{i + 1} ; g
+  \end{equation*}
+  and therefore
+  \begin{equation*}
+  (f ; g + A)^\dagger = \bigcup_{i \in \nats}(f ; g + A)_i
+  = \bigcup_{i \in \nats}(f_i ; g)
+  = (\bigcup_{i \in \nats}f_i) ; g
+  = f^\dagger ; g
+  \end{equation*}
+  \item \emph{Codiagonal}: given $f: A \to (B + A) + A$, define $g = f ; [\ms{id}_(B + A),
+  \iota_r]$ and $h = f^\dagger$. We have
+  \begin{align*}
+    h_{i + 1}
+    & = f^\dagger ; [\ms{id}, h_i]
+      = f ; [\ms{id}, f^\dagger] ; [\ms{id}, h_i] \\
+    & = f ; [[\ms{id}, h_i], f^\dagger ; [\ms{id}, h_i]]
+      = f ; [[\ms{id}, h_i], h_{i + 1}] \\
+    g_{i + 1} 
+    & = f ; [\ms{id}_B, \iota_r] ; [\ms{id}, g_i] 
+      = f ; [[\ms{id}, g_i], g_i]
+  \end{align*}
+  It follows by induction that $g_i \subseteq h_i$, since $g_0 = h_0$, and
+  \begin{align*}
+  g_{i + 1} 
+  = f ; [[\ms{id}, g_i], g_i]
+  \subseteq f ; [[\ms{id}, h_i], h_i]
+  \subseteq f ; [[\ms{id}, h_i], h_{i + 1}]
+  = h_{i + 1}
+  \end{align*}
+  We therefore have that $g^\dagger \subseteq h^\dagger$. On the other hand, 
+  \TODO{direction}
+  \item \emph{Directed Uniformity}: given arbitrary $f : A \to B + A$, $g : X \to B + X$ and $h : X
+  \to A$, we have that
+  \begin{itemize}
+    \item Given $h ; f \subseteq g ; B + h$, for all $f_i$, we show by induction that 
+    $h ; f_i \subseteq g_i$ since $h ; f_0 = 0 \subseteq g_0$ and
+    \begin{equation*}
+    h ; f_{i + 1} = h ; f ; [\ms{id}, f_i] 
+    \subseteq g ; B + h ; [\ms{id}, f_i]
+    = g ; [\ms{id}, h ; f_i] \subseteq g ; [\ms{id}, g_i] = g_{i + 1}
+    \end{equation*}
+    and therefore we have that $h ; f^\dagger = \bigcup_i h ; f_i \subseteq \bigcup_i g_i =
+    g^\dagger$
+    \item Given $h ; f \supseteq g ; B + h$, for all $f_i$, we show by induction that 
+    $h ; f_i \supseteq g_i$ since $h ; f_0 = 0 = g_0$ and
+    \begin{equation*}
+    h ; f_{i + 1} = h ; f ; [\ms{id}, f_i] 
+    \supseteq g ; B + h ; [\ms{id}, f_i]
+    = g ; [\ms{id}, h ; f_i] \supseteq g ; [\ms{id}, g_i] = g^\dagger
+    \end{equation*}
+    and therefore we have that $h ; f^\dagger = \bigcup_i h ; f_i \supseteq \bigcup_i g_i =
+    g^\dagger$
+  \end{itemize}
 \end{itemize}
 
 \subsection{Sequential Consistency}
