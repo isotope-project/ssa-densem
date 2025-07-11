@@ -4966,20 +4966,35 @@ by the inductive hypothesis. For example, we have that
 
 \subsection{ANF to SSA}
 
-We begin by stating the following metatheoretic result:
+We begin by stating a few metatheoretic results:
 \begin{lemma}[Label Weakening]
-  Given $\haslb{\Gamma^{\mb{q}}}{\epsilon}{s}{\ms{L}^{\mb{Q}}}$ and 
-  $\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{L}'^{\mb{Q}'}}$, we have that
-  $\haslb{\Gamma^{\mb{q}}}{\epsilon}{s}{\ms{L}'^{\mb{Q}'}}$ with
-  $$
-  \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{s}{\ms{L}'^{\mb{Q}'}}}
-  = \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{s}{\ms{L}^{\mb{Q}}}}
-  ; \dnt{\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{L}'^{\mb{Q}'}}}
-  $$
+  Given a label-weakening $\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{L}'^{\mb{Q}'}}$,
+  \begin{itemize}
+    \item If $\lwk{\Gamma}{\ms{L}'^{\mb{Q}'}}{\ms{L}''^{\mb{Q}''}}$, then 
+      $\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{L}''^{\mb{Q}''}}$ with
+      $$
+      \dnt{\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{L}''^{\mb{Q}''}}}
+      = \dnt{\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{L}'^{\mb{Q}'}}}
+      ; \dnt{lwk{\Gamma}{\ms{L}'^{\mb{Q}'}}{\ms{L}''^{\mb{Q}''}}}
+      $$
+    \item If $\haslb{\Gamma^{\mb{q}}}{\epsilon}{s}{\ms{L}^{\mb{Q}}}$ and , we have that
+    $\haslb{\Gamma^{\mb{q}}}{\epsilon}{s}{\ms{L}'^{\mb{Q}'}}$ with
+    $$
+    \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{s}{\ms{L}'^{\mb{Q}'}}}
+    = \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{s}{\ms{L}^{\mb{Q}}}}
+    ; \dnt{\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{L}'^{\mb{Q}'}}}
+    $$
+  \end{itemize}
+  
 \end{lemma}
 \begin{proof}
-  \TODO{label weakening composition}
-  We begin by noting that, via a straightforward induction,
+  We begin by noting that, via a straightforward induction, we have that
+  $$
+      \dnt{\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{L}''^{\mb{Q}''}}}
+      = \dnt{\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{L}'^{\mb{Q}'}}}
+      ; \dnt{lwk{\Gamma}{\ms{L}'^{\mb{Q}'}}{\ms{L}''^{\mb{Q}''}}}
+  $$
+  and
   \begin{equation*}
   \dnt{\lwk{\Gamma, x : A}{\ms{L}^{\zeroqv{\mb{Q}}}}{\ms{L}'^{\zeroqv{\mb{Q}'}}}} 
   ; \alpha^\downarrow
