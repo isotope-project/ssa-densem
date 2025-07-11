@@ -4388,7 +4388,7 @@ To show completeness, it hence suffices to prove the following lemma:
       \letexpr{z}{\ms{pack}(\Gamma^{\mb{q}})}
         {\dnt{\hasty{\Gamma^{\mb{q}}}{}{\letexpr{(x, y)}{a}{c}}{C}}(z)} \\
       &\approx
-      \letexpr{z}{\ms{pack}(\Gamma^{\mb{q}})}{
+      \letexpr{z}{\ms{pack}(\Gamma^{\mb{q}})}{ \\ & \qquad 
         (\dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}}
         ; \dnt{\Gamma^{\mb{q}_l}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A \otimes B}}
         ; \alpha
@@ -4396,7 +4396,7 @@ To show completeness, it hence suffices to prove the following lemma:
         )(z)
       } \\
       &\approx
-      \letexpr{z}{(\ms{pack}(\Gamma^{\mb{q}_l}), \ms{pack}(\Gamma^{\mb{q}_r}))}{(
+      \letexpr{z}{(\ms{pack}(\Gamma^{\mb{q}_l}), \ms{pack}(\Gamma^{\mb{q}_r}))}{\\ & \qquad ( 
         \dnt{\Gamma^{\mb{q}_l}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A \otimes B}}
         ; \alpha
         ; \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A, y : B}{\epsilon}{c}{C}}
@@ -4409,7 +4409,7 @@ To show completeness, it hence suffices to prove the following lemma:
             \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{a}{A \otimes B}(w)}
           }
         )
-        }{(
+        }{\\ & \qquad (
         \alpha
         ; \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A, y : B}{\epsilon}{c}{C}}
         )(z)
@@ -5095,7 +5095,7 @@ We begin by stating the following metatheoretic result:
 % \end{itemize}
 We may now define $\tossa{\ell}{P}$ by induction on ANF programs $P$ as follows:
 \begin{itemize}
-  \item (Valid operations $\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{o}{A}$): we define
+  \item (Valid operations $o$): we define
   $(\tossa{\ell}{o}) := \brb{\ell}{o}$. This has the desired semantics, since
   \begin{align*}
     \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{\brb{\ell}{o}}{\ell(A)^{\mb{0}}}}
@@ -5104,10 +5104,15 @@ We may now define $\tossa{\ell}{P}$ by induction on ANF programs $P$ as follows:
       ; \iota_r
       ; \cancel{\dnt{\lwk{\Gamma}{\ell(A)^{\mb{q}_l}}{\ell(A)^{\mb{q}_l}}}}
   \end{align*}
-  \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{\letexpr{x}{o}{P}}{B}$): we define
-  $(\tossa{\ell}{\letexpr{x}{o}{P}}) := \letstmt{x}{o}{\tossa{\ell}{P}}$
+  \item ($\letexpr{x}{o}{P}$): we define
+  $(\tossa{\ell}{\letexpr{x}{o}{P}}) := \letstmt{x}{o}{\tossa{\ell}{P}}$; we verify this has
+  the correct semantics by induction as follows:
+  \begin{align*}
+  \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{\tossa{\ell}{\letexpr{x}{o}{P}}}{\ell(B)^{\mb{0}}}}
+  ...
+  \end{align*}
   \TODO{not so trivial anymore, buster}
-  \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{\letexpr{(x, y)}{o}{P}}{C}$): we define
+  \item ($\letexpr{(x, y)}{o}{P}$): we define
   $(\tossa{\ell}{\letexpr{(x, y)}{o}{P}}) := \letstmt{(x, y)}{o}{\tossa{\ell}{P}}$
   \TODO{not so trivial anymore, buster2}
   \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{\letexpr{x}{\caseexpr{o}{y}{P}{z}{Q}}{R}}{D}$): we
@@ -5115,12 +5120,12 @@ We may now define $\tossa{\ell}{P}$ by induction on ANF programs $P$ as follows:
   \begin{align*}
     (\tossa{\ell}{\letexpr{x}{\caseexpr{o}{y}{P}{z}{Q}}{R}})
     & := \awhere{(\awhere{\casestmt{o}{y}{\brb{\ell_l}{y}}{z}{\brb{\ell_r}{z}} \\ & \qquad }{
-      %\\ & \quad \qquad
+      \\ & \quad \qquad
       \wbranch{\ell_l}{y}{\tossa{\ell_o}{P}},
-      % \\ & \quad \qquad
+      \\ & \quad \qquad
       \wbranch{\ell_r}{z}{\tossa{\ell_o}{Q}})
     } \\ & \quad }{
-      %\\ & \qquad
+      \\ & \qquad
       \wbranch{\ell_o}{x}{\tossa{\ell}{R}}
     }
   \end{align*}
@@ -5277,7 +5282,7 @@ We may now define $\tossa{\ell}{P}$ by induction on ANF programs $P$ as follows:
       } ; \iota_r
   \end{align*}
   as desired.
-  \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{\letexpr{x}{\liter{o}{x}{P}}{Q}}{C}$): 
+  \item ($\letexpr{x}{\liter{o}{x}{P}}{Q}$): 
   \begin{align*}
     (\tossa{\ell}{\letexpr{x}{\liter{o}{y}{P}}{Q}})
     & := \cwhere{\brb{\ell_b}{o}}{ \\ & \qquad
@@ -5445,16 +5450,18 @@ We may now define $\tossa{\ell}{P}$ by induction on ANF programs $P$ as follows:
       ; \alpha
       ; \dnt{\Gamma^{\mb{q}_1}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_2}, x : B}{\epsilon}{Q}{C}}
       ; \iota_r \\
+  \end{align*}
+  \begin{align*}
   &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{12}}{\mb{q}_{3r}}}
       ; \dnt{\qsp{\Gamma}{\mb{q}_{12}}{\mb{q}_1}{\mb{q}_2}} \otimes
         \dnt{\hasty{\Gamma^{\mb{q}_{3r}}}{\epsilon}{\liter{o}{y}{P}}{B}}
-      ; \alpha
+      ; \\ &\quad \alpha
       ; \dnt{\Gamma^{\mb{q}_1}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_2}, x : B}{\epsilon}{Q}{C}}
       ; \iota_r \\
   &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{12}}{\mb{q}_{3r}}}
       ; \dnt{\qsp{\Gamma}{\mb{q}_{12}}{\mb{q}_1}{\mb{q}_2}} \otimes
         \dnt{\hasty{\Gamma^{\mb{q}_{3r}}}{\epsilon}{\liter{o}{y}{P}}{B}}
-      ; \alpha
+      ; \\ &\quad \alpha
       ; \dnt{\Gamma^{\mb{q}_1}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_2}, x : B}{\epsilon}{Q}{C}}
       ; \iota_r \\
   &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{1}}{\mb{q}_{23r}}}
@@ -5465,8 +5472,6 @@ We may now define $\tossa{\ell}{P}$ by induction on ANF programs $P$ as follows:
         ; \dnt{\hasty{\Gamma^{\mb{q}_2}, x : B}{\epsilon}{Q}{C}}
       )
       ; \iota_r\\
-  \end{align*}
-  \begin{align*}
   &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_{1}}{\mb{q}_{23r}}}
       ; \dnt{\Gamma^{\mb{q}_1}} \otimes \dnt{
         \hasty{\Gamma^{\mb{q}_{23r}}}{\epsilon}{\letexpr{x}{\liter{o}{y}{P}}{Q}}{C}
