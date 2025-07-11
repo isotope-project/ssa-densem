@@ -5935,8 +5935,8 @@ Elgot structure, since it satisfies:
   = (\bigcup_{i \in \nats}f_i) ; g
   = f^\dagger ; g
   \end{equation*}
-  \item \emph{Codiagonal}: given $f: A \to (B + A) + A$, define $g = f ; [\ms{id}_(B + A),
-  \iota_r]$ and $h = f^\dagger$. We have
+  \item \emph{Codiagonal}: given $f: A \to (B + A) + A$, define $g = f ; [\ms{id}_{B + A}, \iota_r]$
+  and $h = f^\dagger$. We have
   \begin{align*}
     h_{i + 1}
     & = f^\dagger ; [\ms{id}, h_i]
@@ -5955,8 +5955,27 @@ Elgot structure, since it satisfies:
   \subseteq f ; [[\ms{id}, h_i], h_{i + 1}]
   = h_{i + 1}
   \end{align*}
-  We therefore have that $g^\dagger \subseteq h^\dagger$. On the other hand, 
-  \TODO{direction}
+  We therefore have that $g^\dagger \subseteq h^\dagger$. On the other hand, we may show by
+  induction on $j$ that $f_j ; [\ms{id}, g^\dagger] \subseteq g^\dagger$, since $0 \subseteq
+  g^\dagger$ and
+  \begin{align*}
+  f_{j + 1} ; [\ms{id}, g^\dagger] 
+  & = f ; [\ms{id}, f_j] ; [\ms{id}, g^\dagger]
+    = f ; [[\ms{id}, g^\dagger], f_j ; [\ms{id}, g^\dagger]]
+    \subseteq f ;  [[\ms{id}, g^\dagger], g^\dagger] = g^\dagger
+  \end{align*}
+  We now show by induction that $h_i \subseteq g^\dagger$: noting that $h_0 = 0
+  \subseteq g^\dagger$, it suffices to show that
+  \begin{align*}
+  h_{i + 1} 
+  & = f ; [[\ms{id}, h_i], f^\dagger ; [\ms{id}, h_i]] 
+    \subseteq f ; [[\ms{id}, g^\dagger], f_j ; [\ms{id}, g^\dagger]] \\
+  & = \bigcup_{j \in \nats}(f ; [[\ms{id}, g^\dagger], f_j ; [\ms{id}, g^\dagger]])
+    \subseteq \bigcup_{j \in \nats}(f ; [[\ms{id}, g^\dagger], g^\dagger]])
+    = g^\dagger
+  \end{align*}
+  It follows that $h^\dagger \subseteq g^\dagger$ and hence that $h^\dagger = g^\dagger$, as
+  desired.
   \item \emph{Directed Uniformity}: given arbitrary $f : A \to B + A$, $g : X \to B + X$ and $h : X
   \to A$, we have that
   \begin{itemize}
