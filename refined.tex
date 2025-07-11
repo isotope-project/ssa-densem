@@ -5102,7 +5102,7 @@ We begin by stating a few metatheoretic results:
       \\
     &= \dnt{\qsp{\Gamma}{\mb{q}}{\mb{q}_l}{\mb{q}_r}} 
       ; \dnt{\Gamma^{\mb{q}_l}} \otimes \dnt{\hasty{\Gamma^{\mb{q}_r}}{\epsilon}{o}{A + B}}
-      ; [
+      ; \\ & \qquad [
       \dnt{\hasty{\Gamma^{\mb{q}_l}, x : A}{\epsilon}{\tau_l}{\ms{L}'^{\zeroqv{\mb{Q}'}}}}
         ; \alpha^\downarrow,
       \dnt{\hasty{\Gamma^{\mb{q}_l}, y : B}{\epsilon}{\tau_r}{\ms{L}'^{\zeroqv{\mb{Q}'}}}}
@@ -5201,7 +5201,95 @@ We begin by stating a few metatheoretic results:
     as desired.
     \item ($\haslb{\Gamma^{\mb{q}}}{\epsilon}{\cwhere{\kappa}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
       {\ms{L}^{\mb{Q}}}$):
-    \todo{I remain}
+    we have
+    \begin{align*}
+    & \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{\cwhere{\kappa}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
+      {\ms{L}'^{\mb{Q}'}}} \\
+    & = \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{\kappa}
+      {\ms{L}'^{\mb{Q}'}, \ms{R}^{\mb{Q}''}}} ; \alpha^+ ; [
+      \ms{id}_{\dnt{\ltoty{\Gamma}{\ms{L}'^{\mb{Q}'}}}},
+      [
+        \dnt{\hasty{\Gamma^{\mb{q}_i}, x_i : A_i}{\epsilon}{t_i}
+          {\ms{L}'^{\zeroqv{\mb{Q}'}}, \ms{R}^{\zeroqv{\mb{Q}''}}}} ; \alpha^\downarrow ; \alpha^+,
+      ]_{\ell_i(A_i)^{\mb{q}_i} \in \ms{R}^{\mb{Q}'}}^\dagger
+    ] \\
+    & = \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{\kappa}{\ms{L}'^{\mb{Q}'}, \ms{R}^{\mb{Q}''}}}
+      ; \dnt{\lwk{\Gamma}{\ms{L}^{\mb{Q}}, \ms{R}^{\mb{Q}''}}{\ms{L}'^{\mb{Q}'}, \ms{R}^{\mb{Q}''}}}
+      ; \alpha^+
+      ; \\ & \qquad [
+      \ms{id}_{\dnt{\ltoty{\Gamma}{\ms{L}'^{\mb{Q}'}}}},
+      [
+        \dnt{\hasty{\Gamma^{\mb{q}_i}, x_i : A_i}{\epsilon}{t_i}
+          {\ms{L}^{\zeroqv{\mb{Q}}}, \ms{R}^{\zeroqv{\mb{Q}''}}}} 
+        ; \dnt{\lwk{\Gamma}{\ms{L}^{\mb{Q}}, \ms{R}^{\mb{Q}''}}
+            {\ms{L}'^{\mb{Q}'}, \ms{R}^{\mb{Q}''}}}
+        ; \alpha^\downarrow ; \alpha^+,
+      ]_{\ell_i(A_i)^{\mb{q}_i} \in \ms{R}^{\mb{Q}'}}^\dagger
+    ] \\
+    & = \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{\kappa}{\ms{L}'^{\mb{Q}'}, \ms{R}^{\mb{Q}''}}}
+      ; \dnt{\lwk{\Gamma}{\ms{L}^{\mb{Q}}, \ms{R}^{\mb{Q}''}}{\ms{L}'^{\mb{Q}'}, \ms{R}^{\mb{Q}''}}}
+      ; \alpha^+
+      ; \\ & \qquad [
+      \ms{id}_{\dnt{\ltoty{\Gamma}{\ms{L}'^{\mb{Q}'}}}},
+      [
+        \dnt{\hasty{\Gamma^{\mb{q}_i}, x_i : A_i}{\epsilon}{t_i}
+          {\ms{L}^{\zeroqv{\mb{Q}}}, \ms{R}^{\zeroqv{\mb{Q}''}}}} 
+        ; \dnt{\lwk{\Gamma}{\ms{L}^{\mb{Q}}, \ms{R}^{\mb{Q}''}}
+            {\ms{L}'^{\mb{Q}'}, \ms{R}^{\mb{Q}''}}}
+        ; \alpha^\downarrow ; \alpha^+,
+      ]_{\ell_i(A_i)^{\mb{q}_i} \in \ms{R}^{\mb{Q}'}}^\dagger
+    ] \\
+    & = \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{\kappa}{\ms{L}'^{\mb{Q}'}, \ms{R}^{\mb{Q}''}}}
+      ; \alpha^+
+      ; \dnt{\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{L}'^{\mb{Q}'}}} 
+        + \dnt{\ltoty{\Gamma}{\ms{R}^{\mb{Q}''}}}
+      ; [
+      \ms{id}_{\dnt{\ltoty{\Gamma}{\ms{L}'^{\mb{Q}'}}}}, \\ & \qquad
+      [
+        \dnt{\hasty{\Gamma^{\mb{q}_i}, x_i : A_i}{\epsilon}{t_i}
+          {\ms{L}^{\zeroqv{\mb{Q}}}, \ms{R}^{\zeroqv{\mb{Q}''}}}}
+        ; \alpha^\downarrow ; \alpha^+,
+        ; \dnt{\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{L}'^{\mb{Q}'}}} 
+        + \dnt{\ltoty{\Gamma}{\ms{R}^{\mb{Q}''}}}
+      ]_{\ell_i(A_i)^{\mb{q}_i} \in \ms{R}^{\mb{Q}'}}^\dagger
+    ] \\
+    & = \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{\kappa}{\ms{L}'^{\mb{Q}'}, \ms{R}^{\mb{Q}''}}}
+      ; \alpha^+
+      ; [
+      \dnt{\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{L}'^{\mb{Q}'}}} , \\ & \qquad
+      ([
+        \dnt{\hasty{\Gamma^{\mb{q}_i}, x_i : A_i}{\epsilon}{t_i}
+          {\ms{L}^{\zeroqv{\mb{Q}}}, \ms{R}^{\zeroqv{\mb{Q}''}}}}
+        ; \alpha^\downarrow ; \alpha^+,
+      ]_{\ell_i(A_i)^{\mb{q}_i} \in \ms{R}^{\mb{Q}'}} 
+        ; \dnt{\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{L}'^{\mb{Q}'}}} 
+        + \dnt{\ltoty{\Gamma}{\ms{R}^{\mb{Q}''}}})^\dagger
+    ] \\
+    & = \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{\kappa}{\ms{L}'^{\mb{Q}'}, \ms{R}^{\mb{Q}''}}}
+      ; \alpha^+
+      ; [
+      \dnt{\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{L}'^{\mb{Q}'}}} , \\ & \qquad
+      [
+        \dnt{\hasty{\Gamma^{\mb{q}_i}, x_i : A_i}{\epsilon}{t_i}
+          {\ms{L}^{\zeroqv{\mb{Q}}}, \ms{R}^{\zeroqv{\mb{Q}''}}}}
+        ; \alpha^\downarrow ; \alpha^+,
+      ]_{\ell_i(A_i)^{\mb{q}_i} \in \ms{R}^{\mb{Q}'}}^\dagger
+      ; \dnt{\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{L}'^{\mb{Q}'}}}
+    ] \\
+    & = \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{\kappa}{\ms{L}'^{\mb{Q}'}, \ms{R}^{\mb{Q}''}}}
+      ; \alpha^+
+      ; [
+      \ms{id} ,
+      [
+        \dnt{\hasty{\Gamma^{\mb{q}_i}, x_i : A_i}{\epsilon}{t_i}
+          {\ms{L}^{\zeroqv{\mb{Q}}}, \ms{R}^{\zeroqv{\mb{Q}''}}}}
+        ; \alpha^\downarrow ; \alpha^+,
+      ]_{\ell_i(A_i)^{\mb{q}_i} \in \ms{R}^{\mb{Q}'}}^\dagger
+    ] ; \\ & \qquad \dnt{\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{L}'^{\mb{Q}'}}} \\
+    &= \dnt{\haslb{\Gamma^{\mb{q}}}{\epsilon}{\cwhere{\kappa}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
+      {\ms{L}^{\mb{Q}}}} ; \dnt{\lwk{\Gamma}{\ms{L}^{\mb{Q}}}{\ms{L}'^{\mb{Q}'}}}
+    \end{align*}
+    as desired.
   \end{itemize}
 \end{proof}
 % We now note a few identities:
