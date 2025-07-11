@@ -3508,15 +3508,15 @@ We extend pattern binding to other binding forms, for $P \notin \ms{Var}$, in th
   \label{fig:derivable-binding}
 \end{figure}
 
-\section{Formalization}
+% \section{Formalization}
 
-In this section, we go over some of the lemmas and theorems in the paper which we have formally
-verified in Lean 4. Some of these are used in the paper proofs in later sections of the appendix.
+% In this section, we go over some of the lemmas and theorems in the paper which we have formally
+% verified in Lean 4. Some of these are used in the paper proofs in later sections of the appendix.
 
-\TODO{checkmark everything, and talk about it?}
+% \TODO{checkmark everything, and talk about it?}
 
-\TODO{restate: weakening, substitution, weakening composition, splitting, coherence, soundness of
-(weakening/substitution)}
+% \TODO{restate: weakening, substitution, weakening composition, splitting, coherence, soundness of
+% (weakening/substitution)}
 
 \section{Completeness}
 
@@ -3646,7 +3646,7 @@ We also note that
 \end{align*}
 We now verify that:
 \begin{itemize}
-  \item $\ms{Tm}_\epsilon(\mc{R})$ is a category (\cmark): we have that
+  \item $\ms{Tm}_\epsilon(\mc{R})$ is a category: we have that
   % for arbitrary $(\lambda x . a) : \ms{Tm}_\epsilon(\mc{R})(A, B)$, $(\lambda y . b) :
   % \ms{Tm}_\epsilon(\mc{R})(B, C)$, $(\lambda z . c) : \ms{Tm}_\epsilon(\mc{R})(C, D)$, that
   \begin{align*}
@@ -3659,7 +3659,7 @@ We now verify that:
     &= (\lambda x . a) ; (\lambda y . \letexpr{z}{b}{c})
     = (\lambda x . a) ; ((\lambda y . b) ; (\lambda z . c))
   \end{align*}
-  \item $\ms{Tm}_\epsilon(\mc{R})$ is binoidal (\cmark): we have that
+  \item $\ms{Tm}_\epsilon(\mc{R})$ is binoidal: we have that
   \begin{align*}
     (\lambda x . x) \otimes A 
     &= (\lambda z . \letexpr{(x, y)}{z}{(x, y)}) = (\lambda z . z)\
@@ -3708,7 +3708,7 @@ We now verify that:
       \\
       &= \alpha_{A, B, C} \otimes D ; \alpha_{A, B \otimes C, D} ; A \otimes \alpha_{B, C, D}
     \end{align*}
-    \item Triangle equation (\cmark): we have that
+    \item Triangle equation: we have that
     \begin{align*}
       \alpha_{A, \mb{1}, B} ; X \otimes \lambda_B
       &= (\lambda ((x, y), z) . (x, (y, z))) ; (\lambda (x', y') . y') \\
@@ -3739,8 +3739,7 @@ We now verify that:
       &= \sigma_{A, B} \otimes C ; \alpha_{B, A, C} ; B \otimes \sigma_{A, C}
     \end{align*}
   \end{itemize}
-  \item $\ms{Tm}_\epsilon(\mc{R})$ has chosen coproducts and an initial object (\cmark):
-  \todo{this...}
+  \item $\ms{Tm}_\epsilon(\mc{R})$ has chosen coproducts and an initial object: see formalization.
   \item $\ms{Tm}_\epsilon(\mc{R})$ is distributive: we have that
   \begin{align*}
     \delta_{X, Y, Z} ; \delta^{-1}_{X, Y, Z}
@@ -4334,7 +4333,19 @@ To show completeness, it hence suffices to prove the following lemma:
       \letexpr{(w, u)}{(x, ())}{u} \approx x : A
     \end{align*}
     as desired.
-    \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{f\;a}{B}$): \todo{oops}
+    \item ($\hasty{\Gamma^{\mb{q}}}{\epsilon}{f\;a}{B}$): we have that
+    \begin{align*}
+    \Gamma^{\mb{q}} &\vdash_\bot
+      \letexpr{x}{\ms{pack}(\Gamma^{\mb{q}})}{\dnt{\hasty{\Gamma^{\mb{q}}}{}{f\;a}{B}}(x)}
+      \\ &\approx 
+      \letexpr{x}{\ms{pack}(\Gamma^{\mb{q}})}
+        {(\dnt{\hasty{\Gamma^{\mb{q}}}{}{a}{A}} ; (\lambda y.f\;y))(x)}
+      \\ &\approx
+      \letexpr{x}{(\letexpr{y}{\ms{pack}(\Gamma^{\mb{q}})}{\dnt{\hasty{\Gamma^{\mb{q}}}{}{a}{A}}})}
+        {f\;x} 
+      \\ &\approx
+      \letexpr{x}{a}{f\;x} \approx f\;a : B
+    \end{align*}
     \item $(\hasty{\Gamma^{\mb{q}}}{}{\letexpr{x}{a}{b}}{B})$: we have
     \begin{align*}
     \Gamma^{\mb{q}} &\vdash_\bot 
@@ -6023,6 +6034,8 @@ in the submonad $\ms{UB}$ (since if all $f_i$ are empty, $f_\infty = \{\infty\}$
 straightforward to verify that this indeed gives us an Elgot structure.
 
 \subsection{Monad Transformers}
+
+\label{apx:ub-st}
 
 In functional programming, we often use a stack of \emph{monad transformers} to build up complex
 effects from simple building blocks. It turns out that many common monad transformers are compatible
