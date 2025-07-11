@@ -5726,40 +5726,68 @@ We may now define $\tossa{\ell}{P}$ by induction on ANF programs $P$ as follows:
 \label{apx:models}
 
 In this section, we give a few simple families of \subiterexp{}-models highlighting some of the
-features of our formalization. Using the machinery developed in Appendix~\ref{apx:model-cats}, we
-also construct some relationships between models, allowing us to use higher level models as
-``analysis passes'' for lower-level ones.
+features of our formalization.
 
 \subsection{Poset-Enriched Elgot Monads}
 
-\TODO{introduction, working over $\mb{Set}$}
-
+A wide variety of \subiterexp{}-models can be derived from \emph{poset-enriched Elgot monads} over
+$\mb{Set}$, which are just standard monads equipped with a notion of refinement and iteration. We
+begin by defining a \emph{poset-enriched monad} as follows:
 \begin{definition}[Poset-Enriched Monad]
   We say a monad $T$ over $\mb{Set}$ is \emph{poset-enriched} if $T\;A$ is equipped with a partial
   order compatible with $\mbind{T}{\cdot}{\cdot}$, i.e., such that, for $a \leq b$ and $f \leq g$,
   we have $\mbind{T}{a}{f} \leq \mbind{T}{b}{g}$, where functions $f, g : A \to T\;B$ are given the
   pointwise partial order.
 \end{definition}
+Note that, just like for poset-enriched categories, \emph{every} monad is poset-enriched with the
+identity order on $T\;A$. Probably the simplest nontrivial example of a poset-enriched monad is
+given by adjoining a top element to every set as follows $\top(A) := A \cup \{\top\}$, with pure and
+bind defined as for the option monad; we can symmetrically instead adjoin a bottom element $\bot(A)
+:= A \cup \{\bot\}$. A more complex example is given by the power-set monad $\mc{P}$ equipped with
+the inclusion order, with
+\begin{equation}
+  \eta_{\mc{P}}(a) := \{a\} \qquad
+  \mbind{\mc{P}}{X}{f} := \bigcup_{a \in X}f(a) 
+\end{equation}
+This has numerous natural submonads which are also poset-enriched, including:
+\begin{itemize}
+  \item Nonempty sets $\mc{P}^+$
+  \item Finite sets $\mc{P}_{\ms{fin}}$
+  \item Countable sets $\mc{P}_{\nats}$
+  \item Sets of cardinality at most one, which is isomorphic to $\bot$.
+\end{itemize}
+It is easy to see that the Kleisli category of a poset-enriched monad is
+always a poset-enriched distributive category; in particular, tensor products and coproducts are
+simply given by the product and coproduct in $\mb{Set}$, with
+\begin{gather*}
+  f \otimes A := (\lambda (x, y) . \mbind{}{f\;x}{\lambda z . (z, y)}) \qquad
+  A \otimes f := (\lambda (x, y) . \mbind{}{f\;y}{\lambda z . (x, z)}) 
+\end{gather*}
+and (inverse) associators, unitors, symmetries, distributors, and injections given by the lifts of
+the underlying morphisms in $\mb{Set}$. We can always equip the Kleisli category with the structure
+of a distributive effectful category with pure morphisms
+\begin{align*}
+  \ms{Set}_{T\bot}(A, B) := \{\eta_B \circ f \mid f : A \to B\}
+\end{align*}
+We can define $\ms{Set}_{T\epsilon}$ for other effects $\epsilon \in \mc{E}$ in a given effect
+system as appropriate to the effect system and monad; submonads are often a good place to look for
+these.
 
-\TODO{in particular, \emph{every} monad is poset-enriched with the identity order on $T\;A$}
+\TODO{example: power-set monad, nonempty}
 
-\TODO{simplest poset-enriched monad is $\top$-monad}
+\TODO{define an Elgot monad}
 
-\TODO{a good example of a nontrivial poset-enriched monad is nondeterminism $\mc{P}$, $\mc{P}^+$}
+\TODO{the simplest Elgot monad is...}
 
-\TODO{every poset-enriched monad yields a distributive effectful category}
- 
-\TODO{Elgot monad; poset-enrichment is the obvious thing}
+\TODO{also, see the power set monad}
 
-\TODO{simplest Elgot monad is nontermination}
+\TODO{but NOT the nonempty power set monad; non-iterative effect}
 
-\TODO{nondeterminism is a poset-enriched Elgot monad}
+\subsection{Undefined Behavior}
 
-\TODO{as is $\top$}
+\label{apx:ub}
 
-\TODO{as is $\top$-NT}
-
-\TODO{as is $\top$-NT-ND}
+\TODO{this}
 
 \subsection{Monad Transformers}
 
@@ -5797,15 +5825,110 @@ also construct some relationships between models, allowing us to use higher leve
 
 \label{apx:rel-acq}
 
-\TODO{trace models of concurrency; associated monad}
+In this section, we show how to construct a concurrency monad from a
+\citet{brookes-full-abstraction-96}-style model of concurrency, which we axiomatize.
+We will then explicitly show how to instantiate the model for sequentially consistent execution
+from \citet{brookes-full-abstraction-96}.
 
-\TODO{ordered Elgot structure}
+We begin by defining a \emph{countable closure operator}, given below:
+\begin{definition}[Countable Closure Operator]
+  We define a \emph{(countable) closure operator} $\ms{c}: \mc{P}(T) \to \mc{P}(T)$ on $T$ to be a
+  function on sets of $T$ which:
+  \begin{itemize}
+    \item \emph{is extensive}: $X \subseteq \ms{c}(X)$
+    \item \emph{is idempotent}: $\ms{c}(\ms{c}(X)) = \ms{c}(X)$
+    \item \emph{distributes over countable unions}: $\ms{c}(\bigcup_i X_i) = \bigcup_i \ms{c}(X_i)$
+  \end{itemize}
+  We say a set $X$ such that $\ms{c}(X) = X$ is \emph{closed} under $\ms{c}$. 
+\end{definition}
+Note that this differs from the standard definition of a Kuratowski topological closure operator,
+which only requires us to distributive over \emph{finite} unions. We define the \emph{lift} of a
+closure operator $\ms{c}_A : \mc{P}(T \times A) \to \mc{P}(T \times A)$ to be given by
+\begin{equation*}
+  \ms{c}_A(X) := \bigcup_{a \in A}\{(t', a) \mid t' \in \ms{c}(\{t \mid (t, a) \in X\})\}
+\end{equation*}
+Identifying $\mc{P}(T \times A)$ with $A \to \mc{P}(T)$, this is equivalent to stating that
+$\ms{c}_A(X) := \ms{c} \circ X$. It is hence easy to check that this gives a closure operator on $T
+\times A$.
+\begin{definition}[Brookes Monad]
+  Given a monoid of \emph{traces} $T$ and a closure operator $\ms{c}: \mc{P}(T) \to \mc{P}(T)$, we
+  define the \emph{Brookes monad} $\ms{B}_{\ms{c}}$ over $\ms{c}$ to be given by closed sets of
+  pairs $\tret{t}{a}$ of \emph{traces} $t \in T$ and \emph{results} $a \in A$. In particular, we
+  define
+  $$
+  \ms{B}_{\ms{c}}(A) := \ms{c}_A(\mc{P}(T \times A)) \simeq A \to \ms{c}(\mc{P}(T))
+  $$
+  with
+  $$
+  \eta_{\ms{B}_{\ms{c}}}\;a := \ms{c}_A(\{\tret{1}{a}\}) \qquad
+  \mbind{\ms{B}_{\ms{c}}}{X}{f} 
+  := \ms{c}_A(\{\tret{t \cdot t'}{b} \mid \exists a . \tret{t}{a} \in X, \tret{t'}{b} \in X'\})
+  $$
+  It is easy to see that the Brookes monad is in fact poset-enriched under the inclusion order. We
+  say a Brookes monad is \emph{standard} if $T = S^*$ is the monoid of finite sequences of
+  \emph{states} $S$.
+\end{definition}
+We can always equip $\ms{B}_{\ms{c}}$ with a (poset-enriched) Elgot structure $(\cdot)^\dagger$ by,
+for $f: A \to \ms{B}_{\ms{c}}(B + A)$, defining
+\begin{equation*}
+  f^\dagger(a) := \ms{c}_B(\bigcup_{i \in \nats}f_i(a))
+\end{equation*}
+where $f_i : A \to \ms{B}_{\mc{C}}(B)$ are the \emph{iterates} of $f$, defined inductively as follows
+\begin{equation*}
+  f_0 := (\lambda x . \varnothing) \qquad
+  f_{i + 1} := f ; [\ms{id}_B, f_{i}]
+\end{equation*}
+We can think of analysis using this structure as corresponding to \emph{partial correctness}, since
+any infinite traces are simply discarded (a program which always diverges will have denotation
+$\varnothing$). It is straightforward to check that this is indeed an Elgot structure, since it
+satisfies:
+\begin{itemize}
+  \item \emph{Fixpoint}: we have, since $f_0(a) = \varnothing$,
+  \begin{align*}
+      f^\dagger(a)
+      & = \ms{c}_B(\bigcup_{i \in \nats}f_i(a))
+        = \ms{c}_B(\bigcup_{i \in \nats}f_{i + 1}(a)) \\
+      & = \ms{c}_B(\bigcup_{i \in \nats}(f ; [\ms{id}_B, f_i])(a)) \\
+      & = \ms{c}_B(\bigcup_{i \in \nats}\ms{c}_B(\{
+        \tret{t \cdot t'}{b} \mid 
+          \exists c . \tret{t}{c} \in f(a), \tret{t'}{b} \in [\ms{id}_B, f_i](c)
+      \})) \\
+      & = \ms{c}_B(\{
+        \tret{t \cdot t'}{b} \mid 
+          \exists c . \tret{t}{c} \in f(a), \tret{t'}{b} \in [\ms{id}_B, \bigcup_{i \in \nats}f_i](c)
+      \}) \\
+      & = \ms{c}_B(\{
+        \tret{t \cdot t'}{b} \mid 
+          \exists c . \tret{t}{c} \in f(a), \tret{t'}{b} \in [\ms{id}_B, f^\dagger](c)
+      \}) \\
+      & = f ; [\ms{id}_B, f^\dagger](a)
+  \end{align*}
+  as desired.
+  \item \emph{Naturality}: we have
+  \TODO{this}
+  \item \emph{Codiagonal}: we have
+  \TODO{this}
+  \item \emph{Uniformity}: we have
+  \TODO{this}
+\end{itemize}
+
+\subsection{Sequential Consistency}
 
 \TODO{instantiate for sequential consistency following \citet{brookes-full-abstraction-96}}
 
-\TODO{instantiate for release-acquire following \citet{release-acquire}}
+\TODO{our state is partial functions from locations to values}
 
-\TODO{instantiate for TSO following \citet{jagadeesan-brookes-relaxed-12}}
+Given a set of rewrites $a \tref b$ for $a, b \in T$ closed under monoid multiplication (i.e., $a
+\tref b \implies l \cdot a \cdot r \tref l \cdot b \cdot r$), we can verify that $\ms{c}(X) := \{t'
+\mid \exists t \in X, t \tref^* t'\}$ is a valid closure operator.
+
+\TODO{our closure operator is given by stuttering and mumbling; intuition}
+
+\subsection{Weak Memory Models}
+
+\TODO{wave-instantiate for release-acquire following \citet{release-acquire}}
+
+\TODO{wave-instantiate for TSO following \citet{jagadeesan-brookes-relaxed-12}}
 
 \end{document}
 \endinput
