@@ -2962,6 +2962,8 @@ $\Gamma, x: A$, assuming every quantity annotation is $\topq$.
 
 \subsection{UB}
 
+\label{ssec:ub}
+
 The simplest model exercising all the features of our refinement calculus is the language with
 nondeterminism, undefined behavior and nontermination. We represent this using the monad $\ms{UB}\;A
 = \mc{P}^+(A \cup \{\infty\}) \cup \{\ubeff\}$ over sets, with $\infty$ a sentinel value for
@@ -5738,9 +5740,9 @@ $\mb{Set}$, which are just standard monads equipped with a notion of refinement 
 begin by defining a \emph{poset-enriched monad} as follows:
 \begin{definition}[Poset-Enriched Monad]
   We say a monad $T$ over $\mb{Set}$ is \emph{poset-enriched} if each $T(A)$ is equipped with a
-  partial order compatible with $\mbind{T}{\cdot}{\cdot}$, i.e., such that, for $a \leq b$ and $f
-  \leq g$, we have $\mbind{T}{a}{f} \leq \mbind{T}{b}{g}$, where functions $f, g : A \to T(B)$ are
-  given the pointwise partial order.
+  partial order $\tref$ compatible with $\mbind{T}{\cdot}{\cdot}$, i.e., such that, for $a \tref b$
+  and $f \tref g$, we have $\mbind{T}{a}{f} \tref \mbind{T}{b}{g}$, where morphisms in the Kleisli
+  category $f, g : A \to T(B)$ are given the pointwise partial order.
 \end{definition}
 Note that, just like for poset-enriched categories, \emph{every} monad is poset-enriched with the
 identity order on $T\;A$. Probably the simplest nontrivial example of a poset-enriched monad is
@@ -5790,8 +5792,10 @@ Elgot monad \cite{goncharov-16-complete-elgot} generalizes directly to the poset
     \item \emph{Directed uniformity}: given $f : A \to T(B + A)$, $g: X \to T(B + X)$, and
     \emph{pure} $h : X \to A$, we have
     \begin{itemize}
-      \item $h^\uparrow\;f \leq g ; B + h^\uparrow \implies h^\uparrow ; f^\dagger \leq g^\dagger$
-      \item$h^\uparrow\;f \geq g ; B + h^\uparrow \implies h^\uparrow ; f^\dagger \geq g^\dagger$
+      \item $h^\uparrow\;f \tref g ; B + h^\uparrow 
+        \implies h^\uparrow ; f^\dagger \tref g^\dagger$
+      \item$h^\uparrow\;f \antitref g ; B + h^\uparrow 
+        \implies h^\uparrow ; f^\dagger \antitref g^\dagger$
     \end{itemize}
     where $h^\uparrow = \eta_A \circ h : X \to T(A)$.
   \end{itemize}
@@ -5821,7 +5825,45 @@ example that
 
 \label{apx:ub}
 
-\TODO{this}
+In this section, we demonstrate how to build a more complex poset-enriched Elgot monad, by
+constructing a monad $\ms{UB}$ which supports
+\begin{itemize}
+  \item \emph{Undefined behavior} (UB), represented as a top element $\ubeff \tref a$ for all $a$.
+  \item \emph{Nondeterministic behavior}
+  \item \emph{Total correctness}, with nontermination represented as a separate possible outcome
+  $\infty$ (allowing us to distinguish between a program which always terminates, never terminates,
+  and is nondeterministically nonterminating)
+\end{itemize}
+As described in Section~\ref{ssec:ub}, we define $\ms{UB}(A) := \mc{P}^+(A \cup \{\infty\}) \cup
+\{\ubeff\}$, with
+$$
+\mbind{\ms{UB}}{\ubeff}{f} = \ubeff \qquad
+\mbind{\ms{UB}}{X}{f} = \{f\;a \mid a \in X\} \;\; \text{if } \forall a \in X, f\;a \neq \ubeff
+\qquad
+\mbind{\ms{UB}}{X}{f} = \ubeff \;\; \text{otherwise}
+$$
+We can equip this with iteration structure $(\cdot)^\dagger$ given by, given $f : A \to \ms{UB}(B +
+A)$,
+$$
+f^\dagger(a) := \begin{cases}
+  f_\infty(a) \cup \bigcup_{i \in \nats}f_i(a) & \text{if } \forall i, f_i(a) \neq \ubeff
+  \\
+  \ubeff & \text{otherwise}
+\end{cases}
+$$
+where
+$$
+f_0 := \varnothing \qquad
+f_{i + 1} := f ; [\ms{id}, f_i] \qquad
+f_\infty(a_0) := \begin{cases}
+  \{\infty\} & \text{if } \exists a_i, \forall i, a_{i + 1} \in f(a_i)\\
+  \varnothing & \text{otherwise}
+\end{cases} 
+$$
+Note that the $f_i$ are in the slightly larger monad $A \mapsto \mc{P}(A \cup \{\infty\}) \cup
+\{\ubeff\}$; but it is straightforward to show that $f^\dagger$ must be nonempty and therefore lie
+in the submonad $\ms{UB}$ (since if all $f_i$ are empty, $f_\infty = \{\infty\}$). It is
+straightforward to verify that this indeed gives us an Elgot structure.
 
 \subsection{Monad Transformers}
 
