@@ -2955,9 +2955,10 @@ inductively (the details are in Appendix~\ref{apx:ssa-roundtrip}).
 
 \section{Concrete Models}
 
-In this section, we sketch some concrete models. All the given models have
-types with unrestricted linearity, and so we will write our typing rules using
-\emph{un-annotated} contexts and variables $\Gamma, x: A$, assuming every quantity annotation is $\topq$. Appendix~\ref{apx:sep} gives an example with substructural types.
+In this section, we sketch some concrete models. All the given models have types with unrestricted
+linearity, and so we will write our typing rules using \emph{un-annotated} contexts and variables
+$\Gamma, x: A$, assuming every quantity annotation is $\topq$. 
+% Appendix~\ref{apx:sep} gives an example with substructural types.
 
 \subsection{UB}
 
@@ -3054,6 +3055,8 @@ Figure~\ref{fig:ub-rewrites}.
 
 \subsection{Heaps}
 
+\label{ssec:heaps}
+
 We model a single-threaded heap
 as a finitely-supported function of type $S := \nats \fpto \nats$. Using the state transformer on
  $\ms{UB}$, we can define a heap monad 
@@ -3082,8 +3085,8 @@ $\{\infty, \ubeff, ?, \ms{r}, \ms{w}, \ms{a}\}$, with $\ms{r}, \ms{w}$, and $\ms
 This model validates the usual properties of heaps (see Figure~\ref{fig:heap-eqns}), as well as
 that allocation is central, reads and writes are relevant, and reads are eliminable and commutative.
 %
-It also supports a simple memory separation model 
-à la \emph{separation logic}, given in Appendix~\ref{apx:sep}.
+% It also supports a simple memory separation model 
+% à la \emph{separation logic}, given in Appendix~\ref{apx:sep}.
 
 \begin{figure}
   \begin{adjustbox}{minipage=1.1\textwidth,scale=0.9}
@@ -5734,10 +5737,10 @@ A wide variety of \subiterexp{}-models can be derived from \emph{poset-enriched 
 $\mb{Set}$, which are just standard monads equipped with a notion of refinement and iteration. We
 begin by defining a \emph{poset-enriched monad} as follows:
 \begin{definition}[Poset-Enriched Monad]
-  We say a monad $T$ over $\mb{Set}$ is \emph{poset-enriched} if $T\;A$ is equipped with a partial
-  order compatible with $\mbind{T}{\cdot}{\cdot}$, i.e., such that, for $a \leq b$ and $f \leq g$,
-  we have $\mbind{T}{a}{f} \leq \mbind{T}{b}{g}$, where functions $f, g : A \to T\;B$ are given the
-  pointwise partial order.
+  We say a monad $T$ over $\mb{Set}$ is \emph{poset-enriched} if each $T(A)$ is equipped with a
+  partial order compatible with $\mbind{T}{\cdot}{\cdot}$, i.e., such that, for $a \leq b$ and $f
+  \leq g$, we have $\mbind{T}{a}{f} \leq \mbind{T}{b}{g}$, where functions $f, g : A \to T(B)$ are
+  given the pointwise partial order.
 \end{definition}
 Note that, just like for poset-enriched categories, \emph{every} monad is poset-enriched with the
 identity order on $T\;A$. Probably the simplest nontrivial example of a poset-enriched monad is
@@ -5755,6 +5758,7 @@ This has numerous natural submonads which are also poset-enriched, including:
   \item Finite sets $\mc{P}_{\ms{fin}}$
   \item Countable sets $\mc{P}_{\nats}$
   \item Sets of cardinality at most one, which is isomorphic to $\bot$.
+  \item Sets of cardinality exactly one, corresponding to pure morphisms.
 \end{itemize}
 It is easy to see that the Kleisli category of a poset-enriched monad is
 always a poset-enriched distributive category; in particular, tensor products and coproducts are
@@ -5773,15 +5777,45 @@ We can define $\ms{Set}_{T\epsilon}$ for other effects $\epsilon \in \mc{E}$ in 
 system as appropriate to the effect system and monad; submonads are often a good place to look for
 these.
 
-\TODO{example: power-set monad, nonempty}
-
-\TODO{define an Elgot monad}
-
-\TODO{the simplest Elgot monad is...}
-
-\TODO{also, see the power set monad}
-
-\TODO{but NOT the nonempty power set monad; non-iterative effect}
+We would now like to equip the Kleisli category of $T$ with an iteration structure. The notion of an
+Elgot monad \cite{goncharov-16-complete-elgot} generalizes directly to the poset-enriched setting:
+\begin{definition}[Poset-Enriched Elgot Monad]
+  We say a poset-enriched monad $T$ is a (strong) Elgot monad if its Kleisli category is equipped
+  with a monotone iteration operator $(\cdot)^\dagger$ satisfying the following properties:
+  \begin{itemize}
+    \item \emph{Naturality}: for $f : A \to T (B + A)$ and $g : B \to T(C)$, we have $(f ; g +
+    A)^\dagger = f^\dagger ; g$
+    \item \emph{Codiagonal}: for $f: A \to T ((B + A) + A)$, we have $f^{\dagger\dagger} = (f ;
+    [\ms{id}, \iota_r])^\dagger$
+    \item \emph{Directed uniformity}: given $f : A \to T(B + A)$, $g: X \to T(B + X)$, and
+    \emph{pure} $h : X \to A$, we have
+    \begin{itemize}
+      \item $h^\uparrow\;f \leq g ; B + h^\uparrow \implies h^\uparrow ; f^\dagger \leq g^\dagger$
+      \item$h^\uparrow\;f \geq g ; B + h^\uparrow \implies h^\uparrow ; f^\dagger \geq g^\dagger$
+    \end{itemize}
+    where $h^\uparrow = \eta_A \circ h : X \to T(A)$.
+  \end{itemize}
+  \item \emph{Strengh}: given $f : A \to T(B + A)$, we have 
+  $X \otimes f^\dagger = (X \otimes f ; \delta^{-1})^\dagger$
+\end{definition}
+We can easily verify that the Kleisli category of a strong Elgot monad is an Elgot category, which
+in particular is $\ms{Set}_{T\bot}$-uniform by uniformity. Probably the simplest example of an Elgot
+monad is the power-set $\mc{P}$, with
+\begin{equation*}
+  f^\dagger := \bigcup_i f_i \qquad \text{where} \qquad
+  f_0 = \varnothing \qquad f_{i + 1} = f ; [\ms{id}, f_i]
+\end{equation*}
+Analysis of semantics in this monad corresponds to \emph{partial correctness}, with any infinite
+executions discarded. This isn't always what we want, especially since every program can be safely
+refined to (and hence ``optimized to'') the infinite loop $0 := \varnothing: A \to B$. Note for
+example that
+\begin{itemize}
+  \item The pure effect is not closed under refinement, since any pure morphism can be refined to
+  $0$
+  \item The pure effect, as well as the effect of being finite and the effect of being nonempty, are
+  \emph{not} iterative, but the effect of being countable and the effect of being deterministic but
+  potentially nonterminating \emph{are}.
+\end{itemize}
 
 \subsection{Undefined Behavior}
 
@@ -5791,35 +5825,64 @@ these.
 
 \subsection{Monad Transformers}
 
-\TODO{readerT preserves order}
+In functional programming, we often use a stack of \emph{monad transformers} to build up complex
+effects from simple building blocks. It turns out that many common monad transformers are compatible
+with both poset-enrichment and Elgot structure; we give some important examples below:
+\begin{itemize}
+  \item The \emph{reader transformer} $\ms{Rd}_R\;T\;A := R \to T\;A$ allows us to read from an
+  environment $R$, with
+  \begin{equation*}
+  \eta_{\ms{Rd}_R\;T}\;a := \lambda r . \eta_T\;a \qquad
+  \mbind{\ms{Rd}_R\;T}{a}{f} := \lambda r. \mbind{T}{a\;r}{\lambda a' . f\;a'\;r}
+  \end{equation*}
+  Given $f : A \to \ms{Rd}_R\;T\;(B + A) = A \to R \to T(B + A)$, we define
+  \begin{equation*}
+    f^{\dagger_{\ms{Rd}_R\;T}} := \lambda a, r . 
+      \mbind{T}{((\lambda (r, a) . (r, f\;a\;r)) ; \delta^{-1})^\dagger(r, a)}{\pi_2}
+  \end{equation*}
+  \item The \emph{writer transformer} $\ms{Wr}_W\;T\;A := T\;(W \times A)$ for a monoid $(W, \cdot,
+  1)$ allows us to write to a $W$-typed log, with
+  \begin{equation*}
+  \eta_{\ms{Wr}_W\;T}\;a := \eta_T\;(1, a) \qquad
+  \mbind{\ms{Wr}_W\;T}{a}{f} := \mbind{T}{a}{\lambda (w, a') . 
+    \mbind{T}{f\;a}{\lambda (w', b) . (w \cdot w', b)}}
+  \end{equation*}
+  Given $f : A \to \ms{Wr}_W\;T\;(B + A) = A \to T(W \times (B + A))$, we define
+  \begin{equation*}
+    f^{\dagger_{\ms{Wr}_W\;T}} := \lambda a . 
+      (W \otimes f ; (\lambda (w, (w', c)) . \eta_T(w \cdot w', c)) ; \delta^{-1})^\dagger(1, a)
+  \end{equation*}
+  \item The \emph{state transformer} $\ms{St}_S\;T\;A := S \to T\;(S \times A)$ allows us to access
+  mutable state of type $S$, with
+  \begin{equation*}
+  \eta_{\ms{St}_S\;T}\;a := \lambda s . \eta_T\;(s, a) \qquad
+  \mbind{\ms{St}_S\;T}{a}{f} := \lambda s . 
+    \mbind{T}{a\;s}{\lambda (s', a') . f\;a'\;s'}
+  \end{equation*}
+  Given $f : A \to \ms{St}_S\;T\;(B + A) = A \to S \to T(S \times (B + A))$, we define
+  \begin{equation*}
+    f^{\dagger_{\ms{St}_S\;T}} := \lambda a, s . 
+      ((\lambda (s, a) . f\;a\;s) ; \delta^{-1})^\dagger(s, a)
+  \end{equation*}
+\end{itemize}
+As a concrete example, we can build the heap monad from Section~\ref{ssec:heaps} by simply applying
+the state transformer to the UB monad from Appendix~\ref{ssec:ub}, with state $S := \nats
+\pto_{\ms{fin}} \nats$.
 
-\TODO{writerT preserves order}
+% \subsection{Separation Logic}
 
-\TODO{stateT preserves order}
+% \label{apx:sep}
 
-\subsection{Heaps}
+% \TODO{predicates on heaps above}
 
-\label{apx:ub-st}
+% \TODO{basetypes are datatypes + predicates}
 
-\TODO{apply stateT for the appropriate state to UB + ND + NT}
+% \TODO{objects are sets + predicates, do tensor}
 
-\TODO{prove some rewrite rules}
+% \TODO{morphisms are predicate-preserving morphisms in the underlying; these become our
+% instructions}
 
-\TODO{fuse with below?}
-
-\subsection{Separation Logic}
-
-\label{apx:sep}
-
-\TODO{predicates on heaps above}
-
-\TODO{basetypes are datatypes + predicates}
-
-\TODO{objects are sets + predicates, do tensor}
-
-\TODO{morphisms are predicate-preserving morphisms in the underlying; these become our instructions}
-
-\TODO{forgetful functor is a model morphism to heap model; show results here}
+% \TODO{forgetful functor is a model morphism to heap model; show results here}
 
 \subsection{Brookes-Style Concurrency}
 
