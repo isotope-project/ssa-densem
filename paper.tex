@@ -1169,50 +1169,8 @@ judgement $\issubst{\gamma}{\Gamma}{\Delta}$ as per the rules given in Figure
   $\hasty{\Gamma}{\epsilon}{e}{A}$, then $\gamma$ with the additional substitution $x \mapsto e$
   adjoined takes $\Gamma$ to $\Delta, \thyp{x}{A}{\epsilon}$
 \end{itemize}
-To \emph{use} a substitution, we simply need to perform standard capture-avoiding substitution, as
-made explicit in Figure \ref{fig:ssa-subst-def}.
-\begin{figure}
-  \begin{gather*}
-    (\gamma, x \mapsto e)(x) = e \qquad
-    (\gamma, y \mapsto e)(x) = \gamma(x) \qquad
-    (\cdot)(x) = x
-    \\ \\
-    [\gamma]x = \gamma(x) \qquad
-    [\gamma](\letexpr{x}{a}{e}) = \letexpr{x}{[\gamma]a}{[\gamma]e} \qquad
-    [\gamma](a, b) = ([\gamma]a, [\gamma]b) \qquad
-    [\gamma]() = () \\
-    [\gamma](\letexpr{(x, y)}{a}{e})
-    = \letexpr{(x, y)}{[\gamma]a}{[\gamma]e} \qquad
-    [\gamma](\linl{a}) = \linl{[\gamma]a} \qquad
-    [\gamma](\linr{b}) = \linr{[\gamma]b} \\
-    [\gamma](\caseexpr{e}{x}{a}{y}{b}) =
-    \caseexpr{[\gamma]e}{x}{[\gamma]a}{y}{[\gamma]b} \\
-    [\gamma](\labort{a}) = \labort{[\gamma]a} 
-    \\ \\
-    [\gamma](\brb{\ell}{a}) = \brb{\ell}{[\gamma]a} \qquad
-    [\gamma](\letstmt{x}{a}{r}) = \letstmt{x}{[\gamma]a}{[\gamma]r} \\
-    [\gamma](\letstmt{(x, y)}{e}{r}) = \letstmt{(x, y)}{[\gamma]e}{[\gamma]r} \\
-    [\gamma](\casestmt{e}{x}{r}{y}{s}) 
-    = \casestmt{[\gamma]e}{x}{[\gamma]r}{y}{[\gamma]s} \\
-    [\gamma](\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}) =
-    \where{[\gamma]r}{(\wbranch{\ell_i}{x_i}{[\gamma]t_i},)_i} 
-    \\ \\
-    [\gamma](\cdot) = \cdot \qquad
-    [\gamma](\gamma', x \mapsto e) 
-    = ([\gamma]\gamma', x \mapsto [\gamma]e)
-    \\ \\
-    [\gamma](\cdot) = \cdot \qquad
-    [\gamma](\sigma, \ell(x) \mapsto r) 
-    = ([\gamma]\sigma, \ell(x) \mapsto [\gamma]r)
-  \end{gather*}
-  \caption{ 
-    Capture-avoiding substititon for \isotopessa{} terms, regions, and
-    (label) substitutions; in particular, we assume bound variables and labels
-    are $\alpha$-converted so as not to appear in $\gamma$/$\sigma$. 
-  }
-  \Description{}
-  \label{fig:ssa-subst-def}
-\end{figure}
+To \emph{use} a substitution, we simply need to perform standard capture-avoiding substitution (see
+Figure \ref{fig:ssa-subst-def} in the appendix.)
 
 This gives us everything we need to state the \emph{substitution lemma}, which
 is as follows:
@@ -1646,7 +1604,7 @@ we have that
 \end{align*}
 and likewise for more complicated distributivity properties involving, e.g., \ms{let}-bindings.
 
-The case for other the other constructors is even more convenient: no additional rules are required
+The case for the other constructors is even more convenient: no additional rules are required
 at all to handle operations, pairs, and injections. For example, we can derive the expected
 bind-rule for operations as follows:
 \begin{align*}
@@ -1656,7 +1614,7 @@ bind-rule for operations as follows:
 \end{align*}
 
 This completes the equational theory for \isotopessa{} terms; in Section \ref{ssec:completeness}, we
-will show that this is enough to state a relatively powerful completeness theorem.
+will show that this is enough to state a completeness theorem.
 
 \subsection{Regions}
 
@@ -2195,10 +2153,10 @@ on an arbitrary control-flow graph.
   \Description{}
   \label{fig:dinat-struct-cfg}
 \end{figure}
-It turns out that this being able to do this is essential, as it allows us to relate unary and
-$n$-ary control-flow graphs and, in particular, use this relationship to interconvert between
-data-flow and control-flow. This means we now have enough machinery to justify the elimination of
-arbitrary nested \ms{where}-blocks, and hence to justify the rule
+It turns out that being able to do this is essential, as it allows us to relate unary and $n$-ary
+control-flow graphs and, in particular, use this relationship to interconvert between data-flow and
+control-flow. This means we now have enough machinery to justify the elimination of arbitrary nested
+\ms{where}-blocks, and hence to justify the rule
 \begin{equation}
   \prftree[r]{\rle{cfg-fuse}}
     {\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i, (\lhyp{\kappa_j}{B_j},)_j}}
@@ -5969,7 +5927,52 @@ We may now state our desired result as follows:
   \end{itemize}
 \end{proof}
 
-\section{Proofs}
+\section{Definitions and Proofs}
+
+\subsection{Syntactic Metatheory}
+
+\begin{figure}
+  \begin{gather*}
+    (\gamma, x \mapsto e)(x) = e \qquad
+    (\gamma, y \mapsto e)(x) = \gamma(x) \qquad
+    (\cdot)(x) = x
+    \\ \\
+    [\gamma]x = \gamma(x) \qquad
+    [\gamma](\letexpr{x}{a}{e}) = \letexpr{x}{[\gamma]a}{[\gamma]e} \qquad
+    [\gamma](a, b) = ([\gamma]a, [\gamma]b) \qquad
+    [\gamma]() = () \\
+    [\gamma](\letexpr{(x, y)}{a}{e})
+    = \letexpr{(x, y)}{[\gamma]a}{[\gamma]e} \qquad
+    [\gamma](\linl{a}) = \linl{[\gamma]a} \qquad
+    [\gamma](\linr{b}) = \linr{[\gamma]b} \\
+    [\gamma](\caseexpr{e}{x}{a}{y}{b}) =
+    \caseexpr{[\gamma]e}{x}{[\gamma]a}{y}{[\gamma]b} \\
+    [\gamma](\labort{a}) = \labort{[\gamma]a} 
+    \\ \\
+    [\gamma](\brb{\ell}{a}) = \brb{\ell}{[\gamma]a} \qquad
+    [\gamma](\letstmt{x}{a}{r}) = \letstmt{x}{[\gamma]a}{[\gamma]r} \\
+    [\gamma](\letstmt{(x, y)}{e}{r}) = \letstmt{(x, y)}{[\gamma]e}{[\gamma]r} \\
+    [\gamma](\casestmt{e}{x}{r}{y}{s}) 
+    = \casestmt{[\gamma]e}{x}{[\gamma]r}{y}{[\gamma]s} \\
+    [\gamma](\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}) =
+    \where{[\gamma]r}{(\wbranch{\ell_i}{x_i}{[\gamma]t_i},)_i} 
+    \\ \\
+    [\gamma](\cdot) = \cdot \qquad
+    [\gamma](\gamma', x \mapsto e) 
+    = ([\gamma]\gamma', x \mapsto [\gamma]e)
+    \\ \\
+    [\gamma](\cdot) = \cdot \qquad
+    [\gamma](\sigma, \ell(x) \mapsto r) 
+    = ([\gamma]\sigma, \ell(x) \mapsto [\gamma]r)
+  \end{gather*}
+  \caption{ 
+    Capture-avoiding substititon for \isotopessa{} terms, regions, and
+    (label) substitutions; in particular, we assume bound variables and labels
+    are $\alpha$-converted so as not to appear in $\gamma$/$\sigma$. 
+  }
+  \Description{}
+  \label{fig:ssa-subst-def}
+\end{figure}
 
 \subsection{Strict SSA}
 

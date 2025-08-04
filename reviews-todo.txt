@@ -244,8 +244,6 @@ Line 721: reference to Rust seems a bit out of place
 Line 840: How is the completeness theorem "relatively powerful" ?
 Relative to what?
 
-Line 834: "for other the other"
-
 Fig 17: again only half of these rules are congruence rules
 
 cfg-β₁: why does the expression a have to be pure? Shouldn't this be
@@ -266,8 +264,6 @@ semantics so I don't think it's appropriate to call any of their rules
 
 Line 1017-1018: What does "r where t" mean? Also why do we have a
 typing side condition for r here but not e,s,t?
-
-Line 1075: "It turns out that this being able to do this"
 
 Line 1108-1111: if we are appealing to the completeness theorem to
 prove equivalences in the theory is the theory really all that
