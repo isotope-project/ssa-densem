@@ -1,0 +1,365 @@
+
+- - - - - - - - - -
+
+From Associate Editor Amal Ahmed:
+
+Recommendation #1: Major Revision
+
+Associate Editor Comments for Author: The reviewers have offered a lot of suggestions for improving
+the article so it more clearly spells out your novel contributions, makes the paper more accessible
+for readers, better justifies the weak memory model section at the end, and compares with important
+related work (especially modern Vellvm). Your major revision should take all of these into account.
+Please also provide a way for reviewers to access your mechanized proofs when you submit the revised
+version.
+
+- - - - - - - - - -
+
+From the reviewers:
+
+Referee: 1
+
+Comments to the Author
+The authors present a "type-theoretic SSA" language, i.e., a
+first-order control-flow graph language. They equip this λSSA with an
+equational theory and define a sound and complete categorical
+semantics in Freyd categories with an Elgot structure to model
+recursion. Finally, several denotational models are given, including
+models of weak memory concurrency.
+
+This paper covers some very technical work and suffers from major
+presentational issues that make it more difficult to evaluate the
+claims and understand the major technical points. Additionally, I find
+that much of the novelty of the work is not clear, and not at all
+clearly argued in the text of the paper. This is especially difficult
+for me to evaluate because the paper lies at the intersection of three
+different research areas: compiler intermediate languages,
+denotational semantics of first-order/call-by-value languages and weak
+memory concurrency.
+
+The paper argues that they are providing a better equational theory
+for SSA programs for proving the correctness of optimizations. Their
+approach to this, however, is to essentially introduce a more complex
+intermediate language, more similar to Monadic Form and then carry out
+their optimizations there. The fact that such a language is equivalent
+to SSA form is not novel in itself, the main difference with prior
+formulations of Monadic Form seems to be the use of "regions" to
+handle arbitrary control-flow graphs. From the functional perspective,
+this is essentially recursive functions, but that can only be
+tail-called rather than called.
+
+The authors then give an equational theory for λSSA, which is
+essentially designed to be sound and complete for their models in
+Elgot Freyd categories. The fact that a first-order CBV language can
+be modeled in Freyd categories in this way is exactly the reason Freyd
+categories were introduced, so the novelty here seems to be adapting
+the Elgot structure to Freyd categories and also showing that
+control-flow graphs can be interpreted in this structure.
+
+Lastly, the authors do some model theory, constructing λSSA models
+from suitable monads and defining such monads that model weak-memory
+models. I am not very familiar with weak-memory model semantics and it
+is not clear to me if any of their models are new or if the
+contribution is showing that they exhibit the Freyd+Elgot structure.
+
+The paper also suffers from some major presentational issues. The
+introduction of the paper is extremely short (1 page!) and does not
+mention many aspects of the paper that then later come as complete
+surprises (effect system? Bohm-Jacopini theorem?).
+
+The paper is pitched as modeling SSA, but the fact that the
+type-theoretic SSA is so much more flexible than SSA makes me wonder
+what property makes this type theory "SSA" rather than "Monadic
+form". The fact that it is equivalent to an SSA form is of course to
+be expected of all of these intermediate representations.
+
+My biggest issues with the paper are in Section 3 and
+Section 4. Though Section 2 gives a good introduction to the
+relationship between SSA and functional representations, Section 3
+jumps immediately into the "type-theoretic" SSA rather than describing
+first the SSA language the authors have told us that they are trying
+to model. An actual formalization of a calculus intended to model SSA
+form directly is not given formally until page 29(!)
+
+Additionally there is an entire effect system included in
+the type-theoretic SSA that is (1) never motivated or explained and
+(2) never used in the equational theory or semantic models other than
+distinguishing between pure and impure morphisms.
+
+My recommendation is for a major revision. The biggest parts to revise would be:
+
+1. Extend the introduction to more clearly lay out what the technical
+   contributions of this work are, as much of it builds on well-known
+   ideas such as SSA-functional correspondence and semantics in Freyd
+   categories.
+
+2. Section 3/4 to better explain the relationship to SSA form, and
+   frontload the actual definition of SSA form and what theorems your
+   type-theoretic SSA should satisfy in relation to it.
+
+3. Explain in much more detail the relation to prior work, especially
+   in Section 5 on the categorical semantics.
+
+4. Streamline the presentation overall, moving some overly technical
+   definitions (e.g., Section 4.5) into the appendix.
+
+5. Add a section to the discussion to more clearly describe which
+   theorems are formalized in Lean and which are not.
+
+6. Explain the relevance of the completeness theorem to the stated
+   goals of the work, which are to aid in modeling SSA form and its
+   optimization.
+
+Direct comments by Section:
+
+* Section 1
+
+Line 55-57: ...memory models could be validated by seeing if they
+satisfy the equations of SSA...: How do we know if this is a useful
+criterion? Does it rule out any known bad models?
+
+Line 63-65: "We show that any denotational model with this categorical
+structure is also a model of SSA" not sure what the distinction
+between "denotational model" and "model of SSA" is here, it seems
+redundant
+
+Line 66-70: there don't seem to be any applications of a completeness
+result given, only of the soundness. Is there any significance of this
+result for compiler writers?  Usually it would be used to provide
+semantic proof techniques for meta-theoretic properties.
+
+Line 75-79: this summary is unclear/confusing. What is a "proof of
+substitution"? How can you prove something forms an initial model
+without defining denotational semantics? What is "soundness of
+substitution"?
+
+Is the model in 6.3 actually interesting from a memory model POV? Does
+SSA even manipulate memory?
+
+The introduction of the paper is very short and doesn't give an
+overview of many of the technical developments. This makes the paper
+difficult to read as entire sections are self-contained asides that
+don't seem to contribute to the goals laid out in the Introduction.
+
+* Section 2
+
+This section is mostly a nice overview of the known correspondence
+between functional IRs/basic blocks with arguments and traditional SSA
+form.
+
+The end of Section 2 describing the benefits for reasoning is very
+unclear, there is only about a paragraph of prose here. Most of the
+work is on the reader to figure out what is going on in the
+examples. The ultimate example seems to be rewriting the example in 7b
+to the one in 6c, which doesn't seem like much of an optimizaiton. I
+would try to find a better optimization as an example of the
+dinaturality property.
+
+Also it hardly seems necessary to repeat example 6b as 7a, this just
+adds to the confusion in my opinion.
+
+Fig 6 part b description doesn't make sense: "Programs 6a and 6b after
+substitution; since the result is the same, both programs must be
+equivalent". This is introducing Program 6b, so how can it be 6a and
+6b after substitution? "since the result is the same" result of what?
+
+Fig 7 part c says "equivalent to 7a by substitution" but it also
+involves arithmetic, as mentioned in the prose.
+
+Fig 7 description says "from 7c to 7a and therefore to 6c", but I
+think the ultimate examples is intended to be 7b to 7c to 7a/6b to 6c?
+
+Line 391: missing a period
+
+It seems against the spirit of a compiler IR to me to rely on the
+existence of product types for branching with multiple
+arguments/multiple phi nodes or sum types for conditional
+branching. This seems like an infelicity to realistic IRs that I
+suspect makes the completeness theorem easier.
+
+* Section 3
+
+The introduction of effects here without any prior mention or
+motivation is very jarring. I honestly don't know why effects are
+included at all. They certainly aren't linked by the authors to
+anything to do with existing SSA-based IRs.
+
+Additionally no examples of what primitive instructions are used for
+is given. I suppose this includes primitives like addition and
+comparisons. But these presumably are pure so we haven't seen an
+example of an impure primitive instruction.
+
+Unless I'm missing something, it's not even described how a λSSA
+program produces a result. Presumably it is by modeling "return" using
+a distinguished output label.
+
+Figure 8: Unless I am misunderstanding,
+1. The two cases of a case expression should be expressions, not regions
+2. abort a should also be a region
+
+The distinction between expressions and regions is that branches are
+only allowed to be in tail position. This was mentioned in passing in
+section 2 but would be welcome to be re-emphasized here when the
+syntax of λSSA is introduced.
+
+Line 436: I think there should be an "and" between "A = B" and "ϵ ≤ ϵ'"
+
+Line 437: "An primitive" should be "A primitive"
+
+Line 439: Seems against the spirit of an IR to have implicit
+evaluation order. Isn't part of the translation to MNF, ANF, CPS and
+SSA specifying evaluation order explicitly?
+
+Bottom of page 12: there is an extended discussion here where
+technical definitions of basic block and terminator are introduced,
+but it's not clear to the reader why any of this matters, e.g., what
+it is used for. This makes the claim in 507 that some particular
+choice "greatly simplifies rewriting" very confusing because it's not
+clear how any of this relates to rewriting at all.
+
+Line 507: "this feature" what feature?
+
+line 524,525: "less" labels/regions is improper English. It should be
+"fewer" labels/regions
+
+Line 527: denotationally isn't it because the weakening of contexts
+corresponds to a function between product types consisting of
+projections, whereas weakening of labels corresponds to a function
+between sum types consisting of injections?
+
+Line 537c should be γ I think
+
+Substitutions and label-substitutions are being used on page 11 but
+aren't introduced until pages 12 and 14.
+
+In Lemma 3.1, the statement of this theorem seems to imply that case d
+only holds if L ≤ K. Is that actually necessary? I would have assumed
+that the rule would be that if Δ ⊢ σ : L ~~> K and Γ ≤ Δ and K ≤ K'
+then Γ ⊢ σ : L ~~> K' but maybe I'm misunderstanding.
+
+Is it really necessary to recapitulate capture-avoiding substitution
+in the body of the paper? Seems fine to relegate to the appendix.
+
+* Section 4
+
+Minor teminological point: Fig 14 is called "Congruence rules" but the
+last two rules are not congruence rules, they are η
+equivalences. Additionally the first 3 rules (refl/trans/symm) are not
+congruence rules.
+
+Line 721: reference to Rust seems a bit out of place
+
+Line 840: How is the completeness theorem "relatively powerful" ?
+Relative to what?
+
+Line 834: "for other the other"
+
+Fig 17: again only half of these rules are congruence rules
+
+cfg-β₁: why does the expression a have to be pure? Shouldn't this be
+valid for any a?
+
+Line 929: this notation is ambiguous: in ∀ i. Γ, x: Aᵢ ⊢ tᵢ ▷ L,
+(lⱼ(Aⱼ),)ⱼ it isn't clear what i or j range over. In particular it
+appeared to me at first that they index over different sets but now I
+think they are both ranging over the same set?
+
+Also, in the notation for a where block do we really need the trailing
+comma in (lᵢ(Aᵢ),)ᵢ ?
+
+I don't really see why I should think of cfg-η as an η rule at
+all. Where blocks aren't given by a universal property in the
+semantics so I don't think it's appropriate to call any of their rules
+β/η rules.
+
+Line 1017-1018: What does "r where t" mean? Also why do we have a
+typing side condition for r here but not e,s,t?
+
+Line 1075: "It turns out that this being able to do this"
+
+Line 1108-1111: if we are appealing to the completeness theorem to
+prove equivalences in the theory is the theory really all that
+convenient to use?
+
+Line 1108-1111: this seems to be the first mention of an application
+of the completeness theorem
+
+In my opinion, since the article is supposed to be about SSA, Section
+4 should *start* with the description of strict SSA and Figure 26 and
+then introduce the "type-theoretic SSA" as a generalization, then
+return to their equivalence, paralleling the structure of Section 2.
+
+Section 4.4 is structured in a way that is difficult to follow. You
+say you "introduce" strict regions, then you make several claims about
+it, but you don't actually introduce strict regions for several pages.
+This is the part of the article where the authors explain how their
+type-theoretic calculus is related to ordinary SSA, but the structure
+here makes it difficult for the reader to understand what the strict
+region subset of the language is, because the description depends on
+several different figures and a third version of the calculus, ANF.
+
+Line 1174: "as an strict region"
+
+Line 1250: this version of the translation into ANF is in the worst
+case exponential in the size of the input program, because it
+duplicates the continuation r in the translation of a case
+expression. To avoid this you can create a *join point*. This doesn't
+affect the correctness of the translation but it would be better if
+you verified the non-naive version (which I think you should be able
+to).
+
+Fig 26: Why does your standard SSA allow for the branches of a case to
+be arbitrary terminators (so including case as well?). Maybe it's a
+typo. It seems unrealistic and also doesn't seem to be necessary as
+your translation to strict SSA never has nested cases
+
+Section 4.5: this is all very technical but ultimately
+straightforward. Does it really need to be in this much detail in the
+body of the paper?
+
+* Section 5
+Section 5: This is a pretty nice introduction to Premonoidal/Freyd
+categories and recursion, but the lack of citations gives the
+misleading and unintentional impression that these are new
+concepts. In particular, Power and Robinson MSCS 1997 which introduces
+premonoidal categories and Levy, Power and Thielecke Information and
+Computation 2003 which introduces Freyd categories are not cited
+anywhere in the paper, even though they provide similar soundness and
+completeness results to those formalized in this work.
+
+Especially the formulation of Elgot structure should be discussed and
+compared with (co)-cartesian Traced monoidal categories, which were
+studied in Hasegawa TLCA 1997 and Simpson and Plotkin LICS 2000.
+
+Theorem 5.2: what does it mean for a subcategory to be an equivalence
+relation? I think you just want to say that it is a thin subcategory
+
+1855-56: what is meant by "continuous" here? homomorphism of join
+semilattices?
+
+2077-78: this was already defined on page 30
+
+* Section 6
+
+2302: "literature on strong Elgot monads": no citation????
+
+2304: Maybe worth pointing out this is not constructive. This can be
+done constructively if you use the partial elements monad Partial A := Σ(ϕ : Prop) ϕ ⇒ A.
+
+2513: fewer not less
+
+Section 6.3: I am not an expert on weak memory and found this section
+very hard to follow, and again I don't know which parts are novel
+contributions and which are taken from prior work (Kavanagh and
+Brookes 2017).
+
+* Section 7
+
+2814-2815: then why is the more general setting included at all?
+
+7.4.3: this section doesn't explain what guarded iteration is in
+enough detail to be self-contained
+
+Referee: 2
+
+Comments to the Author
+(There are no comments.)
