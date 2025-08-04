@@ -201,8 +201,6 @@ syntax of λSSA is introduced.
 
 Line 436: I think there should be an "and" between "A = B" and "ϵ ≤ ϵ'"
 
-Line 437: "An primitive" should be "A primitive"
-
 Line 439: Seems against the spirit of an IR to have implicit
 evaluation order. Isn't part of the translation to MNF, ANF, CPS and
 SSA specifying evaluation order explicitly?

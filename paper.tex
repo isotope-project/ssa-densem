@@ -938,7 +938,7 @@ expressions may be built up from the following fairly standard primitives:
 \begin{itemize}
   \item A variable $x$ in the context $\Gamma$, as typed by \brle{var}. We write $(A, \epsilon) \leq
   (B, \epsilon') \iff A = B \and \epsilon \leq \epsilon'$.
-  \item An \emph{primitive instruction} $f \in \mc{I}_\epsilon(A, B)$ applied to an expression
+  \item A \emph{primitive instruction} $f \in \mc{I}_\epsilon(A, B)$ applied to an expression
   $\hasty{\Gamma}{\epsilon}{a}{A}$, typed by \brle{op}
   \item Unary and binary \emph{let-bindings}, typed by \brle{let$_1$} and \brle{let$_2$}
   respectively
@@ -950,11 +950,15 @@ expressions may be built up from the following fairly standard primitives:
   \item Pattern matching on sum types, typed by \brle{case}. Operationally, we interpret this as
   executing $e$, and then, if $e$ is a left injection $\iota_l\;x$, executing $a$ with its value
   ($x$), otherwise executing $b$.
-  \item An operator $\ms{abort}\;e$ allowing us to abort execution if given a value of the empty type. Since the empty type is a 0-ary sum type, $\ms{abort}$ can be seen as a $\ms{case}$ with no branches. Since the empty type is uninhabited, execution can never reach an $\ms{abort}$. This can be viewed as a typesafe version of the \texttt{unreachable} instruction in LLVM IR. 
+  \item An operator $\ms{abort}\;e$ allowing us to abort execution if given a value of the empty
+  type. Since the empty type is a 0-ary sum type, $\ms{abort}$ can be seen as a $\ms{case}$ with no
+  branches. Since the empty type is uninhabited, execution can never reach an $\ms{abort}$. This can
+  be viewed as a typesafe version of the \texttt{unreachable} instruction in LLVM IR. 
 \end{itemize}
 
-Traditional presentations of SSA use a boolean type instead of sum types. Naturally, booleans can be encoded with sum types as $\mb{1} + \mb{1}$. If-then-else is then a $\ms{case}$ which ignores the unit payloads, so that
-$\ite{e_1}{e_2}{e_3} := \caseexpr{e_1}{()}{e_2}{()}{e_3}$. 
+Traditional presentations of SSA use a boolean type instead of sum types. Naturally, booleans can be
+encoded with sum types as $\mb{1} + \mb{1}$. If-then-else is then a $\ms{case}$ which ignores the
+unit payloads, so that $\ite{e_1}{e_2}{e_3} := \caseexpr{e_1}{()}{e_2}{()}{e_3}$. 
 
 
 \begin{figure}
@@ -1028,9 +1032,9 @@ entry-block even if of the form, e.g., $r = \letstmt{x}{e}{s}$. The entry block 
 \emph{implicit} basic-block made up of any let-bindings surrounding the \ms{where}-statement. The
 key difference is that variables defined in $r$ are \emph{not} visible in the blocks $t_i$, whereas
 variables defined in the entry-block are. While at first glance this can be unintuitive, the
-additional generality greatly simplifies rewriting, and we can always ``normalize away'' this
-feature, since our equational theory generally admits that, \emph{if} both sides are well-typed and
-there is no shadowing,
+additional generality greatly simplifies rewriting, and we can always normalize a where-block into a
+more canonical form by pulling out let-bindings, since our equational theory generally admits that,
+\emph{if} both sides are well-typed and there is no shadowing,
 \begin{align*}
   \where{(\letexpr{x}{e}{r})}{(\wbranch{\ell_i}{x_i}{t_i})_i}
   &= (\letexpr{x}{e}{(\where{r}{(\wbranch{\ell_i}{x_i}{t_i})_i})}) \\
@@ -1087,9 +1091,9 @@ defined in this manner induces a partial order on contexts.
 
 We may go further and introduce weakening for \emph{label contexts} $\ms{L} \leq
 \ms{K}$ analogously, except that we will flip the ordering such that $\ms{L}$
-weakens $\ms{K}$ if it contains \emph{less}, rather than \emph{more}, labels
+weakens $\ms{K}$ if it contains \emph{fewer}, rather than \emph{more}, labels
 than $\ms{K}$. This is a bit unconventional, since in this case $\ms{L}$ types
-\emph{less} regions than $\ms{K}$, but it will make our metatheory and
+\emph{fewer} regions than $\ms{K}$, but it will make our metatheory and
 denotational semantics come out more clearly, since it corresponds to
 label-contexts being ``on the right'' (with variable contexts ``on the left'').
 In particular, in Figure \ref{fig:ssa-meta-rules}, we introduce the rules
