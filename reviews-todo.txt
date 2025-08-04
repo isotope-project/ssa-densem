@@ -214,9 +214,6 @@ clear how any of this relates to rewriting at all.
 
 Line 507: "this feature" what feature?
 
-line 524,525: "less" labels/regions is improper English. It should be
-"fewer" labels/regions
-
 Line 527: denotationally isn't it because the weakening of contexts
 corresponds to a function between product types consisting of
 projections, whereas weakening of labels corresponds to a function
