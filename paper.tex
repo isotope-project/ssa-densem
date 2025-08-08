@@ -781,7 +781,7 @@ Figure~\ref{fig:fact-dinat} to Figure~\ref{fig:fact-zero}. This allows us to bui
 for complex optimizations, such as rewriting \ref{fig:fact-zero} to \ref{fig:fact-opt}, in terms of
 simple rewriting steps. In particular, we can do \textit{complex}, \textit{error-prone} loop and
 control-flow graph optimizations by breaking them down into closed set of simple algebraic steps,
-with each step rigorously justified via our denotational semantics
+with each step rigorously justified via our denotational semantics.
 
 \begin{figure}
   \begin{minipage}{.5\textwidth}
@@ -938,7 +938,7 @@ expressions may be built up from the following fairly standard primitives:
 \begin{itemize}
   \item A variable $x$ in the context $\Gamma$, as typed by \brle{var}. We write $(A, \epsilon) \leq
   (B, \epsilon') \iff A = B \and \epsilon \leq \epsilon'$.
-  \item An \emph{primitive instruction} $f \in \mc{I}_\epsilon(A, B)$ applied to an expression
+  \item A \emph{primitive instruction} $f \in \mc{I}_\epsilon(A, B)$ applied to an expression
   $\hasty{\Gamma}{\epsilon}{a}{A}$, typed by \brle{op}
   \item Unary and binary \emph{let-bindings}, typed by \brle{let$_1$} and \brle{let$_2$}
   respectively
@@ -950,11 +950,15 @@ expressions may be built up from the following fairly standard primitives:
   \item Pattern matching on sum types, typed by \brle{case}. Operationally, we interpret this as
   executing $e$, and then, if $e$ is a left injection $\iota_l\;x$, executing $a$ with its value
   ($x$), otherwise executing $b$.
-  \item An operator $\ms{abort}\;e$ allowing us to abort execution if given a value of the empty type. Since the empty type is a 0-ary sum type, $\ms{abort}$ can be seen as a $\ms{case}$ with no branches. Since the empty type is uninhabited, execution can never reach an $\ms{abort}$. This can be viewed as a typesafe version of the \texttt{unreachable} instruction in LLVM IR. 
+  \item An operator $\ms{abort}\;e$ allowing us to abort execution if given a value of the empty
+  type. Since the empty type is a 0-ary sum type, $\ms{abort}$ can be seen as a $\ms{case}$ with no
+  branches. Since the empty type is uninhabited, execution can never reach an $\ms{abort}$. This can
+  be viewed as a typesafe version of the \texttt{unreachable} instruction in LLVM IR. 
 \end{itemize}
 
-Traditional presentations of SSA use a boolean type instead of sum types. Naturally, booleans can be encoded with sum types as $\mb{1} + \mb{1}$. If-then-else is then a $\ms{case}$ which ignores the unit payloads, so that
-$\ite{e_1}{e_2}{e_3} := \caseexpr{e_1}{()}{e_2}{()}{e_3}$. 
+Traditional presentations of SSA use a boolean type instead of sum types. Naturally, booleans can be
+encoded with sum types as $\mb{1} + \mb{1}$. If-then-else is then a $\ms{case}$ which ignores the
+unit payloads, so that $\ite{e_1}{e_2}{e_3} := \caseexpr{e_1}{()}{e_2}{()}{e_3}$. 
 
 
 \begin{figure}
@@ -1028,9 +1032,9 @@ entry-block even if of the form, e.g., $r = \letstmt{x}{e}{s}$. The entry block 
 \emph{implicit} basic-block made up of any let-bindings surrounding the \ms{where}-statement. The
 key difference is that variables defined in $r$ are \emph{not} visible in the blocks $t_i$, whereas
 variables defined in the entry-block are. While at first glance this can be unintuitive, the
-additional generality greatly simplifies rewriting, and we can always ``normalize away'' this
-feature, since our equational theory generally admits that, \emph{if} both sides are well-typed and
-there is no shadowing,
+additional generality greatly simplifies rewriting, and we can always normalize a where-block into a
+more canonical form by pulling out let-bindings, since our equational theory generally admits that,
+\emph{if} both sides are well-typed and there is no shadowing,
 \begin{align*}
   \where{(\letexpr{x}{e}{r})}{(\wbranch{\ell_i}{x_i}{t_i})_i}
   &= (\letexpr{x}{e}{(\where{r}{(\wbranch{\ell_i}{x_i}{t_i})_i})}) \\
@@ -1087,9 +1091,9 @@ defined in this manner induces a partial order on contexts.
 
 We may go further and introduce weakening for \emph{label contexts} $\ms{L} \leq
 \ms{K}$ analogously, except that we will flip the ordering such that $\ms{L}$
-weakens $\ms{K}$ if it contains \emph{less}, rather than \emph{more}, labels
+weakens $\ms{K}$ if it contains \emph{fewer}, rather than \emph{more}, labels
 than $\ms{K}$. This is a bit unconventional, since in this case $\ms{L}$ types
-\emph{less} regions than $\ms{K}$, but it will make our metatheory and
+\emph{fewer} regions than $\ms{K}$, but it will make our metatheory and
 denotational semantics come out more clearly, since it corresponds to
 label-contexts being ``on the right'' (with variable contexts ``on the left'').
 In particular, in Figure \ref{fig:ssa-meta-rules}, we introduce the rules
@@ -1136,7 +1140,7 @@ We can now state weakening formally as follows:
   \begin{enumerate}[label=(\alph*)]
     \item $\hasty{\Delta}{\epsilon}{a}{A} \implies \hasty{\Gamma}{\epsilon'}{a}{A}$
     \item $\haslb{\Delta}{r}{\ms{L}} \implies \haslb{\Gamma}{r}{\ms{K}}$
-    \item $\issubst{\sigma}{\Delta}{\Xi} \implies \issubst{\sigma}{\Gamma}{\Xi}$
+    \item $\issubst{\gamma}{\Delta}{\Xi} \implies \issubst{\gamma}{\Gamma}{\Xi}$
     \item $\lbsubst{\Delta}{\sigma}{\ms{L}}{\ms{K}} \implies \lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}$
   \end{enumerate}
 \end{lemma}
@@ -1165,50 +1169,8 @@ judgement $\issubst{\gamma}{\Gamma}{\Delta}$ as per the rules given in Figure
   $\hasty{\Gamma}{\epsilon}{e}{A}$, then $\gamma$ with the additional substitution $x \mapsto e$
   adjoined takes $\Gamma$ to $\Delta, \thyp{x}{A}{\epsilon}$
 \end{itemize}
-To \emph{use} a substitution, we simply need to perform standard capture-avoiding substitution, as
-made explicit in Figure \ref{fig:ssa-subst-def}.
-\begin{figure}
-  \begin{gather*}
-    (\gamma, x \mapsto e)(x) = e \qquad
-    (\gamma, y \mapsto e)(x) = \gamma(x) \qquad
-    (\cdot)(x) = x
-    \\ \\
-    [\gamma]x = \gamma(x) \qquad
-    [\gamma](\letexpr{x}{a}{e}) = \letexpr{x}{[\gamma]a}{[\gamma]e} \qquad
-    [\gamma](a, b) = ([\gamma]a, [\gamma]b) \qquad
-    [\gamma]() = () \\
-    [\gamma](\letexpr{(x, y)}{a}{e})
-    = \letexpr{(x, y)}{[\gamma]a}{[\gamma]e} \qquad
-    [\gamma](\linl{a}) = \linl{[\gamma]a} \qquad
-    [\gamma](\linr{b}) = \linr{[\gamma]b} \\
-    [\gamma](\caseexpr{e}{x}{a}{y}{b}) =
-    \caseexpr{[\gamma]e}{x}{[\gamma]a}{y}{[\gamma]b} \\
-    [\gamma](\labort{a}) = \labort{[\gamma]a} 
-    \\ \\
-    [\gamma](\brb{\ell}{a}) = \brb{\ell}{[\gamma]a} \qquad
-    [\gamma](\letstmt{x}{a}{r}) = \letstmt{x}{[\gamma]a}{[\gamma]r} \\
-    [\gamma](\letstmt{(x, y)}{e}{r}) = \letstmt{(x, y)}{[\gamma]e}{[\gamma]r} \\
-    [\gamma](\casestmt{e}{x}{r}{y}{s}) 
-    = \casestmt{[\gamma]e}{x}{[\gamma]r}{y}{[\gamma]s} \\
-    [\gamma](\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}) =
-    \where{[\gamma]r}{(\wbranch{\ell_i}{x_i}{[\gamma]t_i},)_i} 
-    \\ \\
-    [\gamma](\cdot) = \cdot \qquad
-    [\gamma](\gamma', x \mapsto e) 
-    = ([\gamma]\gamma', x \mapsto [\gamma]e)
-    \\ \\
-    [\gamma](\cdot) = \cdot \qquad
-    [\gamma](\sigma, \ell(x) \mapsto r) 
-    = ([\gamma]\sigma, \ell(x) \mapsto [\gamma]r)
-  \end{gather*}
-  \caption{ 
-    Capture-avoiding substititon for \isotopessa{} terms, regions, and
-    (label) substitutions; in particular, we assume bound variables and labels
-    are $\alpha$-converted so as not to appear in $\gamma$/$\sigma$. 
-  }
-  \Description{}
-  \label{fig:ssa-subst-def}
-\end{figure}
+To \emph{use} a substitution, we simply need to perform standard capture-avoiding substitution (see
+Figure \ref{fig:ssa-subst-def} in the appendix.)
 
 This gives us everything we need to state the \emph{substitution lemma}, which
 is as follows:
@@ -1642,7 +1604,7 @@ we have that
 \end{align*}
 and likewise for more complicated distributivity properties involving, e.g., \ms{let}-bindings.
 
-The case for other the other constructors is even more convenient: no additional rules are required
+The case for the other constructors is even more convenient: no additional rules are required
 at all to handle operations, pairs, and injections. For example, we can derive the expected
 bind-rule for operations as follows:
 \begin{align*}
@@ -1652,7 +1614,7 @@ bind-rule for operations as follows:
 \end{align*}
 
 This completes the equational theory for \isotopessa{} terms; in Section \ref{ssec:completeness}, we
-will show that this is enough to state a relatively powerful completeness theorem.
+will show that this is enough to state a completeness theorem.
 
 \subsection{Regions}
 
@@ -2191,10 +2153,10 @@ on an arbitrary control-flow graph.
   \Description{}
   \label{fig:dinat-struct-cfg}
 \end{figure}
-It turns out that this being able to do this is essential, as it allows us to relate unary and
-$n$-ary control-flow graphs and, in particular, use this relationship to interconvert between
-data-flow and control-flow. This means we now have enough machinery to justify the elimination of
-arbitrary nested \ms{where}-blocks, and hence to justify the rule
+It turns out that being able to do this is essential, as it allows us to relate unary and $n$-ary
+control-flow graphs and, in particular, use this relationship to interconvert between data-flow and
+control-flow. This means we now have enough machinery to justify the elimination of arbitrary nested
+\ms{where}-blocks, and hence to justify the rule
 \begin{equation}
   \prftree[r]{\rle{cfg-fuse}}
     {\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i, (\lhyp{\kappa_j}{B_j},)_j}}
@@ -2753,318 +2715,6 @@ $\tocfg{r} \simeq \tocfg{r'}$, we have that $\lbeq{\Gamma}{r}{r'}{\ms{L}}$, sinc
     program is made up of \emph{basic blocks} \(\beta\), and can be thought of as a
     \emph{control-flow graph} \(G\) (with a distinguished entry block $\beta$). } \Description{}
   \label{fig:ssa-standard}
-\end{figure}
-
-\subsection{Records and Enums}
-
-\label{ssec:records-enums}
-
-For simplicity, we defined our language to have only binary products and sums. However, we would
-like to support records (named $n$-ary products) and enums (named $n$-ary sums). We will implement
-these on top of our language using contexts; the resulting machinery will turn out to be crucial in
-proving the B\"ohm-Jacopini theorem in Section~\ref{ssec:data-control} and completeness in
-Section~\ref{ssec:completeness}. We begin by defining \emph{packing} of variable contexts as
-follows:
-\begin{equation}
-  \pckd{\cdot} = \mb{1} \qquad \pckd{\Gamma, \thyp{x}{A}{\epsilon}} = \pckd{\Gamma} \otimes A
-\end{equation}
-While in general we destructure pairs using binary \ms{let}-bindings, it will be more convenient
-to start defining operations on records in terms of projections. We begin by defining projections
-on pairs in the obvious manner:
-\begin{equation}
-  \prftree[r]{\rle{$\pi_l$}}
-    {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
-    {\hasty{\Gamma}{\epsilon}{\pi_l\;e := (\letexpr{(x, y)}{e}{x})}{A}}
-  \qquad
-  \prftree[r]{\rle{$\pi_r$}}
-    {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
-    {\hasty{\Gamma}{\epsilon}{\pi_r\;e := (\letexpr{(x, y)}{e}{y})}{A}}
-\end{equation}
-We may then define projections on records as follows:
-\begin{equation}
-  \pi_{(\Delta, \thyp{x}{A}{\epsilon}), y}\;e = \pi_{\Delta, y}(\pi_l\;e) \qquad
-  \pi_{(\Delta, \thyp{x}{A}{\epsilon}), x}\;e = \pi_r\;e
-\end{equation}
-with typing rule
-\begin{equation}
-  \prftree[r]{\rle{$\pi_{\ms{rec}}$}}
-    {\hasty{\Gamma}{\epsilon}{e}{\pckd{\Delta}}}
-    {\Delta(x) = A}
-    {\hasty{\Gamma}{\epsilon}{\pi_{\Delta, x}\;e}{A}}
-\end{equation}
-We will omit $\Delta$ when it is clear from context. We can define a term
-$\hasty{\Gamma}{\ms{eff}(\Gamma)}{\ms{packed}(\Gamma)}{[\Gamma]}$ to ``pack'' up the current context
-into a record as follows:
-\begin{equation}
-  \ms{packed}(\cdot) = () \qquad
-  \ms{packed}(\Gamma, \thyp{x}{A}{\epsilon}) = (\ms{packed}(\Gamma), x)
-\end{equation}
-where we define the \emph{effect} of a context $\Gamma$ as follows
-\begin{equation}
-  \ms{eff}(\cdot) = \bot \qquad 
-  \ms{eff}(\Gamma, \thyp{x}{A}{\epsilon}) = \ms{eff}(\Gamma) \sqcup \epsilon
-\end{equation}
-In particular, we say $\Gamma$ is \emph{pure} if $\ms{eff}(\Gamma) = \bot$. We may now define
-packing and unpacking substitutions
-$\issubst{\ms{pack}_y^\otimes(\Gamma)}{\Gamma}{\bhyp{y}{\pckd{\Gamma}}}$,
-$\issubst{\ms{unpack}_y^\otimes(\Gamma)}{\bhyp{y}{\pckd{\Gamma}}}{\Gamma}$ as follows:
-\begin{equation}
-  \ms{pack}_y^\otimes(\Gamma) = y \mapsto \ms{packed}(\Gamma) \qquad
-  \ms{unpack}_y^\otimes(\Gamma) = (x \mapsto \pi_{\Gamma, x}\;y)_{x \in \Gamma}
-\end{equation}
-It turns out that our equational theory is sufficient to show that the pack and unpack substitutions
-are inverses of each other \emph{for pure contexts}, i.e.
-\begin{equation}
-  \begin{aligned}
-  \issubst
-    {[\ms{unpack}_y^\otimes(\Gamma)]\ms{pack}_y^\otimes(\Gamma) 
-      &\teqv \ms{id}_{\Gamma}}{\Gamma}{\Gamma}
-  \\
-  \issubst
-    {[\ms{pack}_y^\otimes(\Gamma)]\ms{unpack}_y^\otimes(\Gamma) &\teqv \ms{id}_{\bhyp{y}{[\Gamma]}}}
-    {\bhyp{y}{\Gamma}}{\bhyp{y}{\Gamma}}
-  \end{aligned}
-\end{equation}
-Similarly, we may define a ``packing'' operation $\pckd{\cdot}$ on label-contexts as follows:
-\begin{equation}
-  \pckd{\cdot} = \mb{0} \qquad \pckd{\ms{L}, \ell(A)} = \pckd{\ms{L}} + A
-\end{equation}
-We may then define injections on enums as follows:
-\begin{equation}
-  \iota_{(\ms{L}, \ell(A)), \kappa}\;e = \iota_{\ms{L}, \kappa}(\iota_l\;e) \qquad
-  \iota_{(\ms{L}, \ell(A)), \ell}\;e = \iota_r\;e
-\end{equation}
-with typing rule
-\begin{equation}
-  \prftree[r]{\rle{$\iota_{\ms{enum}}$}}
-    {\hasty{\Gamma}{\epsilon}{e}{A}}
-    {\ms{L}(\ell) = A}
-    {\hasty{\Gamma}{\epsilon}{\iota_{\ms{L}, \ell}\;e}{\pckd{\ms{L}}}}
-\end{equation}
-Similarly, we can define $n$-ary case-statements on enums as follows:
-\begin{equation}
-  \begin{aligned}
-  \ms{case}_\cdot\;e\;\{\} &= \infty \\
-  \ms{case}_{\ms{L}, \kappa(A)}\;e\;\{(\ell_i(x_i): t_i)_i, \kappa(y): s\}
-  &= \casestmt{e}{x}{\ms{case}_{\ms{L}}\;e\;\{(\ell_i(A_i): t_i)_i\}}{y}{s}
-  \end{aligned}
-\end{equation}
-with typing rule
-\begin{equation}
-  \prftree[r]{\rle{$\ms{case}_{\ms{enum}}$}}
-    {\hasty{\Gamma}{\epsilon}{e}{[\ms{L}]}}
-    {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{K}}}
-    {\haslb{\Gamma}{\ms{case}_{\ms{L}}\;e\;\{(\ell_i(x_i): t_i)_i\}}{\ms{K}}}
-\end{equation}
-where
-\begin{equation}
-  \prftree[r]{$\infty$}
-    {\haslb{\Gamma}{\infty := \where{\brb{\ell}{()}}{\wbranch{\ell}{x}{\brb{\ell}{x}}}}{\ms{L}}}
-\end{equation}
-We may now define ``packing'' and ``unpacking'' label-substitutions
-$\lbsubst{\cdot}{\ms{pack}_\kappa^+(\ms{L})}{\ms{L}}{\kappa([\ms{L}])}$,
-$\lbsubst{\cdot}{\ms{unpack}_\kappa^+(\ms{L})}{\kappa([\ms{L}])}{\ms{L}}$ as follows:
-\begin{equation}
-  \ms{pack}_\kappa^+(\cdot) = \cdot \qquad
-  \ms{pack}_\kappa^+(\ms{L}, \ell(A)) 
-  = [\kappa(x) \mapsto \brb{\kappa}{\iota_l\;x}]\ms{pack}_\kappa^+(\ms{L}), 
-    \ell(x) \mapsto \brb{\kappa}{\iota_r\;x}  
-\end{equation}
-\begin{equation}
-  \ms{unpack}_\kappa^+(\ms{L}) = \kappa(x) \mapsto \ms{unpack}^+(\ms{L})\;x
-\end{equation}
-where we have
-\begin{equation}
-  \prftree[r]{\rle{unpack$^+$}}
-    {\hasty{\Gamma}{\epsilon}{e}{\ms{L}}}
-    {\haslb{\Gamma}{\ms{unpack}^+(\ms{L})\;e}{\ms{L}}} \qquad
-  \prftree[r]{$\infty$}
-    {\haslb{\Gamma}{\infty := \where{\brb{\ell}{()}}{\wbranch{\ell}{x}{\brb{\ell}{x}}}}{\ms{L}}}
-\end{equation}
-defined as follows:
-\begin{equation}
-  \ms{unpack}^+(\cdot)\;e = \infty \qquad
-  \ms{unpack}^+(\ms{L}, \ell(A))\;e = \casestmt{e}{x}{\ms{unpack}^+(\ms{L})\;x}{y}{\brb{\ell}{y}}
-\end{equation}
-We can further show that, in this case for all label contexts $\ms{L}$, these substitutions are
-mutually inverse, i.e., that
-\begin{equation}
-  \begin{aligned}
-  \lbsubst{\Gamma}
-    {[\ms{unpack}_\kappa^+(\ms{L})]\ms{pack}_\kappa^+(\ms{L}) 
-      &\teqv \ms{id}_{\ms{L}}}{\ms{L}}{\ms{L}}
-  \\
-  \lbsubst{\Gamma}
-    {[\ms{pack}_\kappa^+(\ms{L})]\ms{unpack}_\kappa^+(\ms{L}) &\teqv \ms{id}_{\kappa([\ms{L}])}}
-    {\kappa([\ms{L}])}{\kappa([\ms{L}])}
-  \end{aligned}
-\end{equation}
-Finally, fixing a distinguished variable $\invar$, it will be very useful to define 
-a ``\emph{variable packing}'' operation on expressions and regions as follows:
-\begin{equation}
-  \haslb{\Gamma}{r}{\ms{L}} \implies 
-  \haslb{\invar : [\Gamma]}{\pckd{r}^\otimes := [\ms{unpack}_{\invar}^\otimes(\Gamma)]r}{\ms{L}}
-\end{equation}
-In particular, for $\Gamma$ pure, the packing operation $[\cdot]$ is an injection on expressions and
-regions w.r.t. the equational theory, since $\ms{unpack}_{\invar}^\otimes(\Gamma)$ has an inverse.
-Similarly, fixing a distinguished label $\outlb$, we may define a ``label packing'' operation on
-regions as follows:
-\begin{equation}
-  \haslb{\Gamma}{r}{\ms{L}} \implies 
-  \haslb{\Gamma}{\pckd{r}^+ := [\ms{pack}_{\outlb}^+(\ms{L})]r}{\outlb([\ms{L}])}
-\end{equation}
-Since the packing substitution has an inverse, it similarly follows that label packing is an
-injection w.r.t. the equational theory, i.e.
-\begin{equation}
-  \lbeq{\Gamma}{r}{r'}{\ms{L}} \iff \lbeq{\Gamma}{\pckd{r}^+}{\pckd{r'}^+}{\ms{L}}
-\end{equation}
-Finally, we can define a ``packing'' operation on regions to be given by label-packing followed by
-variable-packing, or vice versa (since it turns out the operations commute), as follows:
-\begin{equation}
-  \haslb{\Gamma}{r}{\ms{L}} \implies 
-  \haslb{\invar : [\Gamma]}
-    {\pckd{r} := \pckd{\pckd{r}^+}^\otimes = \pckd{\pckd{r}^\otimes}^+}
-    {\outlb(\ms{L})}
-\end{equation}
-We similarly have that this is an injection for $\Gamma$ pure, i.e.
-\begin{equation}
-  \lbeq{\Gamma}{r}{r'}{\ms{L}} \iff \lbeq{\Gamma}{\pckd{r}}{\pckd{r'}}{\ms{L}}
-\end{equation}
-
-\subsection{B\"ohm-Jacopini for SSA}
-
-\label{ssec:data-control}
-
-Now that we have given our equational theory, we want to show it is ``good enough'' to reason about
-the properties inherent to all SSA-based languages. In particular, we
-wish to show that we have enough power to reason about interconversion between data-flow and
-control-flow. For example, a state machine can be implemented either as a switch on a state value,
-or as a set of mutually-tail-recursive functions (i.e., the state can be encoded in the program
-counter). We demonstrate this by using some of the machinery from the previous section to state and prove a form
-of the B\"ohm-Jacopini theorem \cite{bohm-jacopini} for SSA.
-
-The B\"ohm-Jacopini theorem states that every general control-flow graph program can be rewritten to
-an equivalent program which uses only structured control-flow: i.e., it can be rewritten to a program
-using only conditional branching, sequencing, and loops. To adapt this result to SSA, we
-need to express branching, sequencing and loops as SSA regions $\haslb{\Gamma}{r}{\ms{L}}$, 
-so that we can build up an inductive set of structured regions. We will be maximally strict, and
-allow branching to an exit label in $\ms{L}$ only as the terminal statement in a structured program
-(and, in particular, not from within a loop!). It is obvious that we can represent conditional
-branching using \ms{case}-statements, but we need convenient primitives for sequencing and looping.
-Sequencing can be expressed using a \ms{where}-block as follows:
-\begin{equation}
-  \prftree[r]{\rle{seq}}
-    {\haslb{\Gamma}{r}{\outlb(A)}}
-    {\haslb{\Gamma, \bhyp{\invar}{A}}{s}{\ms{L}}}
-    {\haslb{\Gamma}{\ms{seq}(r, s) 
-      := (\where{[\outlb(x) \mapsto \brb{\ell}{x}]r}{\wbranch{\ell}{\invar}{s}})}{\ms{L}}}
-\end{equation}
-where ``$\invar$" is a distinguished input variable, and ``$\outlb$'' is a distinguished output
-label. Another, equivalent, way of writing sequencing is: 
-\begin{equation}
-  \lbeq{\Gamma}{\ms{seq}(r, s)}{[\outlb(\invar) \mapsto s]r}{\ms{L}}
-\end{equation}
-That is, when we exit $r$, we jump to (a copy of) $s$. 
-
-Expressing structured looping is a bit more complicated, since we do not have
-mutable variables and hence cannot directly express while loops. If we recall that loops
-can be expressed as tail-recursive procedures which carry the loop state in the argument,
-then we can define a ``functional do-while loop'' as follows: 
-\begin{equation}
-  \prftree[r]{\rle{loop}}
-    {\hasty{\Gamma}{\epsilon}{e}{A}}
-    {\haslb{\Gamma, \bhyp{\invar}{A}}{r}{\outlb(B + A)}}
-    {\haslb{\Gamma}{\ms{loop}(e, r) 
-      := (\where{\brb{\ell}{e}}{\wbranch{\ell}{\invar}
-        {\ms{seq}(r, \casestmt{\invar}{x}{\brb{\outlb}{x}}{y}{\brb{\ell}{y}})}})}{\outlb(B)}}
-\end{equation}
-%
-We can now define the inductive predicate
-$\shaslb{\Gamma}{r}{\ms{L}}$, which says that $r$ is a structured
-region with input variables $\Gamma$ and output labels $\ms{L}$, as in
-Figure~\ref{fig:structured-regions}. Note that this defines a subset of the
-well-typed regions: every region $r$ such that
-$\shaslb{\Gamma}{r}{\ms{L}}$ is also well-typed as $\haslb{\Gamma}{r}{\ms{L}}$.
-
-It now remains to give an algorithm to convert a region $r$ targeting label-context $\ms{L}$ into an
-equivalent structured region $\towhile{\ms{L}}{r}$. In particular, we define
-\begin{equation}
-  \towhile{\ms{L}}{r} = [\ms{unpack}^+_\outlb(\ms{L})]\topwhile{L}{r}
-\end{equation}
-where we define
-\begin{equation}
-  \begin{aligned}
-    \topwhile{\ms{L}}{\ms{br}\;\ell\;a} &= \ms{pack}^+(\ms{L})_\ell(a) \\
-    \topwhile{\ms{L}}{\letstmt{x}{a}{r}} &= \letstmt{x}{a}{\topwhile{\ms{L}}{r}} \\
-    \topwhile{\ms{L}}{\letstmt{(x, y)}{a}{r}} &= \letstmt{(x, y)}{a}{\topwhile{\ms{L}}{r}} \\
-    \topwhile{\ms{L}}{\casestmt{e}{x}{r}{y}{s}} 
-      &= \casestmt{e}{x}{\topwhile{\ms{L}}{r}}{y}{\topwhile{\ms{L}}{s}} \\
-    \topwhile{\ms{L}}{\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}} 
-      &=
-      \ms{seq}(\topwhile{\ms{L}}{r}, \caseexpr{\ms{ua}\;\invar}{x}{\brb{\outlb}{x}\\ & \qquad}{y}
-        {\ms{loop}(y, 
-        \ms{case}_{\ms{R}}\;\invar\;
-          \{\ell_i(x_i) : \ms{seq}(\topwhile{\ms{L}}{t_i}, \brb{\outlb}{(\ms{ua}\;\invar)}\})})
-      \\ \qquad \text{where} \qquad \ms{R} = (\ell_i(A_i),)
-  \end{aligned}
-\end{equation}
-and
-\begin{equation}
-  \ms{ua}_{\ms{L}, \cdot}\;e = e \qquad
-  \ms{ua}_{\ms{L}, (\ms{R}, \ell(A))}\;e 
-    = \caseexpr{e}{x}{
-        \caseexpr{\ms{ua}_{\ms{L}, \ms{R}}\;x}{z}{\iota_l\;z}{w}{\iota_r\;\iota_l\;w}}
-        {y}{\iota_r\;(\iota_r\;y)}
-\end{equation}
-%
-The $\topwhile{\ms{L}}{r}$ function does the actual transformation, and we can see that most of the
-cases are trivial except for the $\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}$ case. In this case, we replace the set of labels bound
-by the $\ms{where}$ clause with a tag and a while loop containing a case statement branching on the
-tag. (This uses the $\ms{ua}$ function, which implements associativity of n-ary coproducts. That is, 
-given $\hasty{\Gamma}{\bot}{e}{[L, R]}$, we have that
-$\hasty{\Gamma}{\bot}{\ms{ua}_{\ms{L}}\;e}{[L] + [R]}$.)
-
-The B\"ohm-Jacopini theorem for SSA can then
-be written:
-\begin{theorem}[name=B\"ohm-Jacopini for SSA, restate=bohmjacopini]
-  For all $\haslb{\Gamma}{r}{\ms{L}}$, $\shaslb{\Gamma}{\towhile{\ms{L}}{r}}{\ms{L}}$ is structured,
-  and $\lbeq{\Gamma}{r}{\towhile{\ms{L}}{r}}{\ms{L}}$. In particular, we have that
-  $\shaslb{\Gamma}{\topwhile{\ms{L}}{r}}{\outlb(\pckd{\ms{L}})}$ is structured, and
-  $\lbeq{\Gamma}{\pckd{r}^+}{\topwhile{r}}{\outlb(\pckd{\ms{L}})}$.
-\end{theorem}
-\begin{proof}
-  See Appendix~\ref{proof:bohm-jacopini}
-\end{proof}
-
-\begin{figure}
-  \begin{gather*}
-    \prftree[r]{\rle{s-br}}{\hasty{\Gamma}{\bot}{a}{A}}{\ms{L}\;\ell = A}
-      {\shaslb{\Gamma}{\brb{\ell}{a}}{\ms{L}}} \qquad
-    \prftree[r]{\rle{s-let$_1$-r}}
-      {\hasty{\Gamma}{\epsilon}{a}{A}}
-      {\shaslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
-      {\shaslb{\Gamma}{\letstmt{x}{a}{r}}{\ms{L}}} \\
-    \prftree[r]{\rle{s-let$_2$-r}}
-      {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
-      {\shaslb{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{r}{\ms{L}}}
-      {\shaslb{\Gamma}{\letstmt{(x, y)}{e}{r}}{\ms{L}}} \\
-    \prftree[r]{\rle{s-case-r}}
-      {\hasty{\Gamma}{\epsilon}{e}{A + B}}
-      {\shaslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
-      {\shaslb{\Gamma, \bhyp{y}{B}}{s}{\ms{L}}}
-      {\shaslb{\Gamma}{\casestmt{e}{x}{r}{y}{s}}{\ms{L}}} \\
-    \prftree[r]{\rle{s-seq}}
-      {\shaslb{\Gamma}{r}{\outlb(A)}}
-      {\shaslb{\Gamma, \bhyp{\invar}{A}}{s}{\ms{L}}}
-      {\shaslb{\Gamma}{\ms{seq}(r, s)}{\ms{L}}} \qquad
-    \prftree[r]{\rle{s-loop}}
-      {\hasty{\Gamma}{\epsilon}{e}{\outlb(A)}}
-      {\shaslb{\Gamma, \bhyp{\invar}{A}}{r}{\outlb(B + A)}}
-      {\shaslb{\Gamma}{\ms{loop}(e, r)}{\outlb(B)}}
-  \end{gather*}
-  \caption{Typing rules for structured regions}
-  \Description{}
-  \label{fig:structured-regions}
 \end{figure}
 
 \section{Denotational Semantics}
@@ -4230,7 +3880,8 @@ Our strategy for doing this is as follows:
         {\dnt{\haslb{\Delta}{r}{\ms{K}}}_{\ms{Th}(\Gamma, \ms{L})}}{\ms{L}, \outlb(\pckd{\ms{K}})}
     \end{gathered}
   \end{equation}
-  where packing of contexts is defined as in Section~\ref{ssec:records-enums}.
+  where packing of contexts into types $\pckd{\Delta}$ is defined as in
+  Appendix~\ref{apx:records-enums}.
   
   \item Finally, we refine this result to show that
   \begin{equation}
@@ -4248,7 +3899,7 @@ Our strategy for doing this is as follows:
     \end{gathered}
   \end{equation}
   where $\ms{ret}\;a := \brb{\outlb}{a}$. Since the packing operator $\pckd{\cdot}$ on terms and
-  regions from Section~\ref{ssec:records-enums} is injective for pure contexts $\ms{eff}(\Gamma) =
+  regions from Appendix~\ref{apx:records-enums} is injective for pure contexts $\ms{eff}(\Gamma) =
   \bot$, and hence in particular for $\Gamma = \cdot$, $\ms{L} = \cdot$, it follows that in this
   case the category of expressions and the category of regions are the initial distributive
   \isotopessa{} expression model and \isotopessa{} model respectively.
@@ -5302,6 +4953,319 @@ agreement no. 101002277).
 
 \appendix
 
+\section{Records and Enums}
+
+\label{apx:records-enums}
+
+For simplicity, we defined our language to have only binary products and sums. However, we would
+like to support records (named $n$-ary products) and enums (named $n$-ary sums). We will implement
+these on top of our language using contexts; the resulting machinery will turn out to be crucial in
+proving the B\"ohm-Jacopini theorem in Appendix~\ref{apx:data-control} and completeness in
+Section~\ref{ssec:completeness}. We begin by defining \emph{packing} of variable contexts as
+follows:
+\begin{equation}
+  \pckd{\cdot} = \mb{1} \qquad \pckd{\Gamma, \thyp{x}{A}{\epsilon}} = \pckd{\Gamma} \otimes A
+\end{equation}
+While in general we destructure pairs using binary \ms{let}-bindings, it will be more convenient
+to start defining operations on records in terms of projections. We begin by defining projections
+on pairs in the obvious manner:
+\begin{equation}
+  \prftree[r]{\rle{$\pi_l$}}
+    {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
+    {\hasty{\Gamma}{\epsilon}{\pi_l\;e := (\letexpr{(x, y)}{e}{x})}{A}}
+  \qquad
+  \prftree[r]{\rle{$\pi_r$}}
+    {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
+    {\hasty{\Gamma}{\epsilon}{\pi_r\;e := (\letexpr{(x, y)}{e}{y})}{A}}
+\end{equation}
+We may then define projections on records as follows:
+\begin{equation}
+  \pi_{(\Delta, \thyp{x}{A}{\epsilon}), y}\;e = \pi_{\Delta, y}(\pi_l\;e) \qquad
+  \pi_{(\Delta, \thyp{x}{A}{\epsilon}), x}\;e = \pi_r\;e
+\end{equation}
+with typing rule
+\begin{equation}
+  \prftree[r]{\rle{$\pi_{\ms{rec}}$}}
+    {\hasty{\Gamma}{\epsilon}{e}{\pckd{\Delta}}}
+    {\Delta(x) = A}
+    {\hasty{\Gamma}{\epsilon}{\pi_{\Delta, x}\;e}{A}}
+\end{equation}
+We will omit $\Delta$ when it is clear from context. We can define a term
+$\hasty{\Gamma}{\ms{eff}(\Gamma)}{\ms{packed}(\Gamma)}{[\Gamma]}$ to ``pack'' up the current context
+into a record as follows:
+\begin{equation}
+  \ms{packed}(\cdot) = () \qquad
+  \ms{packed}(\Gamma, \thyp{x}{A}{\epsilon}) = (\ms{packed}(\Gamma), x)
+\end{equation}
+where we define the \emph{effect} of a context $\Gamma$ as follows
+\begin{equation}
+  \ms{eff}(\cdot) = \bot \qquad 
+  \ms{eff}(\Gamma, \thyp{x}{A}{\epsilon}) = \ms{eff}(\Gamma) \sqcup \epsilon
+\end{equation}
+In particular, we say $\Gamma$ is \emph{pure} if $\ms{eff}(\Gamma) = \bot$. We may now define
+packing and unpacking substitutions
+$\issubst{\ms{pack}_y^\otimes(\Gamma)}{\Gamma}{\bhyp{y}{\pckd{\Gamma}}}$,
+$\issubst{\ms{unpack}_y^\otimes(\Gamma)}{\bhyp{y}{\pckd{\Gamma}}}{\Gamma}$ as follows:
+\begin{equation}
+  \ms{pack}_y^\otimes(\Gamma) = y \mapsto \ms{packed}(\Gamma) \qquad
+  \ms{unpack}_y^\otimes(\Gamma) = (x \mapsto \pi_{\Gamma, x}\;y)_{x \in \Gamma}
+\end{equation}
+It turns out that our equational theory is sufficient to show that the pack and unpack substitutions
+are inverses of each other \emph{for pure contexts}, i.e.
+\begin{equation}
+  \begin{aligned}
+  \issubst
+    {[\ms{unpack}_y^\otimes(\Gamma)]\ms{pack}_y^\otimes(\Gamma) 
+      &\teqv \ms{id}_{\Gamma}}{\Gamma}{\Gamma}
+  \\
+  \issubst
+    {[\ms{pack}_y^\otimes(\Gamma)]\ms{unpack}_y^\otimes(\Gamma) &\teqv \ms{id}_{\bhyp{y}{[\Gamma]}}}
+    {\bhyp{y}{\Gamma}}{\bhyp{y}{\Gamma}}
+  \end{aligned}
+\end{equation}
+Similarly, we may define a ``packing'' operation $\pckd{\cdot}$ on label-contexts as follows:
+\begin{equation}
+  \pckd{\cdot} = \mb{0} \qquad \pckd{\ms{L}, \ell(A)} = \pckd{\ms{L}} + A
+\end{equation}
+We may then define injections on enums as follows:
+\begin{equation}
+  \iota_{(\ms{L}, \ell(A)), \kappa}\;e = \iota_{\ms{L}, \kappa}(\iota_l\;e) \qquad
+  \iota_{(\ms{L}, \ell(A)), \ell}\;e = \iota_r\;e
+\end{equation}
+with typing rule
+\begin{equation}
+  \prftree[r]{\rle{$\iota_{\ms{enum}}$}}
+    {\hasty{\Gamma}{\epsilon}{e}{A}}
+    {\ms{L}(\ell) = A}
+    {\hasty{\Gamma}{\epsilon}{\iota_{\ms{L}, \ell}\;e}{\pckd{\ms{L}}}}
+\end{equation}
+Similarly, we can define $n$-ary case-statements on enums as follows:
+\begin{equation}
+  \begin{aligned}
+  \ms{case}_\cdot\;e\;\{\} &= \infty \\
+  \ms{case}_{\ms{L}, \kappa(A)}\;e\;\{(\ell_i(x_i): t_i)_i, \kappa(y): s\}
+  &= \casestmt{e}{x}{\ms{case}_{\ms{L}}\;e\;\{(\ell_i(A_i): t_i)_i\}}{y}{s}
+  \end{aligned}
+\end{equation}
+with typing rule
+\begin{equation}
+  \prftree[r]{\rle{$\ms{case}_{\ms{enum}}$}}
+    {\hasty{\Gamma}{\epsilon}{e}{[\ms{L}]}}
+    {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{K}}}
+    {\haslb{\Gamma}{\ms{case}_{\ms{L}}\;e\;\{(\ell_i(x_i): t_i)_i\}}{\ms{K}}}
+\end{equation}
+where
+\begin{equation}
+  \prftree[r]{$\infty$}
+    {\haslb{\Gamma}{\infty := \where{\brb{\ell}{()}}{\wbranch{\ell}{x}{\brb{\ell}{x}}}}{\ms{L}}}
+\end{equation}
+We may now define ``packing'' and ``unpacking'' label-substitutions
+$\lbsubst{\cdot}{\ms{pack}_\kappa^+(\ms{L})}{\ms{L}}{\kappa([\ms{L}])}$,
+$\lbsubst{\cdot}{\ms{unpack}_\kappa^+(\ms{L})}{\kappa([\ms{L}])}{\ms{L}}$ as follows:
+\begin{equation}
+  \ms{pack}_\kappa^+(\cdot) = \cdot \qquad
+  \ms{pack}_\kappa^+(\ms{L}, \ell(A)) 
+  = [\kappa(x) \mapsto \brb{\kappa}{\iota_l\;x}]\ms{pack}_\kappa^+(\ms{L}), 
+    \ell(x) \mapsto \brb{\kappa}{\iota_r\;x}  
+\end{equation}
+\begin{equation}
+  \ms{unpack}_\kappa^+(\ms{L}) = \kappa(x) \mapsto \ms{unpack}^+(\ms{L})\;x
+\end{equation}
+where we have
+\begin{equation}
+  \prftree[r]{\rle{unpack$^+$}}
+    {\hasty{\Gamma}{\epsilon}{e}{\ms{L}}}
+    {\haslb{\Gamma}{\ms{unpack}^+(\ms{L})\;e}{\ms{L}}} \qquad
+  \prftree[r]{$\infty$}
+    {\haslb{\Gamma}{\infty := \where{\brb{\ell}{()}}{\wbranch{\ell}{x}{\brb{\ell}{x}}}}{\ms{L}}}
+\end{equation}
+defined as follows:
+\begin{equation}
+  \ms{unpack}^+(\cdot)\;e = \infty \qquad
+  \ms{unpack}^+(\ms{L}, \ell(A))\;e = \casestmt{e}{x}{\ms{unpack}^+(\ms{L})\;x}{y}{\brb{\ell}{y}}
+\end{equation}
+We can further show that, in this case for all label contexts $\ms{L}$, these substitutions are
+mutually inverse, i.e., that
+\begin{equation}
+  \begin{aligned}
+  \lbsubst{\Gamma}
+    {[\ms{unpack}_\kappa^+(\ms{L})]\ms{pack}_\kappa^+(\ms{L}) 
+      &\teqv \ms{id}_{\ms{L}}}{\ms{L}}{\ms{L}}
+  \\
+  \lbsubst{\Gamma}
+    {[\ms{pack}_\kappa^+(\ms{L})]\ms{unpack}_\kappa^+(\ms{L}) &\teqv \ms{id}_{\kappa([\ms{L}])}}
+    {\kappa([\ms{L}])}{\kappa([\ms{L}])}
+  \end{aligned}
+\end{equation}
+Finally, fixing a distinguished variable $\invar$, it will be very useful to define 
+a ``\emph{variable packing}'' operation on expressions and regions as follows:
+\begin{equation}
+  \haslb{\Gamma}{r}{\ms{L}} \implies 
+  \haslb{\invar : [\Gamma]}{\pckd{r}^\otimes := [\ms{unpack}_{\invar}^\otimes(\Gamma)]r}{\ms{L}}
+\end{equation}
+In particular, for $\Gamma$ pure, the packing operation $[\cdot]$ is an injection on expressions and
+regions w.r.t. the equational theory, since $\ms{unpack}_{\invar}^\otimes(\Gamma)$ has an inverse.
+Similarly, fixing a distinguished label $\outlb$, we may define a ``label packing'' operation on
+regions as follows:
+\begin{equation}
+  \haslb{\Gamma}{r}{\ms{L}} \implies 
+  \haslb{\Gamma}{\pckd{r}^+ := [\ms{pack}_{\outlb}^+(\ms{L})]r}{\outlb([\ms{L}])}
+\end{equation}
+Since the packing substitution has an inverse, it similarly follows that label packing is an
+injection w.r.t. the equational theory, i.e.
+\begin{equation}
+  \lbeq{\Gamma}{r}{r'}{\ms{L}} \iff \lbeq{\Gamma}{\pckd{r}^+}{\pckd{r'}^+}{\ms{L}}
+\end{equation}
+Finally, we can define a ``packing'' operation on regions to be given by label-packing followed by
+variable-packing, or vice versa (since it turns out the operations commute), as follows:
+\begin{equation}
+  \haslb{\Gamma}{r}{\ms{L}} \implies 
+  \haslb{\invar : [\Gamma]}
+    {\pckd{r} := \pckd{\pckd{r}^+}^\otimes = \pckd{\pckd{r}^\otimes}^+}
+    {\outlb(\ms{L})}
+\end{equation}
+We similarly have that this is an injection for $\Gamma$ pure, i.e.
+\begin{equation}
+  \lbeq{\Gamma}{r}{r'}{\ms{L}} \iff \lbeq{\Gamma}{\pckd{r}}{\pckd{r'}}{\ms{L}}
+\end{equation}
+
+
+\subsection{B\"ohm-Jacopini for SSA}
+
+\label{apx:data-control}
+
+Now that we have given our equational theory, we want to show it is ``good enough'' to reason about
+the properties inherent to all SSA-based languages. In particular, we wish to show that we have
+enough power to reason about interconversion between data-flow and control-flow. For example, a
+state machine can be implemented either as a switch on a state value, or as a set of
+mutually-tail-recursive functions (i.e., the state can be encoded in the program counter). We
+demonstrate this by using some of the machinery from the previous section to state and prove a form
+of the B\"ohm-Jacopini theorem \cite{bohm-jacopini} for SSA.
+
+The B\"ohm-Jacopini theorem states that every general control-flow graph program can be rewritten to
+an equivalent program which uses only structured control-flow: i.e., it can be rewritten to a program
+using only conditional branching, sequencing, and loops. To adapt this result to SSA, we
+need to express branching, sequencing and loops as SSA regions $\haslb{\Gamma}{r}{\ms{L}}$, 
+so that we can build up an inductive set of structured regions. We will be maximally strict, and
+allow branching to an exit label in $\ms{L}$ only as the terminal statement in a structured program
+(and, in particular, not from within a loop!). It is obvious that we can represent conditional
+branching using \ms{case}-statements, but we need convenient primitives for sequencing and looping.
+Sequencing can be expressed using a \ms{where}-block as follows:
+\begin{equation}
+  \prftree[r]{\rle{seq}}
+    {\haslb{\Gamma}{r}{\outlb(A)}}
+    {\haslb{\Gamma, \bhyp{\invar}{A}}{s}{\ms{L}}}
+    {\haslb{\Gamma}{\ms{seq}(r, s) 
+      := (\where{[\outlb(x) \mapsto \brb{\ell}{x}]r}{\wbranch{\ell}{\invar}{s}})}{\ms{L}}}
+\end{equation}
+where ``$\invar$" is a distinguished input variable, and ``$\outlb$'' is a distinguished output
+label. Another, equivalent, way of writing sequencing is: 
+\begin{equation}
+  \lbeq{\Gamma}{\ms{seq}(r, s)}{[\outlb(\invar) \mapsto s]r}{\ms{L}}
+\end{equation}
+That is, when we exit $r$, we jump to (a copy of) $s$. 
+
+Expressing structured looping is a bit more complicated, since we do not have
+mutable variables and hence cannot directly express while loops. If we recall that loops
+can be expressed as tail-recursive procedures which carry the loop state in the argument,
+then we can define a ``functional do-while loop'' as follows: 
+\begin{equation}
+  \prftree[r]{\rle{loop}}
+    {\hasty{\Gamma}{\epsilon}{e}{A}}
+    {\haslb{\Gamma, \bhyp{\invar}{A}}{r}{\outlb(B + A)}}
+    {\haslb{\Gamma}{\ms{loop}(e, r) 
+      := (\where{\brb{\ell}{e}}{\wbranch{\ell}{\invar}
+        {\ms{seq}(r, \casestmt{\invar}{x}{\brb{\outlb}{x}}{y}{\brb{\ell}{y}})}})}{\outlb(B)}}
+\end{equation}
+%
+We can now define the inductive predicate
+$\shaslb{\Gamma}{r}{\ms{L}}$, which says that $r$ is a structured
+region with input variables $\Gamma$ and output labels $\ms{L}$, as in
+Figure~\ref{fig:structured-regions}. Note that this defines a subset of the
+well-typed regions: every region $r$ such that
+$\shaslb{\Gamma}{r}{\ms{L}}$ is also well-typed as $\haslb{\Gamma}{r}{\ms{L}}$.
+
+It now remains to give an algorithm to convert a region $r$ targeting label-context $\ms{L}$ into an
+equivalent structured region $\towhile{\ms{L}}{r}$. In particular, we define
+\begin{equation}
+  \towhile{\ms{L}}{r} = [\ms{unpack}^+_\outlb(\ms{L})]\topwhile{L}{r}
+\end{equation}
+where we define
+\begin{equation}
+  \begin{aligned}
+    \topwhile{\ms{L}}{\ms{br}\;\ell\;a} &= \ms{pack}^+(\ms{L})_\ell(a) \\
+    \topwhile{\ms{L}}{\letstmt{x}{a}{r}} &= \letstmt{x}{a}{\topwhile{\ms{L}}{r}} \\
+    \topwhile{\ms{L}}{\letstmt{(x, y)}{a}{r}} &= \letstmt{(x, y)}{a}{\topwhile{\ms{L}}{r}} \\
+    \topwhile{\ms{L}}{\casestmt{e}{x}{r}{y}{s}} 
+      &= \casestmt{e}{x}{\topwhile{\ms{L}}{r}}{y}{\topwhile{\ms{L}}{s}} \\
+    \topwhile{\ms{L}}{\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}} 
+      &=
+      \ms{seq}(\topwhile{\ms{L}}{r}, \caseexpr{\ms{ua}\;\invar}{x}{\brb{\outlb}{x}\\ & \qquad}{y}
+        {\ms{loop}(y, 
+        \ms{case}_{\ms{R}}\;\invar\;
+          \{\ell_i(x_i) : \ms{seq}(\topwhile{\ms{L}}{t_i}, \brb{\outlb}{(\ms{ua}\;\invar)}\})})
+      \\ \qquad \text{where} \qquad \ms{R} = (\ell_i(A_i),)
+  \end{aligned}
+\end{equation}
+and
+\begin{equation}
+  \ms{ua}_{\ms{L}, \cdot}\;e = e \qquad
+  \ms{ua}_{\ms{L}, (\ms{R}, \ell(A))}\;e 
+    = \caseexpr{e}{x}{
+        \caseexpr{\ms{ua}_{\ms{L}, \ms{R}}\;x}{z}{\iota_l\;z}{w}{\iota_r\;\iota_l\;w}}
+        {y}{\iota_r\;(\iota_r\;y)}
+\end{equation}
+%
+The $\topwhile{\ms{L}}{r}$ function does the actual transformation, and we can see that most of the
+cases are trivial except for the $\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}$ case. In this case, we
+replace the set of labels bound by the $\ms{where}$ clause with a tag and a while loop containing a
+case statement branching on the tag. (This uses the $\ms{ua}$ function, which implements
+associativity of n-ary coproducts. That is, given $\hasty{\Gamma}{\bot}{e}{[L, R]}$, we have that
+$\hasty{\Gamma}{\bot}{\ms{ua}_{\ms{L}}\;e}{[L] + [R]}$.)
+
+The B\"ohm-Jacopini theorem for SSA can then
+be written:
+\begin{theorem}[name=B\"ohm-Jacopini for SSA, restate=bohmjacopini]
+  For all $\haslb{\Gamma}{r}{\ms{L}}$, $\shaslb{\Gamma}{\towhile{\ms{L}}{r}}{\ms{L}}$ is structured,
+  and $\lbeq{\Gamma}{r}{\towhile{\ms{L}}{r}}{\ms{L}}$. In particular, we have that
+  $\shaslb{\Gamma}{\topwhile{\ms{L}}{r}}{\outlb(\pckd{\ms{L}})}$ is structured, and
+  $\lbeq{\Gamma}{\pckd{r}^+}{\topwhile{r}}{\outlb(\pckd{\ms{L}})}$.
+\end{theorem}
+\begin{proof}
+  See Appendix~\ref{proof:bohm-jacopini}
+\end{proof}
+
+\begin{figure}
+  \begin{gather*}
+    \prftree[r]{\rle{s-br}}{\hasty{\Gamma}{\bot}{a}{A}}{\ms{L}\;\ell = A}
+      {\shaslb{\Gamma}{\brb{\ell}{a}}{\ms{L}}} \qquad
+    \prftree[r]{\rle{s-let$_1$-r}}
+      {\hasty{\Gamma}{\epsilon}{a}{A}}
+      {\shaslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
+      {\shaslb{\Gamma}{\letstmt{x}{a}{r}}{\ms{L}}} \\
+    \prftree[r]{\rle{s-let$_2$-r}}
+      {\hasty{\Gamma}{\epsilon}{e}{A \otimes B}}
+      {\shaslb{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{r}{\ms{L}}}
+      {\shaslb{\Gamma}{\letstmt{(x, y)}{e}{r}}{\ms{L}}} \\
+    \prftree[r]{\rle{s-case-r}}
+      {\hasty{\Gamma}{\epsilon}{e}{A + B}}
+      {\shaslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
+      {\shaslb{\Gamma, \bhyp{y}{B}}{s}{\ms{L}}}
+      {\shaslb{\Gamma}{\casestmt{e}{x}{r}{y}{s}}{\ms{L}}} \\
+    \prftree[r]{\rle{s-seq}}
+      {\shaslb{\Gamma}{r}{\outlb(A)}}
+      {\shaslb{\Gamma, \bhyp{\invar}{A}}{s}{\ms{L}}}
+      {\shaslb{\Gamma}{\ms{seq}(r, s)}{\ms{L}}} \qquad
+    \prftree[r]{\rle{s-loop}}
+      {\hasty{\Gamma}{\epsilon}{e}{\outlb(A)}}
+      {\shaslb{\Gamma, \bhyp{\invar}{A}}{r}{\outlb(B + A)}}
+      {\shaslb{\Gamma}{\ms{loop}(e, r)}{\outlb(B)}}
+  \end{gather*}
+  \caption{Typing rules for structured regions}
+  \Description{}
+  \label{fig:structured-regions}
+\end{figure}
+
 \section{The Environment Comonad}
 
 \label{apx:environment}
@@ -5963,8 +5927,52 @@ We may now state our desired result as follows:
   \end{itemize}
 \end{proof}
 
-\section{Proofs}
+\section{Definitions and Proofs}
 
+\subsection{Syntactic Metatheory}
+
+\begin{figure}
+  \begin{gather*}
+    (\gamma, x \mapsto e)(x) = e \qquad
+    (\gamma, y \mapsto e)(x) = \gamma(x) \qquad
+    (\cdot)(x) = x
+    \\ \\
+    [\gamma]x = \gamma(x) \qquad
+    [\gamma](\letexpr{x}{a}{e}) = \letexpr{x}{[\gamma]a}{[\gamma]e} \qquad
+    [\gamma](a, b) = ([\gamma]a, [\gamma]b) \qquad
+    [\gamma]() = () \\
+    [\gamma](\letexpr{(x, y)}{a}{e})
+    = \letexpr{(x, y)}{[\gamma]a}{[\gamma]e} \qquad
+    [\gamma](\linl{a}) = \linl{[\gamma]a} \qquad
+    [\gamma](\linr{b}) = \linr{[\gamma]b} \\
+    [\gamma](\caseexpr{e}{x}{a}{y}{b}) =
+    \caseexpr{[\gamma]e}{x}{[\gamma]a}{y}{[\gamma]b} \\
+    [\gamma](\labort{a}) = \labort{[\gamma]a} 
+    \\ \\
+    [\gamma](\brb{\ell}{a}) = \brb{\ell}{[\gamma]a} \qquad
+    [\gamma](\letstmt{x}{a}{r}) = \letstmt{x}{[\gamma]a}{[\gamma]r} \\
+    [\gamma](\letstmt{(x, y)}{e}{r}) = \letstmt{(x, y)}{[\gamma]e}{[\gamma]r} \\
+    [\gamma](\casestmt{e}{x}{r}{y}{s}) 
+    = \casestmt{[\gamma]e}{x}{[\gamma]r}{y}{[\gamma]s} \\
+    [\gamma](\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}) =
+    \where{[\gamma]r}{(\wbranch{\ell_i}{x_i}{[\gamma]t_i},)_i} 
+    \\ \\
+    [\gamma](\cdot) = \cdot \qquad
+    [\gamma](\gamma', x \mapsto e) 
+    = ([\gamma]\gamma', x \mapsto [\gamma]e)
+    \\ \\
+    [\gamma](\cdot) = \cdot \qquad
+    [\gamma](\sigma, \ell(x) \mapsto r) 
+    = ([\gamma]\sigma, \ell(x) \mapsto [\gamma]r)
+  \end{gather*}
+  \caption{ 
+    Capture-avoiding substititon for \isotopessa{} terms, regions, and
+    (label) substitutions; in particular, we assume bound variables and labels
+    are $\alpha$-converted so as not to appear in $\gamma$/$\sigma$. 
+  }
+  \Description{}
+  \label{fig:ssa-subst-def}
+\end{figure}
 
 \subsection{Strict SSA}
 
