@@ -271,31 +271,54 @@ because it makes many optimizations much easier to do than traditional 3-address
 
 The key idea behind SSA is to adapt an idea from functional programming: namely, every variable is
 defined only once. This means that substitution is unconditionally valid, without first requiring a
-dataflow analysis to compute where definitions reach. Unlike in functional programming, though,
-scoping of definitions in SSA is traditionally not lexical. Instead, scoping is determined by
+dataflow analysis to compute where definitions reach. Furthermore, because variables are immutable,
+they can have at most one value, which means that a program analysis only needs to store an abstract
+value once per variable, rather than once per variable per progam point, reducing memory overheads
+from quadratic to linear. Unlike in functional programming, though,
+scoping of definitions in SSA is traditionally not lexical. Instead, scoping is defined by
 \emph{dominance}: every variable occurrence must be dominated by a single assignment in the control
 flow graph.
 
-The semantics of SSA has traditionally been handled quite informally, because conceptually, it is a
+Traditionally, the semantics of SSA has been handled informally, since it was conceived of as a
 simple first-order imperative programming language. As a result, whether a rewrite is sound or not
-is usually obvious, without having to do a complex correctness argument.
+is usually obvious, without having to do a complex correctness argument. Unfortunately, all of 
+computers, languages and compilers have become more complex since in the late 1980s. 
 
-Unfortunately, computers are no longer as simple as they were in the late 1980s. Modern computers
-are typically multicore, and feature many levels of caching, and as a result the semantics of memory
-is no longer correctly modelled as a big array of bytes. Finding good semantics for modern weak
-memory systems remains an ongoing challenge.
+Essentially all modern computers are multicore and feature many levels of caching. As a result,
+the semantics of memory can no longer be correctly modelled as a big array of bytes, and the
+execution of a multithreaded program can no longer be viewed as an interleaving of its threads'
+sequential execution traces. Finding good semantics for modern weak memory systems remains an
+ongoing challenge. Furthermore, each programming language's semantics must also have its own model
+of weak memory which both abstracts over the differing weak memory models of all the architectures
+the language gets compiled to, and also validates the optimizations which compiler writers
+wish to perform. Finally, modern compilers exploit semantic properties like undefined behaviour to
+transform programs much more aggressively than they did in the previous millenium. 
 
-As a result, it is not correct to justify compiler optimizations in terms of a simple imperative
-model, and it is an open question which equations should hold of an SSA program. This is a
-particularly fraught question, because it is also unclear which equations weak memory models should
-satisfy.
+As a result, it is no longer correct to justify compiler optimizations in terms of the simple imperative
+model, and it is an open question which equations should hold of an SSA program. Note that the pressure
+on SSA as an intermediate representation comes from all directions: the machine semantics, the language
+semantics, and the compiler optimizations have all become more complicated. Once all of these concerns
+are tangled together, it is very hard to decide if a particular transformation should hold or not. 
 
-What we would like to know is which equations any SSA representation should satisfy. This would let
-us establish a contract between compiler writers and hardware designers. The compiler writers could
-rely upon the equational theory of SSA when justifying optimizations, without needing to know all
+To resolve this issue, we propose studying the equational theory of SSA. Having a well-defined
+equational theory for SSA will let us disentangle these concerns, because the equational theory can
+serve as an interface which both compiler writers and hardware designers can use. The compiler writers
+can rely upon the equational theory of SSA when justifying optimizations, without needing to know all
 the details of the memory model at all times.  Conversely, memory models could be validated by
 seeing if they satisfy the equations of SSA, without needing to study every possible compiler
 optimization.
+
+Defining an equational theory for SSA is a nontrivial problem, for both minor and major reasons.
+Traditionally, SSA is presented as a collection of basic blocks augmented with $\phi$-functions
+to handle control-flow merges. This is a good representation for compiler engineering, but creates
+a large number of papercuts when defining an operational semantics or equational theory. 
+Operational semantics for SSA have to keep track of the execution history to correctly interpret
+$\phi$-nodes, and the lack of compound expressions makes it awkward to define and use primitives
+like parallel substitution. 
+
+These issues are a persistent nuisance when defining a semantics, and become a bigger problem
+when actually using it prove theorems. \todo{vellum example}
+
 
 Concretely, our contributions are as follows: 
 

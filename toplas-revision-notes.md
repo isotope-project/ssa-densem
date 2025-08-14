@@ -7,10 +7,10 @@
 
    Here are the questions we need to answer:
 
-   1. Articulate the problem. 
+   1. Articulate the problem. [DONE]
    2. Explain the state of the art, and why it does not solve the problem. 
-      - SSA is the most widely used compiler IR
-      - Giving it a semantics is a nuisance (eg, phi-functions are a PITA)	
+      + SSA is the most widely used compiler IR
+      + Giving it a semantics is a nuisance (eg, phi-functions are a PITA)	
       - Using the semantics you make up is very, very painful (Vellvm example) 
       - The reason is that we do not have a good equational theory for SSA as a language.
       - This has more bad side-effects
@@ -91,7 +91,7 @@
    - Line 63-65: "We show that any denotational model with this categorical
      structure is also a model of SSA" not sure what the distinction
      between "denotational model" and "model of SSA" is here, it seems
-     redundant
+q     redundant
 
    - Line 66-70: there don't seem to be any applications of a completeness
      result given, only of the soundness. Is there any significance of this
