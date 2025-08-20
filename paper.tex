@@ -172,6 +172,13 @@
 % Formalization pointers
 \newcommand{\formalizedas}[1]{Formalized as \texttt{#1}}
 
+% Brookes lore
+\newcommand{\obind}{\mathbin{>\!\!>\mkern-6.7mu=}}
+\newcommand{\mpure}[1]{\eta_#1}
+\newcommand{\mbind}[3]{#2 \obind_{#1} #3}
+\newcommand{\tret}[2]{#1 \therefore #2}
+\newcommand{\tref}{\twoheadrightarrow}
+
 %% Rights management information.  This information is sent to you
 %% when you complete the rights form.  These commands have SAMPLE
 %% values in them; it is your responsibility as an author to replace
@@ -4587,6 +4594,191 @@ $d_{A + B} = d_A + d_B$, and $d_{A \otimes B} = A \otimes d_B = d_A \otimes B$, 
 $\ms{Ide}(\mc{C}, d)$ is an \isotopessa{} (expression) model as well. It turns out that all these
 properties hold for $d = \ms{pflush}$, giving us our final categorical model for TSO weak memory,
 $\ms{PTSO} = \ms{Ide}(\ms{Set}_{\ms{TSO}}, \ms{pflush})$.
+
+\subsection{Brookes-Style Models}
+
+\label{apx:rel-acq}
+
+In this section, we show how to construct a concurrency monad from a
+\citet{brookes-full-abstraction-96}-style model of concurrency, which we axiomatize. We will then
+explicitly show how to instantiate the model for sequentially consistent execution from
+\citet{brookes-full-abstraction-96}. We begin by defining a \emph{countable closure operator}, given
+below:
+\begin{definition}[Countable Closure Operator]
+  We define a \emph{(countable) closure operator} $\ms{c}: \mc{P}(T) \to \mc{P}(T)$ on $T$ to be a
+  function on sets of $T$ which:
+  \begin{itemize}
+    \item \emph{is extensive}: $X \subseteq \ms{c}(X)$
+    \item \emph{is idempotent}: $\ms{c}(\ms{c}(X)) = \ms{c}(X)$
+    \item \emph{distributes over countable unions}: $\ms{c}(\bigcup_i X_i) = \bigcup_i \ms{c}(X_i)$
+  \end{itemize}
+  We say a set $X$ such that $\ms{c}(X) = X$ is \emph{closed} under $\ms{c}$. 
+\end{definition}
+Note that this differs from the standard definition of a Kuratowski topological closure operator,
+which only requires us to distributive over \emph{finite} unions. We define the \emph{lift} of a
+closure operator $\ms{c}_A : \mc{P}(T \times A) \to \mc{P}(T \times A)$ to be given by
+\begin{equation*}
+  \ms{c}_A(X) := \bigcup_{a \in A}\{(t', a) \mid t' \in \ms{c}(\{t \mid (t, a) \in X\})\}
+\end{equation*}
+Identifying $\mc{P}(T \times A)$ with $A \to \mc{P}(T)$, this is equivalent to stating that
+$\ms{c}_A(X) := \ms{c} \circ X$. It is hence easy to check that this gives a closure operator on $T
+\times A$.
+\begin{definition}[Brookes Monad]
+  Given a monoid of \emph{traces} $T$ and a closure operator $\ms{c}: \mc{P}(T) \to \mc{P}(T)$, we
+  define the \emph{Brookes monad} $\ms{B}_{\ms{c}}$ over $\ms{c}$ to be given by closed sets of
+  pairs $\tret{t}{a}$ of \emph{traces} $t \in T$ and \emph{results} $a \in A$. In particular, we
+  define
+  $$
+  \ms{B}_{\ms{c}}(A) := \ms{c}_A(\mc{P}(T \times A)) \simeq A \to \ms{c}(\mc{P}(T))
+  $$
+  with
+  $$
+  \eta_{\ms{B}_{\ms{c}}}\;a := \ms{c}_A(\{\tret{1}{a}\}) \qquad
+  \mbind{\ms{B}_{\ms{c}}}{X}{f} 
+  := \ms{c}_A(\{\tret{t \cdot t'}{b} \mid \exists a . \tret{t}{a} \in X, \tret{t'}{b} \in X'\})
+  $$
+  It is easy to see that the Brookes monad is in fact poset-enriched under the inclusion order. We
+  say a Brookes monad is \emph{standard} if $T = \langle S, S \rangle^*$ is the monoid of finite
+  sequences of \emph{rely-guarantee pairs} of \emph{states} $S$.
+\end{definition}
+We note that this definition gives us a Kleisli category which is not only poset-enriched, but in
+fact compatible with countable unions: with the usual definition $\cup_i f_i := \lambda a . \cup_i
+f_i(a)$, we have
+\begin{align*}
+  ((\bigcup_i f_i) ; g)(a) &:= \ms{c}_C(\{
+    \tret{t \cdot t'}{c} \mid \exists b . \tret{t}{b} \in \bigcup_i f_i(a), \tret{t'}{c} \in g(b)
+  \}) \\
+  &= \ms{c}(\bigcup_i \{
+      \tret{t \cdot t'}{c} \mid \exists b . \tret{t}{b} \in f_i(a), \tret{t'}{c} \in g(b)
+    \}) \\
+  &= \bigcup_i \ms{c}(\{
+      \tret{t \cdot t'}{c} \mid \exists b . \tret{t}{b} \in f_i(a), \tret{t'}{c} \in g(b)
+    \}) \\
+  &= \bigcup_i (f_i ; g)(a)
+  \\
+  f ; (\bigcup_i g_i)(a) &:= \ms{c}(\{
+    \tret{t \cdot t'}{c} \mid \exists b . \tret{t}{b} \in f(a), \tret{t'}{c} \in \bigcup_i g_i(b)
+  \}) \\
+  &= \ms{c}(\bigcup_i \{
+    \tret{t \cdot t'}{c} \mid \exists b . \tret{t}{b} \in f(a), \tret{t'}{c} \in g_i(b)
+  \}) \\
+  &= \bigcup_i \ms{c}(\{
+    \tret{t \cdot t'}{c} \mid \exists b . \tret{t}{b} \in f(a), \tret{t'}{c} \in g_i(b)
+  \}) \\
+  &= \bigcup_i (f ; g_i)(a)
+\end{align*}
+and likewise for coproducts.
+
+We can always equip $\ms{B}_{\ms{c}}$ with an Elgot structure $(\cdot)^\dagger$ by, for $f: A \to
+\ms{B}_{\ms{c}}(B + A)$, defining
+\begin{equation*}
+  f^\dagger := \bigcup_{i \in \nats}f_i
+\end{equation*}
+where $f_i : A \to \ms{B}_{\mc{C}}(B)$ are the \emph{iterates} of $f$, defined inductively as
+follows
+\begin{equation*}
+  f_0 := 0_{A, B} = (\lambda x . \varnothing) \qquad
+  f_{i + 1} := f ; [\ms{id}_B, f_{i}]
+\end{equation*}
+We note in particular that $\forall i . f_i \subseteq f_{i + 1}$; similarly, if $g \subseteq f$, we
+have that $g_i \subseteq f_i$. We can think of analysis using this structure as corresponding to
+\emph{partial correctness}, since any infinite traces are simply discarded (a program which always
+diverges will have denotation $\varnothing$). It is straightforward to check that this is indeed an
+Elgot structure, since it satisfies:
+\begin{itemize}
+  \item \emph{Fixpoint}: we have, since $f_0 \cup g = g$,
+  \begin{equation*}
+    f^\dagger = \bigcup_{i \in \nats}f_i 
+               = \bigcup_{i \in \nats}f_{i + 1} 
+               = \bigcup_{i \in \nats}(f ; [\ms{id}_B, f_i]) 
+               = f ; [\ms{id}_B, \bigcup_{i \in \nats}f_i] 
+               = f ; [\ms{id}_B, f^\dagger]
+  \end{equation*}
+  as desired.
+  \item \emph{Naturality}: by induction, we show that $(f ; g + A)_i = f_i ; g$, since 
+  $(f ; g + A)_0 = 0_{A, C} = 0_{A, B} ; g$ and
+  \begin{equation*}
+    (f ; g + A)_{i + 1} = f ; g + A ; [\ms{id}_C, (f ; g + A)_i] 
+                        = f ; [g, f_i ; g] = f ; [\ms{id}_B, f_i] ; g = f_{i + 1} ; g
+  \end{equation*}
+  and therefore
+  \begin{equation*}
+  (f ; g + A)^\dagger = \bigcup_{i \in \nats}(f ; g + A)_i
+  = \bigcup_{i \in \nats}(f_i ; g)
+  = (\bigcup_{i \in \nats}f_i) ; g
+  = f^\dagger ; g
+  \end{equation*}
+  \item \emph{Codiagonal}: given $f: A \to (B + A) + A$, define $g = f ; [\ms{id}_{B + A}, \iota_r]$
+  and $h = f^\dagger$. We have
+  \begin{align*}
+    h_{i + 1}
+    & = f^\dagger ; [\ms{id}, h_i]
+      = f ; [\ms{id}, f^\dagger] ; [\ms{id}, h_i] \\
+    & = f ; [[\ms{id}, h_i], f^\dagger ; [\ms{id}, h_i]]
+      = f ; [[\ms{id}, h_i], h_{i + 1}] \\
+    g_{i + 1} 
+    & = f ; [\ms{id}_B, \iota_r] ; [\ms{id}, g_i] 
+      = f ; [[\ms{id}, g_i], g_i]
+  \end{align*}
+  It follows by induction that $g_i \subseteq h_i$, since $g_0 = h_0$, and
+  \begin{align*}
+  g_{i + 1} 
+  = f ; [[\ms{id}, g_i], g_i]
+  \subseteq f ; [[\ms{id}, h_i], h_i]
+  \subseteq f ; [[\ms{id}, h_i], h_{i + 1}]
+  = h_{i + 1}
+  \end{align*}
+  We therefore have that $g^\dagger \subseteq h^\dagger$. On the other hand, we may show by
+  induction on $j$ that $f_j ; [\ms{id}, g^\dagger] \subseteq g^\dagger$, since $0 \subseteq
+  g^\dagger$ and
+  \begin{align*}
+  f_{j + 1} ; [\ms{id}, g^\dagger] 
+  & = f ; [\ms{id}, f_j] ; [\ms{id}, g^\dagger]
+    = f ; [[\ms{id}, g^\dagger], f_j ; [\ms{id}, g^\dagger]]
+    \subseteq f ;  [[\ms{id}, g^\dagger], g^\dagger] = g^\dagger
+  \end{align*}
+  We now show by induction that $h_i \subseteq g^\dagger$: noting that $h_0 = 0
+  \subseteq g^\dagger$, it suffices to show that
+  \begin{align*}
+  h_{i + 1} 
+  & = f ; [[\ms{id}, h_i], f^\dagger ; [\ms{id}, h_i]] 
+    \subseteq f ; [[\ms{id}, g^\dagger], f_j ; [\ms{id}, g^\dagger]] \\
+  & = \bigcup_{j \in \nats}(f ; [[\ms{id}, g^\dagger], f_j ; [\ms{id}, g^\dagger]])
+    \subseteq \bigcup_{j \in \nats}(f ; [[\ms{id}, g^\dagger], g^\dagger]])
+    = g^\dagger
+  \end{align*}
+  It follows that $h^\dagger \subseteq g^\dagger$ and hence that $h^\dagger = g^\dagger$, as
+  desired.
+  \item \emph{Uniformity}: given arbitrary $f : A \to B + A$, $g : X \to B + X$ and $h : X \to A$
+  such that $h ; f = g ; B + h$, for all $f_i$, we show by induction that $h ; f_i = g_i$ since $h ;
+  f_0 = 0 = g_0$ and
+  \begin{equation*}
+  h ; f_{i + 1} = h ; f ; [\ms{id}, f_i] 
+  = g ; B + h ; [\ms{id}, f_i]
+  = g ; [\ms{id}, h ; f_i] = g ; [\ms{id}, g_i] = g_{i + 1}
+  \end{equation*}
+  Therefore, $h ; f^\dagger = \bigcup_i h ; f_i = \bigcup_i g_i = g^\dagger$, as desired.
+\end{itemize}
+Following \citet{brookes-full-abstraction-96}, we can build up a model of \emph{sequentially
+consistent} concurrent computation by taking a standard Brookes monad with
+\begin{itemize}
+  \item States maps from locations to values $S := \ms{Loc} \to \ms{Val}$
+  \item Closure operator generated by:
+  \begin{itemize}
+    \item \emph{Stuttering} $\forall \mu \in S . \cdot \tref \langle \mu, \mu \rangle$
+    \item \emph{Mumbling} $\forall \mu, \rho, \theta \in S . 
+      \langle \mu, \rho \rangle \langle \rho, \theta \rangle \tref \langle \mu, \theta \rangle$
+  \end{itemize}
+\end{itemize} 
+The semantics of a write, for example, is then given by
+\begin{equation*}
+  \ms{write} : \ms{Loc} \times \ms{Val} \to \ms{B}_{\ms{c}}(\mb{1})
+  := \lambda (\ell, v) . 
+    \ms{c}_{\mb{1}}(\{\tret{\langle \mu, [\ell \mapsto v]\mu \rangle}{()} \mid \mu \in S\})
+\end{equation*}
+More complex states (e.g. involving per-thread buffers) and closure operators can allow us to model
+weak memory models. In particular, \citet{jagadeesan-brookes-relaxed-12} gives a Brookes model of
+TSO, while \citet{release-acquire} gives a Brookes model of release-acquire.
 
 \section{Discussion and Related Work}
 
