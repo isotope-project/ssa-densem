@@ -323,8 +323,14 @@ Operational semantics for SSA have to keep track of the execution history to cor
 $\phi$-nodes, and the lack of compound expressions makes it awkward to define and use primitives
 like parallel substitution. 
 
-These issues are a persistent nuisance when defining a semantics, and become a bigger problem
-when actually using it prove theorems. \todo{vellum example}
+%TODO: discuss with Neel, this argument may not hold water.
+% These issues are a persistent nuisance when defining a semantics, and become a bigger problem when
+% actually using it prove theorems. For example, \citet{vellvm-12} use their operational semantics
+% of LLVM to formally verify the SoftBound instrumentation path w.r.t. the LLVM semantics. To do so,
+% they needed to define a \emph{nonstandard} operational semantics for LLVM under SoftBound, and
+% then prove a simulation relation with the original LLVM semantics.
+%
+% \todo{vellum example}
 
 
 Concretely, our contributions are as follows: 
