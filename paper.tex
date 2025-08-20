@@ -4227,45 +4227,32 @@ submonads forms an (Elgot) submonad, i.e., the (Elgot) submonads form a complete
 
 \subsection{Trace Models}
 
-A particularly important class of \isotopessa{} models are what we will call
-\emph{trace models}, which can be viewed as programs which either diverge or
-produce a result, while also producing (potentially nondeterministic,
-potentially infinite) traces of events $\epsilon \in E$.
+A particularly important class of \isotopessa{} models are what we will call \emph{trace models},
+which can be viewed as programs which either diverge or produce a result, while also producing
+(potentially nondeterministic, potentially infinite) traces of events $\epsilon \in E$.
 
-\begin{definition}[(Monoidal) Stream Action]
-  A \textit{stream action} $(M, I, \cdot, \Sigma)$ is a set $M$ of \emph{finite
-  effects} and set $I$ of \emph{divergent effects} equipped with a binary
-  function (``action'') $\cdot : M \times I \to I$ and a function $\Sigma : M^\omega \to I$
-  mapping infinite streams of $M$ to an element of $I$ satisfying $\Sigma \sigma
-  = \sigma_0 \cdot \Sigma_i \sigma_{i + 1}$, where $\Sigma_i \sigma_i = \Sigma
-  (\lambda i. \sigma_i)$. If $M$ is a monoid and $(M, I, \cdot)$ a monoid
-  action, we say we  have a \emph{monoidal} stream action
+\begin{definition}[Stream Action]
+  A \textit{stream action} $(M, I, \cdot, \Sigma)$ is a monoid actions $(M, I, \cdot)$ of
+  \emph{finite effects} $M$ acting on \emph{divergent effects} $I$, along with a function $\Sigma :
+  M^\omega \to I$ mapping infinite streams of $M$ to an element of $I$ satisfying $\Sigma \sigma =
+  \sigma_0 \cdot \Sigma_i \sigma_{i + 1}$, where $\Sigma_i \sigma_i = \Sigma (\lambda i. \sigma_i)$.
 \end{definition}
-The most important example of a monoidal stream action is the \emph{free}
-monoidal stream action over a set $E$, called the set of \emph{events}, where:
+The most important example of a stream action is the \emph{free} stream action over a set $E$,
+called the set of \emph{events}, where:
 \begin{itemize}
-  \item $M = E^*$ is the free monoid over a set of ``events" $\epsilon \in E$, i.e., the
-  monoid of finite lists of events
-  \item $I = E^{\leq \omega}$ is the set of \textit{potentially} infinite
-  streams of events $\epsilon \in E$
+  \item $M = E^*$ is the free monoid over a set of ``events" $\epsilon \in E$, i.e., the monoid of
+  finite lists of events
+  \item $I = E^{\leq \omega}$ is the set of \textit{potentially} infinite streams of events
+  $\epsilon \in E$
   \item $m \cdot i$ is defined in the obvious manner, i.e. by prepending the (finite) list $m$ to
   the (potentially infinite) stream $i$
-  \item $\Sigma\;\sigma$ is defined as the supremum $\bigsqcup_it_i$, where $t
-  \leq t'$ iff $t$ is a prefix of $t'$, $t_0 = \bot$ (the empty stream), and
-  $t_{i + 1} = t_i \cdot \sigma_i$
-\end{itemize}
-Other important examples include:
-\begin{itemize}
-  \item The free stream action over a set of events $E$, where $M = E$, $I =
-  E^\omega$ (the set of infinite streams of events $\epsilon$), $m \cdot i$ is
-  merely prepending $m$ to the stream $i$, and $\Sigma \sigma = \sigma$
-  \item The terminal stream action over an arbitrary set $M$, where $I
-  = \mb{1}$. This is always a monoidal stream action if $M$ is a monoid
+  \item $\Sigma\;\sigma$ is defined as the supremum $\bigsqcup_it_i$, where $t \leq t'$ iff $t$ is a
+  prefix of $t'$, $t_0 = \bot$ (the empty stream), and $t_{i + 1} = t_i \cdot \sigma_i$
 \end{itemize}
 
 \begin{definition}[Trace Monad Transformer]
-  Given a monoidal stream action $(M, I, \cdot, \Sigma)$, we can define the \emph{trace
-  monad transformer} over $\ms{Set}$ as follows:
+  Given a stream action $(M, I, \cdot, \Sigma)$, we can define the \emph{trace monad transformer}
+  over $\ms{Set}$ as follows:
   $
   \ms{TraceT}\;\Sigma\;\ms{T}\;A = \ms{T}\;(A \times M + I)
   $
