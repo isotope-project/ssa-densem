@@ -902,10 +902,10 @@ We'll call a tuple $Sg = (\mc{T}, \mc{I})$ of types and instructions over these 
 
 A (variable) \textit{context} $\Gamma$ is a list of \textit{typing hypotheses}
 $\thyp{x}{A}{\epsilon}$, where $x$ is a variable name, $A$ is the type of that variable, and
-$\epsilon$ is the effect of using that variable (used when filling holes with effectful
-expressions). If $\epsilon = \bot$, we often omit it, writing $\bhyp{x}{A}$. Similarly, we define a
-\textit{label-context} to be a list of \textit{labels} $\lhyp{\ell}{A}$, where $A$ is the parameter
-type that must be passed on a jump to the label $\ell$.
+$\epsilon \in \{\top, \bot\}$ is the effect of using that variable (used when filling holes with
+effectful expressions). If $\epsilon = \bot$, we often omit it, writing $\bhyp{x}{A}$. Similarly, we
+define a \textit{label-context} to be a list of \textit{labels} $\lhyp{\ell}{A}$, where $A$ is the
+parameter type that must be passed on a jump to the label $\ell$.
 
 \begin{figure}[H]
   \begin{center}
@@ -945,13 +945,14 @@ type that must be passed on a jump to the label $\ell$.
 \end{figure}
 
 As shown in Figure~\ref{fig:ssa-grammar}, \isotopessa{} terms are divided into two syntactic
-categories, each of with associated with a judgement:
+categories, each associated with a judgement:
 \begin{itemize}
-  \item \emph{Expressions} $a, b, c, e$ typed with the judgement $\hasty{\Gamma}{\epsilon}{a}{A}$,
-  which says that under the typing context $\Gamma$, the expression $a$ has type $A$ and effect
-  $\epsilon$. We say a term is \emph{pure} if it has effect $\bot$; note that whether an expression
-  is pure or not depends both on the expression itself and on the purity of the variables used in
-  the expression; this is to allow reasoning about impure substitutions.
+  \item \emph{Expressions} $a, b, c, e$, which are typed with the judgement
+  $\hasty{\Gamma}{\epsilon}{a}{A}$, which says that under the typing context $\Gamma$, the
+  expression $a$ has type $A$ and effect $\epsilon$. We say a term is \emph{pure} if it has effect
+  $\bot$; note that whether an expression is pure or not depends both on the expression itself and
+  on the purity of the variables used in the expression; this is to allow reasoning about impure
+  substitutions.
   \item \emph{Regions} $r, s, t$, which recursively define a lexically-scoped SSA program with a
   single entry and (potentially) multiple exits. This is typed with the judgement
   $\haslb{\Gamma}{r}{\ms{L}}$, which states that given that $\Gamma$ is live at the unique entry
