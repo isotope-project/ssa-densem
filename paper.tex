@@ -332,6 +332,7 @@ like parallel substitution.
 %
 % \todo{vellum example}
 
+\TODO{segue here}
 
 Concretely, our contributions are as follows: 
 
@@ -377,6 +378,8 @@ SSA}, or \isotopessa{}, which will be the focus of the rest of this paper. A str
 argument shows that these extensions add no expressive power; we give a more formal version of this
 argument, as well as algorithms to interconvert between \isotopessa{}, standard SSA, and ANF, in
 Section~\ref{ssec:ssa-normal}.
+
+\TODO{note the signposted argument above when doing grammar stuff}
 
 As a running example, consider the simple imperative program to compute $10!$ given in
 Figure~\ref{fig:fact-program}. Operating directly on an imperative language can be challenging,
@@ -725,6 +728,10 @@ key difference is that, in our format (which is strictly first order), we requir
   \label{fig:bba-to-anf}
 \end{figure}
 
+\TODO{give grammar for standard-\isotopessa{} here}
+
+\TODO{justify full \isotopessa{} here}
+
 ANF, however, lacks a good substitution property, since substituting a value for a variable can take
 you out of ANF, making it difficult to express optimizations like $(i + 1) - 1 \to i$ as rewrite
 rules. To fix this, we can simply relax the restriction that expressions in a program must be
@@ -738,6 +745,10 @@ can be eliminated in the obvious manner, such as by taking
   & \to \ms{if}\;e\;\{\ms{br}\;\ell(x)\}\;\ms{else}\;\{\ms{br}\;\ell(x)\}\;
         \ms{where}\;\ell(x): \{t\}
 \end{align*}
+
+\TODO{give pointer to transformation in later section / appendix}
+
+\TODO{give grammar for full \isotopessa{} \emph{here} instead of below}
 
 \begin{figure}
   \centering
@@ -806,6 +817,9 @@ can be eliminated in the obvious manner, such as by taking
 This gives us our final \isotopessa{} calculus, which we will call \emph{type-theoretic SSA}. In
 this language, we can safely perform \textit{substitutions}, like in Figure~\ref{fig:fact-cse}.
 These can then be used to build up optimizations such as \textit{common-subexpression elimination}.
+
+\TODO{rework this example, since it is confusing. Maybe remove?}
+
 More generally, substitution lets us do \textit{algebra}. For example, since we know that:
 \begin{align*}
   (i_0 + 1, a_0 * (i_0 + 1)) &= (\ms{let}\;(x, y) = (i_0, a_0)\;\ms{in}\;(x + 1, y * (x + 1))) \\
@@ -887,6 +901,9 @@ with each step rigorously justified via our denotational semantics.
 \section{Type Theory}
 
 \label{sec:typing}
+
+\TODO{it was a \emph{big} mistake to annotate variables with effects. Should we remove this
+throughout? Will this require re-doing the formalization?}
 
 We now give a formal account of \isotopessa{}, starting with the types. Our types are first order,
 and consists of binary sums $A + B$, products $A \otimes B$, the unit type $\mathbf{1}$, and the
@@ -1064,10 +1081,12 @@ $\where{r}{(\wbranch{\ell_i}{x_i}{t_i})_i}$ is best interpreted as a terminator 
 entry-block even if of the form, e.g., $r = \letstmt{x}{e}{s}$. The entry block is instead the
 \emph{implicit} basic-block made up of any let-bindings surrounding the \ms{where}-statement. The
 key difference is that variables defined in $r$ are \emph{not} visible in the blocks $t_i$, whereas
-variables defined in the entry-block are. While at first glance this can be unintuitive, the
-additional generality greatly simplifies rewriting, and we can always normalize a where-block into a
-more canonical form by pulling out let-bindings, since our equational theory generally admits that,
-\emph{if} both sides are well-typed and there is no shadowing,
+variables defined in the entry-block are. 
+\TODO{why does this greatly simplify rewriting?}
+While at first glance this can be unintuitive, the additional generality greatly simplifies
+rewriting, and we can always normalize a where-block into a more canonical form by pulling out
+let-bindings, since our equational theory generally admits that, \emph{if} both sides are well-typed
+and there is no shadowing,
 \begin{align*}
   \where{(\letexpr{x}{e}{r})}{(\wbranch{\ell_i}{x_i}{t_i})_i}
   &= (\letexpr{x}{e}{(\where{r}{(\wbranch{\ell_i}{x_i}{t_i})_i})}) \\
@@ -2754,7 +2773,7 @@ $\tocfg{r} \simeq \tocfg{r'}$, we have that $\lbeq{\Gamma}{r}{r'}{\ms{L}}$, sinc
 
 \label{sec:densem}
 
-\subsection{Freyd Elgot Categories}
+\subsection{Freyd-Elgot Categories}
 
 \citet{moggi-91-monad} showed that the Kleisli category of a strong
 monad over a CCC interprets effectful higher-order functional
