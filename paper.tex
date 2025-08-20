@@ -932,7 +932,7 @@ parameter type that must be passed on a jump to the label $\ell$.
       \alt  \(\linl{a}\) 
       \;|\; \(\linr{a}\)
       \;|\; \(\labort{a}\)
-      \;|\; \(\caseexpr{e}{x}{s}{y}{t}\)
+      \;|\; \(\caseexpr{e}{x}{a}{y}{b}\)
       
       <\(s, t\)> ::= \(\brb{\ell}{a}\) 
       \alt  \(\letstmt{x}{a}{t}\)
@@ -970,7 +970,7 @@ The typing rules for expressions are given in Figure~\ref{fig:ssa-expr-rules}. I
 expressions may be built up from the following fairly standard primitives:
 \begin{itemize}
   \item A variable $x$ in the context $\Gamma$, as typed by \brle{var}. We write $(A, \epsilon) \leq
-  (B, \epsilon') \iff A = B \and \epsilon \leq \epsilon'$.
+  (B, \epsilon') \iff A = B \land \epsilon \leq \epsilon'$.
   \item A \emph{primitive instruction} $f \in \mc{I}_\epsilon(A, B)$ applied to an expression
   $\hasty{\Gamma}{\epsilon}{a}{A}$, typed by \brle{op}
   \item Unary and binary \emph{let-bindings}, typed by \brle{let$_1$} and \brle{let$_2$}
@@ -6339,7 +6339,7 @@ We may now state our desired result as follows:
   \begin{equation}
     G \simeq \beta, (\wbranch{\kappa_i}{y_i}{G_i},)_i \qquad
     \forall i, G_i = \beta_i, (\wbranch{\kappa_{i, j}}{y_{i, j}}{\beta_{i, j}},)_j, R_i
-  \end{equation}
+  \end{equation} 
   where $R_i$ is the ``remainder'' of the control-flow graph $G_i$. Note the equations for $G_i$ are
   actually equalities, rather than being equivalence up to permutation $\simeq$, since the
   $\beta_{i, j}$, appear in $G$ before any other elements, being immediate children of $\beta$. It

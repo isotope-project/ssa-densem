@@ -193,15 +193,15 @@ program produces a result. Presumably it is by modeling "return" using
 a distinguished output label.
 
 Figure 8: Unless I am misunderstanding,
-1. The two cases of a case expression should be expressions, not regions
-2. abort a should also be a region
+1. The two cases of a case expression should be expressions, not regions (FIXED)
+2. abort a should also be a region (NO)
 
 The distinction between expressions and regions is that branches are
 only allowed to be in tail position. This was mentioned in passing in
 section 2 but would be welcome to be re-emphasized here when the
 syntax of λSSA is introduced.
 
-Line 436: I think there should be an "and" between "A = B" and "ϵ ≤ ϵ'"
+Line 436: I think there should be an "and" between "A = B" and "ϵ ≤ ϵ'" (FIXED)
 
 Line 437: "An primitive" should be "A primitive"
 
