@@ -140,7 +140,7 @@
 \newcommand{\dmor}[1]{{\Delta}_{#1}}
 \newcommand{\entrymor}[3]{\ms{esem}_{#1, #3}(#2)}
 \newcommand{\loopmor}[3]{\ms{lsem}_{#1, #3}(#2)}
-\newcommand{\substpure}[1]{#1\;\ms{pure}}
+% \newcommand{\substpure}[1]{#1\;\ms{pure}}
 
 % Comonadic lore
 \newcommand{\lmor}[1]{\ms{let}(#1)}
@@ -916,9 +916,6 @@ with each step rigorously justified via our denotational semantics.
 
 \label{sec:typing}
 
-\TODO{it was a \emph{big} mistake to annotate variables with effects. Should we remove this
-throughout? Will this require re-doing the formalization?}
-
 We now give a formal account of \isotopessa{}, starting with the types. Our types are first order,
 and consists of binary sums $A + B$, products $A \otimes B$, the unit type $\mathbf{1}$, and the
 empty type $\mb{0}$, all parameterised over a set of base types $X \in \mc{T}$. We write our set of
@@ -937,12 +934,10 @@ types as $\ms{Ty}(X)$. We also parameterise over:
 We'll call a tuple $Sg = (\mc{T}, \mc{I})$ of types and instructions over these types an
 \emph{\isotopessa{}-signature}.
 
-A (variable) \textit{context} $\Gamma$ is a list of \textit{typing hypotheses}
-$\thyp{x}{A}{\epsilon}$, where $x$ is a variable name, $A$ is the type of that variable, and
-$\epsilon \in \{\top, \bot\}$ is the effect of using that variable (used when filling holes with
-effectful expressions). If $\epsilon = \bot$, we often omit it, writing $\bhyp{x}{A}$. Similarly, we
-define a \textit{label-context} to be a list of \textit{labels} $\lhyp{\ell}{A}$, where $A$ is the
-parameter type that must be passed on a jump to the label $\ell$.
+A (variable) \textit{context} $\Gamma$ is a list of \textit{typing hypotheses} $\bhyp{x}{A}$,
+where $x$ is a variable name and $A$ is the type of that variable. Similarly, we define a
+\textit{label-context} to be a list of \textit{labels} $\lhyp{\ell}{A}$, where $A$ is the parameter
+type that must be passed on a jump to the label $\ell$.
 
 \begin{figure}[H]
   \begin{center}
@@ -971,7 +966,7 @@ parameter type that must be passed on a jump to the label $\ell$.
       \;|\; \(\casestmt{e}{x}{s}{y}{t}\)
       \alt  \(\where{t}{(\wbranch{\ell_i}{x_i}{t_i},)_i}\)
 
-      <\(\Gamma\)> ::= \(\cdot\) \;|\; \(\Gamma, \thyp{x}{A}{\epsilon}\)
+      <\(\Gamma\)> ::= \(\cdot\) \;|\; \(\Gamma, \bhyp{x}{A}\)
 
       <\(\ms{L}\)> ::= \(\cdot\) \;|\; \(\ms{L}, \lhyp{\ell}{A}\)
     \end{grammar}
@@ -1000,8 +995,7 @@ categories, each associated with a judgement:
 The typing rules for expressions are given in Figure~\ref{fig:ssa-expr-rules}. In particular,
 expressions may be built up from the following fairly standard primitives:
 \begin{itemize}
-  \item A variable $x$ in the context $\Gamma$, as typed by \brle{var}. We write $(A, \epsilon) \leq
-  (B, \epsilon') \iff A = B \land \epsilon \leq \epsilon'$.
+  \item A variable $x$ in the context $\Gamma$, as typed by \brle{var}.
   \item A \emph{primitive instruction} $f \in \mc{I}_\epsilon(A, B)$ applied to an expression
   $\hasty{\Gamma}{\epsilon}{a}{A}$, typed by \brle{op}
   \item Unary and binary \emph{let-bindings}, typed by \brle{let$_1$} and \brle{let$_2$}
@@ -1028,7 +1022,7 @@ unit payloads, so that $\ite{e_1}{e_2}{e_3} := \caseexpr{e_1}{()}{e_2}{()}{e_3}$
 \begin{figure}
   \begin{gather*}
     \boxed{\hasty{\Gamma}{\epsilon}{a}{A}} \\
-    \prftree[r]{\rle{var}}{\Gamma\;x \leq (A, \epsilon)}{\hasty{\Gamma}{\epsilon}{x}{A}} \qquad
+    \prftree[r]{\rle{var}}{\Gamma(x) = A}{\hasty{\Gamma}{\epsilon}{x}{A}} \qquad
     \prftree[r]{\rle{op}}{\isop{f}{A}{B}{\epsilon}}{\hasty{\Gamma}{\epsilon}{a}{A}}
       {\hasty{\Gamma}{\epsilon}{f\;a}{B}} \qquad
     \prftree[r]{\rle{let$_1$}}
@@ -1146,37 +1140,32 @@ pronounced ``$\Gamma$ \emph{weakens} $\Delta$''), then these things should
 typecheck in the context $\Gamma$ as well. That is, ``$\Gamma$ typechecks more
 terms than $\Delta$''.
  
-Making things more formal, we introduce the rules for weakening $\Gamma \leq
-\Delta$ in the first part of Figure \ref{fig:ssa-meta-rules}: \brle{wk-nil} says
-that the empty context weakens itself, \brle{wk-skip} says that if $\Gamma$
-weakens $\Delta$, then $\Gamma$ with an arbitrary variable added also weakens
-$\Delta$, and \brle{wk-cons} says that if $\Gamma$ weakens $\Delta$ and
-$\epsilon \leq \epsilon'$, then $\Gamma$ with $\thyp{x}{A}{\epsilon}$ added
-weakens $\Delta, \thyp{x}{A}{\epsilon'}$. It is easy to see that weakening
+Making things more formal, we introduce the rules for weakening $\Gamma \leq \Delta$ in the first
+part of Figure \ref{fig:ssa-meta-rules}: \brle{wk-nil} says that the empty context weakens itself,
+\brle{wk-skip} says that if $\Gamma$ weakens $\Delta$, then $\Gamma$ with an arbitrary variable
+added also weakens $\Delta$, and \brle{wk-cons} says that if $\Gamma$ weakens $\Delta$, then
+$\Gamma$ with $\bhyp{x}{A}$ added weakens $\Delta, \bhyp{x}{A}$. It is easy to see that weakening
 defined in this manner induces a partial order on contexts.
 
-We may go further and introduce weakening for \emph{label contexts} $\ms{L} \leq
-\ms{K}$ analogously, except that we will flip the ordering such that $\ms{L}$
-weakens $\ms{K}$ if it contains \emph{fewer}, rather than \emph{more}, labels
-than $\ms{K}$. This is a bit unconventional, since in this case $\ms{L}$ types
-\emph{fewer} regions than $\ms{K}$, but it will make our metatheory and
-denotational semantics come out more clearly, since it corresponds to
-label-contexts being ``on the right'' (with variable contexts ``on the left'').
-In particular, in Figure \ref{fig:ssa-meta-rules}, we introduce the rules
-\brle{lwk-nil}, which says that the empty label context weakens itself,
-\brle{lwk-skip}, which says that if $\ms{L}$ weakens $\ms{K}$, then $\ms{L}$
-weakens $\ms{K}$ with an arbitrary label added, and \brle{lwk-cons}, which says
-that if $\ms{L}$ weakens $\ms{K}$, then $\ms{L}$ with a label $\lhyp{\ell}{A}$
-added weakens $\ms{K}$ with the same label added. It is easy to see that this
-induces a partial order on label contexts.
+We may go further and introduce weakening for \emph{label contexts} $\ms{L} \leq \ms{K}$
+analogously, except that we will flip the ordering such that $\ms{L}$ weakens $\ms{K}$ if it
+contains \emph{fewer}, rather than \emph{more}, labels than $\ms{K}$. This is a bit unconventional,
+since in this case $\ms{L}$ types \emph{fewer} regions than $\ms{K}$, but it will make our
+metatheory and denotational semantics come out more clearly, since it corresponds to label-contexts
+being ``on the right'' (with variable contexts ``on the left''). In particular, in Figure
+\ref{fig:ssa-meta-rules}, we introduce the rules \brle{lwk-nil}, which says that the empty label
+context weakens itself, \brle{lwk-skip}, which says that if $\ms{L}$ weakens $\ms{K}$, then $\ms{L}$
+weakens $\ms{K}$ with an arbitrary label added, and \brle{lwk-cons}, which says that if $\ms{L}$
+weakens $\ms{K}$, then $\ms{L}$ with a label $\lhyp{\ell}{A}$ added weakens $\ms{K}$ with the same
+label added. It is easy to see that this induces a partial order on label contexts.
 
 \begin{figure}
   \begin{gather*}
     \boxed{\Gamma \leq \Delta} \\
     \prftree[r]{\rle{wk-nil}}{}{\cdot \leq \cdot} \qquad
-    \prftree[r]{\rle{wk-skip}}{\Gamma \leq \Delta}{\Gamma, \thyp{x}{A}{\epsilon} \leq \Delta} \qquad
-    \prftree[r]{\rle{wk-cons}}{\Gamma \leq \Delta}{\epsilon \leq \epsilon'}
-      {\Gamma, \thyp{x}{A}{\epsilon} \leq \Delta, \thyp{x}{A}{\epsilon'}} \\
+    \prftree[r]{\rle{wk-skip}}{\Gamma \leq \Delta}{\Gamma, \bhyp{x}{A} \leq \Delta} \qquad
+    \prftree[r]{\rle{wk-cons}}{\Gamma \leq \Delta}
+      {\Gamma, \bhyp{x}{A} \leq \Delta, \bhyp{x}{A}} \\
     \boxed{\ms{L} \leq \ms{K}} \\
     \prftree[r]{\rle{lwk-nil}}{}{\cdot \leq \cdot} \qquad
     \prftree[r]{\rle{lwk-skip}}{\ms{L} \leq \ms{K}}{\ms{L} \leq \ms{K}, \lhyp{\ell}{A}} \qquad
@@ -1184,8 +1173,8 @@ induces a partial order on label contexts.
       {\ms{L}, \lhyp{\ell}{A} \leq \ms{K}, \lhyp{\ell}{A}} \\
     \boxed{\issubst{\gamma}{\Gamma}{\Delta}} \\
     \prftree[r]{\rle{sb-nil}}{}{\issubst{\cdot}{\Gamma}{\cdot}} \qquad
-    \prftree[r]{\rle{sb-cons}}{\issubst{\gamma}{\Gamma}{\Delta}}{\hasty{\Gamma}{\epsilon}{e}{A}}
-      {\issubst{\gamma, x \mapsto e}{\Gamma}{\Delta, \thyp{x}{A}{\epsilon}}}
+    \prftree[r]{\rle{sb-cons}}{\issubst{\gamma}{\Gamma}{\Delta}}{\hasty{\Gamma}{\bot}{e}{A}}
+      {\issubst{\gamma, x \mapsto e}{\Gamma}{\Delta, \bhyp{x}{A}}}
        \\
     \boxed{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}} \\
     \prftree[r]{\rle{ls-nil}}{}{\lbsubst{\Gamma}{\cdot}{\cdot}{\ms{K}}}
@@ -1224,16 +1213,16 @@ If we look at the proof of variable weakening, we might arrive at the alternate 
 the variables in $\Delta$ are also available with the same type in $\Gamma$, i.e., if
 $\hasty{\Delta}{\epsilon}{x}{A} \implies \hasty{\Gamma}{\epsilon}{x}{A}$, then anything which can be
 typed in $\Delta$ can be typed in $\Gamma$. More generally, we might ask if every variable
-$\hasty{\Delta}{\epsilon}{x}{A}$ in $\Delta$ can be associated with a term
-$\hasty{\Gamma}{\epsilon}{\gamma_x}{A}$ which is well-typed in $\Gamma$. An assignment of such
-variables $\gamma : x \mapsto \gamma_x$ is called a \emph{substitution}, which we can type with the
-judgement $\issubst{\gamma}{\Gamma}{\Delta}$ as per the rules given in Figure
-\ref{fig:ssa-reg-rules}. In particular,
+$\hasty{\Delta}{\epsilon}{x}{A}$ in $\Delta$ can be associated with a \emph{pure} term
+$\hasty{\Gamma}{\bot}{\gamma_x}{A}$ which is well-typed in $\Gamma$. An assignment of such variables
+$\gamma : x \mapsto \gamma_x$ is called a \emph{substitution}, which we can type with the judgement
+$\issubst{\gamma}{\Gamma}{\Delta}$ as per the rules given in Figure \ref{fig:ssa-reg-rules}. In
+particular,
 \begin{itemize}
   \item \brle{sb-nil} says that the empty substitution takes every context to the empty context.
   \item \brle{sb-cons} says that if $\gamma$ takes $\Gamma$ to $\Delta$ and
-  $\hasty{\Gamma}{\epsilon}{e}{A}$, then $\gamma$ with the additional substitution $x \mapsto e$
-  adjoined takes $\Gamma$ to $\Delta, \thyp{x}{A}{\epsilon}$
+  $\hasty{\Gamma}{\bot}{e}{A}$, then $\gamma$ with the additional substitution $x \mapsto e$
+  adjoined takes $\Gamma$ to $\Delta, \bhyp{x}{A}$
 \end{itemize}
 To \emph{use} a substitution, we simply need to perform standard capture-avoiding substitution (see
 Figure \ref{fig:ssa-subst-def} in the appendix.)
@@ -1264,18 +1253,20 @@ and $\issubst{\gamma}{\Gamma}{\Delta}$; the composition associates as expected:
 $[[\gamma_1]\gamma_2]\gamma_3 = [\gamma_1]([\gamma_2]\gamma_3)$, and has identity $[\ms{id}]\gamma =
 \gamma$, yielding a category of substitutions with variable contexts $\Gamma$ as objects.
 
+\TODO{clarify extension operators and why they matter; push to appendix / remove?}
+
 We will define a ``left extension'' operation $\lupg{\cdot}_\Xi$ yielding
 $\issubst{\lupg{\gamma}_{\Xi}}{\Xi, \Gamma}{\Xi, \Delta}$ which appends the identity substitution
 for each variable in $\Xi$ in the obvious manner:
 \begin{equation}
   \lupg{\gamma}_{\cdot} = \gamma \qquad 
-  \lupg{\gamma}_{\Xi, \thyp{x}{A}{\epsilon}} = x \mapsto x, \lupg{\gamma}_{\Xi}
+  \lupg{\gamma}_{\Xi, \bhyp{x}{A}} = x \mapsto x, \lupg{\gamma}_{\Xi}
 \end{equation}
 We may similarly define a ``right extension'' operation $\rupg{\cdot}_\Xi$ yielding
 $\issubst{\rupg{\gamma}_{\Xi}}{\Gamma, \Xi}{\Delta, \Xi}$ as follows:
 \begin{equation}
   \rupg{\gamma}_{\cdot} = \gamma \qquad 
-  \rupg{\gamma}_{\Xi, \thyp{x}{A}{\epsilon}} = \rupg{\gamma}_{\Xi}, x \mapsto x
+  \rupg{\gamma}_{\Xi, \bhyp{x}{A}} = \rupg{\gamma}_{\Xi}, x \mapsto x
 \end{equation}
 We will usually infer $\Xi$ from context; sometimes, for convenience, we may even omit the
 $\rupg{\cdot}, \lupg{\cdot}$ operators entirely, due to the fact that for any $\gamma$, we have
@@ -2369,8 +2360,8 @@ in Section~\ref{ssec:completeness}.
   \begin{gather*}
     \prftree[r]{\rle{sb-nil}}{\tmseq{\cdot}{\cdot}{\Gamma}{\cdot}} \qquad
     \prftree[r]{\rle{sb-cons}}
-      {\tmeq{\Gamma}{\epsilon}{a}{a'}{A}}{\tmseq{\gamma}{\gamma'}{\Gamma}{\Delta}}
-      {\tmseq{\gamma, x \mapsto a}{\gamma', x \mapsto a'}{\Gamma}{\Delta, \thyp{x}{A}{\epsilon}}}
+      {\tmeq{\Gamma}{\bot}{a}{a'}{A}}{\tmseq{\gamma}{\gamma'}{\Gamma}{\Delta}}
+      {\tmseq{\gamma, x \mapsto a}{\gamma', x \mapsto a'}{\Gamma}{\Delta, \bhyp{x}{A}}}
     \\
     \prftree[r]{\rle{sb-skip-l}}
       {\tmseq{\gamma}{\gamma'}{\Gamma}{\Delta}}
@@ -2396,7 +2387,7 @@ in Section~\ref{ssec:completeness}.
       {\lbseq{\sigma}{\sigma', \ell(x) \mapsto r'}{\Gamma}{\ms{L}}{\ms{K}}}
     \\
     \prftree[r]{\rle{sb-id}}
-      {\tmseq{\gamma}{\gamma'}{\Gamma, \thyp{x}{A}{\epsilon}}{\Delta, \thyp{x}{A}{\epsilon}}}
+      {\tmseq{\gamma}{\gamma'}{\Gamma, \bhyp{x}{A}}{\Delta, \bhyp{x}{A}}}
       {\tmseq{\gamma}{\gamma'}{\Gamma}{\Delta}} \qquad
     \prftree[r]{\rle{ls-id}}
       {\lbseq{\sigma}{\sigma'}{\Gamma}{\ms{L}, \lhyp{\ell}{A}}{\ms{K}, \lhyp{\ell}{A}}}
@@ -2408,6 +2399,10 @@ in Section~\ref{ssec:completeness}.
 \end{figure}
 
 \subsection{Strict SSA}
+
+\TODO{pull up definition of strict SSA to introduction}
+
+\TODO{push down definition of ANF transformation to appendix}
 
 \label{ssec:ssa-normal}
 
@@ -2502,17 +2497,17 @@ We state the correctness of these functions in the following lemma:
     \boxed{\ahasty{\Gamma}{\epsilon}{a}{A}}
   \end{equation*}
   \begin{gather*}    
-    \prftree[r]{\rle{var}}{\Gamma\;x \leq (A, \epsilon)}{\ahasty{\Gamma}{\epsilon}{x}{A}} \qquad
-    \prftree[r]{\rle{op}}{\isop{f}{A}{B}{\epsilon}}{\Gamma\;x \leq (A, \epsilon)}
+    \prftree[r]{\rle{var}}{\Gamma(x) = A}{\ahasty{\Gamma}{\epsilon}{x}{A}} \qquad
+    \prftree[r]{\rle{op}}{\isop{f}{A}{B}{\epsilon}}{\Gamma(x) = A}
       {\ahasty{\Gamma}{\epsilon}{f\;x}{B}} \\
     \prftree[r]{\rle{unit}}{\ahasty{\Gamma}{\epsilon}{()}{\mb{1}}} \qquad
-    \prftree[r]{\rle{pair}}{\Gamma\;x \leq (A, \epsilon)}{\Gamma\;y \leq (B, \epsilon)}
+    \prftree[r]{\rle{pair}}{\Gamma(x) = A}{\Gamma(y) = B}
       {\hasty{\Gamma}{\epsilon}{(x, y)}{A \otimes B}} \\
-    \prftree[r]{\rle{inl}}{\Gamma\;x \leq (A, \epsilon)}
+    \prftree[r]{\rle{inl}}{\Gamma(x) = A}
       {\hasty{\Gamma}{\epsilon}{\linl{x}}{A + B}} \qquad
-    \prftree[r]{\rle{inr}}{\Gamma\;y \leq (B, \epsilon)}
+    \prftree[r]{\rle{inr}}{\Gamma(y) = B}
       {\hasty{\Gamma}{\epsilon}{\linr{y}}{A + B}} \qquad
-    \prftree[r]{\rle{abort}}{\Gamma\;x \leq (\mb{0}, \epsilon)}
+    \prftree[r]{\rle{abort}}{\Gamma(x) = 0}
       {\hasty{\Gamma}{\epsilon}{\labort{x}}{A}}
   \end{gather*}
   \caption{Typing rules for atomic expressions}
@@ -3435,7 +3430,7 @@ Figure~\ref{fig:ssa-ty-sem}.
   \end{equation*}
   \begin{align*}
     \dnt{\cdot} = I \qquad
-      \dnt{\Gamma, \thyp{x}{A}{\epsilon}} = \dnt{\Gamma} \otimes \dnt{A} \\
+      \dnt{\Gamma, \bhyp{x}{A}} = \dnt{\Gamma} \otimes \dnt{A} \\
   \end{align*}
   \begin{equation*}
     \boxed{\dnt{\ms{L}} : |\mc{C}|}
@@ -3449,8 +3444,8 @@ Figure~\ref{fig:ssa-ty-sem}.
   \end{equation*}
   \begin{gather*}
     \dnt{\cdot \leq \cdot} = \ms{id}_I \qquad
-    \dnt{\Gamma, \thyp{x}{A}{\epsilon} \leq \Delta} = \pi_l;\dnt{\Gamma \leq \Delta} \qquad
-    \dnt{\Gamma, \thyp{x}{A}{\epsilon} \leq \Delta, \thyp{x}{A}{\epsilon}}
+    \dnt{\Gamma, \bhyp{x}{A} \leq \Delta} = \pi_l;\dnt{\Gamma \leq \Delta} \qquad
+    \dnt{\Gamma, \bhyp{x}{A} \leq \Delta, \bhyp{x}{A}}
     = \dnt{\Gamma \leq \Delta} \otimes \dnt{A} \\
   \end{gather*}
   \begin{equation*}
@@ -3715,56 +3710,57 @@ can then be used to derive the following weakening lemmas:
   See Appendix~\ref{proof:weakening}.
 \end{proof}
 
-Our first proper semantic theorem is that \emph{rewriting} is sound: if two (potentially impure!)
-substitutions have pointwise equal semantics, then substituting by either yields a result with
-the same semantics. That is, value-substitution is a well-defined operation when quotienting by the
-semantics, or, more formally:
+\TODO{
+  state rewriting in the appendix, if at all. If so, we probably want to use a separate judgement
+  for impute substitutions.  
+}
 
-\begin{theorem}[Soundness (Rewriting)]
-  Given substitutions $\issubst{\gamma, \gamma'}{\Gamma}{\Delta}$ such that, for all 
-  $\thyp{x}{A}{\epsilon} \in \Delta$, $\dnt{\hasty{\Gamma}{\epsilon}{\gamma\;x}{A}} =
-  \dnt{\hasty{\Gamma}{\epsilon}{\gamma'\;x}{A}}$, we have
-  \begin{enumerate}[label=(\alph*)]
-    \item Given $\hasty{\Delta}{\epsilon}{a}{A}$, 
-      $\dnt{\hasty{\Gamma}{\epsilon}{[\gamma]a}{A}} = \dnt{\hasty{\Gamma}{\epsilon}{[\gamma']a}{A}}$
-    \item Given $\issubst{\rho}{\Delta}{\Xi}$, $\dnt{\issubst{[\gamma]\rho}{\Gamma}{\Xi}} =
-      \dnt{\issubst{[\gamma']\rho}{\Gamma}{\Xi}}$
-    \item Given $\haslb{\Delta}{r}{\ms{L}}$, $\dnt{\haslb{\Gamma}{[\gamma]r}{\ms{L}}} =
-      \dnt{\haslb{\Gamma}{[\gamma']r}{\ms{L}}}$
-    \item Given $\lbsubst{\Delta}{\rho}{\ms{L}}{\ms{K}}$,
-      $\dnt{\lbsubst{\Gamma}{[\gamma]\rho}{\ms{L}}{\ms{K}}} =
-      \dnt{\lbsubst{\Gamma}{[\gamma']\rho}{\ms{L}}{\ms{K}}}$ 
-  \end{enumerate}
-  \label{thm:rewriting}
-\end{theorem}
-\begin{proof}
-  By a trivial induction, since our semantics is compositional.
-\end{proof}
+% Our first proper semantic theorem is that \emph{rewriting} is sound: if two (potentially impure!)
+% substitutions have pointwise equal semantics, then substituting by either yields a result with
+% the same semantics. That is, value-substitution is a well-defined operation when quotienting by the
+% semantics, or, more formally:
 
-This result allows us to safely perform peephole rewrites which we can independently prove
-semantically valid, including on potentially impure operations. However, for pure substitutions, it
-is possible to relate the semantics of the substituted term to the original more precisely. By
-\emph{pure} substitutions, we mean substitutions which do not replace variables with impure terms.
-More precisely, we can define the \emph{effect} of a context using the lattice structure on $\{\top,
-\bot\}$ as follows
-\begin{equation}
-  \ms{eff}(\cdot) = \bot \qquad 
-  \ms{eff}(\Gamma, \thyp{x}{A}{\epsilon}) = \ms{eff}(\Gamma) \sqcup \epsilon
-\end{equation}
+% \begin{theorem}[Soundness (Rewriting)]
+%   Given substitutions $\issubst{\gamma, \gamma'}{\Gamma}{\Delta}$ such that, for all 
+%   $\bhyp{x}{A} \in \Delta$, $\dnt{\hasty{\Gamma}{\epsilon}{\gamma\;x}{A}} =
+%   \dnt{\hasty{\Gamma}{\epsilon}{\gamma'\;x}{A}}$, we have
+%   \begin{enumerate}[label=(\alph*)]
+%     \item Given $\hasty{\Delta}{\epsilon}{a}{A}$, 
+%       $\dnt{\hasty{\Gamma}{\epsilon}{[\gamma]a}{A}} = \dnt{\hasty{\Gamma}{\epsilon}{[\gamma']a}{A}}$
+%     \item Given $\issubst{\rho}{\Delta}{\Xi}$, $\dnt{\issubst{[\gamma]\rho}{\Gamma}{\Xi}} =
+%       \dnt{\issubst{[\gamma']\rho}{\Gamma}{\Xi}}$
+%     \item Given $\haslb{\Delta}{r}{\ms{L}}$, $\dnt{\haslb{\Gamma}{[\gamma]r}{\ms{L}}} =
+%       \dnt{\haslb{\Gamma}{[\gamma']r}{\ms{L}}}$
+%     \item Given $\lbsubst{\Delta}{\rho}{\ms{L}}{\ms{K}}$,
+%       $\dnt{\lbsubst{\Gamma}{[\gamma]\rho}{\ms{L}}{\ms{K}}} =
+%       \dnt{\lbsubst{\Gamma}{[\gamma']\rho}{\ms{L}}{\ms{K}}}$ 
+%   \end{enumerate}
+%   \label{thm:rewriting}
+% \end{theorem}
+% \begin{proof}
+%   By a trivial induction, since our semantics is compositional.
+% \end{proof}
+
+% This result allows us to safely perform peephole rewrites which we can independently prove
+% semantically valid, including on potentially impure operations. However, for pure substitutions, it
+% is possible to relate the semantics of the substituted term to the original more precisely. 
+
 We can now give a denotational semantics to substitutions in which a substitution
-$\issubst{\gamma}{\Gamma}{\Delta}$ is interpreted as a morphism from $\dnt{\Gamma}$ to
-$\dnt{\Delta}$ with effect $\leq \ms{eff}(\Delta)$, as in Figure~\ref{fig:ssa-subst-sem}. Such a
-substitution is \emph{pure} if the effect of each of its components is $\bot$, i.e., we have
-\begin{equation}
-  \substpure{\gamma} \iff \forall x, \dnt{\hasty{\Gamma}{\epsilon}{\gamma\;x}{\Delta\;x}} 
-    : \dnt{\Gamma} \to_\bot \dnt{\Delta\;x}
-\end{equation}
-In particular, we have that
-\begin{enumerate}
-  \item $\ms{eff}(\Delta) = \bot \implies \substpure{\gamma}$
-  \item $\substpure{\gamma} \implies \substpure{\lupg{\gamma}}$ and $\substpure{\rupg{\gamma}}$; 
-  in particular, the identity substitution is obviously pure.
-\end{enumerate}
+$\issubst{\gamma}{\Gamma}{\Delta}$ is interpreted as a pure morphism from $\dnt{\Gamma}$ to
+$\dnt{\Delta}$, as in Figure~\ref{fig:ssa-subst-sem}. 
+
+% Such a substitution is \emph{pure} if the
+% effect of each of its components is $\bot$, i.e., we have
+% \begin{equation}
+%   \substpure{\gamma} \iff \forall x, \dnt{\hasty{\Gamma}{\epsilon}{\gamma\;x}{\Delta\;x}} 
+%     : \dnt{\Gamma} \to_\bot \dnt{\Delta\;x}
+% \end{equation}
+% In particular, we have that
+% \begin{enumerate}
+%   \item $\ms{eff}(\Delta) = \bot \implies \substpure{\gamma}$
+%   \item $\substpure{\gamma} \implies \substpure{\lupg{\gamma}}$ and $\substpure{\rupg{\gamma}}$; 
+%   in particular, the identity substitution is obviously pure.
+% \end{enumerate}
 We can now state the soundness of variable substitution as follows:
 \begin{theorem}[name=Soundness (Substitution), restate=soundnesssubst]
   Given $\dnt{\issubst{\gamma}{\Gamma}{\Delta}} : \dnt{\Gamma} \to \dnt{\Delta}$ pure, we have that
@@ -3784,15 +3780,17 @@ We can now state the soundness of variable substitution as follows:
 \begin{proof}
   See Appendix~\ref{proof:soundness-subst}.
 \end{proof}
-In particular, this implies that, when $\gamma$ is pure, the semantics of substitution composition
-$[\gamma]\rho$ is just composition of the denotations of $\gamma, \rho$; note in general that this is
-\emph{not} true in general if only the $\rho$ is pure, as can trivially be seen from the example
-\(\gamma = x \mapsto \ms{print}; x\), \(\rho = x \mapsto ()\). Note also that we can derive
-rewriting (Theorem~\ref{thm:rewriting}) for pure substitutions from soundness of substitution, but
-not vice versa; however, rewriting also covers \emph{impure} substitutions; this is similar to the
-distinction between \emph{uniformity} (which only holds for pure operations) and \emph{dinaturality}
-(which holds in general, but has a more restricted form). We can derive the following important
-corollary:
+In particular, this implies that the semantics of substitution composition $[\gamma]\rho$ is just
+composition of the denotations of $\gamma, \rho$.
+% ; note in general that this is \emph{not} true in
+% general if only the $\rho$ is pure, as can trivially be seen from the example \(\gamma = x \mapsto
+% \ms{print}; x\), \(\rho = x \mapsto ()\). 
+\TODO{handle rewriting note here}
+% Note also that we can derive rewriting (Theorem~\ref{thm:rewriting}) for pure substitutions from
+% soundness of substitution, but not vice versa; however, rewriting also covers \emph{impure}
+% substitutions; this is similar to the distinction between \emph{uniformity} (which only holds for
+% pure operations) and \emph{dinaturality} (which holds in general, but has a more restricted form). 
+We can derive the following important corollary:
 \begin{corollary}[Soundness (Single Substitution)]
   Given $\hasty{\Gamma}{\bot}{a}{A}$, we have
   \begin{enumerate}
@@ -3825,14 +3823,14 @@ corollary:
 \begin{figure}
   \begin{equation*}
     \boxed{\dnt{\issubst{\gamma}{\Gamma}{\Delta}} 
-      : \dnt{\Gamma} \to_{\ms{eff}(\Delta)} \dnt{\Delta}}
+      : \dnt{\Gamma} \to_\bot \dnt{\Delta}}
   \end{equation*}
   \begin{gather*}
     \dnt{\issubst{\cdot}{\Gamma}{\cdot}} = \tmor{\dnt{\Gamma}}
     \qquad
-    \dnt{\issubst{\gamma, x \mapsto e}{\Gamma}{\Delta, \thyp{x}{A}{\epsilon}}}
+    \dnt{\issubst{\gamma, x \mapsto e}{\Gamma}{\Delta, \bhyp{x}{A}}}
     = \dmor{\dnt{\Gamma}};\dnt{\issubst{\gamma}{\Gamma}{\Delta}} 
-      \ltimes \dnt{\hasty{\Gamma}{\epsilon}{e}{A}}
+      \ltimes \dnt{\hasty{\Gamma}{\bot}{e}{A}}
   \end{gather*}
   \begin{equation*}
     \boxed{\dnt{\lbsubst{\Gamma}{\kappa}{\ms{L}}{\ms{K}}} 
@@ -3853,12 +3851,12 @@ corollary:
   \label{fig:ssa-subst-sem} 
 \end{figure}
 
-We can now move on to stating the metatheoretic properties of label-substitutions, which,
-thankfully, turn out to be a little bit simpler. In particular, in Figure~\ref{fig:ssa-subst-sem},
-we interpret label substitutions $\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}$ as morphisms taking
-a copy of the context $\dnt{\Gamma}$ and an element of the coproduct $\dnt{\ms{L}}$ to an element
-of the coproduct $\dnt{\ms{K}}$, with an arbitrary effect. Label substitution is then sound in
-general, as stated in the following theorem:
+We can now move on to stating the metatheoretic properties of label-substitutions in much the same
+manner. In particular, in Figure~\ref{fig:ssa-subst-sem}, we interpret label substitutions
+$\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}$ as morphisms taking a copy of the context $\dnt{\Gamma}$
+and an element of the coproduct $\dnt{\ms{L}}$ to an element of the coproduct $\dnt{\ms{K}}$, with
+an arbitrary effect. Label substitution is then sound in general, as stated in the following
+theorem:
 \begin{theorem}[name=Soundness (Label Substitution), restate=soundnesslsubst]
   Given $\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}$, we have
   \begin{enumerate}[label=(\alph*)]
@@ -4030,7 +4028,7 @@ so, we may define an inverse distributor morphism
 which can easily be shown to be an inverse to the obvious distributor morphism. We may now note that
 \begin{equation}
   \dnt{\cdot}_{\ms{Th}^\otimes(\Gamma)} = \mb{1}, \quad
-  \dnt{\Delta, \thyp{x}{A}{\epsilon}}_{\ms{Th}^\otimes(\Gamma)} 
+  \dnt{\Delta, \bhyp{x}{A}}_{\ms{Th}^\otimes(\Gamma)} 
     = \dnt{\Delta}_{\ms{Th}^\otimes(\Gamma)} \otimes A
   \qquad \implies \qquad
   \dnt{\Delta}_{\ms{Th}^\otimes(\Gamma)} = \pckd{\Gamma}
@@ -4125,7 +4123,7 @@ an Elgot structure through a somewhat tedious calculation. We may now note that
   \begin{aligned}
     \dnt{\cdot}_{\ms{Th}(\Gamma, \ms{L})} 
       &= \mb{1}, &
-    \dnt{\Delta, \thyp{x}{A}{\epsilon}}_{\ms{Th}(\Gamma, \ms{L})} 
+    \dnt{\Delta, \bhyp{x}{A}}_{\ms{Th}(\Gamma, \ms{L})} 
       &= \dnt{\Delta}_{\ms{Th}(\Gamma, \ms{L})} \otimes A
     &\qquad \implies \qquad
     \dnt{\Delta}_{\ms{Th}(\Gamma, \ms{L})} &= \pckd{\Gamma} \\
@@ -5195,7 +5193,7 @@ proving the B\"ohm-Jacopini theorem in Appendix~\ref{apx:data-control} and compl
 Section~\ref{ssec:completeness}. We begin by defining \emph{packing} of variable contexts as
 follows:
 \begin{equation}
-  \pckd{\cdot} = \mb{1} \qquad \pckd{\Gamma, \thyp{x}{A}{\epsilon}} = \pckd{\Gamma} \otimes A
+  \pckd{\cdot} = \mb{1} \qquad \pckd{\Gamma, \bhyp{x}{A}} = \pckd{\Gamma} \otimes A
 \end{equation}
 While in general we destructure pairs using binary \ms{let}-bindings, it will be more convenient
 to start defining operations on records in terms of projections. We begin by defining projections
@@ -5211,8 +5209,8 @@ on pairs in the obvious manner:
 \end{equation}
 We may then define projections on records as follows:
 \begin{equation}
-  \pi_{(\Delta, \thyp{x}{A}{\epsilon}), y}\;e = \pi_{\Delta, y}(\pi_l\;e) \qquad
-  \pi_{(\Delta, \thyp{x}{A}{\epsilon}), x}\;e = \pi_r\;e
+  \pi_{(\Delta, \bhyp{x}{A}), y}\;e = \pi_{\Delta, y}(\pi_l\;e) \qquad
+  \pi_{(\Delta, \bhyp{x}{A}), x}\;e = \pi_r\;e
 \end{equation}
 with typing rule
 \begin{equation}
@@ -5222,27 +5220,21 @@ with typing rule
     {\hasty{\Gamma}{\epsilon}{\pi_{\Delta, x}\;e}{A}}
 \end{equation}
 We will omit $\Delta$ when it is clear from context. We can define a term
-$\hasty{\Gamma}{\ms{eff}(\Gamma)}{\ms{packed}(\Gamma)}{[\Gamma]}$ to ``pack'' up the current context
+$\hasty{\Gamma}{\bot}{\ms{packed}(\Gamma)}{[\Gamma]}$ to ``pack'' up the current context
 into a record as follows:
 \begin{equation}
   \ms{packed}(\cdot) = () \qquad
-  \ms{packed}(\Gamma, \thyp{x}{A}{\epsilon}) = (\ms{packed}(\Gamma), x)
+  \ms{packed}(\Gamma, \bhyp{x}{A}) = (\ms{packed}(\Gamma), x)
 \end{equation}
-where we define the \emph{effect} of a context $\Gamma$ as follows
-\begin{equation}
-  \ms{eff}(\cdot) = \bot \qquad 
-  \ms{eff}(\Gamma, \thyp{x}{A}{\epsilon}) = \ms{eff}(\Gamma) \sqcup \epsilon
-\end{equation}
-In particular, we say $\Gamma$ is \emph{pure} if $\ms{eff}(\Gamma) = \bot$. We may now define
-packing and unpacking substitutions
+We may now define packing and unpacking substitutions
 $\issubst{\ms{pack}_y^\otimes(\Gamma)}{\Gamma}{\bhyp{y}{\pckd{\Gamma}}}$,
 $\issubst{\ms{unpack}_y^\otimes(\Gamma)}{\bhyp{y}{\pckd{\Gamma}}}{\Gamma}$ as follows:
 \begin{equation}
   \ms{pack}_y^\otimes(\Gamma) = y \mapsto \ms{packed}(\Gamma) \qquad
   \ms{unpack}_y^\otimes(\Gamma) = (x \mapsto \pi_{\Gamma, x}\;y)_{x \in \Gamma}
 \end{equation}
-It turns out that our equational theory is sufficient to show that the pack and unpack substitutions
-are inverses of each other \emph{for pure contexts}, i.e.
+Our equational theory is sufficient to show that the pack and unpack substitutions are inverses of
+each other:
 \begin{equation}
   \begin{aligned}
   \issubst
@@ -6749,39 +6741,38 @@ We may now state our desired result as follows:
   \begin{itemize}
     \item \brle{wk-nil}: if $\Gamma, \Gamma' = \cdot$, then $\Delta = \cdot$, and so we trivially
     have $\dnt{\cdot \leq \cdot} ; \dnt{\cdot \leq \cdot} = \dnt{\cdot \leq \cdot} = \ms{id}$
-    \item \brle{wk-skip}: we have $\Gamma = \Xi, \thyp{x}{A}{\epsilon}$, and so by induction
+    \item \brle{wk-skip}: we have $\Gamma = \Xi, \bhyp{x}{A}$, and so by induction
     \begin{equation}
-      \dnt{\Xi, \thyp{x}{A}{\epsilon} \leq \Gamma'} ; \dnt{\Gamma' \leq \Delta}
+      \dnt{\Xi, \bhyp{x}{A} \leq \Gamma'} ; \dnt{\Gamma' \leq \Delta}
       = \pi_l ; \dnt{\Xi \leq \Gamma'} ; \dnt{\Gamma' \leq \Delta}
       = \pi_l ; \dnt{\Xi \leq \Delta}
-      = \dnt{\Xi, \thyp{x}{A}{\epsilon} \leq \Delta}
+      = \dnt{\Xi, \bhyp{x}{A} \leq \Delta}
     \end{equation}
     as desired
-    \item \brle{wk-cons}: we have $\Gamma = \Xi, \thyp{x}{A}{\epsilon}$ and $\Gamma' = \Xi',
-    \thyp{x}{A}{\epsilon'}$. We proceed by case analysis on $\Gamma' \leq \Delta$:
+    \item \brle{wk-cons}: we have $\Gamma = \Xi, \bhyp{x}{A}$ and $\Gamma' = \Xi',
+    \bhyp{x}{A}$. We proceed by case analysis on $\Gamma' \leq \Delta$:
     \begin{itemize}
       \item \brle{wk-skip}: we have
       \begin{equation}
         \begin{aligned}
-        \dnt{\Xi, \thyp{x}{A}{\epsilon} \leq \Xi', \thyp{x}{A}{\epsilon'}} ; \dnt{\Xi' \leq \Delta}
-        & = \dnt{\Xi \leq \Xi'} \otimes \dnt{A} ; \dnt{\Xi', \thyp{x}{A}{\epsilon'} \leq \Delta} \\
+        \dnt{\Xi, \bhyp{x}{A} \leq \Xi', \bhyp{x}{A}} ; \dnt{\Xi' \leq \Delta}
+        & = \dnt{\Xi \leq \Xi'} \otimes \dnt{A} ; \dnt{\Xi', \bhyp{x}{A} \leq \Delta} \\
         & = \dnt{\Xi \leq \Xi'} \otimes \dnt{A} ; \pi_l ; \dnt{\Xi' \leq \Delta} \\
         & = \pi_l ; \dnt{\Xi \leq \Xi'} ; \dnt{\Xi' \leq \Delta} \\
         & = \pi_l ; \dnt{\Xi \leq \Delta} \\
-        & = \dnt{\Xi, \thyp{x}{A}{\epsilon} \leq \Delta}
+        & = \dnt{\Xi, \bhyp{x}{A} \leq \Delta}
         \end{aligned}
       \end{equation}
       as desired
-      \item \brle{wk-cons}: we have $\Delta = \Delta' , \thyp{x}{A}{\epsilon''}$, and so by
-      induction
+      \item \brle{wk-cons}: we have $\Delta = \Delta' , \bhyp{x}{A}$, and so by induction
       \begin{equation}
         \begin{aligned}
-        \dnt{\Xi, \thyp{x}{A}{\epsilon} \leq \Xi', \thyp{x}{A}{\epsilon'}} ; 
-        \dnt{\Xi', \thyp{x}{A}{\epsilon'} \leq \Delta', \thyp{x}{A}{\epsilon''}}
+        \dnt{\Xi, \bhyp{x}{A} \leq \Xi', \bhyp{x}{A}} ; 
+        \dnt{\Xi', \bhyp{x}{A} \leq \Delta', \bhyp{x}{A}}
         &= \dnt{\Xi \leq \Xi'} \otimes \dnt{A} ; \dnt{\Xi' \leq \Delta'} \otimes \dnt{A} \\
         &= (\dnt{\Xi \leq \Xi'} ; \dnt{\Xi' \leq \Delta'}) \otimes \dnt{A} \\
         &= \dnt{\Xi \leq \Delta'} \otimes \dnt{A} \\
-        &= \dnt{\Xi, \thyp{x}{A}{\epsilon} \leq \Delta}
+        &= \dnt{\Xi, \bhyp{x}{A} \leq \Delta}
         \end{aligned}
       \end{equation}
       as desired
@@ -6838,23 +6829,22 @@ We may now state our desired result as follows:
     \begin{itemize}
       \item \brle{wk-nil}: this case yields a contradiction, since if $\Delta = \cdot$ it cannot
       define $x$.
-      \item \brle{wk-cons}: given $\Gamma = \Gamma', \thyp{y}{B}{\epsilon''}$, $\Delta = \Delta',
-      \thyp{y}{B}{\epsilon'}$,
+      \item \brle{wk-cons}: given $\Gamma = \Gamma', \bhyp{y}{B}$, $\Delta = \Delta',
+      \bhyp{y}{B}$,
       \begin{itemize}
         \item If $x = y$, then $B = A$, and
         \begin{equation}
-          \dnt{\Gamma', \thyp{x}{A}{\epsilon''} \leq \Delta', \thyp{x}{A}{\epsilon'}} 
-          ; \pi_{(\Delta, \thyp{x}{A}{\epsilon'}), x}
+          \dnt{\Gamma', \bhyp{x}{A} \leq \Delta', \bhyp{x}{A}} 
+          ; \pi_{(\Delta, \bhyp{x}{A}), x}
           = \dnt{\Gamma' \leq \Delta'} \otimes \dnt{A} ; \pi_r
           = \pi_r
-          = \pi_{(\Gamma, \thyp{x}{A}{\epsilon''}), x}
+          = \pi_{(\Gamma, \bhyp{x}{A}), x}
         \end{equation}
         as desired.
         \item Otherwise, we have by induction that
         \begin{equation}
           \begin{aligned}
-          \dnt{\Gamma', \thyp{y}{B}{\epsilon''} \leq \Delta', \thyp{y}{B}{\epsilon'}}
-          ; \pi_{(\Delta', \thyp{y}{B}{\epsilon'}), x}
+          \dnt{\Gamma', \bhyp{y}{B} \leq \Delta', \bhyp{y}{B}} ; \pi_{(\Delta', \bhyp{y}{B}), x}
           & = \dnt{\Gamma' \leq \Delta'} \otimes \dnt{B} ; \pi_l ; \pi_{\Delta', x} \\
           & = \pi_l ; \dnt{\Gamma' \leq \Delta'} ; \pi_{\Delta', x}
           = \pi_l ; \pi_{\Gamma', x}
@@ -6862,10 +6852,10 @@ We may now state our desired result as follows:
           \end{aligned}
         \end{equation}
       \end{itemize}
-      \item \brle{wk-skip}: we have $\Gamma = \Gamma', \thyp{y}{B}{\epsilon'}$, and hence
+      \item \brle{wk-skip}: we have $\Gamma = \Gamma', \bhyp{y}{B}$, and hence
       \begin{equation}
         \begin{aligned}
-          \dnt{\Gamma', \thyp{y}{B}{\epsilon'} \leq \Delta} ; \pi_{\Delta, x}
+          \dnt{\Gamma', \bhyp{y}{B} \leq \Delta} ; \pi_{\Delta, x}
           = \pi_l ; \dnt{\Gamma' \leq \Delta} ; \pi_{\Delta, x}
           = \pi_l ; \pi_{\Gamma', x}
           = \pi_{\Gamma, x}
