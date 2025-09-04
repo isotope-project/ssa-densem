@@ -345,9 +345,7 @@ axiomatization, and a variety of interesting concrete models.
 %
 % \todo{vellum example}
 
-\TODO{segue here}
-\TODO{remove effects from variables (add note about formalization)}
-
+This is exactly what we provide in this paper. 
 Concretely, our contributions are as follows: 
 
 \begin{itemize}
@@ -379,6 +377,22 @@ Concretely, our contributions are as follows:
 \end{itemize}
 
 \section{Static Single Assignment Form}
+
+\begin{enumerate}
+  \item We recall classical SSA form, and recall that it is equivalent to the basic  blocks with arguments format. 
+  \item Next, we show that the dominance-based scoping of SSA becomes equivalent to lexical scoping
+    when the dominance structure is made explicit in the syntax. We can now give a BNF grammar for ``functional 
+    SSA'' with the dominator tree reified in syntax. 
+  \item Next, by relaxing the distinction between statements and terminators, we can show that functional SSA
+    is a subset of ANF. However, ANF has the same expressive power as functional SSA. 
+  \item But ANF has weak substitution properties. By generalizing the grammar to 
+    let instructions be arbitrary expressions, we can have a simpler and more expressive substitution 
+    principle without changing the expressive power of the language. This gives us \isotopessa{}, which 
+    retains the statement-expression distinction, but has no more syntactic categories than that.  
+  \item We formalize these intuitions by giving algorithms to translate back and forth between functional SSA 
+    and \isotopessa{}.  Furthermore, in section~\ref{?} we show that this translation is fully 
+    semantics-preserving. 
+\end{enumerate}
 
 In this section, we describe SSA form and the isomorphism between the standard $\phi$-node-based
 presentation and the more functional \emph{basic blocks with arguments} format. We then discuss
@@ -2520,7 +2534,7 @@ We state the correctness of these functions in the following lemma:
     \boxed{\ahaslb{\Gamma}{r}{\ms{L}}}
   \end{equation*}
   \begin{gather*}
-    \prftree[r]{\rle{br}}{\Gamma\;x \leq (A, \epsilon)}{\ms{L}\;\ell = A}
+    \prftree[r]{\rle{br}}{\Gamma(x) = A}{\ms{L}\;\ell = A}
       {\ahaslb{\Gamma}{\brb{\ell}{x}}{\ms{L}}} \qquad
     \prftree[r]{\rle{let$_1$-r}}
       {\ahasty{\Gamma}{\epsilon}{a}{A}}
