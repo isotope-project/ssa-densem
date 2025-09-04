@@ -1098,6 +1098,9 @@ terminator, which is either an unconditional branch, a \ms{case}-statement or a
   \ms{terminator}(r) = r \quad \text{otherwise} \\
   \ms{bb}(r) = (\ms{defs}(r), \ms{terminator}(r))
 \end{gather*}
+\TODO{it is unintuitive that it is unintuitive}
+\TODO{pull up to section 2}
+\TODO{add C++ struct}
 Note in particular that the region $r$ in a \ms{where}-statement
 $\where{r}{(\wbranch{\ell_i}{x_i}{t_i})_i}$ is best interpreted as a terminator rather than an
 entry-block even if of the form, e.g., $r = \letstmt{x}{e}{s}$. The entry block is instead the
@@ -3799,7 +3802,6 @@ composition of the denotations of $\gamma, \rho$.
 % ; note in general that this is \emph{not} true in
 % general if only the $\rho$ is pure, as can trivially be seen from the example \(\gamma = x \mapsto
 % \ms{print}; x\), \(\rho = x \mapsto ()\). 
-\TODO{handle rewriting note here}
 % Note also that we can derive rewriting (Theorem~\ref{thm:rewriting}) for pure substitutions from
 % soundness of substitution, but not vice versa; however, rewriting also covers \emph{impure}
 % substitutions; this is similar to the distinction between \emph{uniformity} (which only holds for
