@@ -407,8 +407,6 @@ argument shows that these extensions add no expressive power; we give a more for
 argument, as well as algorithms to interconvert between \isotopessa{}, standard SSA, and ANF, in
 Section~\ref{ssec:ssa-normal}.
 
-\TODO{note the signposted argument above when doing grammar stuff}
-
 As a running example, consider the simple imperative program to compute $10!$ given in
 Figure~\ref{fig:fact-program}. Operating directly on an imperative language can be challenging,
 since having a uniform representation of code friendly to mechanized optimization and analysis is
@@ -685,6 +683,10 @@ and standard SSA can be recovered by removing the inserted \ms{where}-blocks.
   \label{fig:dominance-to-lexical}
 \end{figure}
 
+\TODO{give grammar for SSA here from other paper}
+
+\TODO{collapse distinction between regions and terminators to get ANF; tfw thread those jumps}
+
 Lexical scoping allows us to apply many of the techniques developed in theoretical computer science
 and functional programming for reasoning about and developing optimizations and analysis passes --
 in particular, the result of our conversion to lexical scoping looks a lot like the correspondence
@@ -756,9 +758,7 @@ key difference is that, in our format (which is strictly first order), we requir
   \label{fig:bba-to-anf}
 \end{figure}
 
-\TODO{give grammar for standard-\isotopessa{} here}
-
-\TODO{justify full \isotopessa{} here}
+\TODO{justify full \isotopessa{} here by generalizing \emph{instructions} to \emph{expressions}}
 
 ANF, however, lacks a good substitution property, since substituting a value for a variable can take
 you out of ANF, making it difficult to express optimizations like $(i + 1) - 1 \to i$ as rewrite
@@ -775,8 +775,6 @@ can be eliminated in the obvious manner, such as by taking
 \end{align*}
 
 \TODO{give pointer to transformation in later section / appendix}
-
-\TODO{give grammar for full \isotopessa{} \emph{here} instead of below}
 
 \begin{figure}
   \centering
@@ -846,86 +844,86 @@ This gives us our final \isotopessa{} calculus, which we will call \emph{type-th
 this language, we can safely perform \textit{substitutions}, like in Figure~\ref{fig:fact-cse}.
 These can then be used to build up optimizations such as \textit{common-subexpression elimination}.
 
-\TODO{rework this example, since it is confusing. Maybe remove?}
+% \TODO{rework this example, since it is confusing. Maybe remove?}
 
-More generally, substitution lets us do \textit{algebra}. For example, since we know that:
-\begin{align*}
-  (i_0 + 1, a_0 * (i_0 + 1)) &= (\ms{let}\;(x, y) = (i_0, a_0)\;\ms{in}\;(x + 1, y * (x + 1))) \\
-  (1, 1) &= (\ms{let}\;(x, y) = (0, 1)\;\ms{in}\;(x + 1, y * (x + 1)))
-\end{align*} 
-we can rewrite the program in Figure~\ref{fig:fact-subst-2} to that in Figure~\ref{fig:fact-dinat}.
-We can then apply general rewrite rules such as \textit{dinaturality} to rewrite
-Figure~\ref{fig:fact-dinat} to Figure~\ref{fig:fact-zero}. This allows us to build up justifications
-for complex optimizations, such as rewriting \ref{fig:fact-zero} to \ref{fig:fact-opt}, in terms of
-simple rewriting steps. In particular, we can do \textit{complex}, \textit{error-prone} loop and
-control-flow graph optimizations by breaking them down into closed set of simple algebraic steps,
-with each step rigorously justified via our denotational semantics.
+% More generally, substitution lets us do \textit{algebra}. For example, since we know that:
+% \begin{align*}
+%   (i_0 + 1, a_0 * (i_0 + 1)) &= (\ms{let}\;(x, y) = (i_0, a_0)\;\ms{in}\;(x + 1, y * (x + 1))) \\
+%   (1, 1) &= (\ms{let}\;(x, y) = (0, 1)\;\ms{in}\;(x + 1, y * (x + 1)))
+% \end{align*} 
+% we can rewrite the program in Figure~\ref{fig:fact-subst-2} to that in Figure~\ref{fig:fact-dinat}.
+% We can then apply general rewrite rules such as \textit{dinaturality} to rewrite
+% Figure~\ref{fig:fact-dinat} to Figure~\ref{fig:fact-zero}. This allows us to build up justifications
+% for complex optimizations, such as rewriting \ref{fig:fact-zero} to \ref{fig:fact-opt}, in terms of
+% simple rewriting steps. In particular, we can do \textit{complex}, \textit{error-prone} loop and
+% control-flow graph optimizations by breaking them down into closed set of simple algebraic steps,
+% with each step rigorously justified via our denotational semantics.
 
-\begin{figure}
-  \begin{minipage}{.5\textwidth}
-    \begin{subfigure}{\textwidth}
-      \begin{align*}
-        & \ms{let}\;n = 10; \\
-        & \ms{br}\;\ms{loop}(1, 1) \\
-        & \ms{where}\;\ms{loop}(i_0, a_0): \{\\
-        & \quad \ms{if}\;i_0 < n\;\{ \\
-        & \qquad \ms{br}\;\ms{loop}(i_0 + 1, a_0 * (i_0 + 1)) \\
-        & \quad \}\;\ms{else}\;\{ \\
-        & \qquad \ms{ret}\;a_0 \\
-        & \quad \} \\
-        & \}
-      \end{align*}
-      \caption{Substituted program from Figure \ref{fig:fact-subst}}
-      \label{fig:fact-subst-2}
-    \end{subfigure}
-    \begin{subfigure}{\textwidth}
-      \begin{align*}
-        & \ms{let}\;n = 10; \\
-        & \ms{br}\;\ms{loop}\;(0, 1) \\
-        & \ms{where}\;\ms{loop}(x, y): \{\\
-        & \quad \ms{let}\;(i_0, a_0) = (x + 1, y * (x + 1)); \\
-        & \quad \ms{if}\;i_0 < n\;\{ \\
-        & \qquad \ms{br}\;\ms{loop}(i_0, a_0) \\
-        & \quad \}\;\ms{else}\;\{ \\
-        & \qquad \ms{ret}\;a_0 \\
-        & \quad \} \\
-        & \}
-      \end{align*}
-      \caption{Equivalent to Figure \ref{fig:fact-zero} by \textit{dinaturality}}
-      \label{fig:fact-dinat}
-    \end{subfigure}
-  \end{minipage}%
-  \begin{subfigure}[c]{.5\textwidth}
-    \begin{align*}
-      & \ms{let}\;n = 10; \\
-      & \ms{br}\;\ms{loop}( \\
-      & \quad \ms{let}\;(x, y) = (0, 1); \\
-      & \quad(x + 1, y * (x + 1)) \\
-      & ) \\
-      & \ms{where}\;\ms{loop}(i_0, a_0): \{\\
-      & \quad \ms{if}\;i_0 < n\;\{ \\
-      & \qquad \ms{br}\;\ms{loop}( \\
-      & \qquad \quad \ms{let}\;(x, y) = (i_0, a_0); \\
-      & \qquad \quad (x + 1, y * (x + 1)) \\ 
-      & \qquad ) \\
-      & \quad \}\;\ms{else}\;\{ \\
-      & \qquad \ms{ret}\;a_0 \\
-      & \quad \} \\
-      & \}
-    \end{align*}
-    \caption{Equivalent to Figure \ref{fig:fact-subst-2} by substitution}
-    \label{fig:fact-zero}
-  \end{subfigure}
-  \caption{
-    Decomposing multi-block rewrites (from \ref{fig:fact-zero} to
-    \ref{fig:fact-subst-2}, and therefore to the more optimal program 
-    \ref{fig:fact-opt}) into simple algebraic steps. By verifying each step, we can
-    verify complex optimizations through decomposition.
-  } 
-  \Description{}
-  \label{fig:fact-dinat-rewrites}
-\end{figure}
-
+% \begin{figure}
+%   \begin{minipage}{.5\textwidth}
+%     \begin{subfigure}{\textwidth}
+%       \begin{align*}
+%         & \ms{let}\;n = 10; \\
+%         & \ms{br}\;\ms{loop}(1, 1) \\
+%         & \ms{where}\;\ms{loop}(i_0, a_0): \{\\
+%         & \quad \ms{if}\;i_0 < n\;\{ \\
+%         & \qquad \ms{br}\;\ms{loop}(i_0 + 1, a_0 * (i_0 + 1)) \\
+%         & \quad \}\;\ms{else}\;\{ \\
+%         & \qquad \ms{ret}\;a_0 \\
+%         & \quad \} \\
+%         & \}
+%       \end{align*}
+%       \caption{Substituted program from Figure \ref{fig:fact-subst}}
+%       \label{fig:fact-subst-2}
+%     \end{subfigure}
+%     \begin{subfigure}{\textwidth}
+%       \begin{align*}
+%         & \ms{let}\;n = 10; \\
+%         & \ms{br}\;\ms{loop}\;(0, 1) \\
+%         & \ms{where}\;\ms{loop}(x, y): \{\\
+%         & \quad \ms{let}\;(i_0, a_0) = (x + 1, y * (x + 1)); \\
+%         & \quad \ms{if}\;i_0 < n\;\{ \\
+%         & \qquad \ms{br}\;\ms{loop}(i_0, a_0) \\
+%         & \quad \}\;\ms{else}\;\{ \\
+%         & \qquad \ms{ret}\;a_0 \\
+%         & \quad \} \\
+%         & \}
+%       \end{align*}
+%       \caption{Equivalent to Figure \ref{fig:fact-zero} by \textit{dinaturality}}
+%       \label{fig:fact-dinat}
+%     \end{subfigure}
+%   \end{minipage}%
+%   \begin{subfigure}[c]{.5\textwidth}
+%     \begin{align*}
+%       & \ms{let}\;n = 10; \\
+%       & \ms{br}\;\ms{loop}( \\
+%       & \quad \ms{let}\;(x, y) = (0, 1); \\
+%       & \quad(x + 1, y * (x + 1)) \\
+%       & ) \\
+%       & \ms{where}\;\ms{loop}(i_0, a_0): \{\\
+%       & \quad \ms{if}\;i_0 < n\;\{ \\
+%       & \qquad \ms{br}\;\ms{loop}( \\
+%       & \qquad \quad \ms{let}\;(x, y) = (i_0, a_0); \\
+%       & \qquad \quad (x + 1, y * (x + 1)) \\ 
+%       & \qquad ) \\
+%       & \quad \}\;\ms{else}\;\{ \\
+%       & \qquad \ms{ret}\;a_0 \\
+%       & \quad \} \\
+%       & \}
+%     \end{align*}
+%     \caption{Equivalent to Figure \ref{fig:fact-subst-2} by substitution}
+%     \label{fig:fact-zero}
+%   \end{subfigure}
+%   \caption{
+%     Decomposing multi-block rewrites (from \ref{fig:fact-zero} to
+%     \ref{fig:fact-subst-2}, and therefore to the more optimal program 
+%     \ref{fig:fact-opt}) into simple algebraic steps. By verifying each step, we can
+%     verify complex optimizations through decomposition.
+%   } 
+%   \Description{}
+%   \label{fig:fact-dinat-rewrites}
+% \end{figure}
+ 
 \section{Type Theory}
 
 \label{sec:typing}
@@ -933,18 +931,20 @@ with each step rigorously justified via our denotational semantics.
 We now give a formal account of \isotopessa{}, starting with the types. Our types are first order,
 and consists of binary sums $A + B$, products $A \otimes B$, the unit type $\mathbf{1}$, and the
 empty type $\mb{0}$, all parameterised over a set of base types $X \in \mc{T}$. We write our set of
-types as $\ms{Ty}(X)$. We also parameterise over:
-\begin{itemize}
-  
-  \item For each pair $A, B \in \ms{Ty}(X)$ and effect $\epsilon \in \{\bot, \top\}$, a set of
-  \textit{primitive instructions} $f \in \mc{I}_\epsilon(A, B)$, where $\epsilon \leq \epsilon'
-  \implies \mc{I}_\epsilon(A, B) \subseteq \mc{I}_{\epsilon'}(A, B)$. 
-  
-  We write $\mc{I}(A, B) = \bigcup_\epsilon\mc{I}_\epsilon(A, B)$,
-  $\mc{I}_\epsilon = \bigcup_{A, B}\mc{I}_\epsilon(A, B)$, and $\mc{I} =
-  \bigcup_\epsilon\mc{I}_\epsilon$.
+types as $\ms{Ty}(X)$. 
 
-\end{itemize}
+\TODO{clarify this jump}
+
+We also parameterise over, for each pair $A, B \in \ms{Ty}(X)$ and
+\emph{effect} $\epsilon \in \{\bot, \top\}$, a set of \textit{primitive instructions} $f \in
+\mc{I}_\epsilon(A, B)$, where $\epsilon \leq \epsilon' \implies \mc{I}_\epsilon(A, B) \subseteq
+\mc{I}_{\epsilon'}(A, B)$. 
+  
+We write $\mc{I}(A, B) = \bigcup_\epsilon\mc{I}_\epsilon(A, B)$, $\mc{I}_\epsilon = \bigcup_{A,
+B}\mc{I}_\epsilon(A, B)$, and $\mc{I} = \bigcup_\epsilon\mc{I}_\epsilon$.
+
+\TODO{segue?}
+
 We'll call a tuple $Sg = (\mc{T}, \mc{I})$ of types and instructions over these types an
 \emph{\isotopessa{}-signature}.
 
@@ -985,7 +985,7 @@ type that must be passed on a jump to the label $\ell$.
       <\(\ms{L}\)> ::= \(\cdot\) \;|\; \(\ms{L}, \lhyp{\ell}{A}\)
     \end{grammar}
   \end{center}
-  \caption{Grammar for \isotopessa{}, parametrized over an \isotopessa{} signature}
+  \caption{Grammar for \isotopessa{}, parametrized over an \isotopessa{}-signature}
   \Description{}
   \label{fig:ssa-grammar}
 \end{figure}
@@ -3414,7 +3414,8 @@ the former will not.
 \subsection{Semantics}
 
 We now have all the ingredients we need to give a semantics to \isotopessa{} expressions and
-regions. In particular, an \isotopessa{} expression model consists of:
+regions. In particular, an \isotopessa{} expression model of a signature $Sg = (\mc{T}, \mc{I})$
+consists of:
 \begin{itemize}
   \item An distributive Freyd category $\mc{C}$
   \item A map $\dnt{\cdot}$ from base types $X$ to objects $\dnt{X} : |\mc{C}|$
@@ -3479,10 +3480,10 @@ Figure~\ref{fig:ssa-ty-sem}.
   \label{fig:ssa-ty-sem}
 \end{figure}
 
-We can now interpret \isotopessa{} expressions $\hasty{\Gamma}{\epsilon}{a}{A}$ over a given
-signature in a model interpreting that signature as morphisms $\dnt{\Gamma} \to_\epsilon \dnt{A}$
-using the rules in Figure~\ref{fig:ssa-expr-sem}. Up to this point, both our syntax and semantics
-are quite standard; in particular:
+We can now interpret \isotopessa{}-expressions $\hasty{\Gamma}{\epsilon}{a}{A}$ over a given
+signature $Sg$ as morphisms $\dnt{\Gamma} \to_\epsilon \dnt{A}$ using the rules in
+Figure~\ref{fig:ssa-expr-sem}. Up to this point, both our syntax and semantics are quite standard;
+in particular:
 \begin{itemize}
   \item Variables $x$ are modelled as projections from the appropriate index in the context's
   denotation $\pi_{\Gamma, x} : \dnt{\Gamma} \to_\bot \dnt{A}$
