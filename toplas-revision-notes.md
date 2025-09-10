@@ -11,7 +11,7 @@
    2. Explain the state of the art, and why it does not solve the problem. 
       + SSA is the most widely used compiler IR
       + Giving it a semantics is a nuisance (eg, phi-functions are a PITA)	
-      - Using the semantics you make up is very, very painful (Vellvm example) 
+      o Using the semantics you make up is very, very painful (Vellvm example) 
       - The reason is that we do not have a good equational theory for SSA as a language.
       - This has more bad side-effects
       - Modern computers have weak memory
