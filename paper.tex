@@ -691,32 +691,45 @@ Figure~\ref{fig:fact-bba}:
     Cranelift \cite{cranelift}. The arguments $i_0, a_0$ corresponding to the $\phi$-nodes $i_0,
     a_0$ are colored in \textcolor{red}{red} and \textcolor{blue}{blue}, respectively.
   }
-
   \Description{}
 \end{figure}
-
-\TODO{clarify the transformation steps}
 
 An important insight provided by the BBA format, as discussed by \citet{appel-ssa} and
 \citet{kelsey-95-cps}, is that a program in SSA form can in this way be interpreted as a collection
 of tail-recursive functions, where each basic block and branch correspond to a function and tail
-call, respectively. This interpretation offers a natural framework for defining the semantics of SSA
-and reasoning about optimizations. By topologically sorting the basic blocks in the CFG according to
-the dominance order and inserting brackets based on the dominance tree, we can convert
-dominance-based scoping to lexical scoping. In this arrangement, a variable is in lexical scope if
-and only if it is in scope under dominance-based scoping, as shown in
-Figure~\ref{fig:dominance-to-lexical}. This transformation is straightforward, and standard SSA can
-be recovered by removing the inserted \ms{where}-blocks. We give the resulting grammar for
-\emph{lexical SSA} in Figure~\ref{fig:lex-ssa}:
+call, respectively. This yields a natural framework for defining the semantics of SSA and reasoning
+about optimizations. To deal with scoping, it suffices to observe that the function corresponding to
+a given basic block $B$ can only be called by other blocks $B'$ having that basic block's parent $P
+= \ms{parent}(B)$ in the dominance tree as an ancestor (as, otherwise, the parent would not actually
+dominate the block, since we could get to $B$ through $B'$ without passing through $P$). Moreover,
+the variables \emph{visible} in $B$ are exactly the variables visible at the end of $P$; i.e., the
+variables visible in $P$ and those defined in $P$. 
 
-\TODO{!NEW! object: regions}
+\TODO{we can use this observation to introduce \emph{lexical SSA}; grammar in
+Figure~\ref{fig:lex-ssa}}
 
-\TODO{!NEW! object: generalized terminators.}
+In this arrangement, a variable is in lexical scope if and only if it is in scope
+under dominance-based scoping, as shown in Figure~\ref{fig:dominance-to-lexical}. This
+transformation is straightforward, and standard SSA can be recovered by removing the inserted
+\ms{where}-blocks.
 
-\TODO{C analogy...}
+\TODO{new object: regions, which are subtrees of the dominance tree}
 
-\TODO{where is the distinguished entry block? it's a nameless region!}
+\TODO{think of a region like a basic block carrying the subtree of blocks which it dominates;
+single-entry-multiple-exit style}
 
+\TODO{new object: control-blocks: a terminator, and where the terminator can jump to}
+
+\TODO{the data is that in \ref{fig:ssa-data}}
+
+\TODO{no need for a distinguished entry block; we now just pass in a region, which has an implicit
+entry block}
+
+It follows that by topologically sorting the basic blocks in the CFG according to the dominance
+order and inserting brackets based on the dominance tree, we can convert dominance-based scoping to
+lexical scoping, where the immediate children of a node in the dominator tree are placed in its
+lexical scope immediately after the definitions. We give the resulting grammar for \emph{lexical
+SSA} in Figure~\ref{fig:lex-ssa}:
 \begin{figure}[H]
   \begin{center}
     \begin{grammar}
@@ -739,7 +752,25 @@ be recovered by removing the inserted \ms{where}-blocks. We give the resulting g
   \caption{Grammar for lexically-scoped SSA} 
   \Description{}
   \label{fig:lex-ssa}
+\end{figure} 
+
+\begin{figure}
+  \begin{lstlisting}[language=C++]
+    struct BasicBlock {
+      vector<Instruction> instructions;             // unary/binary let-bindings
+      ControlBlock terminator;                      // control-block
+    }
+
+    struct ControlBlock {
+      Terminator terminator;                        // LHS of where-block
+      map<Label, (Argument, BasicBlock)> children;  // RHS of where-block
+    }
+  \end{lstlisting}
+  \caption{Data encoded by the grammar in Figure \ref{fig:lex-ssa}}
+  \Description{}
+  \label{fig:ssa-data}
 \end{figure}
+
 
 \TODO{segue to concrete example}
 
@@ -780,7 +811,7 @@ be recovered by removing the inserted \ms{where}-blocks. We give the resulting g
   \label{fig:dominance-to-lexical}
 \end{figure}
 
-\TODO{we want to be able to easily and inductively:
+\TODO{we now want to be able to easily and inductively:
 \begin{itemize}
   \item Replace variables with arbitrary expressions, i.e. do substitution (see: CSE, GVN)
   \item Replace labels with arbitraty subprograms, i.e. do \emph{label-substitution} (see:
@@ -945,86 +976,6 @@ can be eliminated in the obvious manner, such as by taking
 This gives us our final \isotopessa{} calculus, which we will call \emph{type-theoretic SSA}. In
 this language, we can safely perform \textit{substitutions}, like in Figure~\ref{fig:fact-cse}.
 These can then be used to build up optimizations such as \textit{common-subexpression elimination}.
-
-% \TODO{rework this example, since it is confusing. Maybe remove?}
-
-% More generally, substitution lets us do \textit{algebra}. For example, since we know that:
-% \begin{align*}
-%   (i_0 + 1, a_0 * (i_0 + 1)) &= (\ms{let}\;(x, y) = (i_0, a_0)\;\ms{in}\;(x + 1, y * (x + 1))) \\
-%   (1, 1) &= (\ms{let}\;(x, y) = (0, 1)\;\ms{in}\;(x + 1, y * (x + 1)))
-% \end{align*} 
-% we can rewrite the program in Figure~\ref{fig:fact-subst-2} to that in Figure~\ref{fig:fact-dinat}.
-% We can then apply general rewrite rules such as \textit{dinaturality} to rewrite
-% Figure~\ref{fig:fact-dinat} to Figure~\ref{fig:fact-zero}. This allows us to build up justifications
-% for complex optimizations, such as rewriting \ref{fig:fact-zero} to \ref{fig:fact-opt}, in terms of
-% simple rewriting steps. In particular, we can do \textit{complex}, \textit{error-prone} loop and
-% control-flow graph optimizations by breaking them down into closed set of simple algebraic steps,
-% with each step rigorously justified via our denotational semantics.
-
-% \begin{figure}
-%   \begin{minipage}{.5\textwidth}
-%     \begin{subfigure}{\textwidth}
-%       \begin{align*}
-%         & \ms{let}\;n = 10; \\
-%         & \ms{br}\;\ms{loop}(1, 1) \\
-%         & \ms{where}\;\ms{loop}(i_0, a_0): \{\\
-%         & \quad \ms{if}\;i_0 < n\;\{ \\
-%         & \qquad \ms{br}\;\ms{loop}(i_0 + 1, a_0 * (i_0 + 1)) \\
-%         & \quad \}\;\ms{else}\;\{ \\
-%         & \qquad \ms{ret}\;a_0 \\
-%         & \quad \} \\
-%         & \}
-%       \end{align*}
-%       \caption{Substituted program from Figure \ref{fig:fact-subst}}
-%       \label{fig:fact-subst-2}
-%     \end{subfigure}
-%     \begin{subfigure}{\textwidth}
-%       \begin{align*}
-%         & \ms{let}\;n = 10; \\
-%         & \ms{br}\;\ms{loop}\;(0, 1) \\
-%         & \ms{where}\;\ms{loop}(x, y): \{\\
-%         & \quad \ms{let}\;(i_0, a_0) = (x + 1, y * (x + 1)); \\
-%         & \quad \ms{if}\;i_0 < n\;\{ \\
-%         & \qquad \ms{br}\;\ms{loop}(i_0, a_0) \\
-%         & \quad \}\;\ms{else}\;\{ \\
-%         & \qquad \ms{ret}\;a_0 \\
-%         & \quad \} \\
-%         & \}
-%       \end{align*}
-%       \caption{Equivalent to Figure \ref{fig:fact-zero} by \textit{dinaturality}}
-%       \label{fig:fact-dinat}
-%     \end{subfigure}
-%   \end{minipage}%
-%   \begin{subfigure}[c]{.5\textwidth}
-%     \begin{align*}
-%       & \ms{let}\;n = 10; \\
-%       & \ms{br}\;\ms{loop}( \\
-%       & \quad \ms{let}\;(x, y) = (0, 1); \\
-%       & \quad(x + 1, y * (x + 1)) \\
-%       & ) \\
-%       & \ms{where}\;\ms{loop}(i_0, a_0): \{\\
-%       & \quad \ms{if}\;i_0 < n\;\{ \\
-%       & \qquad \ms{br}\;\ms{loop}( \\
-%       & \qquad \quad \ms{let}\;(x, y) = (i_0, a_0); \\
-%       & \qquad \quad (x + 1, y * (x + 1)) \\ 
-%       & \qquad ) \\
-%       & \quad \}\;\ms{else}\;\{ \\
-%       & \qquad \ms{ret}\;a_0 \\
-%       & \quad \} \\
-%       & \}
-%     \end{align*}
-%     \caption{Equivalent to Figure \ref{fig:fact-subst-2} by substitution}
-%     \label{fig:fact-zero}
-%   \end{subfigure}
-%   \caption{
-%     Decomposing multi-block rewrites (from \ref{fig:fact-zero} to
-%     \ref{fig:fact-subst-2}, and therefore to the more optimal program 
-%     \ref{fig:fact-opt}) into simple algebraic steps. By verifying each step, we can
-%     verify complex optimizations through decomposition.
-%   } 
-%   \Description{}
-%   \label{fig:fact-dinat-rewrites}
-% \end{figure}
  
 \section{Type Theory}
 
