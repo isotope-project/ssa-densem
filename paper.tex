@@ -286,10 +286,10 @@ scoping of definitions in SSA is traditionally not lexical. Instead, scoping is 
 \emph{dominance}: every variable occurrence must be dominated by a single assignment in the control
 flow graph.
 
-Traditionally, the semantics of SSA has been handled informally, since it was conceived of as a
-simple first-order imperative programming language. As a result, whether a rewrite is sound or not
-is usually obvious, without having to do a complex correctness argument. Unfortunately, all of 
-computers, languages and compilers have become more complex since in the late 1980s. 
+Traditionally, the semantics of SSA has been handled informally. Since it was conceived of as a
+simple first-order imperative programming language, whether a rewrite is sound or not
+was usually obvious, without needing any complex correctness arguments. Unfortunately, all of 
+computers, languages and compilers have become more complex since the late 1980s. 
 
 Essentially all modern computers are multicore and feature many levels of caching. As a result,
 the semantics of memory can no longer be correctly modelled as a big array of bytes, and the
@@ -333,7 +333,10 @@ equational theory, and show that it is complete (or not) relative to this class 
 this is precisely the classical methodology of type theory and categorical logic! To fully
 understand a programming language, in general one wants a type theory equipped with an
 equational theory, a proof that it is sound and complete with respect to a categorical
-axiomatization, and a variety of interesting concrete models.
+axiomatization, and a variety of interesting concrete models satisfying those axioms.
+Moreover, it would be best if the categorical axiomatization was constructed from ``standard
+parts'': the less novel the categorical axioms, the better, because standard constructions
+are better-studied and have more theorems already proved about them. 
 
 
 %TODO: discuss with Neel, this argument may not hold water.
@@ -345,8 +348,7 @@ axiomatization, and a variety of interesting concrete models.
 %
 % \todo{vellum example}
 
-This is exactly what we provide in this paper. 
-Concretely, our contributions are as follows: 
+This is exactly what we provide in this paper. Concretely, our contributions are as follows: 
 
 \begin{itemize}
 \item First, we give a type-theoretic presentation of SSA, with both typing rules (in
@@ -355,26 +357,43 @@ Concretely, our contributions are as follows:
   calculus. 
   
 \item Next, in Section~\ref{sec:densem}, we give a categorical semantics for this type theory, in
-  terms of distributive Elgot categories. We show that any denotational model with this categorical
-  structure is also a model of SSA. This shows that all of the equations we give are sound with
-  respect to the categorical structure. 
+  terms of distributive Elgot categories, which are Freyd categories equipped with distributive
+  coproducts and a strong Conway iteration operator. This demonstrates that a categorical semantics
+  for SSA can be constructed from well-known structures. We use Freyd categories to model sequencing of
+  imperative computations,  we use coproducts to model conditionals, and we use Conway iteration to model
+  looping. 
+
+  We show that any category with this categorical structure is a model of SSA. This establishes that all of
+  the equations we give are sound with respect to the categorical structure.
 
 \item We also show, in Section~\ref{ssec:completeness}, that syntax quotiented by the equational
   theory yields the initial distributive Elgot category. This establishes that our set of syntactic
   equations is complete, and that there are no equations which the denotational semantics validates,
-  but which cannot be proved syntactically. 
+  but which cannot be proved syntactically. This leads us to the surprising discovery that SSA is actually
+  a syntactic presentation of distributive Elgot categories, thereby establishing a surprising connection
+  between compiler IRs and category theory. (In fact, our calculus is also the first syntactic presentation
+  of distributive Elgot categories.) 
 
-\item We proceed in Section~\ref{sec:concrete} to show that this denotational axiomatization is
-  useful in practice, by giving a variety of concrete models, including a model of TSO weak memory
-  based on~\citet{sparky} in Section~\ref{ssec:tso}. This demonstrates that it is possible to give
-  realistic weak memory models which do not disturb the structure of SSA in fundamental ways.
+\item We proceed in Section~\ref{sec:concrete} to show that this
+  denotational axiomatization is useful in practice. We give a model
+  of TSO weak memory based on~\citet{sparky} in
+  Section~\ref{ssec:tso}, We also give a family of concrete models
+  based on Brookes-style traces~\cite{brookes-traces}, which can be
+  instantiated to support the release/acquire model
+  of~\citet{kammar-dvir}. This demonstrates that it is possible to
+  give realistic weak memory models, in a variety of semantic styles,
+  which do not disturb the structure of SSA in fundamental ways.
+  Furthermore, our results constitute the first proof that SSA-based loop transformations
+  are compatible with weak memory. 
 
 \item Finally, we have substantially mechanized our proofs using the Lean 4 proof assistant. We have
   mechanized proofs of substitution for our type theory, as well as proofs that the syntax forms the
   initial model, and that the SPARC TSO semantics forms a valid model of SSA. The denotational
   semantics and its proof of the soundness of substitution are done on paper. 
-
 \end{itemize}
+
+
+\todo{5. How does what we did actually solve the problem?}
 
 \section{Static Single Assignment Form}
 
