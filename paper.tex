@@ -378,43 +378,82 @@ Concretely, our contributions are as follows:
 
 \section{Static Single Assignment Form}
 
-\begin{enumerate}
-  \item We recall classical SSA form, and recall that it is equivalent to the basic  blocks with arguments format. 
-  \item Next, we show that the dominance-based scoping of SSA becomes equivalent to lexical scoping
-    when the dominance structure is made explicit in the syntax. We can now give a BNF grammar for ``functional 
-    SSA'' with the dominator tree reified in syntax. 
-  \item Next, by relaxing the distinction between statements and terminators, we can show that functional SSA
-    is a subset of ANF. However, ANF has the same expressive power as functional SSA. 
-  \item But ANF has weak substitution properties. By generalizing the grammar to 
-    let instructions be arbitrary expressions, we can have a simpler and more expressive substitution 
-    principle without changing the expressive power of the language. This gives us \isotopessa{}, which 
-    retains the statement-expression distinction, but has no more syntactic categories than that.  
-  \item We formalize these intuitions by giving algorithms to translate back and forth between functional SSA 
-    and \isotopessa{}.  Furthermore, in section~\ref{?} we show that this translation is fully 
-    semantics-preserving. 
-\end{enumerate}
+% \begin{enumerate}
+%   \item We recall classical SSA form, and recall that it is equivalent to the basic  blocks with
+%   arguments format. 
+%   \item Next, we show that the dominance-based scoping of SSA becomes equivalent to lexical scoping
+%     when the dominance structure is made explicit in the syntax. We can now give a BNF grammar for ``functional 
+%     SSA'' with the dominator tree reified in syntax. 
+%   \item Next, by relaxing the distinction between statements and terminators, we can show that functional SSA
+%     is a subset of ANF. However, ANF has the same expressive power as functional SSA. 
+%   \item But ANF has weak substitution properties. By generalizing the grammar to 
+%     let instructions be arbitrary expressions, we can have a simpler and more expressive substitution 
+%     principle without changing the expressive power of the language. This gives us \isotopessa{}, which 
+%     retains the statement-expression distinction, but has no more syntactic categories than that.  
+%   \item We formalize these intuitions by giving algorithms to translate back and forth between
+%     functional SSA and \isotopessa{}.  Furthermore, in section~\ref{?} we show that this translation
+%     is fully semantics-preserving. 
+% \end{enumerate}
 
-In this section, we describe SSA form and the isomorphism between the standard $\phi$-node-based
-presentation and the more functional \emph{basic blocks with arguments} format. We then discuss
-standard dominance-based scoping and how it can be recast as lexical scoping to make it more
-amenable to standard type-theoretic treatment. We further generalize this format to allow branching
-to arbitrary code rather than only labels, obtaining \emph{A-normal form}
-(ANF)~\cite{flanagan-93-anf}, analogously to the transformation described by
-\citet{chakravarty-functional-ssa-2003}. Finally, to allow for substitution, we relax our syntax to
-permit arbitrary expression nesting and \ms{let}-expressions, resulting in \emph{type-theoretic
-SSA}, or \isotopessa{}, which will be the focus of the rest of this paper. A straightforward
-argument shows that these extensions add no expressive power; we give a more formal version of this
-argument, as well as algorithms to interconvert between \isotopessa{}, standard SSA, and ANF, in
-Section~\ref{ssec:ssa-normal}.
+% In this section, we describe SSA form and the isomorphism between the standard $\phi$-node-based
+% presentation and the more functional \emph{basic blocks with arguments} format. We then discuss
+% standard dominance-based scoping and how it can be recast as lexical scoping to make it more
+% amenable to standard type-theoretic treatment. While the restrictions on the resulting format make
+% it easy to analyze and to work with as the internal data-structure of a compiler, transformations
+% such as \emph{substitution} (corresponding to \emph{inlining} of pure expressions and \emph{common
+% subexpression elimination} when done in the forward and reverse directions, respectively) and
+% \emph{label substitution} (i.e. the composition of SSA programs) are a bit unwieldy, as is the
+% resulting equational theory. To mitigate this...
 
-As a running example, consider the simple imperative program to compute $10!$ given in
-Figure~\ref{fig:fact-program}. Operating directly on an imperative language can be challenging,
-since having a uniform representation of code friendly to mechanized optimization and analysis is
-often in tension with features designed to improve readability and programmer productivity, such as
-syntactic sugar. Early work on compiler intermediate representations, notably by Frances
-Allen~\cite{allen-70-cfa}, introduced \emph{three-address code}, also known as \emph{register
-transfer language (RTL)},  to normalize programs into a form more suitable for analysis and
-optimization. We can normalize our code into 3-address code, as in Figure~\ref{fig:fact-3addr}, by:
+% We further generalize this format to allow branching
+% to arbitrary code rather than only labels, obtaining \emph{A-normal form}
+% (ANF)~\cite{flanagan-93-anf}, analogously to the transformation described by
+% \citet{chakravarty-functional-ssa-2003}. Finally, to allow for substitution, we relax our syntax to
+% permit arbitrary expression nesting and \ms{let}-expressions, resulting in \emph{type-theoretic
+% SSA}, or \isotopessa{}, which will be the focus of the rest of this paper. A straightforward
+% argument shows that these extensions add no expressive power; we give a more formal version of this
+% argument, as well as algorithms to interconvert between \isotopessa{}, standard SSA, and ANF, in
+% Section~\ref{ssec:ssa-normal}.
+
+Operating directly on an imperative language can be challenging, since having a uniform
+representation of code friendly to mechanized optimization and analysis is often in tension with
+features designed to improve readability and programmer productivity, such as syntactic sugar. Early
+work on compiler intermediate representations, notably by Frances Allen~\cite{allen-70-cfa},
+introduced \emph{three-address code}, also known as \emph{register transfer language (RTL)},  to
+normalize programs into a form more suitable for analysis and optimization. 
+
+3-address programs consists of a \emph{control-flow graph} (CFG) $C$ with a distinguished entry
+label $\ell_{\ms{start}}$. Each node of the CFG corresponds to a \emph{basic block} $\beta$, which
+is a straight-line sequence of \emph{instructions} $x = f(y, z)$ (hence the name \emph{3-address
+code}, referring to the typical three variables $x, y, z$) followed by a \emph{terminator} $\tau$,
+which can be a (conditional) branch to another basic block. We give a grammar for 3-address code in
+Figure~\ref{fig:3addr-grammar}; note that we interpret \ms{if}-statements as \ms{case}-expressions
+branching on $\mb{1} + \mb{1}$, and constants as nullary instructions $c()$.
+
+\begin{figure}[H]
+  \begin{center}
+    \begin{grammar}
+      <\(v\)> ::= \(x\) \;|\; \((v, v')\) \;|\; \(()\)
+
+      <\(o\)> ::= \(v\) \;|\; \(f\;v\) \;|\; \(\linl{v}\) \;|\; \(\linr{v}\) \;|\; \(\labort{v}\)
+
+      <\(\beta\)> ::= \(\tau\) 
+      \;|\; \(x = o ; \beta\)
+      \;|\; \((x, y) = o ; \beta\)
+
+      <\(\tau\)> ::= \(\brb{\ell}{o}\) \;|\; $\caseexpr{x}{y}{\tau}{z}{\tau'}$
+      
+      <\(C\)> ::= \(\cdot\) \;|\; \(C \;\; \ell : \beta\)
+    \end{grammar}
+  \end{center}
+  \caption{Grammar for 3-address code}
+  \Description{}
+  \label{fig:3addr-grammar}
+\end{figure}
+
+As a concrete example, consider the simple imperative program to compute $10!$ given in
+Figure~\ref{fig:fact-program}. We can normalize our code into 3-address code, as in
+Figure~\ref{fig:fact-3addr}, by:
 \begin{itemize}
   \item Converting structured control flow (e.g., \ms{while}) into unstructured jumps between basic
   blocks labelled \ms{start}, \ms{loop}, and \ms{body}.
@@ -439,9 +478,9 @@ optimization. We can normalize our code into 3-address code, as in Figure~\ref{f
   \end{subfigure}%
   \begin{subfigure}[t]{.5\textwidth}
     \begin{align*}
-      \ms{start}:\quad  & \ms{let}\;n = 10; \\
-                        & \ms{let\;mut}\;i = 1; \\
-                        & \ms{let\;mut}\;a = 1; \\
+      \ms{start}:\quad  & n = 10; \\
+                        & i = 1; \\
+                        & a = 1; \\
                         & \ms{br}\;\ms{loop} \\
       \ms{loop}: \quad  & \ms{if}\;i < n\;
                           \{\;\ms{br}\;\ms{body}\;\}\;
@@ -516,9 +555,9 @@ definition of $x$ goes through $y$, rather than only those paths which also go t
 \begin{figure}
   \begin{subfigure}[t]{.5\textwidth}
     \begin{align*}
-      \ms{start}:\quad  & \ms{let}\;n = 10; \\
-                        & \ms{let\;mut}\;i = 1; \\
-                        & \ms{let\;mut}\;a = 1; \\
+      \ms{start}:\quad  & n = 10; \\
+                        & i = 1; \\
+                        & a = 1; \\
                         & \ms{br}\;\ms{loop} \\
       \ms{loop}: \quad  & \ms{if}\;i < n\;
                           \{\;\ms{br}\;\ms{body}\;\}\;
@@ -568,7 +607,29 @@ $\phi$-node as equivalent to an argument for the basic block, with the correspon
 at the jump site. Converting a program from BBA format back to standard SSA form with $\phi$-nodes
 is straightforward: introduce a $\phi$-node for each argument of a basic block, and for each branch
 corresponding to the $\phi$-node, add an argument to the jump instruction from the appropriate
-source block. 
+source block. We give a formal grammar for basic blocks-with-arguments SSA in
+Figure~\ref{fig:bba-grammar}.
+
+\begin{figure}[H]
+  \begin{center}
+    \begin{grammar}
+      <\(v\)> ::= \(x\) \;|\; \((v, v')\) \;|\; \(()\)
+
+      <\(o\)> ::= \(v\) \;|\; \(f\;v\) \;|\; \(\linl{v}\) \;|\; \(\linr{v}\) \;|\; \(\labort{v}\)
+
+      <\(\beta\)> ::= \(\tau\) 
+      \;|\; \(\letstmt{x}{o}{\beta}\)
+      \;|\; \(\letstmt{(x, y)}{o}{\beta}\)
+
+      <\(\tau\)> ::= \(\brb{\ell}{o}\) \;|\; $\caseexpr{x}{y}{\tau}{z}{\tau'}$
+      
+      <\(C\)> ::= \(\cdot\) \;|\; \(C \;\; \ell(x) : \beta\)
+    \end{grammar}
+  \end{center}
+  \caption{Grammar for basic blocks-with-arguments SSA} 
+  \Description{}
+  \label{fig:bba-grammar}
+\end{figure}
 
 This allows us to use standard dominance-based scoping without any special cases for $\phi$-nodes.
 When considering basic blocks, this means that a variable is visible within the block $D$ where it
@@ -634,17 +695,53 @@ Figure~\ref{fig:fact-bba}:
   \Description{}
 \end{figure}
 
+\TODO{clarify the transformation steps}
+
 An important insight provided by the BBA format, as discussed by \citet{appel-ssa} and
 \citet{kelsey-95-cps}, is that a program in SSA form can in this way be interpreted as a collection
 of tail-recursive functions, where each basic block and branch correspond to a function and tail
 call, respectively. This interpretation offers a natural framework for defining the semantics of SSA
-and reasoning about optimizations. However, there is a subtle difference between the scoping rules
-in this format and the actual scoping used in traditional SSA, which requires careful consideration.
-By topologically sorting the basic blocks in the CFG according to this partial order and inserting
-brackets based on the dominance tree, we can convert dominance-based scoping to lexical scoping. In
-this arrangement, a variable is in lexical scope if and only if it is in scope under dominance-based
-scoping, as shown in Figure~\ref{fig:dominance-to-lexical}. This transformation is straightforward,
-and standard SSA can be recovered by removing the inserted \ms{where}-blocks.
+and reasoning about optimizations. By topologically sorting the basic blocks in the CFG according to
+the dominance order and inserting brackets based on the dominance tree, we can convert
+dominance-based scoping to lexical scoping. In this arrangement, a variable is in lexical scope if
+and only if it is in scope under dominance-based scoping, as shown in
+Figure~\ref{fig:dominance-to-lexical}. This transformation is straightforward, and standard SSA can
+be recovered by removing the inserted \ms{where}-blocks. We give the resulting grammar for
+\emph{lexical SSA} in Figure~\ref{fig:lex-ssa}:
+
+\TODO{!NEW! object: regions}
+
+\TODO{!NEW! object: generalized terminators.}
+
+\TODO{C analogy...}
+
+\TODO{where is the distinguished entry block? it's a nameless region!}
+
+\begin{figure}[H]
+  \begin{center}
+    \begin{grammar}
+      <\(v\)> ::= \(x\) \;|\; \((v, v')\) \;|\; \(()\)
+
+      <\(o\)> ::= \(v\) \;|\; \(f\;v\) \;|\; \(\linl{v}\) \;|\; \(\linr{v}\) \;|\; \(\labort{v}\)
+
+      <\(r, s, t\)> ::= \(\kappa\)
+        \;|\; \(\letstmt{x}{o}{t}\)
+        \;|\; \(\letstmt{(x, y)}{o}{t}\)
+
+      <\(\kappa\)> ::= \(\tau\) \;|\; \(\where{\kappa}{L}\)
+
+      <\(\tau\)> ::= \(\brb{\ell}{o}\)
+        \;|\; \(\casestmt{o}{y}{\tau}{z}{\tau'}\)
+
+      <\(L\)> ::= \(\cdot\) \;|\; \(L, \wbranch{\ell}{x}{t}\)
+    \end{grammar}
+  \end{center}
+  \caption{Grammar for lexically-scoped SSA} 
+  \Description{}
+  \label{fig:lex-ssa}
+\end{figure}
+
+\TODO{segue to concrete example}
 
 \begin{figure}
   \centering
@@ -683,9 +780,14 @@ and standard SSA can be recovered by removing the inserted \ms{where}-blocks.
   \label{fig:dominance-to-lexical}
 \end{figure}
 
-\TODO{give grammar for SSA here from other paper}
-
-\TODO{collapse distinction between regions and terminators to get ANF; tfw thread those jumps}
+\TODO{we want to be able to easily and inductively:
+\begin{itemize}
+  \item Replace variables with arbitrary expressions, i.e. do substitution (see: CSE, GVN)
+  \item Replace labels with arbitraty subprograms, i.e. do \emph{label-substitution} (see:
+  jump-threading, branch duplication, loop unrolling)
+\end{itemize}
+So we weaken syntactic constraints without weakening our language. Also everybody be typed, yo. 
+}
 
 Lexical scoping allows us to apply many of the techniques developed in theoretical computer science
 and functional programming for reasoning about and developing optimizations and analysis passes --
