@@ -434,20 +434,25 @@ This is exactly what we provide in this paper. Concretely, our contributions are
 % argument, as well as algorithms to interconvert between \isotopessa{}, standard SSA, and ANF, in
 % Section~\ref{ssec:ssa-normal}.
 
-Operating directly on an imperative language can be challenging, since having a uniform
-representation of code friendly to mechanized optimization and analysis is often in tension with
-features designed to improve readability and programmer productivity, such as syntactic sugar. Early
-work on compiler intermediate representations, notably by Frances Allen~\cite{allen-70-cfa},
-introduced \emph{three-address code}, also known as \emph{register transfer language (RTL)},  to
-normalize programs into a form more suitable for analysis and optimization. 
+\subsection{From Three Address Code to SSA}
+
+Directly optimizing a source language can be difficult, because surface languages are often
+very large and have features (such as type inference and overloading) which make it difficult
+to express sound program equivalences. Elaborating a surface language to a simpler intermediate
+representation makes it easier to write program analyses and optimizations. One of the earliest
+compiler IRs introduced is \emph{three-address code}~\cite{allen-70-cfa} (also
+known as \emph{register transfer language (RTL)}). 
 
 3-address programs consists of a \emph{control-flow graph} (CFG) $C$ with a distinguished entry
 label $\ell_{\ms{start}}$. Each node of the CFG corresponds to a \emph{basic block} $\beta$, which
 is a straight-line sequence of \emph{instructions} $x = f(y, z)$ (hence the name \emph{3-address
-code}, referring to the typical three variables $x, y, z$) followed by a \emph{terminator} $\tau$,
-which can be a (conditional) branch to another basic block. We give a grammar for 3-address code in
-Figure~\ref{fig:3addr-grammar}; note that we interpret \ms{if}-statements as \ms{case}-expressions
-branching on $\mb{1} + \mb{1}$, and constants as nullary instructions $c()$.
+code}, referring to the typical three variables $x, y, z$ in an instruction like $x = y + z$) followed by a \emph{terminator} $\tau$.
+A terminator is either a return, a jump to another block, or a conditional branch. We give a grammar
+for 3-address code in
+Figure~\ref{fig:3addr-grammar}; note that we permit nested conditionals to allow jumping to 
+more than two possible target labels (eg, the C switch statement). 
+
+\TODO{add $\ms{ret}\;a$ to terminator grammar, and change case to if-then-else}
 
 \begin{figure}[H]
   \begin{center}
@@ -504,7 +509,7 @@ Figure~\ref{fig:fact-3addr}, by:
       \ms{loop}: \quad  & \ms{if}\;i < n\;
                           \{\;\ms{br}\;\ms{body}\;\}\;
                           \ms{else}\;\{\;\ms{ret}\;a\;\} \\
-      \ms{body}: \quad  & \ms{let}\;t = i + 1; \\
+      \ms{body}: \quad  & t = i + 1; \\
                         & a = a * t; \\
                         & i = i + 1; \\
                         & \ms{br}\;\ms{loop}
@@ -539,9 +544,10 @@ being given by an immutable \ms{let}-binding. In particular, given a variable $x
 associate to its unique definition $D_x$, $x$ is in scope at a point $P$ if and only if $D_x$
 strictly dominates $P$.
 
-One might attempt to convert programs to SSA form by numbering each definition of a variable,
+A basic block can be converted to SSA form by numbering each definition of a variable,
 effectively changing references to $x$ to references to $x_t$, i.e. ``$x$ at time $t$.'' For
 example, we could rewrite
+\TODO{remove lets on the LHS and put both pieces of code in vertical form}
 \begin{multline}
   \letexpr{x}{3y + 5}{\letexpr{x}{3x + 2}{\letexpr{x}{3x + 1}{\ms{ret}\;x}}}
   \\ \teqv \letexpr{x_0}{3y + 5}{\letexpr{x_1}{3x_0 + 2}{\letexpr{x_2}{3x_1 + 1}{\ms{ret}\;x_2}}}
@@ -627,7 +633,8 @@ at the jump site. Converting a program from BBA format back to standard SSA form
 is straightforward: introduce a $\phi$-node for each argument of a basic block, and for each branch
 corresponding to the $\phi$-node, add an argument to the jump instruction from the appropriate
 source block. We give a formal grammar for basic blocks-with-arguments SSA in
-Figure~\ref{fig:bba-grammar}.
+Figure~\ref{fig:bba-grammar}. Note that this grammar no longer needs a separate terminator for
+returns: we can treat the return point as a distinguished label (with argument) that a program can jump to. 
 
 \begin{figure}[H]
   \begin{center}
@@ -650,7 +657,7 @@ Figure~\ref{fig:bba-grammar}.
   \label{fig:bba-grammar}
 \end{figure}
 
-This allows us to use standard dominance-based scoping without any special cases for $\phi$-nodes.
+This allows us to use dominance-based scoping without any special cases for $\phi$-nodes.
 When considering basic blocks, this means that a variable is visible within the block $D$ where it
 is defined, starting from the point of its definition. It continues to be visible in all subsequent
 blocks $P$ that are strictly dominated by $D$ in the control-flow graph (CFG). For example, in
@@ -713,19 +720,28 @@ Figure~\ref{fig:fact-bba}:
   \Description{}
 \end{figure}
 
+\subsection{From SSA to Type-theoretic SSA}
+
+
 An important insight provided by the BBA format, as discussed by \citet{appel-ssa} and
-\citet{kelsey-95-cps}, is that a program in SSA form can in this way be interpreted as a collection
+\citet{kelsey-95-cps}, is that a program in SSA form can be interpreted as a collection
 of tail-recursive functions, where each basic block and branch correspond to a function and tail
 call, respectively. This yields a natural framework for defining the semantics of SSA and reasoning
-about optimizations. To deal with scoping, it suffices to observe that the function corresponding to
+about optimizations.
+
+A program in BBA is not quite a functional program, because scoping is dominance-based rather
+than lexically scoped. However, it turns out to be very easy to convert dominance-based scoping
+into lexical scoping. Observe that the function corresponding to
 a given basic block $B$ can only be called by other blocks $B'$ having that basic block's parent $P
-= \ms{parent}(B)$ in the dominance tree as an ancestor (as, otherwise, the parent would not actually
+= \ms{parent}(B)$ as an ancestor in the dominance tree (as, otherwise, the parent would not actually
 dominate the block, since we could get to $B$ through $B'$ without passing through $P$). Moreover,
 the variables \emph{visible} in $B$ are exactly the variables visible at the end of $P$; i.e., the
-variables visible in $P$ and those defined in $P$. 
+variables visible in $P$ and those defined in $P$.
 
-\TODO{we can use this observation to introduce \emph{lexical SSA}; grammar in
-Figure~\ref{fig:lex-ssa}}
+So if we make the dominance tree explicit in the syntax and tie the binding of variables to this
+tree structure, then lexical and dominance-based scoping become one and the same. We use this
+observation to introduce \emph{lexical SSA} in Figure~\ref{fig:lex-ssa}}. The main change to the
+syntax is the addition of the \todo{explain where blocks}. 
 
 In this arrangement, a variable is in lexical scope if and only if it is in scope
 under dominance-based scoping, as shown in Figure~\ref{fig:dominance-to-lexical}. This
@@ -839,9 +855,9 @@ SSA} in Figure~\ref{fig:lex-ssa}:
 So we weaken syntactic constraints without weakening our language. Also everybody be typed, yo. 
 }
 
-Lexical scoping allows us to apply many of the techniques developed in theoretical computer science
-and functional programming for reasoning about and developing optimizations and analysis passes --
-in particular, the result of our conversion to lexical scoping looks a lot like the correspondence
+Lexical scoping allows us to apply many of techniques developed in type theory
+and functional programming for reasoning about program transformations. 
+Indeed, the result of our conversion to lexical scoping looks a lot like the correspondence
 between SSA and CPS described in \citet{kelsey-95-cps}. We can use this correspondence to guide us
 in developing an \textit{equational theory} for SSA programs, with the goal of enabling
 compositional reasoning about program transformations such as:
@@ -849,11 +865,13 @@ compositional reasoning about program transformations such as:
   \item \textit{Control-flow rewrites}, such as jump-threading or fusing two identical branches of
   an \ms{if}-statement
   \item \textit{Algebraic rewrites}, such as simplifying arithmetic expressions
-  \item Combinations of the two, such as rewriting $\ms{if}\;x > 0\;\ms{then}\;1 - x\;\ms{else}\;1 +
-  x$ to $1 + \ms{abs}(x)$.
+  \item Combinations of the two, such as rewriting $\ms{if}\;x > 0\;\ms{then}\;0 - x\;\ms{else}\;
+  x$ to $\ms{abs}(x)$.
 \end{itemize}
-We can work towards making these easier to express by generalizing our syntax to allow the branches
-of if-statements to contain arbitrary code, rather than just unconditional branches, as in
+\TODO{Enumerate the steps you will do next here}
+
+First, we  generalize our syntax to allow the branches
+of if-statements to contain arbitrary code, rather than just branches in
 Figure~\ref{fig:bba-to-anf}. This clearly adds no additional expressive power, since:
 \begin{itemize}
   \item This syntax clearly generalizes the previous syntax, so no conversion into it is necessary
