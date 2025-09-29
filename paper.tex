@@ -446,13 +446,25 @@ known as \emph{register transfer language (RTL)}).
 3-address programs consists of a \emph{control-flow graph} (CFG) $C$ with a distinguished entry
 label $\ell_{\ms{start}}$. Each node of the CFG corresponds to a \emph{basic block} $\beta$, which
 is a straight-line sequence of \emph{instructions} $x = f(y, z)$ (hence the name \emph{3-address
-code}, referring to the typical three variables $x, y, z$ in an instruction like $x = y + z$) followed by a \emph{terminator} $\tau$.
-A terminator is either a return, a jump to another block, or a conditional branch. We give a grammar
-for 3-address code in
-Figure~\ref{fig:3addr-grammar}; note that we permit nested conditionals to allow jumping to 
-more than two possible target labels (eg, the C switch statement). 
+code}, referring to the typical three variables $x, y, z$) followed by a \emph{terminator} $\tau$,
+which can be a (conditional) branch to another basic block. We give a grammar for 3-address code in
+Figure~\ref{fig:3addr-grammar}, with some slight adjustments to the usual presentation:
+\begin{itemize}
+  \item \emph{Constants} $c$ are interpreted as nullary instructions $c()$.
+  \item \emph{Conditional branches} $\ite{o}{\tau}{\tau'}$ are desugared to case-statements
+  $\casestmt{o}{y}{\tau}{z}{\tau'}$ on a sum type $x : \mb{1} + \mb{1}$. This is equivalent in power
+  to regular conditional branches inthe usual low-level setting with fallible operators $\rho_i :
+  A_1 + A_2 \to A_i$, while allowing our work to generalize easily to higher-level, pure settings as
+  well.
 
-\TODO{add $\ms{ret}\;a$ to terminator grammar, and change case to if-then-else}
+  We go further and allow case-statements (and hence if-statements) in a terminator to be
+  \emph{nested}, allowing us to emulate switch-statements $\ms{switch}(o) \{c_1 : \tau_1 ,
+  ... , c_n : \tau_n\}$ as nested case-statements. This does not add any additional
+  expressive power, but prevents the proliferation of intermediate basic-blocks.
+
+  \item \emph{Return statements} $\ms{ret}\;v$ are desugared to branches $\brb{\ell_{\ms{exit}}}{v}$
+  to a distinguished exit label $\ell_{\ms{exit}}$
+\end{itemize}
 
 \begin{figure}[H]
   \begin{center}
@@ -465,7 +477,7 @@ more than two possible target labels (eg, the C switch statement).
       \;|\; \(x = o ; \beta\)
       \;|\; \((x, y) = o ; \beta\)
 
-      <\(\tau\)> ::= \(\brb{\ell}{o}\) \;|\; $\caseexpr{x}{y}{\tau}{z}{\tau'}$
+      <\(\tau\)> ::= \(\brb{\ell}{o}\) \;|\; $\casestmt{o}{y}{\tau}{z}{\tau'}$
       
       <\(C\)> ::= \(\cdot\) \;|\; \(C \;\; \ell : \beta\)
     \end{grammar}
@@ -565,17 +577,17 @@ into SSA with $\phi$-nodes in Figure~\ref{fig:fact-ssa}.
 code to valid SSA while introducing a minimum number of $\phi$-nodes, making SSA practical for
 widespread use as an intermediate representation. Unfortunately, $\phi$-nodes do not have an obvious
 operational semantics. Additionally, they require us to adopt more complex scoping rules than simple
-dominance-based scoping. For example, in basic block \ms{loop} in Figure~\ref{fig:fact-ssa}, $i_0$
-evaluates to 1 if we came from \ms{start} and to $i_1$ if we came from \ms{body}. Similarly, $a_0$
-evaluates to either 1 or $a_1$ based on the predecessor block. This does not obey dominance-based
-scoping, since $i_0$ and $i_1$ are defined \emph{after} the $\phi$-nodes $i_0$, $a_0$ that reference
-them, which seems counterintuitive -- after all, variables are typically used after they are
-defined. In fact, since the value of a $\phi$-node is determined by which basic block is our
-immediate predecessor, we instead need to use the rule that expressions in $\phi$-node branches with
-source $S$ can use any variable $y$ defined at the \emph{end} of $S$. Note that this is a strict
-superset of the variables visible for a normal instruction $x$, which can only use variables $y$
-which \emph{dominate} $x$ -- i.e., such that \emph{every} path from the entry block to the
-definition of $x$ goes through $y$, rather than only those paths which also go through $S$.
+dominance-based scoping. For example, in the basic block \ms{loop} in Figure~\ref{fig:fact-ssa},
+$i_0$ evaluates to 1 if we came from \ms{start} and to $i_1$ if we came from \ms{body}. Similarly,
+$a_0$ evaluates to either 1 or $a_1$ based on the predecessor block. This does not obey
+dominance-based scoping, since $i_0$ and $i_1$ are defined \emph{after} the $\phi$-nodes $i_0$,
+$a_0$ that reference them, which seems counterintuitive -- after all, variables are typically used
+after they are defined. In fact, since the value of a $\phi$-node is determined by which basic block
+is our immediate predecessor, we instead need to use the rule that expressions in $\phi$-node
+branches with source $S$ can use any variable $y$ defined at the \emph{end} of $S$. Note that this
+is a strict superset of the variables visible for a normal instruction $x$, which can only use
+variables $y$ which \emph{dominate} $x$ -- i.e., such that \emph{every} path from the entry block to
+the definition of $x$ goes through $y$, rather than only those paths which also go through $S$.
 
 \begin{figure}
   \begin{subfigure}[t]{.5\textwidth}
@@ -647,7 +659,7 @@ returns: we can treat the return point as a distinguished label (with argument) 
       \;|\; \(\letstmt{x}{o}{\beta}\)
       \;|\; \(\letstmt{(x, y)}{o}{\beta}\)
 
-      <\(\tau\)> ::= \(\brb{\ell}{o}\) \;|\; $\caseexpr{x}{y}{\tau}{z}{\tau'}$
+      <\(\tau\)> ::= \(\brb{\ell}{v}\) \;|\; $\casestmt{x}{y}{\tau}{z}{\tau'}$
       
       <\(C\)> ::= \(\cdot\) \;|\; \(C \;\; \ell(x) : \beta\)
     \end{grammar}
@@ -740,7 +752,7 @@ variables visible in $P$ and those defined in $P$.
 
 So if we make the dominance tree explicit in the syntax and tie the binding of variables to this
 tree structure, then lexical and dominance-based scoping become one and the same. We use this
-observation to introduce \emph{lexical SSA} in Figure~\ref{fig:lex-ssa}}. The main change to the
+observation to introduce \emph{lexical SSA} in Figure~\ref{fig:lex-ssa}. The main change to the
 syntax is the addition of the \todo{explain where blocks}. 
 
 In this arrangement, a variable is in lexical scope if and only if it is in scope
