@@ -766,8 +766,20 @@ the root of the tree implicitly being the entry block. We call such subtrees \em
 that they have a single entry (the root) and multiple exits (the leaves), and so generalize the more
 standard concept of a single-entry-single-exit region in the CFG.
 
-To accomplish this, we adjust the grammar for basic blocks $\beta$ by replacing terminators $\tau$
-with \emph{\ms{where}-statements} $\where{\tau}{L}$. 
+In particular, a \emph{region} $r$ generalizes a basic block $\beta$ by annotating the terminator
+$\tau$ with a list $L$ of \emph{labeled branches} ``$\wbranch{\ell_i}{x_i}{t_i}$,'' yielding a
+\emph{\ms{where}-block} ``$\where{\tau}{L}$''. Each $\ell_i$ can only be branched to by $\tau$ and
+the regions $t_i$, thus syntactically enforcing that the basic block at the root of $r$ (made up of
+its instructions and terminators) \emph{dominates} all the basic blocks in the subregions $t_i$
+(which can only be reached through $r$). We may then enforce dominance-based scoping simply by
+making the variables defined in $r$ visible only in the $t_i$, which, as previously stated,
+\emph{must} be dominated by $r$. Syntactically, this is just lexical scoping of \ms{where}-blocks.
+
+It is easy to see (we demonstrate this more rigorously in Section~\ref{ssec:ssa-normal}) that, given
+a CFG $C$ with a distinguished entry label $\ell$, there exists some way to annotate its topological
+sort w.r.t. the dominance relation) with \ms{where}-blocks to obtain a region $r$ which is lexically
+well-scoped if and only if $C$ is a valid SSA program. Conversely, erasing the \ms{where}-blocks
+from a region $r$ and giving the root a name trivially yields a (topologically sorted!) SSA program
 
 \TODO{explain where-statements}
 
