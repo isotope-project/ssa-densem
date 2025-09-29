@@ -559,11 +559,13 @@ strictly dominates $P$.
 A basic block can be converted to SSA form by numbering each definition of a variable,
 effectively changing references to $x$ to references to $x_t$, i.e. ``$x$ at time $t$.'' For
 example, we could rewrite
-\TODO{remove lets on the LHS and put both pieces of code in vertical form}
-\begin{multline}
-  \letexpr{x}{3y + 5}{\letexpr{x}{3x + 2}{\letexpr{x}{3x + 1}{\ms{ret}\;x}}}
-  \\ \teqv \letexpr{x_0}{3y + 5}{\letexpr{x_1}{3x_0 + 2}{\letexpr{x_2}{3x_1 + 1}{\ms{ret}\;x_2}}}
-\end{multline}
+\begin{equation*}
+\begin{array}{lcl}
+  x = 3y + 5; & & \letexpr{x_0}{3y + 5}{}  \\
+  x = 3x + 2; & \qquad \approx \qquad & \letexpr{x_1}{3x_0 + 2} \\
+  \ms{ret}\;(3x + 1) & & \ms{ret}\;(3x_1 + 1)
+\end{array}
+\end{equation*}
 This transformation enables algebraic reasoning about expressions involving each $x_t$. However,
 since we can only define a variable once in SSA form, expressing programs with loops and branches
 becomes challenging. For example, na\"ively trying to lower the program in
