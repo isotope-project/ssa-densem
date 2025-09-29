@@ -436,6 +436,8 @@ This is exactly what we provide in this paper. Concretely, our contributions are
 
 \subsection{From Three Address Code to SSA}
 
+\label{ssec:3addr-ssa}
+
 Directly optimizing a source language can be difficult, because surface languages are often
 very large and have features (such as type inference and overloading) which make it difficult
 to express sound program equivalences. Elaborating a surface language to a simpler intermediate
@@ -648,7 +650,8 @@ is straightforward: introduce a $\phi$-node for each argument of a basic block, 
 corresponding to the $\phi$-node, add an argument to the jump instruction from the appropriate
 source block. We give a formal grammar for basic blocks-with-arguments SSA in
 Figure~\ref{fig:bba-grammar}. Note that this grammar no longer needs a separate terminator for
-returns: we can treat the return point as a distinguished label (with argument) that a program can jump to. 
+returns: we can treat the return point as a distinguished label (with argument) that a program can
+jump to. 
 
 \begin{figure}[H]
   \begin{center}
@@ -734,7 +737,9 @@ Figure~\ref{fig:fact-bba}:
   \Description{}
 \end{figure}
 
-\subsection{From SSA to Type-theoretic SSA}
+\subsection{Type-theoretic SSA}
+
+\label{ssec:tt-ssa}
 
 
 An important insight provided by the BBA format, as discussed by \citet{appel-ssa} and
@@ -754,31 +759,29 @@ variables visible in $P$ and those defined in $P$.
 
 So if we make the dominance tree explicit in the syntax and tie the binding of variables to this
 tree structure, then lexical and dominance-based scoping become one and the same. We use this
-observation to introduce \emph{lexical SSA} in Figure~\ref{fig:lex-ssa}. The main change to the
-syntax is the addition of the \todo{explain where blocks}. 
+observation to introduce \emph{lexical SSA} in Figure~\ref{fig:lex-ssa}. The key idea of this syntax
+is to, rather than treating the control-flow graph $C$ as a flat collection of basic blocks (with a
+distinguished entry label $\ell$), to instead consider (subtrees of) the dominance tree $r$, with
+the root of the tree implicitly being the entry block. We call such subtrees \emph{regions}: we note
+that they have a single entry (the root) and multiple exits (the leaves), and so generalize the more
+standard concept of a single-entry-single-exit region in the CFG.
 
-In this arrangement, a variable is in lexical scope if and only if it is in scope
-under dominance-based scoping, as shown in Figure~\ref{fig:dominance-to-lexical}. This
-transformation is straightforward, and standard SSA can be recovered by removing the inserted
-\ms{where}-blocks.
+To accomplish this, we adjust the grammar for basic blocks $\beta$ by replacing terminators $\tau$
+with \emph{\ms{where}-statements} $\where{\tau}{L}$. 
 
-\TODO{new object: regions, which are subtrees of the dominance tree}
+\TODO{explain where-statements}
 
-\TODO{think of a region like a basic block carrying the subtree of blocks which it dominates;
-single-entry-multiple-exit style}
+\TODO{tie scoping for labels and variables; encodes dominance tree}
 
-\TODO{new object: control-blocks: a terminator, and where the terminator can jump to}
+\TODO{see also, for a data structure, \ref{fig:ssa-data}}
 
-\TODO{the data is that in \ref{fig:ssa-data}}
+\TODO{if well-scoped w.r.t. dominance, you can topologically sort and insert where's according to
+the dominance tree}
 
-\TODO{no need for a distinguished entry block; we now just pass in a region, which has an implicit
-entry block}
+\TODO{later, will show that any two where-bracketings are semantically equivalent}
 
-It follows that by topologically sorting the basic blocks in the CFG according to the dominance
-order and inserting brackets based on the dominance tree, we can convert dominance-based scoping to
-lexical scoping, where the immediate children of a node in the dominator tree are placed in its
-lexical scope immediately after the definitions. We give the resulting grammar for \emph{lexical
-SSA} in Figure~\ref{fig:lex-ssa}:
+\TODO{so this is the same as regular SSA}
+
 \begin{figure}[H]
   \begin{center}
     \begin{grammar}
@@ -786,11 +789,9 @@ SSA} in Figure~\ref{fig:lex-ssa}:
 
       <\(o\)> ::= \(v\) \;|\; \(f\;v\) \;|\; \(\linl{v}\) \;|\; \(\linr{v}\) \;|\; \(\labort{v}\)
 
-      <\(r, s, t\)> ::= \(\kappa\)
+      <\(r, s, t\)> ::= \(\where{\tau}{L}\)
         \;|\; \(\letstmt{x}{o}{t}\)
         \;|\; \(\letstmt{(x, y)}{o}{t}\)
-
-      <\(\kappa\)> ::= \(\tau\) \;|\; \(\where{\kappa}{L}\)
 
       <\(\tau\)> ::= \(\brb{\ell}{o}\)
         \;|\; \(\casestmt{o}{y}{\tau}{z}{\tau'}\)
@@ -806,20 +807,18 @@ SSA} in Figure~\ref{fig:lex-ssa}:
 \begin{figure}
   \begin{lstlisting}[language=C++]
     struct BasicBlock {
-      vector<Instruction> instructions;             // unary/binary let-bindings
-      ControlBlock terminator;                      // control-block
-    }
-
-    struct ControlBlock {
-      Terminator terminator;                        // LHS of where-block
-      map<Label, (Argument, BasicBlock)> children;  // RHS of where-block
+      // unary/binary let-bindings, collected into a list
+      vector<Instruction> instructions;             
+      Terminator terminator;                        
+      // Dominated basic blocks, forming a subtree of the dominance tree
+      // Note that only `terminator` is allowed to jump to blocks in `children`
+      map<Label, (Argument, BasicBlock)> children;  
     }
   \end{lstlisting}
   \caption{Data encoded by the grammar in Figure \ref{fig:lex-ssa}}
   \Description{}
   \label{fig:ssa-data}
 \end{figure}
-
 
 \TODO{segue to concrete example}
 
@@ -1170,6 +1169,9 @@ unit payloads, so that $\ite{e_1}{e_2}{e_3} := \caseexpr{e_1}{()}{e_2}{()}{e_3}$
   \Description{}
   \label{fig:ssa-expr-rules}
 \end{figure}
+
+\TODO{this explanation is redundant now that it is in Section~\ref{ssec:tt-ssa}; go merge it /
+pull-up the end}
 
 We now move on to \emph{regions}, which can be built up as follows:
 \begin{itemize}
