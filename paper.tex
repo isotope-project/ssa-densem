@@ -445,11 +445,11 @@ representation makes it easier to write program analyses and optimizations. One 
 compiler IRs introduced is \emph{three-address code}~\cite{allen-70-cfa} (also
 known as \emph{register transfer language (RTL)}). 
 
-3-address programs consists of a \emph{control-flow graph} (CFG) $C$ with a distinguished entry
-label $\ell_{\ms{start}}$. Each node of the CFG corresponds to a \emph{basic block} $\beta$, which
-is a straight-line sequence of \emph{instructions} $x = f(y, z)$ (hence the name \emph{3-address
-code}, referring to the typical three variables $x, y, z$) followed by a \emph{terminator} $\tau$,
-which can be a (conditional) branch to another basic block. We give a grammar for 3-address code in
+3-address programs consists of a \emph{control-flow graph} (CFG) $G$ with a distinguished, nameless
+entry block. Each node of the CFG corresponds to a \emph{basic block} $\beta$, which is a
+straight-line sequence of \emph{instructions} $x = f(y, z)$ (hence the name \emph{3-address code},
+referring to the typical three variables $x, y, z$) followed by a \emph{terminator} $\tau$, which
+can be a (conditional) branch to another basic block. We give a grammar for 3-address code in
 Figure~\ref{fig:3addr-grammar}, with some slight adjustments to the usual presentation:
 \begin{itemize}
   \item \emph{Constants} $c$ are interpreted as nullary instructions $c()$.
@@ -475,13 +475,14 @@ Figure~\ref{fig:3addr-grammar}, with some slight adjustments to the usual presen
 
       <\(o\)> ::= \(v\) \;|\; \(f\;v\) \;|\; \(\linl{v}\) \;|\; \(\linr{v}\) \;|\; \(\labort{v}\)
 
-      <\(\beta\)> ::= \(\tau\) 
-      \;|\; \(x = o ; \beta\)
+      <\(\beta\)> ::=
+      \(x = o ; \beta\)
       \;|\; \((x, y) = o ; \beta\)
+      \;|\; \(\tau\)
 
       <\(\tau\)> ::= \(\brb{\ell}{o}\) \;|\; $\casestmt{o}{y}{\tau}{z}{\tau'}$
       
-      <\(C\)> ::= \(\cdot\) \;|\; \(C \;\; \ell : \beta\)
+      <\(G\)> ::= \(\beta\) \;|\; \(G \;\; \ell : \beta\)
     \end{grammar}
   \end{center}
   \caption{Grammar for 3-address code}
@@ -516,7 +517,8 @@ Figure~\ref{fig:fact-3addr}, by:
   \end{subfigure}%
   \begin{subfigure}[t]{.5\textwidth}
     \begin{align*}
-      \ms{start}:\quad  & n = 10; \\
+      %\ms{start}:\quad  
+                        & n = 10; \\
                         & i = 1; \\
                         & a = 1; \\
                         & \ms{br}\;\ms{loop} \\
@@ -596,7 +598,8 @@ the definition of $x$ goes through $y$, rather than only those paths which also 
 \begin{figure}
   \begin{subfigure}[t]{.5\textwidth}
     \begin{align*}
-      \ms{start}:\quad  & n = 10; \\
+      %\ms{start}:\quad  
+                        & n = 10; \\
                         & i = 1; \\
                         & a = 1; \\
                         & \ms{br}\;\ms{loop} \\
@@ -612,8 +615,9 @@ the definition of $x$ goes through $y$, rather than only those paths which also 
   \end{subfigure}%
   \begin{subfigure}[t]{.5\textwidth}
     \begin{align*}
-      \ms{start}:\quad & \ms{let}\;n = 10; \\
-      & \ms{br}\;\ms{loop} \\
+      %\ms{start}:\quad  
+                        & \ms{let}\;n = 10; \\
+                        & \ms{br}\;\ms{loop} \\
       \ms{loop}: \quad  & \ms{let}\;i_0 = \phi(\ms{start}: 1, \ms{body}: i_1) \\
                         & \ms{let}\;a_0 = \phi(\ms{start}: 1, \ms{body}: a_1) \\
                         & \ms{if}\;i_0 < n\;
@@ -660,13 +664,14 @@ jump to.
 
       <\(o\)> ::= \(v\) \;|\; \(f\;v\) \;|\; \(\linl{v}\) \;|\; \(\linr{v}\) \;|\; \(\labort{v}\)
 
-      <\(\beta\)> ::= \(\tau\) 
-      \;|\; \(\letstmt{x}{o}{\beta}\)
+      <\(\beta\)> ::= 
+      \(\letstmt{x}{o}{\beta}\)
       \;|\; \(\letstmt{(x, y)}{o}{\beta}\)
+      \;|\; \(\tau\)
 
       <\(\tau\)> ::= \(\brb{\ell}{v}\) \;|\; $\casestmt{x}{y}{\tau}{z}{\tau'}$
       
-      <\(C\)> ::= \(\cdot\) \;|\; \(C \;\; \ell(x) : \beta\)
+      <\(G\)> ::= \(G \;\; \ell(x) : \beta\) \;|\; \(\beta\)
     \end{grammar}
   \end{center}
   \caption{Grammar for basic blocks-with-arguments SSA} 
@@ -692,7 +697,8 @@ Figure~\ref{fig:fact-bba}:
   \begin{subfigure}[t]{.5\textwidth}
     \centering
     \begin{align*}
-      \ms{start}:\quad  & \ms{let}\;n = 10; \\
+      %\ms{start}:\quad  
+                        & \ms{let}\;n = 10; \\
                         & \ms{br}\;\ms{loop} \\
       \ms{loop}: \quad  & \begingroup \color{red}
                           \ms{let}\;i_0 = \phi(\ms{start}: 1, \ms{body}: i_1) 
@@ -713,7 +719,8 @@ Figure~\ref{fig:fact-bba}:
   \begin{subfigure}[t]{.5\textwidth}
     \centering
     \begin{align*}
-      \ms{start}:\quad            & \ms{let}\;n = 10; \\
+      %\ms{start}:\quad            
+                                  & \ms{let}\;n = 10; \\
                                   & \ms{br}\;\ms{loop}(\textcolor{red}{1}, \textcolor{blue}{1}) \\
       \ms{loop}(\textcolor{red}{i_0}, \textcolor{blue}{a_0}): \quad  
                                   & \ms{if}\;i_0 < n\; \{\;\ms{br}\;\ms{body}\;\} \\
@@ -741,7 +748,6 @@ Figure~\ref{fig:fact-bba}:
 
 \label{ssec:tt-ssa}
 
-
 An important insight provided by the BBA format, as discussed by \citet{appel-ssa} and
 \citet{kelsey-95-cps}, is that a program in SSA form can be interpreted as a collection
 of tail-recursive functions, where each basic block and branch correspond to a function and tail
@@ -760,39 +766,32 @@ variables visible in $P$ and those defined in $P$.
 So if we make the dominance tree explicit in the syntax and tie the binding of variables to this
 tree structure, then lexical and dominance-based scoping become one and the same. We use this
 observation to introduce \emph{lexical SSA} in Figure~\ref{fig:lex-ssa}. The key idea of this syntax
-is to, rather than treating the control-flow graph $C$ as a flat collection of basic blocks (with a
-distinguished entry label $\ell$), to instead consider (subtrees of) the dominance tree $r$, with
-the root of the tree implicitly being the entry block. We call such subtrees \emph{regions}: we note
-that they have a single entry (the root) and multiple exits (the leaves), and so generalize the more
-standard concept of a single-entry-single-exit region in the CFG.
+is to, rather than treating the control-flow graph $G$ as a flat collection of basic blocks (with a
+distinguished block), to instead consider (subtrees of) the dominance tree $r$, with the root of the
+tree implicitly being the entry block. We call such subtrees \emph{regions}: we note that they have
+a single entry (the root) and multiple exits (the leaves), and so generalize the more standard
+concept of a single-entry-single-exit region in a CFG.
 
 In particular, a \emph{region} $r$ generalizes a basic block $\beta$ by annotating the terminator
 $\tau$ with a list $L$ of \emph{labeled branches} ``$\wbranch{\ell_i}{x_i}{t_i}$,'' yielding a
 \emph{\ms{where}-block} ``$\where{\tau}{L}$''. Each $\ell_i$ can only be branched to by $\tau$ and
 the regions $t_i$, thus syntactically enforcing that the basic block at the root of $r$ (made up of
 its instructions and terminators) \emph{dominates} all the basic blocks in the subregions $t_i$
-(which can only be reached through $r$). We may then enforce dominance-based scoping simply by
-making the variables defined in $r$ visible only in the $t_i$, which, as previously stated,
-\emph{must} be dominated by $r$. Syntactically, this is just lexical scoping of \ms{where}-blocks.
+(which can only be reached through $r$). The data of a region $r$ is thus exactly the data contained
+in a basic block $\beta$ (its instructions and terminator) together with a set of subregions
+dominated by $r$; in C++-like pseudocode, we might represent a region as in
+Figure~\ref{fig:ssa-data}.
 
-It is easy to see (we demonstrate this more rigorously in Section~\ref{ssec:ssa-normal}) that, given
-a CFG $C$ with a distinguished entry label $\ell$, there exists some way to annotate its topological
-sort w.r.t. the dominance relation) with \ms{where}-blocks to obtain a region $r$ which is lexically
-well-scoped if and only if $C$ is a valid SSA program. Conversely, erasing the \ms{where}-blocks
-from a region $r$ and giving the root a name trivially yields a (topologically sorted!) SSA program
-
-\TODO{explain where-statements}
-
-\TODO{tie scoping for labels and variables; encodes dominance tree}
-
-\TODO{see also, for a data structure, \ref{fig:ssa-data}}
-
-\TODO{if well-scoped w.r.t. dominance, you can topologically sort and insert where's according to
-the dominance tree}
-
-\TODO{later, will show that any two where-bracketings are semantically equivalent}
-
-\TODO{so this is the same as regular SSA}
+Regions allow us to enforce dominance-based scoping simply by making the variables defined in $r$
+visible only in the $t_i$, which, as previously stated, \emph{must} be dominated by $r$; i.e.,
+dominance based scoping becomes lexical scoping of \ms{where}-blocks. It is easy to see (we
+demonstrate this more rigorously in Section~\ref{ssec:ssa-normal}) that, given a CFG $G$, there
+exists some way to annotate its topological sort w.r.t. the dominance relation with
+\ms{where}-blocks to obtain a region $r$ which is lexically well-scoped if and only if $C$ is a
+valid SSA program; we illustrate this process on our running example in
+Figure~\ref{fig:dominance-to-lexical}. Conversely, erasing the \ms{where}-blocks from a region $r$
+and giving the root a name trivially yields a (topologically sorted!) SSA program, establishing an
+isomorphism between lexical SSA and standard SSA.
 
 \begin{figure}[H]
   \begin{center}
@@ -801,9 +800,10 @@ the dominance tree}
 
       <\(o\)> ::= \(v\) \;|\; \(f\;v\) \;|\; \(\linl{v}\) \;|\; \(\linr{v}\) \;|\; \(\labort{v}\)
 
-      <\(r, s, t\)> ::= \(\where{\tau}{L}\)
-        \;|\; \(\letstmt{x}{o}{t}\)
+      <\(r, s, t\)> ::=
+        \(\letstmt{x}{o}{t}\)
         \;|\; \(\letstmt{(x, y)}{o}{t}\)
+        \;|\; \(\where{\tau}{L}\)
 
       <\(\tau\)> ::= \(\brb{\ell}{o}\)
         \;|\; \(\casestmt{o}{y}{\tau}{z}{\tau'}\)
@@ -832,13 +832,12 @@ the dominance tree}
   \label{fig:ssa-data}
 \end{figure}
 
-\TODO{segue to concrete example}
-
 \begin{figure}
   \centering
   \begin{subfigure}[t]{.5\textwidth}
     \begin{align*}
-      \ms{start}:\quad            & \ms{let}\;n = 10; \\
+      %\ms{start}:\quad            
+                                  & \ms{let}\;n = 10; \\
                                   & \ms{br}\;\ms{loop}(1, 1) \\
       \ms{loop}(i_0, a_0): \quad  & \ms{if}\;i_0 < n\; \{\;\ms{br}\;\ms{body}\;\} \\
                                   & \ms{else}\;\{\;\ms{ret}\;a_0\;\} \\
@@ -871,15 +870,6 @@ the dominance tree}
   \label{fig:dominance-to-lexical}
 \end{figure}
 
-\TODO{we now want to be able to easily and inductively:
-\begin{itemize}
-  \item Replace variables with arbitrary expressions, i.e. do substitution (see: CSE, GVN)
-  \item Replace labels with arbitraty subprograms, i.e. do \emph{label-substitution} (see:
-  jump-threading, branch duplication, loop unrolling)
-\end{itemize}
-So we weaken syntactic constraints without weakening our language. Also everybody be typed, yo. 
-}
-
 Lexical scoping allows us to apply many of techniques developed in type theory
 and functional programming for reasoning about program transformations. 
 Indeed, the result of our conversion to lexical scoping looks a lot like the correspondence
@@ -893,155 +883,188 @@ compositional reasoning about program transformations such as:
   \item Combinations of the two, such as rewriting $\ms{if}\;x > 0\;\ms{then}\;0 - x\;\ms{else}\;
   x$ to $\ms{abs}(x)$.
 \end{itemize}
-\TODO{Enumerate the steps you will do next here}
 
-First, we  generalize our syntax to allow the branches
-of if-statements to contain arbitrary code, rather than just branches in
-Figure~\ref{fig:bba-to-anf}. This clearly adds no additional expressive power, since:
+\TODO{we want to be able to do substitution}
+
+\TODO{to do this, we need a proper expression language; which we define here. The grammar of SSA
+stays the same except that it has expressions}
+
+\TODO{this adds no expressive power}
+
+\TODO{we now get a Cranelift-like language; we can do E-graphs; this is cool and good}
+
+\TODO{but we want to go Peggy and rewrite control-flow E-graphically and have fun; alas, we can't
+substitute a region for a label and e.g. jump-thread, since that would invalidate our terminators!}
+
+\TODO{so... fuse the syntactic categories of terminators and regions. presto}
+
+\TODO{this adds no power, because we can interconvert}
+
+\TODO{morally:, a where-block can have lets pulled out of it}
+
+\TODO{THAT IS ABOVE; we now want to be able to easily and inductively:
 \begin{itemize}
-  \item This syntax clearly generalizes the previous syntax, so no conversion into it is necessary
-  \item To revert back to the less general syntax, one must simply introduce new anonymous basic
-  blocks for each branch of the if-statement, likeso:
-  \begin{equation}
-    \ms{if}\;e\;\{s\}\;\ms{else}\;\{t\}
-    \to (\ms{if}\;e\;\{\ms{br}\;\ell_\top\}\;\ms{else}\;\{\ms{br}\;\ell_\bot\})\;
-        \ms{where}\;\ell_\top: \{s\},\;\ell_\bot: \{t\}
-  \end{equation}
+  \item Replace variables with arbitrary expressions, i.e. do substitution (see: CSE, GVN)
+  \item Replace labels with arbitraty subprograms, i.e. do \emph{label-substitution} (see:
+  jump-threading, branch duplication, loop unrolling)
 \end{itemize}
-What we end up with is something which looks a lot like \textit{administrative normal form} (ANF),
-with our transformation analogous to that described in \citet{chakravarty-functional-ssa-2003}. The
-key difference is that, in our format (which is strictly first order), we require an explicit
-\ms{ret} instruction (rather than adopting an expression-oriented language), and write
-``$\ms{let\;rec}\;f(x) = e; t$" as ``$\where{t}{\wbranch{f}{x}{e}}$."
+So we weaken syntactic constraints without weakening our language. Also everybody be typed, yo. 
+}
 
-\begin{figure}
-  \centering
-  \begin{subfigure}[t]{.5\textwidth}
-    \begin{align*}
-      & \ms{let}\;n = 10; \\
-      & \ms{br}\;\ms{loop}(1, 1) \\
-      & \ms{where}\;\ms{loop}(i_0, a_0): \{ \\
-      & \quad \ms{if}\;i_0 < n\;\{\;\ms{br}\;\ms{body}\;\} \\
-      & \quad \ms{else}\;\{\;\ms{ret}\;a_0\;\} \\
-      & \quad \ms{where}\;\ms{body}: \{\\ 
-      & \qquad \ms{let}\;t = i_0 + 1 \\
-      & \qquad \ms{let}\;a_1 = a_0 * t \\
-      & \qquad \ms{let}\;i_1 = i_0 + 1 \\
-      & \qquad \ms{br}\;\ms{loop}(i_1, a_1) \\
-      & \quad \} \\
-      & \}
-    \end{align*}
-  \end{subfigure}%
-  \begin{subfigure}[t]{.5\textwidth}
-    \begin{align*}
-      & \ms{let}\;n = 10; \\
-      & \ms{br}\;\ms{loop}(1, 1) \\
-      & \ms{where}\;\ms{loop}(i_0, a_0): \{\\
-      & \quad \ms{if}\;i_0 < n\;\{ \\
-      & \qquad \ms{let}\;t = i_0 + 1 \\
-      & \qquad \ms{let}\;a_1 = a_0 * t \\
-      & \qquad \ms{let}\;i_1 = i_0 + 1 \\
-      & \qquad \ms{br}\;\ms{loop}(i_1, a_1) \\
-      & \quad \}\;\ms{else}\;\{ \\
-      & \qquad \ms{ret}\;a_0 \\
-      & \quad \} \\
-      & \}
-    \end{align*}
-  \end{subfigure}
-  \caption{Allowing if-statements to jump to arbitrary instructions, rather than a terminator}
-  \Description{}
-  \label{fig:bba-to-anf}
-\end{figure}
+% \TODO{Enumerate the steps you will do next here}
 
-\TODO{justify full \isotopessa{} here by generalizing \emph{instructions} to \emph{expressions}}
+% First, we  generalize our syntax to allow the branches
+% of if-statements to contain arbitrary code, rather than just branches in
+% Figure~\ref{fig:bba-to-anf}. This clearly adds no additional expressive power, since:
+% \begin{itemize}
+%   \item This syntax clearly generalizes the previous syntax, so no conversion into it is necessary
+%   \item To revert back to the less general syntax, one must simply introduce new anonymous basic
+%   blocks for each branch of the if-statement, likeso:
+%   \begin{equation}
+%     \ms{if}\;e\;\{s\}\;\ms{else}\;\{t\}
+%     \to (\ms{if}\;e\;\{\ms{br}\;\ell_\top\}\;\ms{else}\;\{\ms{br}\;\ell_\bot\})\;
+%         \ms{where}\;\ell_\top: \{s\},\;\ell_\bot: \{t\}
+%   \end{equation}
+% \end{itemize}
+% What we end up with is something which looks a lot like \textit{administrative normal form} (ANF),
+% with our transformation analogous to that described in \citet{chakravarty-functional-ssa-2003}. The
+% key difference is that, in our format (which is strictly first order), we require an explicit
+% \ms{ret} instruction (rather than adopting an expression-oriented language), and write
+% ``$\ms{let\;rec}\;f(x) = e; t$" as ``$\where{t}{\wbranch{f}{x}{e}}$."
 
-ANF, however, lacks a good substitution property, since substituting a value for a variable can take
-you out of ANF, making it difficult to express optimizations like $(i + 1) - 1 \to i$ as rewrite
-rules. To fix this, we can simply relax the restriction that expressions in a program must be
-atomic. This can again trivially be seen to add no excessive power, since we can always introduce
-temporary variables via \ms{let}-bindings to make any expression atomic. For full generality, we
-will also allow \ms{let}-bindings and \ms{if}-statements \textit{inside} expressions, which again
-can be eliminated in the obvious manner, such as by taking
-\begin{align*}
-  \ms{let}\;x = (\ms{if}\;e\;\{a\}\;\ms{else}\;\{b\}); t &
-    \to \ms{if}\;e\;\{\ms{let}\;x = a; t\}\;\ms{else}\;\{\ms{let}\;x = b; t\} \\ 
-  & \to \ms{if}\;e\;\{\ms{br}\;\ell(x)\}\;\ms{else}\;\{\ms{br}\;\ell(x)\}\;
-        \ms{where}\;\ell(x): \{t\}
-\end{align*}
+% \begin{figure}
+%   \centering
+%   \begin{subfigure}[t]{.5\textwidth}
+%     \begin{align*}
+%       & \ms{let}\;n = 10; \\
+%       & \ms{br}\;\ms{loop}(1, 1) \\
+%       & \ms{where}\;\ms{loop}(i_0, a_0): \{ \\
+%       & \quad \ms{if}\;i_0 < n\;\{\;\ms{br}\;\ms{body}\;\} \\
+%       & \quad \ms{else}\;\{\;\ms{ret}\;a_0\;\} \\
+%       & \quad \ms{where}\;\ms{body}: \{\\ 
+%       & \qquad \ms{let}\;t = i_0 + 1 \\
+%       & \qquad \ms{let}\;a_1 = a_0 * t \\
+%       & \qquad \ms{let}\;i_1 = i_0 + 1 \\
+%       & \qquad \ms{br}\;\ms{loop}(i_1, a_1) \\
+%       & \quad \} \\
+%       & \}
+%     \end{align*}
+%   \end{subfigure}%
+%   \begin{subfigure}[t]{.5\textwidth}
+%     \begin{align*}
+%       & \ms{let}\;n = 10; \\
+%       & \ms{br}\;\ms{loop}(1, 1) \\
+%       & \ms{where}\;\ms{loop}(i_0, a_0): \{\\
+%       & \quad \ms{if}\;i_0 < n\;\{ \\
+%       & \qquad \ms{let}\;t = i_0 + 1 \\
+%       & \qquad \ms{let}\;a_1 = a_0 * t \\
+%       & \qquad \ms{let}\;i_1 = i_0 + 1 \\
+%       & \qquad \ms{br}\;\ms{loop}(i_1, a_1) \\
+%       & \quad \}\;\ms{else}\;\{ \\
+%       & \qquad \ms{ret}\;a_0 \\
+%       & \quad \} \\
+%       & \}
+%     \end{align*}
+%   \end{subfigure}
+%   \caption{Allowing if-statements to jump to arbitrary instructions, rather than a terminator}
+%   \Description{}
+%   \label{fig:bba-to-anf}
+% \end{figure}
 
-\TODO{give pointer to transformation in later section / appendix}
+% \TODO{justify full \isotopessa{} here by generalizing \emph{instructions} to \emph{expressions}}
 
-\begin{figure}
-  \centering
-  \begin{subfigure}[t]{.31\textwidth}
-    \begin{align*}
-      & \ms{let}\;n = 10; \\
-      & \ms{br}\;\ms{loop}(1, 1) \\
-      & \ms{where}\;\ms{loop}(i_0, a_0): \{\\
-      & \quad \ms{if}\;i_0 < n\;\{ \\
-      & \qquad \ms{let}\;t = i_0 + 1 \\
-      & \qquad \ms{let}\;a_1 = a_0 * t \\
-      & \qquad \ms{let}\;i_1 = i_0 + 1 \\
-      & \qquad \ms{br}\;\ms{loop}(i_1, a_1) \\
-      & \quad \}\;\ms{else}\;\{ \\
-      & \qquad \ms{ret}\;a_0 \\
-      & \quad \} \\
-      & \}
-    \end{align*}
-    \caption{Program in ANF}
-    \label{fig:fact-anf}
-  \end{subfigure}%
-  \begin{subfigure}[t]{.35\textwidth}
-    \begin{align*}
-      & \ms{let}\;n = 10; \\
-      & \ms{br}\;\ms{loop}(1, 1) \\
-      & \ms{where}\;\ms{loop}(i_0, a_0): \{\\
-      & \quad \ms{if}\;i_0 < n\;\{ \\
-      & \qquad \ms{br}\;\ms{loop}(i_0 + 1, a_0 * (i_0 + 1)) \\
-      & \quad \}\;\ms{else}\;\{ \\
-      & \qquad \ms{ret}\;a_0 \\
-      & \quad \} \\
-      & \}  \\ \\ \\
-    \end{align*}
-    \caption{
-      Programs \ref{fig:fact-anf} and \ref{fig:fact-subst} after substitution;
-      since the result is the same, both programs must be equivalent.
-    }
-    \label{fig:fact-subst}
-  \end{subfigure}\hspace{1em}%
-  \begin{subfigure}[t]{.31\textwidth}
-    \begin{align*}
-      & \ms{let}\;n = 10; \\
-      & \ms{br}\;\ms{loop}(1, 1) \\
-      & \ms{where}\;\ms{loop}(i_0, a_0): \{\\
-      & \quad \ms{if}\;i_0 < n\;\{ \\
-      & \qquad \ms{let}\;i_1 = i_0 + 1 \\
-      & \qquad \ms{let}\;a_1 = a_0 * i_1 \\
-      & \qquad \ms{br}\;\ms{loop}(i_1, a_1) \\
-      & \quad \}\;\ms{else}\;\{ \\
-      & \qquad \ms{ret}\;a_0 \\
-      & \quad \} \\
-      & \} \\
-    \end{align*}
-    \caption{Optimized ANF program}
-    \label{fig:fact-opt}
-  \end{subfigure}
-  \caption{
-    Adding support for expressions, allowing us to perform substitutions of (pure) expressions.
-    Optimizations such as common subexpression elimination can be built using substitution as a
-    building block.
-  }
-  \Description{}
-  \label{fig:fact-cse}
-\end{figure}
+% ANF, however, lacks a good substitution property, since substituting a value for a variable can take
+% you out of ANF, making it difficult to express optimizations like $(i + 1) - 1 \to i$ as rewrite
+% rules. To fix this, we can simply relax the restriction that expressions in a program must be
+% atomic. This can again trivially be seen to add no excessive power, since we can always introduce
+% temporary variables via \ms{let}-bindings to make any expression atomic. For full generality, we
+% will also allow \ms{let}-bindings and \ms{if}-statements \textit{inside} expressions, which again
+% can be eliminated in the obvious manner, such as by taking
+% \begin{align*}
+%   \ms{let}\;x = (\ms{if}\;e\;\{a\}\;\ms{else}\;\{b\}); t &
+%     \to \ms{if}\;e\;\{\ms{let}\;x = a; t\}\;\ms{else}\;\{\ms{let}\;x = b; t\} \\ 
+%   & \to \ms{if}\;e\;\{\ms{br}\;\ell(x)\}\;\ms{else}\;\{\ms{br}\;\ell(x)\}\;
+%         \ms{where}\;\ell(x): \{t\}
+% \end{align*}
 
-This gives us our final \isotopessa{} calculus, which we will call \emph{type-theoretic SSA}. In
-this language, we can safely perform \textit{substitutions}, like in Figure~\ref{fig:fact-cse}.
-These can then be used to build up optimizations such as \textit{common-subexpression elimination}.
+% \TODO{give pointer to transformation in later section / appendix}
+
+% \begin{figure}
+%   \centering
+%   \begin{subfigure}[t]{.31\textwidth}
+%     \begin{align*}
+%       & \ms{let}\;n = 10; \\
+%       & \ms{br}\;\ms{loop}(1, 1) \\
+%       & \ms{where}\;\ms{loop}(i_0, a_0): \{\\
+%       & \quad \ms{if}\;i_0 < n\;\{ \\
+%       & \qquad \ms{let}\;t = i_0 + 1 \\
+%       & \qquad \ms{let}\;a_1 = a_0 * t \\
+%       & \qquad \ms{let}\;i_1 = i_0 + 1 \\
+%       & \qquad \ms{br}\;\ms{loop}(i_1, a_1) \\
+%       & \quad \}\;\ms{else}\;\{ \\
+%       & \qquad \ms{ret}\;a_0 \\
+%       & \quad \} \\
+%       & \}
+%     \end{align*}
+%     \caption{Program in ANF}
+%     \label{fig:fact-anf}
+%   \end{subfigure}%
+%   \begin{subfigure}[t]{.35\textwidth}
+%     \begin{align*}
+%       & \ms{let}\;n = 10; \\
+%       & \ms{br}\;\ms{loop}(1, 1) \\
+%       & \ms{where}\;\ms{loop}(i_0, a_0): \{\\
+%       & \quad \ms{if}\;i_0 < n\;\{ \\
+%       & \qquad \ms{br}\;\ms{loop}(i_0 + 1, a_0 * (i_0 + 1)) \\
+%       & \quad \}\;\ms{else}\;\{ \\
+%       & \qquad \ms{ret}\;a_0 \\
+%       & \quad \} \\
+%       & \}  \\ \\ \\
+%     \end{align*}
+%     \caption{
+%       Programs \ref{fig:fact-anf} and \ref{fig:fact-subst} after substitution;
+%       since the result is the same, both programs must be equivalent.
+%     }
+%     \label{fig:fact-subst}
+%   \end{subfigure}\hspace{1em}%
+%   \begin{subfigure}[t]{.31\textwidth}
+%     \begin{align*}
+%       & \ms{let}\;n = 10; \\
+%       & \ms{br}\;\ms{loop}(1, 1) \\
+%       & \ms{where}\;\ms{loop}(i_0, a_0): \{\\
+%       & \quad \ms{if}\;i_0 < n\;\{ \\
+%       & \qquad \ms{let}\;i_1 = i_0 + 1 \\
+%       & \qquad \ms{let}\;a_1 = a_0 * i_1 \\
+%       & \qquad \ms{br}\;\ms{loop}(i_1, a_1) \\
+%       & \quad \}\;\ms{else}\;\{ \\
+%       & \qquad \ms{ret}\;a_0 \\
+%       & \quad \} \\
+%       & \} \\
+%     \end{align*}
+%     \caption{Optimized ANF program}
+%     \label{fig:fact-opt}
+%   \end{subfigure}
+%   \caption{
+%     Adding support for expressions, allowing us to perform substitutions of (pure) expressions.
+%     Optimizations such as common subexpression elimination can be built using substitution as a
+%     building block.
+%   }
+%   \Description{}
+%   \label{fig:fact-cse}
+% \end{figure}
+
+% This gives us our final \isotopessa{} calculus, which we will call \emph{type-theoretic SSA}. In
+% this language, we can safely perform \textit{substitutions}, like in Figure~\ref{fig:fact-cse}.
+% These can then be used to build up optimizations such as \textit{common-subexpression elimination}.
  
 \section{Type Theory}
 
 \label{sec:typing}
+
+\TODO{pull out grammar for SSA, expressions to Section~\ref{ssec:tt-ssa}; focus on types and
+contexts}
+
+\TODO{the types be}
 
 We now give a formal account of \isotopessa{}, starting with the types. Our types are first order,
 and consists of binary sums $A + B$, products $A \otimes B$, the unit type $\mathbf{1}$, and the
@@ -1062,6 +1085,8 @@ B}\mc{I}_\epsilon(A, B)$, and $\mc{I} = \bigcup_\epsilon\mc{I}_\epsilon$.
 
 We'll call a tuple $Sg = (\mc{T}, \mc{I})$ of types and instructions over these types an
 \emph{\isotopessa{}-signature}.
+
+\TODO{the contexts be}
 
 A (variable) \textit{context} $\Gamma$ is a list of \textit{typing hypotheses} $\bhyp{x}{A}$,
 where $x$ is a variable name and $A$ is the type of that variable. Similarly, we define a
@@ -1089,12 +1114,15 @@ type that must be passed on a jump to the label $\ell$.
       \;|\; \(\labort{a}\)
       \;|\; \(\caseexpr{e}{x}{a}{y}{b}\)
       
-      <\(s, t\)> ::= \(\brb{\ell}{a}\) 
-      \alt  \(\letstmt{x}{a}{t}\)
+      <\(r, s, t\)> ::= 
+      \(\letstmt{x}{a}{t}\)
       \;|\; \(\letstmt{(x, y)}{a}{t}\)
+      \;|\; \(\where{t}{L}\)
+      \;|\; \(\brb{\ell}{a}\)
       \;|\; \(\casestmt{e}{x}{s}{y}{t}\)
-      \alt  \(\where{t}{(\wbranch{\ell_i}{x_i}{t_i},)_i}\)
 
+      <\(L\)> ::= \(\cdot\) \;|\; \(L, \wbranch{\ell}{x}{t}\)
+      
       <\(\Gamma\)> ::= \(\cdot\) \;|\; \(\Gamma, \bhyp{x}{A}\)
 
       <\(\ms{L}\)> ::= \(\cdot\) \;|\; \(\ms{L}, \lhyp{\ell}{A}\)
@@ -1105,8 +1133,9 @@ type that must be passed on a jump to the label $\ell$.
   \label{fig:ssa-grammar}
 \end{figure}
 
-As shown in Figure~\ref{fig:ssa-grammar}, \isotopessa{} terms are divided into two syntactic
-categories, each associated with a judgement:
+\TODO{rework given that syntactic categories are given in Section~\ref{ssec:tt-ssa}; maybe do
+expressions-then-regions} As shown in Figure~\ref{fig:ssa-grammar}, \isotopessa{} terms are divided
+into two syntactic categories, each associated with a judgement:
 \begin{itemize}
   \item \emph{Expressions} $a, b, c, e$, which are typed with the judgement
   $\hasty{\Gamma}{\epsilon}{a}{A}$, which says that under the typing context $\Gamma$, the
@@ -1119,6 +1148,7 @@ categories, each associated with a judgement:
   $\haslb{\Gamma}{r}{\ms{L}}$, which states that given that $\Gamma$ is live at the unique entry
   point, $r$ will either loop forever or branch to one of the exit labels in $\ell(A) \in \ms{L}$
   with an argument of type $A$.
+  \TODO{refine this explanation}
 \end{itemize}
 
 The typing rules for expressions are given in Figure~\ref{fig:ssa-expr-rules}. In particular,
@@ -1182,10 +1212,7 @@ unit payloads, so that $\ite{e_1}{e_2}{e_3} := \caseexpr{e_1}{()}{e_2}{()}{e_3}$
   \label{fig:ssa-expr-rules}
 \end{figure}
 
-\TODO{this explanation is redundant now that it is in Section~\ref{ssec:tt-ssa}; go merge it /
-pull-up the end}
-
-We now move on to \emph{regions}, which can be built up as follows:
+We now move on to \emph{regions}, which can be typed as follows:
 \begin{itemize}
   \item A branch to a label $\ell$ with pure argument $a$, typed with \brle{br}.
   
@@ -1196,46 +1223,10 @@ We now move on to \emph{regions}, which can be built up as follows:
   executing the (potentially effectful) expression $e$, and then, if $e$ is a left injection
   $\iota_l\;x$, executing $r$ with its value ($x$), otherwise executing $s$.
   
-  \item \emph{\ms{where}-statements} of the form ``$\where{r}{(\wbranch{\ell_i}{x_i}{t_i})_i}$",
+  \item \emph{\ms{where}-blocks} of the form ``$\where{r}{(\wbranch{\ell_i}{x_i}{t_i})_i}$",
   which consist of a collection of mutually recursive regions $\wbranch{\ell_i}{x_i}{t_i}$ and a
   \emph{terminator region} $r$ which may branch to one of $\ell_i$ or an exit label.
 \end{itemize}
-We previously described SSA programs as being made up out of \emph{basic blocks}, each of which is
-made up of a sequence of instructions followed by a \emph{terminator} and, potentially, a list of
-strictly dominated basic blocks this terminator may jump to. Basic blocks are an \emph{implicit}
-feature of our grammar: we can view each as a list of unary or binary let-bindings, until we reach a
-terminator, which is either an unconditional branch, a \ms{case}-statement or a
-\ms{where}-statement, as follows:
-\begin{gather*}
-  \ms{defs}(\letstmt{x}{e}{r}) = (x, e)::r \qquad 
-  \ms{defs}(\letstmt{(x, y)}{e}{r}) = ((x, y), e)::r \\
-  \ms{defs}(r) = [] \quad \text{otherwise} \\
-  \ms{terminator}(\letstmt{x}{e}{r}) 
-  = \ms{terminator}(\letstmt{(x, y)}{e}{r}) 
-  = \ms{terminator}(r) \\
-  \ms{terminator}(r) = r \quad \text{otherwise} \\
-  \ms{bb}(r) = (\ms{defs}(r), \ms{terminator}(r))
-\end{gather*}
-\TODO{it is unintuitive that it is unintuitive}
-\TODO{pull up to section 2}
-\TODO{add C++ struct}
-Note in particular that the region $r$ in a \ms{where}-statement
-$\where{r}{(\wbranch{\ell_i}{x_i}{t_i})_i}$ is best interpreted as a terminator rather than an
-entry-block even if of the form, e.g., $r = \letstmt{x}{e}{s}$. The entry block is instead the
-\emph{implicit} basic-block made up of any let-bindings surrounding the \ms{where}-statement. The
-key difference is that variables defined in $r$ are \emph{not} visible in the blocks $t_i$, whereas
-variables defined in the entry-block are. 
-\TODO{why does this greatly simplify rewriting?}
-While at first glance this can be unintuitive, the additional generality greatly simplifies
-rewriting, and we can always normalize a where-block into a more canonical form by pulling out
-let-bindings, since our equational theory generally admits that, \emph{if} both sides are well-typed
-and there is no shadowing,
-\begin{align*}
-  \where{(\letexpr{x}{e}{r})}{(\wbranch{\ell_i}{x_i}{t_i})_i}
-  &= (\letexpr{x}{e}{(\where{r}{(\wbranch{\ell_i}{x_i}{t_i})_i})}) \\
-  \where{(\letexpr{(x, y)}{e}{r})}{(\wbranch{\ell_i}{x_i}{t_i})_i}
-  &= (\letexpr{(x, y)}{e}{(\where{r}{(\wbranch{\ell_i}{x_i}{t_i})_i})})
-\end{align*}
 
 \begin{figure}
   \begin{gather*}
@@ -1266,6 +1257,8 @@ and there is no shadowing,
 \end{figure}
 
 \subsection{Metatheory}
+
+\TODO{do a clarification pass here}
 
 We can now begin to state the syntactic metatheory of \isotopessa{}. One of the
 most important metatheorems, and a basic sanity check of our type theory, is
@@ -1481,6 +1474,8 @@ define the shorthand $[\ell / \kappa] = [\lupg{\kappa(x) \mapsto \brb{\ell}{x}}]
 \label{sec:equations}
 
 \subsection{Expressions}
+
+\TODO{do a clarification pass here}
 
 We can now give an equational theory for \isotopessa{} expressions. In particular,
 we will inductively define an equivalence relation
@@ -2533,19 +2528,25 @@ in Section~\ref{ssec:completeness}.
   \label{fig:ssa-subst-equiv}
 \end{figure}
 
-\subsection{Strict SSA}
-
-\TODO{pull up definition of strict SSA to introduction}
-
-\TODO{push down definition of ANF transformation to appendix}
+\subsection{Standard SSA}
 
 \label{ssec:ssa-normal}
 
 The relaxation of SSA to \isotopessa{} allows us to state our equational theory and handle
 substitution more conveniently. However, this approach may lead readers to question whether we have
-truly provided a type-theoretic presentation of SSA as it is used in practice. To address this
-concern, we introduce a subset of \isotopessa{} regions called \emph{strict regions}. We make the
-following claims about these strict regions:
+truly provided a type-theoretic presentation of SSA as it is used in practice. 
+
+\TODO{relate to SSA variants in Section~\ref{ssec:tt-ssa}, rather than strict, say \emph{standard};
+note that these are a syntactic inclusion relation and hence that $\equiv$ works on them}
+
+\TODO{we need a Cranelift-like name for SSA-with-expressions}
+
+\TODO{split out ANF typing into generalized-variable typing, operation typing}
+
+\TODO{}
+
+To address this concern, we introduce a subset of \isotopessa{} regions called \emph{strict
+regions}. We make the following claims about these strict regions:
 \begin{enumerate}
   \item Every \isotopessa{} region can be converted to an equivalent strict region 
   %using our equational theory 
@@ -2562,11 +2563,9 @@ We assert that strict regions correspond exactly to SSA, with the \ms{where}-bra
 syntactic sugar to make our typing rules syntax-directed. Specifically, \ms{where}-blocks can be
 added algorithmically by computing dominance relationships between basic blocks.
 
-Converting directly to strict SSA can be unwieldy. Therefore, we do
-this in two stages, first converting \isotopessa{} into to a subset
-corresponding to A-normal form (ANF) extended with mutually recursive
-\ms{where}-bindings, and then converting the ANF regions into strict
-regions.
+Converting directly to strict SSA can be unwieldy. Therefore, we do this in two stages, first
+converting \isotopessa{} into to a subset corresponding to A-normal form (ANF) extended with
+mutually recursive \ms{where}-bindings, and then converting the ANF regions into strict regions.
 
 \subsubsection{From \isotopessa{} to A-Normal Form}
 
