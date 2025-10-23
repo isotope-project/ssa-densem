@@ -2939,22 +2939,27 @@ $\tocfg{r} \simeq \tocfg{r'}$, we have that $\lbeq{\Gamma}{r}{r'}{\ms{L}}$, sinc
 
 \subsection{Freyd-Elgot Categories}
 
-\citet{moggi-91-monad} showed that the Kleisli category of a strong
-monad over a CCC interprets effectful higher-order functional
-programs. There are two mismatches in using this as a semantics for
-SSA. On one hand, SSA has features not necessarily supported by Moggi
-models such as arbitrary, unstructured cyclic control-flow. On the
-other hand Moggi models support features SSA (as a first-order
-language) does not have, such as higher-order functions and
-first-class computation values.
+\citet{moggi-91-monad} showed that the Kleisli category of a strong monad over a CCC interprets
+effectful higher-order functional programs. There are two mismatches in using this as a semantics
+for SSA. 
+%
+On one hand, SSA has features not necessarily supported by Moggi models such as arbitrary,
+unstructured cyclic control-flow. 
+%
+On the other hand Moggi models support features SSA (as a first-order language) does not have, such
+as higher-order functions and first-class computation values.
 
 Given that we want to model SSA with some category $\mc{C}$, we hence have to think about what
-structure we need $\mc{C}$ to possess so that it has exactly our desired features.
-Obviously, we need a way to take the product of two objects, to be able to model contexts as well as
-pairs. The usual way to do this is via \emph{monoidal categories}. However, monoidal categories
-typically have too many
-equations: computations operating on independent data must always commute
-(this is the ``sliding rule''), which is obviously not true for effects such as printing, since
+structure we need $\mc{C}$ to possess so that it has exactly our desired features. Obviously, we
+need a way to take the product of two objects, to be able to model contexts as well as pairs.
+% 
+The usual way to do this is via \emph{monoidal categories}. 
+%
+However, monoidal categories typically have too many equations: 
+%
+computations operating on independent data must always commute (this is the ``sliding rule''), 
+%
+  which is obviously not true for effects such as printing, since
 $$
 \ms{print}(x) ; \ms{print}(y) \neq \ms{print}(y) ; \ms{print}(x)
 $$
