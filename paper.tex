@@ -961,6 +961,19 @@ syntactic categories $r, \tau$ of regions and terminators respectively, yielding
   \label{fig:ssa-grammar}
 \end{figure}
 
+We can view this change as allowing a case-statement, and the head of a where-block, to branch to
+anonymous basic blocks. For example, the program
+$$
+\casestmt{e}{x}{s}{y}{t}
+$$
+is exactly equivalent to the lexical SSA program
+$$
+\where{\casestmt{e}{t}{\brb{\ell_1}{t}}{\brb{\ell_2}{y}}{t}}{
+  \wbranch{\ell_1}{x}{s},
+  \wbranch{\ell_2}{y}{t}
+}
+$$
+
 \TODO{this adds no power, because we can interconvert;}
 
 \TODO{morally, what we're doing is allowing anonymous labels at the ends of our terminators}
