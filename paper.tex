@@ -894,21 +894,43 @@ instruction), but makes it much more cumbersome to do theoretical work.
 
 To fix this, instead of stratifying the left-hand-side of our bindings into operations $o$ and
 values $v$, we can instead fuse these into a single syntactic category of \emph{expressions} $a$.
-Conceptually, what we're doing is replacing variables $x$ with arbitrary expressions $a$. While
-we're at it, it makes sense to allow the pure control-flow combinators, namely sequencing and
-branching, to appear in expressions, by allowing let-expressions and case-expressions, giving us the
-grammar for expressions $a$ in Figure~\ref{fig:ssa-grammar}.
+Conceptually, what we're doing is replacing variables $x$ with arbitrary expressions $a$. This
+clearly adds no expressive power, since we can introduce temporary variable names for each
+sub-expression of $a$ to go back to standard SSA. We can justify allowing let-bindings in
+expressions $a$ in the same way: we get an equivalent program by ``floating'' the let-binding out of
+the expression and into the main lexical SSA program, $\alpha$-renaming as necessary to ensure the
+let-binding binds a fresh variable.
 
-\TODO{this adds no expressive power}
-
-\TODO{we now get a Cranelift-like language; we can do E-graphs; this is cool and good}
-
-\TODO{do the same thing for label substitution}
-
-\TODO{but we want to go Peggy and rewrite control-flow E-graphically and have fun; alas, we can't
-substitute a region for a label and e.g. jump-thread, since that would invalidate our terminators!}
-
-\TODO{so... fuse the syntactic categories of terminators and regions. presto}
+To be able to effectively combine control-flow rewrites with algebraic rewriting, such as in our
+absolute-value example, it helps to be able to represent conditional control-flow in our expression
+language. We can do this by allowing expressions to contain case-statements, giving us the grammar
+for expressions $a$ in Figure~\ref{fig:ssa-grammar}. The justification that this adds no expressive
+power is slightly more fiddly, and resembles to some degree the transformation into
+continuation-passing style. In particular, given a program of the form
+$$
+\letstmt{x}{\caseexpr{a}{x}{b}{y}{c}}{r}
+$$
+and assuming without loss of generality that $a = t$ is a variable (we can first pull out $a$ into a
+let-binding, essentially converting our expressions to A-normal form) we can obtain an equivalent
+program with the case-expression removed by
+\begin{itemize}
+  \item Introducing a new label corresponding to the rest of the program taking the value of the
+  case-expression as argument, $\ell_{\ms{rest}}(x): r'$, where $r'$ is $r$ (inductively) converted
+  into standard SSA
+  \item Compiling $a$ to SSA and, binding it's value to $t_a$, inserting a branch to either:
+  \begin{itemize}
+    \item A new label $\ell_{\ms{left}}$, which computes $b$, binding its value to $t_b$, and jumps
+    to $\ell_{\ms{rest}}(t_b)$, or
+    \item A new label $\ell_{\ms{right}}$, which computes $c$, binding its value to $t_c$, and jumps
+    to $\ell_{\ms{rest}}(t_c)$
+  \end{itemize}
+\end{itemize}
+We'd like to be able to reason like this without fiddling with temporary labels. More generally,
+we'd like to perform \emph{label-substitution}, in which we replace an unconditional branch to a
+label $\ell$ with a region $r$; this allows us to directly reason about optimizations such as
+jump-threading, inlining, and loop-unrolling. The easiest way to do this is simply to fuse the
+syntactic categories $r, \tau$ of regions and terminators respectively, yielding our final
+\isotopessa{} language, whose grammar is given in Figure~\ref{fig:ssa-grammar}.
 
 \begin{figure}[H]
   \begin{center}
@@ -939,9 +961,13 @@ substitute a region for a label and e.g. jump-thread, since that would invalidat
   \label{fig:ssa-grammar}
 \end{figure}
 
-\TODO{this adds no power, because we can interconvert}
+\TODO{this adds no power, because we can interconvert;}
 
-\TODO{morally:, a where-block can have lets pulled out of it}
+\TODO{morally, what we're doing is allowing anonymous labels at the ends of our terminators}
+
+\TODO{the other change: a where-block can have lets pulled out of it}
+
+\TODO{our complex transformation above then becomes the simple rewrite rule}
 
 \TODO{THAT IS ABOVE; we now want to be able to easily and inductively:
 \begin{itemize}
