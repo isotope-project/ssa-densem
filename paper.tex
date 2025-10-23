@@ -884,7 +884,24 @@ compositional reasoning about program transformations such as:
   x$ to $\ms{abs}(x)$.
 \end{itemize}
 
-\TODO{we want to be able to do substitution}
+Our current syntax, however, makes it difficult to reason about \emph{substitution}. In particular,
+replacing a variable with its definition is not generally possible, even if that variable's
+definition is \emph{pure}, since a valid expression $f\;(x, y)$ might become an invalid expression
+$f\;(a + b, 0)$. This means that algebraic rewrites need to be able to look through variable
+definitions, inserting and removing them as necessary: this is may actually be \emph{beneficial} in
+practical implementations (where each node of an expression-tree can correspond one-to-one with an
+instruction), but makes it much more cumbersome to do theoretical work.
+
+\TODO{thankfully, the solution is not particularly difficult; rather than have variables $x$, we
+just have pure expressions $a$}
+
+\TODO{while we're at it, we can build up a proper expression language with let-bindings and
+conditionals...}
+
+% NOTE: things would be a _lot_ nicer if our expression language had iteration, too; but this
+% changes our results and narrative. Try doing this in a branch...
+
+\TODO{it is in fact sometimes useful to discuss general expressions $e$}
 
 \TODO{to do this, we need a proper expression language; which we define here. The grammar of SSA
 stays the same except that it has expressions}
@@ -892,6 +909,8 @@ stays the same except that it has expressions}
 \TODO{this adds no expressive power}
 
 \TODO{we now get a Cranelift-like language; we can do E-graphs; this is cool and good}
+
+\TODO{do the same thing for label substitution}
 
 \TODO{but we want to go Peggy and rewrite control-flow E-graphically and have fun; alas, we can't
 substitute a region for a label and e.g. jump-thread, since that would invalidate our terminators!}
@@ -2231,6 +2250,8 @@ equivalent to
   \caption{Rewriting rules for \isotopessa{} \ms{where}-blocks}
   \label{fig:ssa-where-rules}
 \end{figure}
+
+\TODO{either remove references to old dinaturality figures or pull them down here from git history}
 
 This format illuminates a very important potential use for uniformity; namely, formalizing rewrites
 like those in Figure~\ref{fig:fact-dinat-rewrites}. In particular, consider a program of the form
