@@ -908,7 +908,7 @@ for expressions $a$ in Figure~\ref{fig:ssa-grammar}. The justification that this
 power is slightly more fiddly, and resembles to some degree the transformation into
 continuation-passing style. In particular, given a program of the form
 $$
-\letstmt{x}{\caseexpr{a}{x}{b}{y}{c}}{r}
+\letstmt{x}{\caseexpr{a}{y}{b}{z}{c}}{r}
 $$
 and assuming without loss of generality that $a = t$ is a variable (we can first pull out $a$ into a
 let-binding, essentially converting our expressions to A-normal form) we can obtain an equivalent
@@ -917,12 +917,13 @@ program with the case-expression removed by
   \item Introducing a new label corresponding to the rest of the program taking the value of the
   case-expression as argument, $\ell_{\ms{rest}}(x): r'$, where $r'$ is $r$ (inductively) converted
   into standard SSA
-  \item Compiling $a$ to SSA and, binding it's value to $t_a$, inserting a branch to either:
+  \item Compiling $a$ to SSA and inserting a branch parametrized by the resulting value $t_a$ to
+  either:
   \begin{itemize}
-    \item A new label $\ell_{\ms{left}}$, which computes $b$, binding its value to $t_b$, and jumps
+    \item A new label $\ell_{\ms{left}}(y)$, which computes $b$, binding its value to $t_b$, and jumps
     to $\ell_{\ms{rest}}(t_b)$, or
-    \item A new label $\ell_{\ms{right}}$, which computes $c$, binding its value to $t_c$, and jumps
-    to $\ell_{\ms{rest}}(t_c)$
+    \item A new label $\ell_{\ms{right}}(z)$, which computes $c$, binding its value to $t_c$, and
+    jumps to $\ell_{\ms{rest}}(t_c)$
   \end{itemize}
 \end{itemize}
 We'd like to be able to reason like this without fiddling with temporary labels. More generally,
@@ -964,32 +965,28 @@ syntactic categories $r, \tau$ of regions and terminators respectively, yielding
 We can view this change as allowing a case-statement, and the head of a where-block, to branch to
 anonymous basic blocks. For example, the program
 $$
-\casestmt{e}{x}{s}{y}{t}
+\where{\casestmt{e}{x}{s}{y}{t}}{L}
 $$
 is exactly equivalent to the lexical SSA program
 $$
-\where{\casestmt{e}{t}{\brb{\ell_1}{t}}{\brb{\ell_2}{y}}{t}}{
-  \wbranch{\ell_1}{x}{s},
-  \wbranch{\ell_2}{y}{t}
+\where{\brb{\ell_1}(())}
+{
+  \wbranch{\ell_1}{-}{
+    \where{\casestmt{e}{t}{\brb{\ell_2}{t}}{\brb{\ell_3}{y}}{t}}{
+      \wbranch{\ell_2}{x}{s},
+      \wbranch{\ell_3}{y}{t},
+      L
+    }
+  }
 }
 $$
-
-\TODO{this adds no power, because we can interconvert;}
-
-\TODO{morally, what we're doing is allowing anonymous labels at the ends of our terminators}
-
-\TODO{the other change: a where-block can have lets pulled out of it}
-
-\TODO{our complex transformation above then becomes the simple rewrite rule}
-
-\TODO{THAT IS ABOVE; we now want to be able to easily and inductively:
-\begin{itemize}
-  \item Replace variables with arbitrary expressions, i.e. do substitution (see: CSE, GVN)
-  \item Replace labels with arbitraty subprograms, i.e. do \emph{label-substitution} (see:
-  jump-threading, branch duplication, loop unrolling)
-\end{itemize}
-So we weaken syntactic constraints without weakening our language. Also everybody be typed, yo. 
-}
+It is hence easy to see that this change adds no additional expressive power; however, it makes it a
+lot easier to justify equivalences, like the one we used above, as simple step-by-step derivations:
+\begin{align*}
+\letstmt{x}{\caseexpr{a}{y}{b}{z}{c}}{r} 
+&\teqv \casestmt{a}{y}{\letstmt{x}{b}{r}}{z}{\letstmt{x}{c}{r}} \\
+&\teqv \where{\casestmt{a}{y}{\brb{\ell}{y}}{z}{\brb{\ell}{z}}}{\wbranch{\ell}{x}{r}}
+\end{align*}
 
 % \TODO{Enumerate the steps you will do next here}
 
@@ -1141,37 +1138,16 @@ So we weaken syntactic constraints without weakening our language. Also everybod
 
 \label{sec:typing}
 
-\TODO{pull out grammar for SSA, expressions to Section~\ref{ssec:tt-ssa}; focus on types and
-contexts}
-
-\TODO{the types be}
-
 We now give a formal account of \isotopessa{}, starting with the types. Our types are first order,
 and consists of binary sums $A + B$, products $A \otimes B$, the unit type $\mathbf{1}$, and the
 empty type $\mb{0}$, all parameterised over a set of base types $X \in \mc{T}$. We write our set of
 types as $\ms{Ty}(X)$. 
 
-\TODO{clarify this jump}
-
-We also parameterise over, for each pair $A, B \in \ms{Ty}(X)$ and
-\emph{effect} $\epsilon \in \{\bot, \top\}$, a set of \textit{primitive instructions} $f \in
-\mc{I}_\epsilon(A, B)$, where $\epsilon \leq \epsilon' \implies \mc{I}_\epsilon(A, B) \subseteq
-\mc{I}_{\epsilon'}(A, B)$. 
-  
-We write $\mc{I}(A, B) = \bigcup_\epsilon\mc{I}_\epsilon(A, B)$, $\mc{I}_\epsilon = \bigcup_{A,
-B}\mc{I}_\epsilon(A, B)$, and $\mc{I} = \bigcup_\epsilon\mc{I}_\epsilon$.
-
-\TODO{segue?}
-
-We'll call a tuple $Sg = (\mc{T}, \mc{I})$ of types and instructions over these types an
-\emph{\isotopessa{}-signature}.
-
-\TODO{the contexts be}
-
-A (variable) \textit{context} $\Gamma$ is a list of \textit{typing hypotheses} $\bhyp{x}{A}$,
-where $x$ is a variable name and $A$ is the type of that variable. Similarly, we define a
+A (variable) \textit{context} $\Gamma$ is a list of \textit{typing hypotheses} $\bhyp{x}{A}$, where
+$x$ is a variable name and $A$ is the type of that variable. Similarly, we define a
 \textit{label-context} to be a list of \textit{labels} $\lhyp{\ell}{A}$, where $A$ is the parameter
-type that must be passed on a jump to the label $\ell$.
+type that must be passed on a jump to the label $\ell$. The grammar for types, contexts, and
+label-contexts is given in Figure~\ref{fig:ssa-types}.
 
 \begin{figure}[H]
   \begin{center}
@@ -1193,9 +1169,20 @@ type that must be passed on a jump to the label $\ell$.
   \label{fig:ssa-types}
 \end{figure}
 
-\TODO{rework given that syntactic categories are given in Section~\ref{ssec:tt-ssa}; maybe do
-expressions-then-regions} As shown in Figure~\ref{fig:ssa-grammar}, \isotopessa{} terms are divided
-into two syntactic categories, each associated with a judgement:
+Our grammar in Figure~\ref{fig:ssa-grammar} was implicitly parameterised over a set of
+\emph{primitive instructions} $f \in \mc{I}$. In particular, for each pair $A, B \in \ms{Ty}(X)$ we
+specify a set of primitive instructions $f \in \mc{I}(A, B)$, with a subset of \emph{pure
+instructions} $\mc{I}_\bot(A, B)$. To allow us to write $\mc{I}_\epsilon$ for an \emph{effect}
+$\epsilon \in \{\top, \bot\}$, we denote $\mc{I}_\top(A, B) := \mc{I}(A, B)$.. In general, we define
+$\mc{I}_\epsilon = \bigcup_{A, B}\mc{I}_\epsilon(A, B)$, and $\mc{I} =
+\bigcup_\epsilon\mc{I}_\epsilon$. 
+
+We'll call a tuple $Sg = (\mc{T}, \mc{I})$ of types and instructions over these types an
+\emph{\isotopessa{}-signature}, and, for the rest of this section, work over a fixed signature.
+ 
+
+As shown in Figure~\ref{fig:ssa-grammar}, \isotopessa{} terms are divided into two syntactic
+categories, each associated with a judgement:
 \begin{itemize}
   \item \emph{Expressions} $a, b, c, e$, which are typed with the judgement
   $\hasty{\Gamma}{\epsilon}{a}{A}$, which says that under the typing context $\Gamma$, the
@@ -1208,7 +1195,6 @@ into two syntactic categories, each associated with a judgement:
   $\haslb{\Gamma}{r}{\ms{L}}$, which states that given that $\Gamma$ is live at the unique entry
   point, $r$ will either loop forever or branch to one of the exit labels in $\ell(A) \in \ms{L}$
   with an argument of type $A$.
-  \TODO{refine this explanation}
 \end{itemize}
 
 The typing rules for expressions are given in Figure~\ref{fig:ssa-expr-rules}. In particular,
@@ -1236,7 +1222,6 @@ expressions may be built up from the following fairly standard primitives:
 Traditional presentations of SSA use a boolean type instead of sum types. Naturally, booleans can be
 encoded with sum types as $\mb{1} + \mb{1}$. If-then-else is then a $\ms{case}$ which ignores the
 unit payloads, so that $\ite{e_1}{e_2}{e_3} := \caseexpr{e_1}{()}{e_2}{()}{e_3}$. 
-
 
 \begin{figure}
   \begin{gather*}
@@ -1318,15 +1303,12 @@ We now move on to \emph{regions}, which can be typed as follows:
 
 \subsection{Metatheory}
 
-\TODO{do a clarification pass here}
-
-We can now begin to state the syntactic metatheory of \isotopessa{}. One of the
-most important metatheorems, and a basic sanity check of our type theory, is
-\emph{weakening}; essentially, if things typecheck in a context $\Delta$, and
-$\Gamma$ contains all the variables of $\Delta$ (written $\Gamma \leq \Delta$,
-pronounced ``$\Gamma$ \emph{weakens} $\Delta$''), then these things should
-typecheck in the context $\Gamma$ as well. That is, ``$\Gamma$ typechecks more
-terms than $\Delta$''.
+We can now begin to state the syntactic metatheory of \isotopessa{}. One of the most important
+metatheorems, and a basic sanity check of our type theory, is \emph{weakening}; essentially, if
+things typecheck in a context $\Delta$, and $\Gamma$ contains all the variables of $\Delta$ (written
+$\Gamma \leq \Delta$, pronounced ``$\Gamma$ \emph{weakens} $\Delta$''), then these things should
+typecheck in the context $\Gamma$ as well. That is, ``$\Gamma$ typechecks more terms than
+$\Delta$''.
  
 Making things more formal, we introduce the rules for weakening $\Gamma \leq \Delta$ in the first
 part of Figure \ref{fig:ssa-meta-rules}: \brle{wk-nil} says that the empty context weakens itself,
@@ -1413,10 +1395,8 @@ particular,
   adjoined takes $\Gamma$ to $\Delta, \bhyp{x}{A}$
 \end{itemize}
 To \emph{use} a substitution, we simply need to perform standard capture-avoiding substitution (see
-Figure \ref{fig:ssa-subst-def} in the appendix.)
-
-This gives us everything we need to state the \emph{substitution lemma}, which
-is as follows:
+Figure \ref{fig:ssa-subst-def} in the appendix). We can now go ahead and state the
+\emph{substitution lemma} as follows:
 \begin{lemma}[Substitution]
   Given $\issubst{\gamma}{\Gamma}{\Delta}$, we have that:
   \begin{enumerate}[label=(\alph*)]
@@ -1441,9 +1421,8 @@ and $\issubst{\gamma}{\Gamma}{\Delta}$; the composition associates as expected:
 $[[\gamma_1]\gamma_2]\gamma_3 = [\gamma_1]([\gamma_2]\gamma_3)$, and has identity $[\ms{id}]\gamma =
 \gamma$, yielding a category of substitutions with variable contexts $\Gamma$ as objects.
 
-\TODO{clarify extension operators and why they matter; push to appendix / remove?}
-
-We will define a ``left extension'' operation $\lupg{\cdot}_\Xi$ yielding
+Given a substitution $\issubst{\gamma}{\Gamma}{\Delta}$ and context $\Xi$ disjoint from $\Gamma$ and
+$\Delta$, we may define a ``left extension'' operation $\lupg{\cdot}_\Xi$ yielding
 $\issubst{\lupg{\gamma}_{\Xi}}{\Xi, \Gamma}{\Xi, \Delta}$ which appends the identity substitution
 for each variable in $\Xi$ in the obvious manner:
 \begin{equation}
@@ -1456,12 +1435,15 @@ $\issubst{\rupg{\gamma}_{\Xi}}{\Gamma, \Xi}{\Delta, \Xi}$ as follows:
   \rupg{\gamma}_{\cdot} = \gamma \qquad 
   \rupg{\gamma}_{\Xi, \bhyp{x}{A}} = \rupg{\gamma}_{\Xi}, x \mapsto x
 \end{equation}
-We will usually infer $\Xi$ from context; sometimes, for convenience, we may even omit the
-$\rupg{\cdot}, \lupg{\cdot}$ operators entirely, due to the fact that for any $\gamma$, we have
-$[\gamma]a = [\lupg{\Gamma}_\Xi]a = [\rupg{\gamma}_\Xi]a$. The identity substitution on $\Gamma$ can
-therefore be written as $\rupg{\cdot}_{\Gamma}$. One other particularly important form of
-substitution is that of substituting an expression $a$ for an individual variable $x$, which we will
-write $[a/x] := \lupg{(x \mapsto a)}$.
+In particular, we note that the identity substitution on $\Gamma$ can be written as
+$\rupg{\cdot}_{\Gamma}$; in general, we have $[\gamma]a = [\lupg{\Gamma}_\Xi]a =
+[\rupg{\gamma}_\Xi]a$. We will usually infer $\Xi$ from context.
+% ; sometimes, for convenience, we may even omit the
+% $\rupg{\cdot}, \lupg{\cdot}$ operators entirely, due to the fact that for any $\gamma$, we have
+% $[\gamma]a = [\lupg{\Gamma}_\Xi]a = [\rupg{\gamma}_\Xi]a$. 
+
+One other particularly important form of substitution is that of substituting an expression $a$ for
+an individual variable $x$, which we will write $[a/x] := \lupg{(x \mapsto a)}$.
 
 Finally, just as we can generalize weakening by substituting expressions for variables via
 substitution, we can generalize label weakening by substituting \emph{labels} for
@@ -1498,10 +1480,12 @@ manner:
   \lupg{\sigma}_{\cdot} = \sigma \qquad
   \lupg{\sigma}_{\ms{K}, \ell(A)} = \ell(x) \mapsto \brb{\ell}{x}, \lupg{\sigma}_{\ms{K}}
 \end{gather}
-As for variable substitutions, we will often omit $\ms{L}$ when it is clear from the context, or
-even omit the $\rupg{\cdot}$ and $\lupg{\cdot}$ operators entirely, due to the fact that for any
-$\sigma$, we have $[\sigma]r = [\rupg{\sigma}_{\ms{K}}]r = [\lupg{\sigma}_{\ms{K}}]r$. We also
-define the shorthand $[\ell / \kappa] = [\lupg{\kappa(x) \mapsto \brb{\ell}{x}}]$.
+As for variable substitutions, we will often omit $\ms{L}$ when it is clear from the context.
+% , or
+% even omit the $\rupg{\cdot}$ and $\lupg{\cdot}$ operators entirely, due to the fact that for any
+% $\sigma$, we have $[\sigma]r = [\rupg{\sigma}_{\ms{K}}]r = [\lupg{\sigma}_{\ms{K}}]r$. 
+We also define the shorthand $[\ell / \kappa] = [\lupg{\kappa(x) \mapsto \brb{\ell}{x}}]$ for
+single-label substitutions.
 
 \begin{figure}
   \begin{gather*}
@@ -1535,10 +1519,8 @@ define the shorthand $[\ell / \kappa] = [\lupg{\kappa(x) \mapsto \brb{\ell}{x}}]
 
 \subsection{Expressions}
 
-\TODO{do a clarification pass here}
-
-We can now give an equational theory for \isotopessa{} expressions. In particular,
-we will inductively define an equivalence relation
+We can now give an equational theory for \isotopessa{} expressions. In particular, we will
+inductively define an equivalence relation
 $
 \tmeq{\Gamma}{\epsilon}{a}{a'}{A}
 $
