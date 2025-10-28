@@ -455,14 +455,13 @@ Figure~\ref{fig:3addr-grammar}, with some slight adjustments to the usual presen
   \item \emph{Constants} $c$ are interpreted as nullary instructions $c()$.
   \item \emph{Conditional branches} $\ite{o}{\tau}{\tau'}$ are desugared to case-statements
   $\casestmt{o}{y}{\tau}{z}{\tau'}$ on a sum type $x : \mb{1} + \mb{1}$. This is equivalent in power
-  to regular conditional branches inthe usual low-level setting with fallible operators $\rho_i :
-  A_1 + A_2 \to A_i$, while allowing our work to generalize easily to higher-level, pure settings as
-  well.
+  to regular conditional branches, while allowing our work to generalize easily to higher-level
+  settings as well.
 
-  We go further and allow case-statements (and hence if-statements) in a terminator to be
+  Furthermore, we allow case-statements (and hence if-statements) in a terminator to be
   \emph{nested}, allowing us to emulate switch-statements $\ms{switch}(o) \{c_1 : \tau_1 ,
   ... , c_n : \tau_n\}$ as nested case-statements. This does not add any additional
-  expressive power, but prevents the proliferation of intermediate basic-blocks.
+  expressive power, but avoids the proliferation of intermediate basic-blocks.
 
   \item \emph{Return statements} $\ms{ret}\;v$ are desugared to branches $\brb{\ell_{\ms{exit}}}{v}$
   to a distinguished exit label $\ell_{\ms{exit}}$
@@ -496,8 +495,8 @@ Figure~\ref{fig:fact-3addr}, by:
 \begin{itemize}
   \item Converting structured control flow (e.g., \ms{while}) into unstructured jumps between basic
   blocks labelled \ms{start}, \ms{loop}, and \ms{body}.
-  \item Replacing subexpressions like $i + 1$ in $a * (i + 1)$ with \ms{let}-bindings so that every
-  expression in our program is atomic.
+  \item Converting composite expressions like $a * (i + 1)$ into a sequence of definitions naming each
+  subexpression. 
 \end{itemize}
 
 \begin{figure}
@@ -506,7 +505,7 @@ Figure~\ref{fig:fact-3addr}, by:
       & \ms{let}\;n = 10; \\
       & \ms{let\;mut}\;i = 1; \\
       & \ms{let\;mut}\;a = 1; \\
-      & \ms{while}\;i_0 < n\;\{ \\
+      & \ms{while}\;i < n\;\{ \\
       & \quad a = a * (i + 1) \\
       & \quad i = i + 1; \\
       & \} \\
@@ -548,19 +547,14 @@ scope at a specific point $P$ if and only if all execution paths from the progra
 $P$ pass through a definition $D$ for $x$. In this case, we say that the definition $D$
 \emph{strictly dominates} $P$. The relation on basic blocks ``$A$ strictly dominates $B$"
 intersected with ``$A$ is a \emph{direct predecessor} of $B$" forms a tree called the
-\emph{dominance tree} of the CFG -- this can be computed in nearly linear time
+\emph{dominance tree} of the CFG. % -- this can be computed in nearly linear time
 \cite{cytron-ssa-intro-91}.
 
-Despite this normalization, many optimizations remain difficult to express in this format because a
-variable's value may be set by multiple definitions throughout the program's execution. To improve
-our ability to reason about programs, we introduce the \emph{static single assignment} restriction,
-originally proposed by \citet{alpern-ssa-original-88}, which states that every variable must be
-defined at exactly one point in the program. We can intuitively represent this as every variable
-being given by an immutable \ms{let}-binding. In particular, given a variable $x$, which we can now
-associate to its unique definition $D_x$, $x$ is in scope at a point $P$ if and only if $D_x$
-strictly dominates $P$.
+Even though three address code was designed to simplify flow analysis, many optimizations remain difficult to express in this format. Because a variable's value may be set by multiple definitions throughout the program's execution, variables do not have stable values, and so it is not in general safe to substitute a definition for a variable. To improve our ability to reason about programs, we introduce the \emph{static single assignment} restriction, originally proposed by \citet{alpern-ssa-original-88}, which states that every variable must be defined at exactly one point in the program. Because there is a unique definition for each variable, substitution is valid.
 
-A basic block can be converted to SSA form by numbering each definition of a variable,
+We can we  intuitively think of each variable as being defined by an immutable \ms{let}-binding, and a variable $x$ is in scope at a program point $P$, if and only if it sunique definition site $D_x$ strictly dominates $P$.
+
+A given basic block can be converted to SSA form by numbering each definition of a variable,
 effectively changing references to $x$ to references to $x_t$, i.e. ``$x$ at time $t$.'' For
 example, we could rewrite
 \begin{equation*}
@@ -573,16 +567,20 @@ example, we could rewrite
 This transformation enables algebraic reasoning about expressions involving each $x_t$. However,
 since we can only define a variable once in SSA form, expressing programs with loops and branches
 becomes challenging. For example, na\"ively trying to lower the program in
-Figure~\ref{fig:fact-3addr} into SSA form would not work, since the $i$ definition $i = i + 1$ can
+Figure~\ref{fig:fact-3addr} into SSA form would not work, since the reference to $i$ in the right-hand-side of the statement $i = i + 1$ can
 refer to \emph{either} the previous value of $i$ from the last iteration of the loop \emph{or} the
 original value $i = 1$. The classical solution is to introduce \emph{$\phi$-nodes}, which select a
 value based on the predecessor block from which control arrived. We give the lowering of our program
-into SSA with $\phi$-nodes in Figure~\ref{fig:fact-ssa}. 
+into SSA with $\phi$-nodes in Figure~\ref{fig:fact-ssa}.
+
+\TODO{Fix figure 3(b) with start node reference}
 
 \citet{cytron-ssa-intro-91} introduced the first efficient algorithm to lower a program in 3-address
 code to valid SSA while introducing a minimum number of $\phi$-nodes, making SSA practical for
 widespread use as an intermediate representation. Unfortunately, $\phi$-nodes do not have an obvious
-operational semantics. Additionally, they require us to adopt more complex scoping rules than simple
+operational semantics.
+
+Additionally, they require us to adopt more complex scoping rules than simple
 dominance-based scoping. For example, in the basic block \ms{loop} in Figure~\ref{fig:fact-ssa},
 $i_0$ evaluates to 1 if we came from \ms{start} and to $i_1$ if we came from \ms{body}. Similarly,
 $a_0$ evaluates to either 1 or $a_1$ based on the predecessor block. This does not obey
