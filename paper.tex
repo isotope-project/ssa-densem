@@ -1317,10 +1317,13 @@ defined in this manner induces a partial order on contexts.
 
 We may go further and introduce weakening for \emph{label contexts} $\ms{L} \leq \ms{K}$
 analogously, except that we will flip the ordering such that $\ms{L}$ weakens $\ms{K}$ if it
-contains \emph{fewer}, rather than \emph{more}, labels than $\ms{K}$. This is a bit unconventional,
-since in this case $\ms{L}$ types \emph{fewer} regions than $\ms{K}$, but it will make our
-metatheory and denotational semantics come out more clearly, since it corresponds to label-contexts
-being ``on the right'' (with variable contexts ``on the left''). In particular, in Figure
+contains \emph{fewer}, rather than \emph{more}, labels than $\ms{K}$. 
+Note that $\ms{L}$ types \emph{fewer} regions than $\ms{K}$. This makes the
+metatheory come out more clearly, since label-contexts
+are ``on the right'' (with variable contexts ``on the left'').
+
+
+In particular, in Figure
 \ref{fig:ssa-meta-rules}, we introduce the rules \brle{lwk-nil}, which says that the empty label
 context weakens itself, \brle{lwk-skip}, which says that if $\ms{L}$ weakens $\ms{K}$, then $\ms{L}$
 weakens $\ms{K}$ with an arbitrary label added, and \brle{lwk-cons}, which says that if $\ms{L}$
@@ -1604,7 +1607,8 @@ We also include the following \emph{type-directed} rules as part of our congruen
       {\hasty{\Gamma}{\bot}{a}{\mb{1}}}
       {\hasty{\Gamma}{\bot}{a'}{\mb{1}}}
       {\tmeq{\Gamma}{\epsilon}{a}{a'}{\mb{1}}}
-  \end{gather*}
+    \end{gather*}
+    \TODO{replace initial with initial-expr to make it stable under substitution}
   \caption{Congruence rules for \isotopessa{} expressions}
   \Description{}
   \label{fig:ssa-expr-congr-rules}

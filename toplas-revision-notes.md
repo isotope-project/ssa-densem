@@ -23,7 +23,7 @@
 	presence of loops, because they are litmus-test focused. (So soundness of loop unrolling 
 	is not known!)
 
-   3. Concretely, what do we do?
+   3. Concretely, what do we do? [DONE}
 
       - We give a type system and equational theory for λSSA. 
       - We prove the soundness of syntactic substitution for this language. 
@@ -38,7 +38,7 @@
       	that standard sequential SSA optimizations like loop unrolling remain valid in the 
 	presence of weak memory. 
 
-   4. Of what we did, what is new, and what is an application of known results?
+   4. Of what we did, what is new, and what is an application of known results? [DONE]
 
       - Freyd categories and Elgot structure are categorical machinery known from the literature. 
       - As far as we know, a type system + equational theory complete for this structure 
@@ -72,10 +72,6 @@
    - What are the technical contributions, relative to the related work?
    - What's the connection between memory models and our SSA model?
    - What are the applications of the results, including completeness?
-
-
-
-
 
 
 

@@ -7,7 +7,11 @@ paper.pdf: paper.tex references.bib acmart.cls
 
 refined.pdf: refined.tex references.bib acmart.cls 
 	latexmk -pdf refined.tex
-	
+
+submission: refined.pdf
+	pdftk refined.pdf cat 1-27 output refined-submission.pdf 
+	pdftk refined.pdf cat 28-end output refined-appendix.pdf
+
 # Needs paper.bbl for arXiv reasons, but I'm too lazy to make that
 # a separate target, so I'm adding paper.pdf as a dep  
 arxiv.tar.gz: paper.tex references.bib paper.pdf 
