@@ -573,8 +573,6 @@ original value $i = 1$. The classical solution is to introduce \emph{$\phi$-node
 value based on the predecessor block from which control arrived. We give the lowering of our program
 into SSA with $\phi$-nodes in Figure~\ref{fig:fact-ssa}.
 
-\TODO{Fix figure 3(b) with start node reference}
-
 \citet{cytron-ssa-intro-91} introduced the first efficient algorithm to lower a program in 3-address
 code to valid SSA while introducing a minimum number of $\phi$-nodes, making SSA practical for
 widespread use as an intermediate representation. Unfortunately, $\phi$-nodes do not have an obvious
@@ -881,6 +879,22 @@ compositional reasoning about program transformations such as:
   \item Combinations of the two, such as rewriting $\ms{if}\;x > 0\;\ms{then}\;0 - x\;\ms{else}\;
   x$ to $\ms{abs}(x)$.
 \end{itemize}
+
+\TODO{
+  \begin{itemize}
+    \item What we want to do is \emph{substitution}: replacing a variable with it's definition
+    \item So fuse values $v$ and operations $o$ to get \emph{expressions}
+    \item But, we also want to represent things like \ms{abs}: so let-bindings and case-expressions
+    \item This adds no expressive power: we can lower in the obvious manner
+    \item Likewise, we fuse $r$ and $\tau$ to allow inlining regions
+    \item Specifically, consider Ye Olde Unconditional Jump. 
+      \begin{equation*}
+        \where{\letstmt{x}{a}{\brb{\ell}{x}}}{\wbranch{\ell}{y}{r}} 
+        \teqv \letstmt{y}{a}{r}
+      \end{equation*}
+      Want this to be unconditionally valid.
+  \end{itemize}
+}
 
 Our current syntax, however, makes it difficult to reason about \emph{substitution}. In particular,
 replacing a variable with its definition is not generally possible, even if that variable's
