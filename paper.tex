@@ -876,74 +876,124 @@ compositional reasoning about program transformations such as:
   \item \textit{Control-flow rewrites}, such as jump-threading or fusing two identical branches of
   an \ms{if}-statement
   \item \textit{Algebraic rewrites}, such as simplifying arithmetic expressions
-  \item Combinations of the two, such as rewriting $\ms{if}\;x > 0\;\ms{then}\;0 - x\;\ms{else}\;
-  x$ to $\ms{abs}(x)$.
+  \item Combinations of the two, such as rewriting ``$\ms{if}\;x > 0\;\ms{then}\;0 - x\;\ms{else}\;
+  x$'' to ``$\ms{abs}(x)$''.
 \end{itemize}
+To help achieve this, we will slightly generalize our syntax by:
+\begin{enumerate}
+  \item Fusing the syntactic categories $o, v$ of operations and values into the syntactic category
+  $a$ of \emph{expressions} \label{ssa-change-val}
+  \item Fusing the syntactic category $\tau$ of terminators into the syntactic category of regions
+  $r$. \label{ssa-change-reg}
+  \item Extending expressions $a$ to allow \emph{let-expressions} ``$\letexpr{x}{a}{b}$'' and
+  \emph{case-expressions} ``$\caseexpr{a}{x}{b}{y}{c}$'' \label{ssa-change-expr}
+\end{enumerate}
+This leaves us with our final language, \isotopessa{}, the resulting grammar for which is given in
+Figure~\ref{fig:ssa-grammar}. It is easy to see that these changes add no expressive power to
+lexical SSA: we can desugar \ref{ssa-change-val} by introducing names for anonymous sub-expressions,
+\ref{ssa-change-reg} by introducing names for anonymous sub-regions, and \ref{ssa-change-expr} by
+floating out let-bindings and case-statements in the obvious manner, introducing labels as
+necessary.
 
-\TODO{
-  \begin{itemize}
-    \item What we want to do is \emph{substitution}: replacing a variable with it's definition
-    \item So fuse values $v$ and operations $o$ to get \emph{expressions}
-    \item But, we also want to represent things like \ms{abs}: so let-bindings and case-expressions
-    \item This adds no expressive power: we can lower in the obvious manner
-    \item Likewise, we fuse $r$ and $\tau$ to allow inlining regions
-    \item Specifically, consider Ye Olde Unconditional Jump. 
-      \begin{equation*}
-        \where{\letstmt{x}{a}{\brb{\ell}{x}}}{\wbranch{\ell}{y}{r}} 
-        \teqv \letstmt{y}{a}{r}
-      \end{equation*}
-      Want this to be unconditionally valid.
-  \end{itemize}
-}
+Change \ref{ssa-change-val} allows us to effectively reason about \emph{substitution}: replacing the
+value of a variable (which is a value $v$) with its definition (which is an instruction $o$). This
+can be used as a building block for optimizations such as common subexpression elimination and
+global value numbering; combined with change \ref{ssa-change-expr}, we can also reason algebraically
+about ``branching'' operations like conditional move and absolute value.
 
-Our current syntax, however, makes it difficult to reason about \emph{substitution}. In particular,
-replacing a variable with its definition is not generally possible, even if that variable's
-definition is \emph{pure}, since a valid expression $f\;(x, y)$ might become an invalid expression
-$f\;(a + b, 0)$. This means that algebraic rewrites need to be able to look through variable
-definitions, inserting and removing them as necessary: this is may actually be \emph{beneficial} in
-practical implementations (where each node of an expression-tree can correspond one-to-one with an
-instruction), but makes it much more cumbersome to do theoretical work.
+On the other hand, \ref{ssa-change-reg} lets us replace an unconditional branch $\brb{\ell}{a}$
+(which is a terminator $\tau$) with the code \emph{pointed to} by the label $\ell$ (which is a
+region $r$), allowing us to perform the jump-threading optimization
+\begin{equation*}
+  \where{\letstmt{x}{a}{\brb{\ell}{b}}}{\wbranch{\ell}{y}{r}}
+  \teqv \where{\letstmt{x}{a}{\letstmt{y}{b}{r}}}{\wbranch{\ell}{y}{r}}
+\end{equation*}
+While both sides of this equation are valid lexical SSA programs, by loosening our syntax slightly,
+we can \emph{unconditionally} replace jumps with regions, without worrying about jumps nested in
+case statements or fusing \ms{where}-blocks. This, especially combined with change
+\ref{ssa-change-expr}, makes it much easier to verify optimizations such as
+\begin{align*}
+  & \where{\casestmt{a}{x}{\brb{\ell}{(\iota_r\;x)}}{x}{\brb{\ell}{(\iota_l\;x)}}}
+        {\wbranch{\ell}{y}{
+          \casestmt{y}{z}{\ms{ret}\;(\iota_r\;z)}{z}{\ms{ret}\;(\iota_l\;z)}
+        }} \\
+  &\teqv \casestmt{a} 
+      {x}{\casestmt{\iota_r\;x}{z}{\ms{ret}\;(\iota_r\;z)}{z}{\ms{ret}\;(\iota_l\;z)}   
+        \\ & \qquad\;\;}
+      {x}{\casestmt{\iota_l\;x}{z}{\ms{ret}\;(\iota_r\;z)}{z}{\ms{ret}\;(\iota_l\;z)}} \\
+  &\teqv \casestmt{a}
+      {x}{\ms{ret}(\iota_l\;x)}
+      {x}{\ms{ret}(\iota_r\;x)}
+   \teqv \ms{ret}\;(\casestmt{a}{x}{\iota_l\;x}{x}{\iota_r\;x})
+   \teqv \ms{ret}\;a
+\end{align*}
+by repeatedly applying a set of known-good rules, and, moreover, dramatically simplifies the form of
+the rules themselves.
 
-To fix this, instead of stratifying the left-hand-side of our bindings into operations $o$ and
-values $v$, we can instead fuse these into a single syntactic category of \emph{expressions} $a$.
-Conceptually, what we're doing is replacing variables $x$ with arbitrary expressions $a$. This
-clearly adds no expressive power, since we can introduce temporary variable names for each
-sub-expression of $a$ to go back to standard SSA. We can justify allowing let-bindings in
-expressions $a$ in the same way: we get an equivalent program by ``floating'' the let-binding out of
-the expression and into the main lexical SSA program, $\alpha$-renaming as necessary to ensure the
-let-binding binds a fresh variable.
+% \TODO{
+%   \begin{itemize}
+%     \item What we want to do is \emph{substitution}: replacing a variable with it's definition
+%     \item So fuse values $v$ and operations $o$ to get \emph{expressions}
+%     \item But, we also want to represent things like \ms{abs}: so let-bindings and case-expressions
+%     \item This adds no expressive power: we can lower in the obvious manner
+%     \item Likewise, we fuse $r$ and $\tau$ to allow inlining regions
+%     \item Specifically, consider Ye Olde Unconditional Jump. 
+%       \begin{equation*}
+%         \where{\letstmt{x}{a}{\brb{\ell}{x}}}{\wbranch{\ell}{y}{r}} 
+%         \teqv \letstmt{y}{a}{r}
+%       \end{equation*}
+%       Want this to be unconditionally valid.
+%   \end{itemize}
+% }
 
-To be able to effectively combine control-flow rewrites with algebraic rewriting, such as in our
-absolute-value example, it helps to be able to represent conditional control-flow in our expression
-language. We can do this by allowing expressions to contain case-statements, giving us the grammar
-for expressions $a$ in Figure~\ref{fig:ssa-grammar}. The justification that this adds no expressive
-power is slightly more fiddly, and resembles to some degree the transformation into
-continuation-passing style. In particular, given a program of the form
-$$
-\letstmt{x}{\caseexpr{a}{y}{b}{z}{c}}{r}
-$$
-and assuming without loss of generality that $a = t$ is a variable (we can first pull out $a$ into a
-let-binding, essentially converting our expressions to A-normal form) we can obtain an equivalent
-program with the case-expression removed by
-\begin{itemize}
-  \item Introducing a new label corresponding to the rest of the program taking the value of the
-  case-expression as argument, $\ell_{\ms{rest}}(x): r'$, where $r'$ is $r$ (inductively) converted
-  into standard SSA
-  \item Compiling $a$ to SSA and inserting a branch parametrized by the resulting value $t_a$ to
-  either:
-  \begin{itemize}
-    \item A new label $\ell_{\ms{left}}(y)$, which computes $b$, binding its value to $t_b$, and jumps
-    to $\ell_{\ms{rest}}(t_b)$, or
-    \item A new label $\ell_{\ms{right}}(z)$, which computes $c$, binding its value to $t_c$, and
-    jumps to $\ell_{\ms{rest}}(t_c)$
-  \end{itemize}
-\end{itemize}
-We'd like to be able to reason like this without fiddling with temporary labels. More generally,
-we'd like to perform \emph{label-substitution}, in which we replace an unconditional branch to a
-label $\ell$ with a region $r$; this allows us to directly reason about optimizations such as
-jump-threading, inlining, and loop-unrolling. The easiest way to do this is simply to fuse the
-syntactic categories $r, \tau$ of regions and terminators respectively, yielding our final
-\isotopessa{} language, whose grammar is given in Figure~\ref{fig:ssa-grammar}.
+% Our current syntax, however, makes it difficult to reason about \emph{substitution}. In particular,
+% replacing a variable with its definition is not generally possible, even if that variable's
+% definition is \emph{pure}, since a valid expression $f\;(x, y)$ might become an invalid expression
+% $f\;(a + b, 0)$. This means that algebraic rewrites need to be able to look through variable
+% definitions, inserting and removing them as necessary: this is may actually be \emph{beneficial} in
+% practical implementations (where each node of an expression-tree can correspond one-to-one with an
+% instruction), but makes it much more cumbersome to do theoretical work.
+
+% To fix this, instead of stratifying the left-hand-side of our bindings into operations $o$ and
+% values $v$, we can instead fuse these into a single syntactic category of \emph{expressions} $a$.
+% Conceptually, what we're doing is replacing variables $x$ with arbitrary expressions $a$. This
+% clearly adds no expressive power, since we can introduce temporary variable names for each
+% sub-expression of $a$ to go back to standard SSA. We can justify allowing let-bindings in
+% expressions $a$ in the same way: we get an equivalent program by ``floating'' the let-binding out of
+% the expression and into the main lexical SSA program, $\alpha$-renaming as necessary to ensure the
+% let-binding binds a fresh variable.
+
+% To be able to effectively combine control-flow rewrites with algebraic rewriting, such as in our
+% absolute-value example, it helps to be able to represent conditional control-flow in our expression
+% language. We can do this by allowing expressions to contain case-statements, giving us the grammar
+% for expressions $a$ in Figure~\ref{fig:ssa-grammar}. The justification that this adds no expressive
+% power is slightly more fiddly, and resembles to some degree the transformation into
+% continuation-passing style. In particular, given a program of the form
+% $$
+% \letstmt{x}{\caseexpr{a}{y}{b}{z}{c}}{r}
+% $$
+% and assuming without loss of generality that $a = t$ is a variable (we can first pull out $a$ into a
+% let-binding, essentially converting our expressions to A-normal form) we can obtain an equivalent
+% program with the case-expression removed by
+% \begin{itemize}
+%   \item Introducing a new label corresponding to the rest of the program taking the value of the
+%   case-expression as argument, $\ell_{\ms{rest}}(x): r'$, where $r'$ is $r$ (inductively) converted
+%   into standard SSA
+%   \item Compiling $a$ to SSA and inserting a branch parametrized by the resulting value $t_a$ to
+%   either:
+%   \begin{itemize}
+%     \item A new label $\ell_{\ms{left}}(y)$, which computes $b$, binding its value to $t_b$, and jumps
+%     to $\ell_{\ms{rest}}(t_b)$, or
+%     \item A new label $\ell_{\ms{right}}(z)$, which computes $c$, binding its value to $t_c$, and
+%     jumps to $\ell_{\ms{rest}}(t_c)$
+%   \end{itemize}
+% \end{itemize}
+% We'd like to be able to reason like this without fiddling with temporary labels. More generally,
+% we'd like to perform \emph{label-substitution}, in which we replace an unconditional branch to a
+% label $\ell$ with a region $r$; this allows us to directly reason about optimizations such as
+% jump-threading, inlining, and loop-unrolling. The easiest way to do this is simply to fuse the
+% syntactic categories $r, \tau$ of regions and terminators respectively, yielding our final
+% \isotopessa{} language, whose grammar is given in Figure~\ref{fig:ssa-grammar}.
 
 \begin{figure}[H]
   \begin{center}
@@ -974,31 +1024,31 @@ syntactic categories $r, \tau$ of regions and terminators respectively, yielding
   \label{fig:ssa-grammar}
 \end{figure}
 
-We can view this change as allowing a case-statement, and the head of a where-block, to branch to
-anonymous basic blocks. For example, the program
-$$
-\where{\casestmt{e}{x}{s}{y}{t}}{L}
-$$
-is exactly equivalent to the lexical SSA program
-$$
-\where{\brb{\ell_1}(())}
-{
-  \wbranch{\ell_1}{-}{
-    \where{\casestmt{e}{t}{\brb{\ell_2}{t}}{\brb{\ell_3}{y}}{t}}{
-      \wbranch{\ell_2}{x}{s},
-      \wbranch{\ell_3}{y}{t},
-      L
-    }
-  }
-}
-$$
-It is hence easy to see that this change adds no additional expressive power; however, it makes it a
-lot easier to justify equivalences, like the one we used above, as simple step-by-step derivations:
-\begin{align*}
-\letstmt{x}{\caseexpr{a}{y}{b}{z}{c}}{r} 
-&\teqv \casestmt{a}{y}{\letstmt{x}{b}{r}}{z}{\letstmt{x}{c}{r}} \\
-&\teqv \where{\casestmt{a}{y}{\brb{\ell}{y}}{z}{\brb{\ell}{z}}}{\wbranch{\ell}{x}{r}}
-\end{align*}
+% We can view this change as allowing a case-statement, and the head of a where-block, to branch to
+% anonymous basic blocks. For example, the program
+% $$
+% \where{\casestmt{e}{x}{s}{y}{t}}{L}
+% $$
+% is exactly equivalent to the lexical SSA program
+% $$
+% \where{\brb{\ell_1}(())}
+% {
+%   \wbranch{\ell_1}{-}{
+%     \where{\casestmt{e}{t}{\brb{\ell_2}{t}}{\brb{\ell_3}{y}}{t}}{
+%       \wbranch{\ell_2}{x}{s},
+%       \wbranch{\ell_3}{y}{t},
+%       L
+%     }
+%   }
+% }
+% $$
+% It is hence easy to see that this change adds no additional expressive power; however, it makes it a
+% lot easier to justify equivalences, like the one we used above, as simple step-by-step derivations:
+% \begin{align*}
+% \letstmt{x}{\caseexpr{a}{y}{b}{z}{c}}{r} 
+% &\teqv \casestmt{a}{y}{\letstmt{x}{b}{r}}{z}{\letstmt{x}{c}{r}} \\
+% &\teqv \where{\casestmt{a}{y}{\brb{\ell}{y}}{z}{\brb{\ell}{z}}}{\wbranch{\ell}{x}{r}}
+% \end{align*}
 
 % \TODO{Enumerate the steps you will do next here}
 
