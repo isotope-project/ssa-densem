@@ -2328,7 +2328,71 @@ equivalent to
   \label{fig:ssa-where-rules}
 \end{figure}
 
-\TODO{either remove references to old dinaturality figures or pull them down here from git history}
+\begin{figure}
+  \begin{minipage}{.5\textwidth}
+    \begin{subfigure}{\textwidth}
+      \begin{align*}
+        & \ms{let}\;n = 10; \\
+        & \ms{br}\;\ms{loop}(1, 1) \\
+        & \ms{where}\;\ms{loop}(i_0, a_0): \{\\
+        & \quad \ms{if}\;i_0 < n\;\{ \\
+        & \qquad \ms{br}\;\ms{loop}(i_0 + 1, a_0 * (i_0 + 1)) \\
+        & \quad \}\;\ms{else}\;\{ \\
+        & \qquad \ms{ret}\;a_0 \\
+        & \quad \} \\
+        & \}
+      \end{align*}
+      \caption{Program from Figure \ref{fig:dominance-to-lexical} after substituting \ms{let}s.}
+      \label{fig:fact-subst-2}
+    \end{subfigure}
+    \begin{subfigure}{\textwidth}
+      \begin{align*}
+        & \ms{let}\;n = 10; \\
+        & \ms{br}\;\ms{loop}\;(0, 1) \\
+        & \ms{where}\;\ms{loop}(x, y): \{\\
+        & \quad \ms{let}\;(i_0, a_0) = (x + 1, y * (x + 1)); \\
+        & \quad \ms{if}\;i_0 < n\;\{ \\
+        & \qquad \ms{br}\;\ms{loop}(i_0, a_0) \\
+        & \quad \}\;\ms{else}\;\{ \\
+        & \qquad \ms{ret}\;a_0 \\
+        & \quad \} \\
+        & \}
+      \end{align*}
+      \caption{Equivalent to Figure \ref{fig:fact-zero} by \textit{dinaturality}}
+      \label{fig:fact-dinat}
+    \end{subfigure}
+  \end{minipage}%
+  \begin{subfigure}[c]{.5\textwidth}
+    \begin{align*}
+      & \ms{let}\;n = 10; \\
+      & \ms{br}\;\ms{loop}( \\
+      & \quad \ms{let}\;(x, y) = (0, 1); \\
+      & \quad(x + 1, y * (x + 1)) \\
+      & ) \\
+      & \ms{where}\;\ms{loop}(i_0, a_0): \{\\
+      & \quad \ms{if}\;i_0 < n\;\{ \\
+      & \qquad \ms{br}\;\ms{loop}( \\
+      & \qquad \quad \ms{let}\;(x, y) = (i_0, a_0); \\
+      & \qquad \quad (x + 1, y * (x + 1)) \\ 
+      & \qquad ) \\
+      & \quad \}\;\ms{else}\;\{ \\
+      & \qquad \ms{ret}\;a_0 \\
+      & \quad \} \\
+      & \}
+    \end{align*}
+    \caption{Equivalent to Figure \ref{fig:fact-subst-2} by congruence}
+    \label{fig:fact-zero}
+  \end{subfigure}
+  \caption{
+    Decomposing multi-block rewrites (from \ref{fig:fact-zero} to
+    \ref{fig:fact-subst-2}, and therefore to the more optimal program 
+    \ref{fig:fact-dinat}) into simple algebraic steps. By verifying each step, we can
+    verify complex optimizations through decomposition.
+  } 
+  \Description{}
+  \label{fig:fact-dinat-rewrites}
+\end{figure}
+
 
 This format illuminates a very important potential use for uniformity; namely, formalizing rewrites
 like those in Figure~\ref{fig:fact-dinat-rewrites}. In particular, consider a program of the form
