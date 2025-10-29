@@ -893,7 +893,7 @@ Figure~\ref{fig:ssa-grammar}. It is easy to see that these changes add no expres
 lexical SSA: we can desugar \ref{ssa-change-val} by introducing names for anonymous sub-expressions,
 \ref{ssa-change-reg} by introducing names for anonymous sub-regions, and \ref{ssa-change-expr} by
 floating out let-bindings and case-statements in the obvious manner, introducing labels as
-necessary.
+necessary; we discuss this in more detail in Section~\ref{ssec:ssa-normal}.
 
 Change \ref{ssa-change-val} allows us to effectively reason about \emph{substitution}: replacing the
 value of a variable (which is a value $v$) with its definition (which is an instruction $o$). This
@@ -2696,49 +2696,46 @@ in Section~\ref{ssec:completeness}.
 
 The relaxation of SSA to \isotopessa{} allows us to state our equational theory and handle
 substitution more conveniently. However, this approach may lead readers to question whether we have
-truly provided a type-theoretic presentation of SSA as it is used in practice. 
-
-\TODO{relate to SSA variants in Section~\ref{ssec:tt-ssa}, rather than strict, say \emph{standard};
-note that these are a syntactic inclusion relation and hence that $\equiv$ works on them}
-
-\TODO{we need a Cranelift-like name for SSA-with-expressions}
-
-\TODO{split out ANF typing into generalized-variable typing, operation typing}
-
-\TODO{}
-
-To address this concern, we introduce a subset of \isotopessa{} regions called \emph{strict
-regions}. We make the following claims about these strict regions:
+truly provided a type-theoretic presentation of SSA as it is used in practice. The argument given in
+the introduction for why this is the case can be re-stated as the following series of explicit
+claims:
 \begin{enumerate}
-  \item Every \isotopessa{} region can be converted to an equivalent strict region 
-  %using our equational theory 
+  \item Every \isotopessa{} region can be converted to an equivalent lexical SSA region
   \label{claim:ssa-conv}
-  \item Every strict region can be erased to a well-formed SSA program by removing
-  ``\ms{where}'' \label{claim:ssa-erase}
-  \item Every well-formed SSA program can be typed as an strict region purely by adding
-  ``\ms{where}'' \label{claim:ssa-wf}
-  \item Two strict regions which erase to the same SSA program are equivalent
-  % according to our equational theory
-  \label{claim:ssa-inj}
+  \item \label{claim:ssa-erase} Every lexical SSA region can be erased to a well-formed SSA program
+    by removing ``\ms{where}'' 
+  \item Every well-formed SSA program can be typed as a lexical SSA region purely by adding
+  ``\ms{where}'' \label{claim:ssa-wf}. Moreover, a way to do this can be found in nearly linear
+  time.
+  \item Two lexical SSA regions which erase to the same SSA program are equivalent
+    \label{claim:ssa-inj}
 \end{enumerate}
-We assert that strict regions correspond exactly to SSA, with the \ms{where}-bracketing serving as
-syntactic sugar to make our typing rules syntax-directed. Specifically, \ms{where}-blocks can be
-added algorithmically by computing dominance relationships between basic blocks.
+Claim~\ref{claim:ssa-inj} implies that the mappings given in Claim~\ref{claim:ssa-erase} and
+Claim~\ref{claim:ssa-wf} establishes an equivalence, up to our equational theory, via lexical SSA
+and traditional SSA. In particular, we treat a lexical SSA region as an SSA program equipped with a
+\emph{semantically irrelevant} choice of dominator tree, represented by our \ms{where}-bracketing,
+which serves only to make our typing rules syntax-directed.
 
-Converting directly to strict SSA can be unwieldy. Therefore, we do this in two stages, first
-converting \isotopessa{} into to a subset corresponding to A-normal form (ANF) extended with
-mutually recursive \ms{where}-bindings, and then converting the ANF regions into strict regions.
+Converting directly to lexical SSA can be unwieldy. Therefore, we break the transformation down into
+two lowering passes: 
+\begin{enumerate}
+  \item We first convert \isotopessa{} into to a subset corresponding to A-normal form (ANF)
+extended with mutually recursive \ms{where}-bindings
+  \item We then convert the resulting ANF regions into lexical SSA
+\end{enumerate}
 
 \subsubsection{From \isotopessa{} to A-Normal Form}
+
+\TODO{kill typing rules; we only need a sub-grammar here. Adjust proof as needed.}
 
 Our first step is to extend the work of \citet{chakravarty-functional-ssa-2003}, by providing an
 algorithm for converting between \isotopessa{} and ANF in an equivalence preserving way. We begin by
 defining a typing judgement $\ahasty{\Gamma}{\epsilon}{a}{A}$ for \emph{atomic expressions} in
 Figure~\ref{fig:ssa-ops}. An atomic expression is either a single variable, a function application,
-an injection, a pair of variables, or the unit expression. We specifically forbid
-\ms{case}-expressions and \ms{let}-bindings at this level; they are required to appear only at the
-region level. It is obvious that $\ahasty{\Gamma}{\epsilon}{a}{A} \implies
-\hasty{\Gamma}{\epsilon}{a}{A}$. 
+an injection, a pair of variables, or the unit expression; these form a (strict) subset of the
+syntactic category $o$ of operations. In particular, we specifically forbid \ms{case}-expressions
+and \ms{let}-bindings at this level; they are required to appear only at the region level. It is
+obvious that $\ahasty{\Gamma}{\epsilon}{a}{A} \implies \hasty{\Gamma}{\epsilon}{a}{A}$. 
 
 We now present typing rules for ANF regions in Figure~\ref{fig:ssa-anf}. These rules mirror those
 for regions but with additional constraints: each \ms{let}-binding in a region must bind an atomic
@@ -2827,7 +2824,7 @@ We state the correctness of these functions in the following lemma:
       {\ahaslb{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{r}{\ms{L}}}
       {\ahaslb{\Gamma}{\letstmt{(x, y)}{e}{r}}{\ms{L}}} \\
     \prftree[r]{\rle{case-r}}
-      {\Gamma\;x \leq (A + B, \epsilon)}
+      {\Gamma\;x = A + B}
       {\ahaslb{\Gamma, \bhyp{y}{A}}{r}{\ms{L}}}
       {\ahaslb{\Gamma, \bhyp{z}{B}}{s}{\ms{L}}}
       {\ahaslb{\Gamma}{\casestmt{x}{y}{r}{z}{s}}{\ms{L}}} \\
@@ -2843,8 +2840,18 @@ We state the correctness of these functions in the following lemma:
 
 \subsubsection{From ANF to SSA}
 
-We now wish to give typing rules for strict regions. Since SSA consists of \emph{basic blocks}, that is,
-linear sequences of instructions followed by a terminator, we will introduce two mutually
+\TODO{lexical SSA region; not strict region}
+
+\TODO{kill rules; all we need is the grammar (already in intro, unlike ANF)}
+
+\TODO{we can probably simplify this dramatically; do we need the BB function...}
+
+\TODO{kill struct; we already gave it in intro}
+
+\TODO{kill standard SSA grammar; we already gave it in intro}
+
+We now wish to give typing rules for strict regions. Since SSA consists of \emph{basic blocks}, that
+is, linear sequences of instructions followed by a terminator, we will introduce two mutually
 recursive judgements:
 \begin{itemize}
   \item $\thaslb{\Gamma}{r}{\ms{L}}$, which states that $r$ is a terminator, which we model
@@ -4012,10 +4019,10 @@ can then be used to derive the following weakening lemmas:
   See Appendix~\ref{proof:weakening}.
 \end{proof}
 
-\TODO{
-  state rewriting in the appendix, if at all. If so, we probably want to use a separate judgement
-  for impute substitutions.  
-}
+% \TODO{
+%   state rewriting in the appendix, if at all. If so, we probably want to use a separate judgement
+%   for impure substitutions.  
+% }
 
 % Our first proper semantic theorem is that \emph{rewriting} is sound: if two (potentially impure!)
 % substitutions have pointwise equal semantics, then substituting by either yields a result with
@@ -4050,7 +4057,6 @@ can then be used to derive the following weakening lemmas:
 We can now give a denotational semantics to substitutions in which a substitution
 $\issubst{\gamma}{\Gamma}{\Delta}$ is interpreted as a pure morphism from $\dnt{\Gamma}$ to
 $\dnt{\Delta}$, as in Figure~\ref{fig:ssa-subst-sem}. 
-
 % Such a substitution is \emph{pure} if the
 % effect of each of its components is $\bot$, i.e., we have
 % \begin{equation}
