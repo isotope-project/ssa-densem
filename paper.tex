@@ -2721,7 +2721,12 @@ This means that the choice of where-bracketing that converts an SSA program into
 SSA program is semantically irrelevant. In other words, where-bracketing only makes dominance
 syntactically apparent, letting us give syntax-directed rules for typing SSA programs. 
 
-Converting directly to lexical SSA can be unwieldy. Therefore, we break the transformation down into
+We establish this claim in two phases. First, we will show that \isotopessa{} can be transformed
+(in linear space) into an equivalent lexical SSA program. Next, we will show that ordinary and lexical
+SSA can be transformed into one another by adding and removing where-blocks. 
+
+
+Converting \isotopessa{} directly to lexical SSA can be unwieldy. Therefore, we break the transformation down into
 two lowering passes: 
 \begin{enumerate}
   \item We first convert \isotopessa{} into to a subset corresponding to A-normal form (ANF)
@@ -2739,13 +2744,13 @@ regions with the syntactic category of regions $r$ and terminators $\tau$ fused.
 introduce the following predicates on syntax:
 \begin{itemize}
   \item $\isanf{r}$ means that the region $r$ is in ANF
-  \item $\isssa{r}$ means that the region $r$ is a lexical SSA region. 
-        We note that $\isssa{r} \implies \toanf{r}$.
+  \item $\isssa{r}$ means that the region $r$ is a lexical SSA region.  We note that $\isssa{r} \implies \isanf{r}$.
   \item $\isvalex{a}$ means that the expression $a$ can be parsed as a value $v$
   \item $\isopex{a}$ means that the expression $a$ can be parsed as an instruction $o$.
         We note that $\isvalex{a} \implies \isopex{a}$.
 \end{itemize}
 We can define a syntactic function to convert an \isotopessa{} region to ANF inductively as follows:
+\todo{make this a linear-space transformation, and mention it}
 \begin{equation}
   \begin{aligned}
     \toanf{\brb{\ell}{a}} &= \letanf{x}{a}{\brb{\ell}{x}} \\
@@ -2815,12 +2820,13 @@ The specification of these functions is given by the following lemma:
 
 \subsubsection{From ANF to (Lexical) SSA}
 
-We would now like to define a syntactic transformation from regions $r$ to equivalent lexical SSA
-regions $\tossa{r}$. To do this, we begin by giving a syntactic transformation $\ssawhere{r}{L}$
-from ANF regions $r$ \emph{targeting} labels in $L$ to syntactically equivalent lexical SSA
-regions:
+We would now like to define a syntactic linear-space transformation from regions $r$ to equivalent lexical SSA
+regions $\tossa{r}$. We do this by giving a pair of mutually syntactic transformations $\tossa{r}$
+converting a region to SSA, and $\ssawhere{r}{L}$
+from ANF regions $r$ \emph{targeting} labels in $L$ to lexical SSA.
 \begin{equation}
   \begin{aligned}
+    \tossa{r} & = \ssawhere{\toanf{r}}{\cdot} \\[1em]
     \ssawhere{t}{(\wbranch{\ell_i}{x_i}{t_i},)_i} 
       &= \where{t}{(\wbranch{\ell_i}{x_i}{t_i},)_i} \qquad \text{where}\;t\;\text{is a terminator}
       \\
@@ -2834,10 +2840,7 @@ regions:
       &= \ssawhere{r}{(L, (\wbranch{\ell_i}{x_i}{\tossa{t_i}},)_i)}
   \end{aligned}
 \end{equation}
-We can then trivially define
-\begin{equation}
-  \tossa{r} = \ssawhere{\toanf{r}}{\cdot}
-\end{equation}
+
 The specification of these functions is given by the following lemma
 \begin{lemma}[name=SSA conversion, restate=ssaconversion]
   Given an arbitrary region $r$,
