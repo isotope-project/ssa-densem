@@ -121,6 +121,10 @@
 \newcommand{\brle}[1]{{\textsf{#1}}}
 
 \newcommand{\toanf}[1]{\ms{ANF}(#1)}
+\newcommand{\isanf}[1]{\ms{IsANF}(#1)}
+\newcommand{\isvalex}[1]{\ms{IsVal}(#1)}
+\newcommand{\isopex}[1]{\ms{IsOp}(#1)}
+\newcommand{\isssa}[1]{\ms{IsSSA}(#1)}
 \newcommand{\letanf}[3]{\ms{ANF}_{\ms{let}}(#1, #2, #3)}
 \newcommand{\tossa}[1]{\ms{SSA}(#1)}
 \newcommand{\ssawhere}[2]{\ms{SSA}_{\ms{a}}(#1, #2)}
@@ -2726,23 +2730,21 @@ extended with mutually recursive \ms{where}-bindings
 
 \subsubsection{From \isotopessa{} to A-Normal Form}
 
-\TODO{kill typing rules; we only need a sub-grammar here. Adjust proof as needed.}
-
 Our first step is to extend the work of \citet{chakravarty-functional-ssa-2003}, by providing an
-algorithm for converting between \isotopessa{} and ANF in an equivalence preserving way. We begin by
-defining a typing judgement $\ahasty{\Gamma}{\epsilon}{a}{A}$ for \emph{atomic expressions} in
-Figure~\ref{fig:ssa-ops}. An atomic expression is either a single variable, a function application,
-an injection, a pair of variables, or the unit expression; these form a (strict) subset of the
-syntactic category $o$ of operations. In particular, we specifically forbid \ms{case}-expressions
-and \ms{let}-bindings at this level; they are required to appear only at the region level. It is
-obvious that $\ahasty{\Gamma}{\epsilon}{a}{A} \implies \hasty{\Gamma}{\epsilon}{a}{A}$. 
-
-We now present typing rules for ANF regions in Figure~\ref{fig:ssa-anf}. These rules mirror those
-for regions but with additional constraints: each \ms{let}-binding in a region must bind an atomic
-expression, and case-statements and branches must operate on variables. This ensures that each
-binding corresponds to a single SSA instruction. It is similarly obvious that
-$\ahaslb{\Gamma}{r}{\ms{L}}$. We can now define a syntactic function to convert an \isotopessa{}
-region to ANF inductively as follows:
+algorithm for converting between \isotopessa{} and ANF in an equivalence-preserving way. We define
+the ANF regions, whose grammar is given in Figure~\ref{fig:anf-grammar}, to be \isotopessa{} regions
+with expressions restricted to operations $o$; equivalently, we can view ANF regions as lexical SSA
+regions with the syntactic category of regions $r$ and terminators $\tau$ fused. We may now
+introduce the following predicates on syntax:
+\begin{itemize}
+  \item $\isanf{r}$ means that the region $r$ is in ANF
+  \item $\isssa{r}$ means that the region $r$ is a lexical SSA region. 
+        We note that $\isssa{r} \implies \toanf{r}$.
+  \item $\isvalex{a}$ means that the expression $a$ can be parsed as a value $v$
+  \item $\isopex{a}$ means that the expression $a$ can be parsed as an instruction $o$.
+        We note that $\isvalex{a} \implies \isopex{a}$.
+\end{itemize}
+We can define a syntactic function to convert an \isotopessa{} region to ANF inductively as follows:
 \begin{equation}
   \begin{aligned}
     \toanf{\brb{\ell}{a}} &= \letanf{x}{a}{\brb{\ell}{x}} \\
@@ -2769,16 +2771,19 @@ where we define $\letanf{x}{a}{r}$ by induction on expressions $a$ as follows
     \letanf{x}{\labort{e}}{r} &= \letanf{y}{e}{(\letstmt{x}{\labort{y}}{r})}
   \end{aligned}
 \end{equation}
-We state the correctness of these functions in the following lemma:
+The specification of these functions is given by the following lemma:
 \begin{lemma}[name=A-normalization, restate=anfconversion]
-  For all $\haslb{\Gamma}{r}{\ms{L}}$, we have that that $\ahaslb{\Gamma}{\ms{ANF}(r)}{\ms{L}}$ and
-  $\lbeq{\Gamma}{r}{\ms{ANF}(r)}{\ms{L}}$. Furthermore, given $\hasty{\Gamma}{\epsilon}{a}{A}$, we
-  have that
+  Given an arbitrary region $r$, we have that
   \begin{itemize}
-    \item $\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}} \implies 
-      \lbeq{\Gamma}{\letstmt{x}{a}{r}}{\letanf{x}{a}{r}}{\ms{L}}$
-    \item $\ahaslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}} \implies
-      \ahaslb{\Gamma}{\letanf{x}{a}{r}}{\ms{L}}$
+    \item $\isanf{\toanf{r}}$
+    \item If $\haslb{\Gamma}{r}{\ms{L}}$, then $\lbeq{\Gamma}{r}{\ms{ANF}(r)}{\ms{L}}$
+  \end{itemize}
+  Similarly, given an arbitrary variable $x$, expression $a$ and region $r$
+  If we are also given an arbitrary expression $a$, then
+  \begin{itemize}
+    \item $\isanf{r} \implies \isanf{\letanf{x}{a}{r}}$
+    \item If $\hasty{\Gamma}{\epsilon}{a}{A}$ and $\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}$, then
+      $\lbeq{\Gamma}{\letstmt{x}{a}{r}}{\letanf{x}{a}{r}}{\ms{L}}$
   \end{itemize}
 \end{lemma}
 \begin{proof}
@@ -2786,95 +2791,90 @@ We state the correctness of these functions in the following lemma:
 \end{proof}
 
 \begin{figure}
-  \begin{equation*}
-    \boxed{\ahasty{\Gamma}{\epsilon}{a}{A}}
-  \end{equation*}
-  \begin{gather*}    
-    \prftree[r]{\rle{var}}{\Gamma(x) = A}{\ahasty{\Gamma}{\epsilon}{x}{A}} \qquad
-    \prftree[r]{\rle{op}}{\isop{f}{A}{B}{\epsilon}}{\Gamma(x) = A}
-      {\ahasty{\Gamma}{\epsilon}{f\;x}{B}} \\
-    \prftree[r]{\rle{unit}}{\ahasty{\Gamma}{\epsilon}{()}{\mb{1}}} \qquad
-    \prftree[r]{\rle{pair}}{\Gamma(x) = A}{\Gamma(y) = B}
-      {\hasty{\Gamma}{\epsilon}{(x, y)}{A \otimes B}} \\
-    \prftree[r]{\rle{inl}}{\Gamma(x) = A}
-      {\hasty{\Gamma}{\epsilon}{\linl{x}}{A + B}} \qquad
-    \prftree[r]{\rle{inr}}{\Gamma(y) = B}
-      {\hasty{\Gamma}{\epsilon}{\linr{y}}{A + B}} \qquad
-    \prftree[r]{\rle{abort}}{\Gamma(x) = 0}
-      {\hasty{\Gamma}{\epsilon}{\labort{x}}{A}}
-  \end{gather*}
-  \caption{Typing rules for atomic expressions}
+  \begin{center}
+    \begin{grammar}
+      <\(v\)> ::= \(x\) \;|\; \((v, v')\) \;|\; \(()\)
+
+      <\(o\)> ::= \(v\) \;|\; \(f\;v\) \;|\; \(\linl{v}\) \;|\; \(\linr{v}\) \;|\; \(\labort{v}\)
+
+      <\(r, s, t\)> ::= 
+      \(\letstmt{x}{o}{t}\)
+      \;|\; \(\letstmt{(x, y)}{o}{t}\)
+      \;|\; \(\where{t}{L}\)
+      \;|\; \(\brb{\ell}{o}\)
+      \;|\; \(\casestmt{e}{o}{s}{y}{t}\)
+
+      <\(L\)> ::= \(\cdot\) \;|\; \(L, \wbranch{\ell}{x}{t}\)
+    \end{grammar}
+  \end{center}
+  \caption{Grammar for ANF regions}
   \Description{}
-  \label{fig:ssa-ops}
+  \label{fig:anf-grammar}
 \end{figure}
 
-\begin{figure}
-  \begin{equation*}
-    \boxed{\ahaslb{\Gamma}{r}{\ms{L}}}
-  \end{equation*}
-  \begin{gather*}
-    \prftree[r]{\rle{br}}{\Gamma(x) = A}{\ms{L}\;\ell = A}
-      {\ahaslb{\Gamma}{\brb{\ell}{x}}{\ms{L}}} \qquad
-    \prftree[r]{\rle{let$_1$-r}}
-      {\ahasty{\Gamma}{\epsilon}{a}{A}}
-      {\ahaslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
-      {\ahaslb{\Gamma}{\letstmt{x}{a}{r}}{\ms{L}}} \\
-    \prftree[r]{\rle{let$_2$-r}}
-      {\ahasty{\Gamma}{\epsilon}{e}{A \otimes B}}
-      {\ahaslb{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{r}{\ms{L}}}
-      {\ahaslb{\Gamma}{\letstmt{(x, y)}{e}{r}}{\ms{L}}} \\
-    \prftree[r]{\rle{case-r}}
-      {\Gamma\;x = A + B}
-      {\ahaslb{\Gamma, \bhyp{y}{A}}{r}{\ms{L}}}
-      {\ahaslb{\Gamma, \bhyp{z}{B}}{s}{\ms{L}}}
-      {\ahaslb{\Gamma}{\casestmt{x}{y}{r}{z}{s}}{\ms{L}}} \\
-    \prftree[r]{\rle{cfg}}
-      {\ahaslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
-      {\forall i. \ahaslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
-      {\ahaslb{\Gamma}{\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}}
-  \end{gather*}
-  \caption{Typing rules for \isotopessa{} ANF regions}
-  \Description{}
-  \label{fig:ssa-anf}
-\end{figure}
+\subsubsection{From ANF to (Lexical) SSA}
 
-\subsubsection{From ANF to SSA}
+We would now like to define a syntactic transformation from regions $r$ to equivalent lexical SSA
+regions $\tossa{r}$. To do this, we begin by giving a syntactic transformation $\ssawhere{r}{L}$
+from ANF regions $r$ \emph{targeting} labels in $L$ to syntactically equivalent lexical SSA
+regions:
+\begin{equation}
+  \begin{aligned}
+    \ssawhere{t}{(\wbranch{\ell_i}{x_i}{t_i},)_i} 
+      &= \where{t}{(\wbranch{\ell_i}{x_i}{t_i},)_i} \qquad \text{where}\;t\;\text{is a terminator}
+      \\
+    \ssawhere{(\letstmt{x}{a}{r})}{L} &= (\letstmt{x}{a}{\ssawhere{r}{L}}) \\
+    \ssawhere{(\letstmt{(x, y)}{a}{r})}{L} &= (\letstmt{(x, y)}{a}{\ssawhere{r}{L}}) \\
+    \ssawhere{(\casestmt{a}{x}{s}{y}{t})}{L} &=
+     \where{(\casestmt{a}{x}{\brb{\ell_l}{x}}{y}
+                    {\brb{\ell_r}{y}})  \\ & \qquad }
+                    {L, \wbranch{\ell_l}{x}{\tossa{s}}, \wbranch{\ell_r}{y}{\tossa{t}}} \\
+    \ssawhere{(\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i})}{L} 
+      &= \ssawhere{r}{(L, (\wbranch{\ell_i}{x_i}{\tossa{t_i}},)_i)}
+  \end{aligned}
+\end{equation}
+We can then trivially define
+\begin{equation}
+  \tossa{r} = \ssawhere{\toanf{r}}{\cdot}
+\end{equation}
+The specification of these functions is given by the following lemma
+\begin{lemma}[name=SSA conversion, restate=ssaconversion]
+  Given an arbitrary region $r$,
+  \begin{itemize}
+    \item $\isssa{\tossa{r}}$
+    \item If $\haslb{\Gamma}{r}{\ms{L}}$, then $\lbeq{\Gamma}{r}{\tossa{r}}{\ms{L}}$
+  \end{itemize}
+  In particular,
+  \begin{itemize}
+    \item If $\isanf{r}$ and $\forall i, \isssa{t_i}$, then 
+      $\isssa{\ssawhere{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}$
+    \item If $\haslb{\Gamma}{r}{\ms{L}, (\ell_i(A_i),)_i}$ and 
+      $\forall i, \haslb{\Gamma}{t_i}{\ms{L}, (\ell_i(A_i),)_i}$, then 
+      $\lbeq{\Gamma}
+        {(\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i})  }
+        {\ssawhere{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}$
+  \end{itemize}
+\end{lemma}
+\begin{proof}
+  See Appendix~\ref{proof:ssa-conversion}
+\end{proof}
 
-\TODO{lexical SSA region; not strict region}
+\subsubsection{From (Lexical) SSA to SSA}
 
-\TODO{kill rules; all we need is the grammar (already in intro, unlike ANF)}
-
-\TODO{we can probably simplify this dramatically; do we need the BB function...}
-
-\TODO{kill struct; we already gave it in intro}
-
-\TODO{kill standard SSA grammar; we already gave it in intro}
-
-We now wish to give typing rules for strict regions. Since SSA consists of \emph{basic blocks}, that
-is, linear sequences of instructions followed by a terminator, we will introduce two mutually
-recursive judgements:
+We now come to the final part of our argument: that strict regions are equivalent to standard SSA,
+where we take the basic-blocks-with-arguments dialect described in Figure~\ref{fig:bba-grammar} as
+standard. We begin by recalling how, in Figure~\ref{fig:ssa-data}, we illustrated how a lexical SSA
+region can alternatively be interpreted as a tuple of: 
 \begin{itemize}
-  \item $\thaslb{\Gamma}{r}{\ms{L}}$, which states that $r$ is a terminator, which we model
-  as a tree of case-statements with unconditional branches at the leaves
-\item $\bhaslb{\Gamma}{r}{\ms{L}}$, which states that $r$ is a basic block \emph{plus} the blocks
-  which are its children in the dominator tree. The basic block itself is a linear
-  sequence of unary and binary let-bindings followed by a terminator, which is wrapped in a where-block
-  containing the child blocks. 
+  \item A basic block $\beta$ (the \emph{entry block}), consisting of,
+  \begin{itemize}
+    \item A sequence of instructions $\letstmt{x}{o}{}$
+    \item A terminator $\tau$
+  \end{itemize}
+  \item A map from labels $\ell$ to subtrees $r$ (the region's \emph{children}), $L$
 \end{itemize}
-A strict region, then, is a basic block, with the block itself (made up of its component
-let-bindings followed by its terminator) the distinguished \emph{entry block}. We give typing rules
-for these judgements in Figure~\ref{fig:ssa-strict}. Note in particular that we require every block
-to have an associated \ms{where}-block of dominated blocks; if there are no blocks dominated, then
-we simply use the empty \ms{where}-block. This hints at the natural inductive representation
-\begin{lstlisting}
-    struct BasicBlock {
-      instructions : List LetBinding,
-      terminator : Terminator,
-      children : List BasicBlock
-    }
-\end{lstlisting}
-In particular, given a strict region $r$, we can define the following functions to extract the
-region's entry block and a list of its children as follows
+More formally, given a lexical SSA region $r$, we can define the following functions to compute
+$r$'s entry block and children as follows
 \begin{equation}
   \begin{aligned}
     \toentry{\letstmt{x}{a}{r}} &= (\letstmt{x}{a}{\toentry{r}}) \\
@@ -2889,7 +2889,7 @@ region's entry block and a list of its children as follows
     \todom{\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}} &= [\wbranch{\ell_i}{x_i}{\todom{t_i}},]_i
   \end{aligned}
 \end{equation}
-We can similarly define a function to construct a strict region from an entry block and a list
+We can similarly define a function to construct a strict region from an entry block and a set
 of children as follows:
 \begin{equation}
   \begin{aligned}
@@ -2932,77 +2932,8 @@ Some other useful facts about $\adddom{\cdot}{\cdot}$ include:
     \label{eqn:pull-where}
   \end{equation}
 \end{itemize}
-Now that we have defined strict regions, we can give a function $\tossa{r}$ to convert a region $r$
-to a strict SSA as follows:
-\begin{equation}
-  \begin{aligned}
-    \tossa{r} &= \ssawhere{\toanf{r}}{\cdot}
-      \\
-    \ssawhere{t}{(\wbranch{\ell_i}{x_i}{t_i},)_i} 
-      &= \where{t}{(\wbranch{\ell_i}{x_i}{t_i},)_i} \qquad \text{where}\;t\;\text{is a terminator}
-      \\
-    \ssawhere{(\letstmt{x}{a}{r})}{G} &= (\letstmt{x}{a}{\ssawhere{r}{G}}) \\
-    \ssawhere{(\letstmt{(x, y)}{a}{r})}{G} &= (\letstmt{(x, y)}{a}{\ssawhere{r}{G}}) \\
-    \ssawhere{(\casestmt{a}{x}{s}{y}{t})}{G} &=
-     \where{(\casestmt{a}{x}{\brb{\ell_l}{x}}{y}
-                    {\brb{\ell_r}{y}})  \\ & \qquad }
-                    {G, \wbranch{\ell_l}{x}{\tossa{s}}, \wbranch{\ell_r}{y}{\tossa{t}}} \\
-    \ssawhere{(\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i})}{G} 
-      &= \ssawhere{r}{(G, (\wbranch{\ell_i}{x_i}{\tossa{t_i}},)_i)}
-  \end{aligned}
-\end{equation}
-We may state its correctness as follows:
-\begin{lemma}[name=SSA conversion, restate=ssaconversion]
-  If $\haslb{\Gamma}{r}{\ms{L}}$, then $\bhaslb{\Gamma}{\tossa{r}}{\ms{L}}$ and
-  $\lbeq{\Gamma}{r}{\tossa{r}}{\ms{L}}$. In particular, given $\ahaslb{\Gamma}{r}{\ms{L},
-  (\ell_i(A_i),)_i}$ and $\forall i, \bhaslb{\Gamma}{t_i}{\ms{L}, (\ell_i(A_i),)_i}$, we have that
-  $\bhaslb{\Gamma}{\ssawhere{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}$ and $\lbeq{\Gamma}
-  {(\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i})  }
-  {\ssawhere{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}$
-\end{lemma}
-\begin{proof}
-  See Appendix~\ref{proof:ssa-conversion}
-\end{proof}
-
-\begin{figure}
-  \begin{equation*}
-    \boxed{\thaslb{\Gamma}{r}{\ms{L}}}
-  \end{equation*}
-  \begin{gather*}
-    \prftree[r]{\rle{br}}{\Gamma\;x \leq (A, \epsilon)}{\ms{L}\;\ell = A}
-      {\thaslb{\Gamma}{\brb{\ell}{x}}{\ms{L}}} \qquad
-    \prftree[r]{\rle{case-t}}
-      {\Gamma\;x \leq (A + B, \epsilon)}
-      {\thaslb{\Gamma, \bhyp{y}{A}}{r}{\ms{L}}}
-      {\thaslb{\Gamma, \bhyp{z}{B}}{s}{\ms{L}}}
-      {\thaslb{\Gamma}{\casestmt{x}{y}{r}{z}{s}}{\ms{L}}} \\
-  \end{gather*}
-  \begin{equation*}
-    \boxed{\bhaslb{\Gamma}{r}{\ms{L}}}
-  \end{equation*}
-  \begin{gather*}
-    \prftree[r]{\rle{cfg}}
-      {\thaslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
-      {\forall i. \bhaslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
-      {\bhaslb{\Gamma}{\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}} \\
-    \prftree[r]{\rle{let$_1$-c}}
-      {\ahasty{\Gamma}{\epsilon}{a}{A}}
-      {\bhaslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
-      {\bhaslb{\Gamma}{\letstmt{x}{a}{r}}{\ms{L}}} \\
-    \prftree[r]{\rle{let$_2$-c}}
-      {\ahasty{\Gamma}{\epsilon}{e}{A \otimes B}}
-      {\bhaslb{\Gamma, \bhyp{x}{A}, \bhyp{y}{B}}{r}{\ms{L}}}
-      {\bhaslb{\Gamma}{\letstmt{(x, y)}{e}{r}}{\ms{L}}} \\
-  \end{gather*}
-  \caption{Typing rules for \isotopessa{} terminators and strict regions}
-  \Description{}
-  \label{fig:ssa-strict}
-\end{figure}
-
-We now come to the final part of our argument: that strict regions are equivalent to standard SSA.
-We begin by giving a grammar for standard SSA in Figure~\ref{fig:ssa-standard}. It is easy to see
-that removing \ms{where}-blocks from a strict region, gives us a function $\tocfg{\cdot}$ from
-strict regions $r$ to control-flow graphs $G$ defined as follows:
+It is easy to see that removing \ms{where}-blocks from a strict region, gives us a function
+$\tocfg{\cdot}$ from strict regions $r$ to control-flow graphs $G$ defined as follows:
 \begin{equation}
     \tocfg{r} = \toentry{r}, (\wbranch{\ell_i}{x_i}{\tocfg{t_i}},)_{
       (\wbranch{\ell_i}{x_i}{t_i}) \in \todom{r}}
@@ -3049,37 +2980,11 @@ $\lbeq{\Gamma}{r}{r'}{\ms{L}}$. We break this down into two lemmas:
 \end{proof}
 
 We may now conclude that, given $\shaslb{\Gamma}{r}{\ms{L}}$ and $\shaslb{\Gamma}{r'}{\ms{L}}$, if
-$\tocfg{r} \simeq \tocfg{r'}$, we have that $\lbeq{\Gamma}{r}{r'}{\ms{L}}$, since in particular
+$\tocfg{r} \simeq \tocfg{r'}$, we have that $\lbeq{\Gamma}{r}{r'}{\ms{L}}$, as desired, since in
+particular
 \begin{equation}
   r \teqv \toreg{\tocfg{r}} \teqv \toreg{\tocfg{r'}} \teqv r'
 \end{equation}
-
-\begin{figure}[H]
-  \begin{center}
-    \begin{grammar}
-      <\(a, b, c, e\)> ::= \(x\) 
-      \;|\;  \(f\;x\)
-      \alt  \(()\)
-      \;|\; \((x, y)\)
-      \alt  \(\linl{x}\) 
-      \;|\; \(\linr{y}\)
-      \;|\; \(\labort{x}\)
-      
-      <\(\tau\)> ::= \(\brb{\ell}{x}\) 
-      \;|\; \(\casestmt{x}{y}{\tau}{z}{\tau'}\)
-
-      <\(\beta\)> := \(\tau\)
-      \;|\; \(\letstmt{x}{a}{\beta}\)
-      \;|\; \(\letstmt{(x, y)}{a}{\beta}\)
-
-      <\(G\)> ::= \(\beta\) \;|\; \(G; \wbranch{\ell}{x}{\beta}\)
-    \end{grammar}
-  \end{center}
-  \caption{ Grammar for standard SSA, parametrized over an \isotopessa{} signature. A standard SSA
-    program is made up of \emph{basic blocks} \(\beta\), and can be thought of as a
-    \emph{control-flow graph} \(G\) (with a distinguished entry block $\beta$). } \Description{}
-  \label{fig:ssa-standard}
-\end{figure}
 
 \section{Denotational Semantics}
 
@@ -6461,7 +6366,7 @@ We may now state our desired result as follows:
 
 \subsection{Syntactic Metatheory}
 
-\begin{figure}
+\begin{figure}[H]
   \begin{gather*}
     (\gamma, x \mapsto e)(x) = e \qquad
     (\gamma, y \mapsto e)(x) = \gamma(x) \qquad
@@ -6510,11 +6415,9 @@ We may now state our desired result as follows:
 
 \label{proof:anf-conversion}
 
-\ssaconversion*
-
 \begin{proof}
   We may show that $\ms{ANF}(r)$ is always in ANF and that $\ms{ANF}_{\ms{let}}(x, a, r)$ is in ANF
-  if $r$ is by a straightforward induction. To prove the rest of the lemma, we begin proving the
+  if $r$ is by a straightforward induction. To prove the rest of the lemma, we begin by proving the
   correctness of $\ms{ANF}_{\ms{let}}(x, a, r)$ by induction on expressions $a$:
   \begin{itemize}
     \item If $\ahasty{\Gamma}{\epsilon}{a}{A}$ is atomic, we are done; otherwise
@@ -6564,6 +6467,8 @@ We may now state our desired result as follows:
     \item The case for control-flow graphs follows trivially by induction
   \end{itemize}
 \end{proof}
+
+\ssaconversion*
 
 \label{proof:ssa-conversion}
 
