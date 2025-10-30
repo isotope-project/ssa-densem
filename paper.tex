@@ -2704,8 +2704,7 @@ truly provided a type-theoretic presentation of SSA as it is used in practice. T
 the introduction for why this is the case can be re-stated as the following series of explicit
 claims:
 \begin{enumerate}
-  \item Every \isotopessa{} region can be converted to an equivalent lexical SSA region in linear
-  space
+  \item Every \isotopessa{} region can be converted to an equivalent lexical SSA region
   \label{claim:ssa-conv}
   \item \label{claim:ssa-erase} Every lexical SSA region can be erased to a well-formed SSA program
     by removing ``\ms{where}'' 
@@ -2750,8 +2749,8 @@ introduce the following predicates on syntax:
   \item $\isopex{a}$ means that the expression $a$ can be parsed as an instruction $o$.
         We note that $\isvalex{a} \implies \isopex{a}$.
 \end{itemize}
-We can define a linear-space syntactic function to convert an \isotopessa{} region to ANF
-inductively as follows:
+We can define a syntactic function to convert an \isotopessa{} region to ANF inductively as follows:
+\todo{make this a linear-space transformation, and mention it}
 \begin{equation}
   \begin{aligned}
     \toanf{\brb{\ell}{a}} &= \letanf{x}{a}{\brb{\ell}{x}} \\
@@ -2774,9 +2773,7 @@ where we define $\letanf{x}{a}{r}$ by induction on expressions $a$ as follows
     \letanf{x}{\linl{e}}{r} &= \letanf{y}{e}{(\letstmt{x}{\linl{y}}{r})} \\
     \letanf{x}{\linr{e}}{r} &= \letanf{y}{e}{(\letstmt{x}{\linr{y}}{r})} \\
     \letanf{x}{\caseexpr{e}{y}{a}{z}{b}}{r} &= 
-      \where{\letanf{w}{e}{\casestmt{w \\ & \qquad}
-            {y}{\letanf{x}{a}{\brb{\ell}{x}}}{z}{\letanf{x}{b}{\brb{\ell}{x}}}} \\ & \qquad}
-            {\wbranch{\ell}{x}{r}} \\
+      \letanf{w}{e}{\\ & \qquad \casestmt{w}{y}{\letanf{x}{a}{r}}{z}{\letanf{x}{b}{r}}} \\
     \letanf{x}{\labort{e}}{r} &= \letanf{y}{e}{(\letstmt{x}{\labort{y}}{r})}
   \end{aligned}
 \end{equation}
@@ -5040,6 +5037,10 @@ TSO, while \citet{release-acquire} gives a Brookes model of release-acquire.
 
 \section{Discussion and Related Work}
 
+\subsection{Lean Formalization}
+
+\todo{What has been mechanized?}
+
 \subsection{SSA, FP and IRs}
 
 Static Single Assignment (SSA) form was first introduced as a compiler intermediate representation
@@ -5201,6 +5202,12 @@ scaffolding for defining and verifying peephole rewrites using tactics. Their fr
 tested on bitvector rewrites from LLVM, structured control flow, and fully homomorphic encryption;
 however, as of publication, only structured control flow was fully supported.
 
+\subsubsection{Completeness}
+
+Most other formalizations oF SSA have given \emph{specific} semantics for it, whether operational or denotational. One of the features which makes our work distinctive is that we give our type theory semantics relative to a categorical axiomatization. Essentially, we have parameterized our interpretation over any model satisfying the Freyd-Elgot axioms. First, this lets us show that many different concrete semantics are valid models of SSA, as can be seen in section 6. This also let us show that our equational theory is complete: we have exactly the equations valid in all Freyd-Elgot models, no more and (crucially) no less. As a result, implementors and researchers proving things about compiler optimizations do not have to deal with any of the messy details of (for example) weak memory semantics, unless they are trying to study optimizations specifically involving weak memory. All the usual  equations used in control- and data-flow optimizations are independent of those details, and can be validated using the equational theory.
+
+Conversely, researchers working on models of weak memory (and other strange models of computation such as quantum computation), can use the Freyd-Elgot axioms as a target. If they ensure their models satisfy these axioms, then using an SSA-based IR in their compiler is justified. 
+
 \subsection{Compositional (Relaxed) Concurrency}
 
 The most natural way to think about concurrency is often in terms of an operational semantics on an
@@ -5360,15 +5367,18 @@ representing complex specifications within SSA.
 Elgot categories and monads were introduced in \citet{elgot-elgot-75}, and subsequently formalized
 in \citet{adamek-elgot-11}. \citet{coinductive-resumption-levy-goncharov-19} generalize Elgot
 categories to \emph{guarded Elgot categories} (and, correspondingly, \emph{guarded Elgot monads},
-whose Kleisli categories are guarded Elgot), to support partial non-unique iteration. Generalizing
+whose Kleisli categories are guarded Elgot), to support partial non-unique iteration -- in other words,
+categories where the fixed point does not always exist. Generalizing
 our language with support for guarded iteration could allow us to study applications of SSA to
 domains for which not all fixpoints exist, such as the representation of terminating languages (as,
-for example, one would find in a proof assistant) or productive processes. Another potential
-advantage of such support is that every category with coproducts can be considered \emph{vacuously}
-guarded, with the only fixpoints supported being those of loops which immediately exit. This could
-allow us to unify the notion of \isotopessa{} expression models and \isotopessa{} models into the
-single notion of \emph{guarded} \isotopessa{} models (with expression models vacuously guarded,
-while \isotopessa{} models in the original sense would have all fixpoints).
+for example, one would find in a proof assistant) or productive processes. 
+
+% Another potential
+% advantage of such support is that every category with coproducts can be considered \emph{vacuously}
+% guarded, with the only fixpoints supported being those of loops which immediately exit. This could
+% allow us to unify the notion of \isotopessa{} expression models and \isotopessa{} models into the
+% single notion of \emph{guarded} \isotopessa{} models (with expression models vacuously guarded,
+% while \isotopessa{} models in the original sense would have all fixpoints).
 
 \citet{goncharov-metalang-21} introduce a metalanguage for guarded iteration based on labelled
 iteration as presented by \citet{geron-iteration-16}. Interestingly, they refer to the labels in
@@ -5377,7 +5387,7 @@ Similar to our work, they provide a denotational semantics for this language usi
 category of a strong guarded \emph{pre-iterative} monad $\mb{T}$—that is, a monad with a guarded
 fixpoint operator—on a distributive category $\mc{C}$. They then demonstrate that this semantics is
 sound and adequate with respect to a big-step operational semantics for a specific monad, namely
-$\ms{T};X = X \times \mathbb{N}^ + \mathbb{N}^\omega$ over $\ms{Set}$. Notably, unlike our trace
+$\ms{T}\;X = (X \times \mathbb{N}^\ast) + \mathbb{N}^\omega$ over $\ms{Set}$. Notably, unlike our trace
 monad, their monad is \emph{guarded iterative} rather than merely iterative. The infinite branch of
 the coproduct $\mathbb{N}^\omega$ represents an infinite sequence of natural numbers, effectively
 prohibiting non-productive infinite loops — that is, recursion that does not pass through a
@@ -6471,8 +6481,7 @@ We may now state our desired result as follows:
             \teqv \toanf{r}
       \end{aligned}
     \end{equation}
-    The proof for \ms{case}-statements is analogous, except that we also apply label-substituion to
-    the right-hand side.
+    The proof for \ms{case}-statements is analogous
     \item The case for control-flow graphs follows trivially by induction
   \end{itemize}
 \end{proof}
