@@ -337,8 +337,8 @@ axiomatization, and a variety of interesting concrete models satisfying those ax
 Moreover, it would be best if the categorical axiomatization was constructed from ``standard
 parts'': the less novel the categorical axioms, the better, because standard constructions
 are better-studied and have more theorems already proved about them. 
-
-
+%
+%
 %TODO: discuss with Neel, this argument may not hold water.
 % These issues are a persistent nuisance when defining a semantics, and become a bigger problem when
 % actually using it prove theorems. For example, \citet{vellvm-12} use their operational semantics
@@ -347,7 +347,7 @@ are better-studied and have more theorems already proved about them.
 % then prove a simulation relation with the original LLVM semantics.
 %
 % \todo{vellum example}
-
+%
 This is exactly what we provide in this paper. Concretely, our contributions are as follows: 
 
 \begin{itemize}
@@ -393,7 +393,7 @@ This is exactly what we provide in this paper. Concretely, our contributions are
 \end{itemize}
 
 
-\todo{5. How does what we did actually solve the problem?}
+
 
 \section{Static Single Assignment Form}
 
@@ -2711,10 +2711,11 @@ claims:
     \label{claim:ssa-inj}
 \end{enumerate}
 Claim~\ref{claim:ssa-inj} implies that the mappings given in Claim~\ref{claim:ssa-erase} and
-Claim~\ref{claim:ssa-wf} establishes an equivalence, up to our equational theory, via lexical SSA
-and traditional SSA. In particular, we treat a lexical SSA region as an SSA program equipped with a
-\emph{semantically irrelevant} choice of dominator tree, represented by our \ms{where}-bracketing,
-which serves only to make our typing rules syntax-directed.
+Claim~\ref{claim:ssa-wf} establish an equivalence (up to our equational theory) between lexical SSA
+and traditional SSA.
+This means that the choice of where-bracketing that converts an SSA program into a lexical
+SSA program is semantically irrelevant. In other words, where-bracketing only makes dominance
+syntactically apparent, letting us give syntax-directed rules for typing SSA programs. 
 
 Converting directly to lexical SSA can be unwieldy. Therefore, we break the transformation down into
 two lowering passes: 
@@ -2726,7 +2727,7 @@ extended with mutually recursive \ms{where}-bindings
 
 \subsubsection{From \isotopessa{} to A-Normal Form}
 
-\TODO{kill typing rules; we only need a sub-grammar here. Adjust proof as needed.}
+
 
 Our first step is to extend the work of \citet{chakravarty-functional-ssa-2003}, by providing an
 algorithm for converting between \isotopessa{} and ANF in an equivalence preserving way. We begin by
