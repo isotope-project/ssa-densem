@@ -2963,8 +2963,9 @@ any well-formed SSA program $G$ into a well-typed strict region $r = \toreg{G}$ 
   appear in $G$. Recursively compute $r_i = \toreg{G_i}$.
   \item Return the program $\adddom{\beta}{(\wbranch{\ell_i}{x_i}{r_i},)_i}$
 \end{enumerate}
-We will write $G \simeq G'$ to mean ``$G$ is a permutation of $G'$'' (in particular, $G$ and $G'$
-must have the same entry block!). It is easy to see that this algorithm gives a strict SSA region
+We will write $G \simeq G'$ to mean ``$G$ is a permutation of $G'$'' (that is, $G$ and $G'$
+have the same entry block, but the other labels may be reordered). It is easy to see that this algorithm
+gives a strict SSA region
 which erases to a permutation of $G$, i.e., $\tocfg{\toreg{G}} \simeq G$, as desired. To complete
 our argument, it hence suffices to show that, given strict regions $\shaslb{\Gamma}{r}{\ms{L}}$,
 $\shaslb{\Gamma}{r'}{\ms{L}}$, such that $\tocfg{r} \simeq \tocfg{r'}$, we have that
