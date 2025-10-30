@@ -2704,7 +2704,8 @@ truly provided a type-theoretic presentation of SSA as it is used in practice. T
 the introduction for why this is the case can be re-stated as the following series of explicit
 claims:
 \begin{enumerate}
-  \item Every \isotopessa{} region can be converted to an equivalent lexical SSA region
+  \item Every \isotopessa{} region can be converted to an equivalent lexical SSA region in linear
+  space
   \label{claim:ssa-conv}
   \item \label{claim:ssa-erase} Every lexical SSA region can be erased to a well-formed SSA program
     by removing ``\ms{where}'' 
@@ -2749,8 +2750,8 @@ introduce the following predicates on syntax:
   \item $\isopex{a}$ means that the expression $a$ can be parsed as an instruction $o$.
         We note that $\isvalex{a} \implies \isopex{a}$.
 \end{itemize}
-We can define a syntactic function to convert an \isotopessa{} region to ANF inductively as follows:
-\todo{make this a linear-space transformation, and mention it}
+We can define a linear-space syntactic function to convert an \isotopessa{} region to ANF
+inductively as follows:
 \begin{equation}
   \begin{aligned}
     \toanf{\brb{\ell}{a}} &= \letanf{x}{a}{\brb{\ell}{x}} \\
@@ -2773,7 +2774,9 @@ where we define $\letanf{x}{a}{r}$ by induction on expressions $a$ as follows
     \letanf{x}{\linl{e}}{r} &= \letanf{y}{e}{(\letstmt{x}{\linl{y}}{r})} \\
     \letanf{x}{\linr{e}}{r} &= \letanf{y}{e}{(\letstmt{x}{\linr{y}}{r})} \\
     \letanf{x}{\caseexpr{e}{y}{a}{z}{b}}{r} &= 
-      \letanf{w}{e}{\\ & \qquad \casestmt{w}{y}{\letanf{x}{a}{r}}{z}{\letanf{x}{b}{r}}} \\
+      \where{\letanf{w}{e}{\casestmt{w \\ & \qquad}
+            {y}{\letanf{x}{a}{\brb{\ell}{x}}}{z}{\letanf{x}{b}{\brb{\ell}{x}}}} \\ & \qquad}
+            {\wbranch{\ell}{x}{r}} \\
     \letanf{x}{\labort{e}}{r} &= \letanf{y}{e}{(\letstmt{x}{\labort{y}}{r})}
   \end{aligned}
 \end{equation}
@@ -6468,7 +6471,8 @@ We may now state our desired result as follows:
             \teqv \toanf{r}
       \end{aligned}
     \end{equation}
-    The proof for \ms{case}-statements is analogous
+    The proof for \ms{case}-statements is analogous, except that we also apply label-substituion to
+    the right-hand side.
     \item The case for control-flow graphs follows trivially by induction
   \end{itemize}
 \end{proof}
