@@ -397,8 +397,6 @@ This is exactly what we provide in this paper. Concretely, our contributions are
 \end{itemize}
 
 
-
-
 \section{Static Single Assignment Form}
 
 % \begin{enumerate}
@@ -5042,6 +5040,13 @@ TSO, while \citet{release-acquire} gives a Brookes model of release-acquire.
 \section{Discussion and Related Work}
 
 \subsection{Lean Formalization}
+
+We have formalized many of the lemmas and theorems presented in this paper in the Lean 4 proof
+assistant; as of now, our main formalization, \texttt{debruijn-ssa}, weighs about \~29k LoC. Each
+formalized theorem is tagged as such in the respective proof. It was also necessary to fork
+Mathlib's monoidal category implementation to support Freyd categories, distributivity, and Elgot
+structure: the resulting library, \texttt{discretion}, weighs about \~27k LoC. We are currently
+trying to upstream support for premonoidal categories into Mathlib.
 
 \todo{What has been mechanized?}
 
