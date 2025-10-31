@@ -3021,10 +3021,11 @@ computations operating on independent data must always commute (this is the ``sl
 $$
 \ms{print}(x) ; \ms{print}(y) \neq \ms{print}(y) ; \ms{print}(x)
 $$
-Instead, we will only require that our category be \emph{premonoidal}: ``monoidal, without
-sliding.'' Indeed, the Kleisli category of a strong monad on a CCC is not always monoidal, as
-demonstrated by the writer monad on $\ms{Set}$ (which exposes $\ms{print}$), but \emph{is} always
-premonoidal. We define a premonoidal category as follows:
+Instead, we will only require that our category be \emph{premonoidal}, as introduced by
+\citet{power-97-premonoidal}: ``monoidal, without sliding.'' Indeed, the Kleisli category of a
+strong monad on a CCC is not always monoidal, as demonstrated by the writer monad on $\ms{Set}$
+(which exposes $\ms{print}$), but \emph{is} always premonoidal. We define a premonoidal category as
+follows:
 \begin{definition}[Symmetric Premonoidal Category]
   We define a \emph{binoidal category} to be a category $\mc{C}$ equipped with a binary operation
   $\otimes : |\mc{C}| \times |\mc{C}| \to |\mc{C}|$ on the objects of $\mc{C}$ and, for each $A, B
@@ -3111,8 +3112,8 @@ analogy with this case, we can suppose that there is a subcategory $\mc{C}_\bot$
 category $\mc{C}$, which has the property that the premonoidal structure in $\mc{C}$ behaves like a
 Cartesian product in $\mc{C}_\bot$. 
 
-This is called a \emph{Freyd category}, and is defined as follows:
-
+If we generalize this structure to an arbitrary premonoidal category, we get the notion of a
+\emph{Freyd category}, as introduced in \citet{levy-03-environment}:
 
 \begin{definition}[Freyd category]
   A \emph{Freyd category} is a premonoidal category $\mc{C}$ equipped with a wide subcategory
@@ -4403,10 +4404,10 @@ induces a Freyd category with pure morphisms given by
   (\ms{C}_{\ms{T}})_{\bot}(A, B) = \{f;\eta_B : A \to \ms{T}B \mid f : A \to B\} 
   \subseteq \ms{C}(A, \ms{T}B) = \ms{C}_{\ms{T}}(A, B)
 \end{equation}
-It follows that every strong Elgot monad over a CCC with all coproducts is an
-\isotopessa{} model (since, in particular, every CCC with coproducts is
-distributive). This allows us to very quickly amass a large collection of
-\isotopessa{} models from the literature on strong Elgot monads.
+It follows that every strong Elgot monad over a CCC with all coproducts is an \isotopessa{} model
+(since, in particular, every CCC with coproducts is distributive). This allows us to very quickly
+amass a large collection of \isotopessa{} models from the literature on strong Elgot monads (see
+e.g. \cite{goncharov-18-guarded-traced}, \cite{goncharov-21-uniform-elgot}).
 
 Probably the simplest example of an \isotopessa{} model is given by the
 \emph{option monad} $\ms{Option}\;A = A + \mb{1}$, with fixpoint operation
@@ -4573,9 +4574,12 @@ an arbitrary value, with \(\dnt{\ms{get}} = \lambda p\;h. \{\iota_0(v, h, []) \m
 the cell, while \(\dnt{\ms{free}} = \lambda p\;h. \{\iota_0\;((), h \setminus p, [])\}\).
 
 As we can see, the trace monad is a very powerful tool for quickly constructing families of
-\isotopessa{} models, at least for relatively simple side-effects. It turns out, however, that the
-same techniques can be used to tackle much more complex side-effects; to demonstrate this, we will
-show how to build a simple model of TSO weak memory based on that given in \citet{sparky}.
+\isotopessa{} models, at least for relatively simple side-effects. The resulting family of models is
+somewhat similar to \emph{interaction trees}, which were introduced by \citet{xia-20-itrees} to give
+convenient denotational semantics to imperative programs: these also form an Elgot monad. It turns
+out, however, that the same techniques can be used to tackle much more complex side-effects; to
+demonstrate this, we will show how to build a simple model of TSO weak memory based on that given in
+\citet{sparky}.
 
 \subsection{TSO weak memory}
 
@@ -5174,21 +5178,30 @@ Many operational semantics for SSA have arisen from compiler verification effort
 and give a semantics-preserving translation from three-address code into SSA.
 \citet{herklotz-gsa-2023} formalise "gated SSA" and give semantics-preserving translations between
 it and ordinary SSA. Going beyond CompCertSSA, \citet{vellvm-12} have studied the semantics of the
-LLVM IR itself as part of the Vellvm project. There has been much less work on denotational
-semantics for SSA, or directly on its equational theory. \citet{pop-ssa-inout-2009} give an unusual
-denotational model of SSA in terms of the iteration structure of a program, which they use to better
-understand the loop-closing $\phi$-nodes found both in the gated SSA representation as well as
-practical compilers such as GCC.
+LLVM IR itself as part of the Vellvm project; \citet{li-20-kllvm} goes further and gives an
+operational semantics for LLVM in the (sequentially consistent) multithreaded setting.
+
+There has been much less work on denotational semantics for SSA, or directly on its equational
+theory. \citet{pop-ssa-inout-2009} give an unusual denotational model of SSA in terms of the
+iteration structure of a program, which they use to better understand the loop-closing $\phi$-nodes
+found both in the gated SSA representation as well as practical compilers such as GCC.
+\citet{xia-20-itrees} describe a toolkit for building denotational semantics for imperative
+languages, including the standard IMP language and a simple assembly language, using the
+\emph{interaction tree monad} and \emph{continuation tree monad}, which they show to satisfy the
+Elgot axioms.
 
 \subsubsection{Mechanizations of SSA}
-
 
 CompcertSSA \cite{compcert-ssa-12} is an attempt to extend the CompCert verified compiler
 \cite{leroy-compcert-09} with an SSA-based middle-end. This is achieved by generating a pruned SSA
 IR from CompCert's RTL format. Instead of verifying the RTL-to-SSA translation within Coq, this
 translation is performed by unverified code, and a separate \emph{translation validation} stage uses
 a verified checker to ensure correctness. After performing (verified) SSA optimizations, the IR is
-naively lowered back to RTL for the rest of CompCert's machinery to work on. \citet{demange-ssa-15} build on this work by providing realistic, verified implementations of Sparse Conditional Constant Propagation (SCCP) \cite{wegman-sccp-91}, Common Subexpression Elimination (CSE), and Global Value Numbering (GVN) \cite{rosen-gvn-1988} within a general framework of flow-insensitive static analysis for CompCertSSA.
+naively lowered back to RTL for the rest of CompCert's machinery to work on. \citet{demange-ssa-15}
+build on this work by providing realistic, verified implementations of Sparse Conditional Constant
+Propagation (SCCP) \cite{wegman-sccp-91}, Common Subexpression Elimination (CSE), and Global Value
+Numbering (GVN) \cite{rosen-gvn-1988} within a general framework of flow-insensitive static analysis
+for CompCertSSA.
 
 While CompCert is a verified implementation of a new compiler in Coq, the Vellvm project
 \cite{vellvm-12} attempts to mechanize a subset of the LLVM intermediate representation (IR),
@@ -5204,9 +5217,21 @@ however, as of publication, only structured control flow was fully supported.
 
 \subsubsection{Completeness}
 
-Most other formalizations oF SSA have given \emph{specific} semantics for it, whether operational or denotational. One of the features which makes our work distinctive is that we give our type theory semantics relative to a categorical axiomatization. Essentially, we have parameterized our interpretation over any model satisfying the Freyd-Elgot axioms. First, this lets us show that many different concrete semantics are valid models of SSA, as can be seen in section 6. This also let us show that our equational theory is complete: we have exactly the equations valid in all Freyd-Elgot models, no more and (crucially) no less. As a result, implementors and researchers proving things about compiler optimizations do not have to deal with any of the messy details of (for example) weak memory semantics, unless they are trying to study optimizations specifically involving weak memory. All the usual  equations used in control- and data-flow optimizations are independent of those details, and can be validated using the equational theory.
+Most other formalizations oF SSA have given \emph{specific} semantics for it, whether operational or
+denotational. One of the features which makes our work distinctive is that we give our type theory
+semantics relative to a categorical axiomatization. Essentially, we have parameterized our
+interpretation over any model satisfying the Freyd-Elgot axioms. First, this lets us show that many
+different concrete semantics are valid models of SSA, as can be seen in section 6. This also let us
+show that our equational theory is complete: we have exactly the equations valid in all Freyd-Elgot
+models, no more and (crucially) no less. As a result, implementors and researchers proving things
+about compiler optimizations do not have to deal with any of the messy details of (for example) weak
+memory semantics, unless they are trying to study optimizations specifically involving weak memory.
+All the usual  equations used in control- and data-flow optimizations are independent of those
+details, and can be validated using the equational theory.
 
-Conversely, researchers working on models of weak memory (and other strange models of computation such as quantum computation), can use the Freyd-Elgot axioms as a target. If they ensure their models satisfy these axioms, then using an SSA-based IR in their compiler is justified. 
+Conversely, researchers working on models of weak memory (and other strange models of computation
+such as quantum computation), can use the Freyd-Elgot axioms as a target. If they ensure their
+models satisfy these axioms, then using an SSA-based IR in their compiler is justified. 
 
 \subsection{Compositional (Relaxed) Concurrency}
 
