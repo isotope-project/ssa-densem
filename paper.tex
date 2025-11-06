@@ -404,6 +404,8 @@ This is exactly what we provide in this paper. Concretely, our contributions are
   \TODO{note this in reviewer response for ``soundness of substitution''}
 \end{itemize}
 
+\TODO{mention refinement early on?}
+
 
 \section{Static Single Assignment Form}
 
@@ -555,14 +557,21 @@ is determined by its position within the code's nested structure, 3-address code
 scoping mechanism based on \emph{dominance}. In particular, a variable $x$ is considered to be in
 scope at a specific point $P$ if and only if all execution paths from the program's entry point to
 $P$ pass through a definition $D$ for $x$. In this case, we say that the definition $D$
-\emph{strictly dominates} $P$. The relation on basic blocks ``$A$ strictly dominates $B$"
-intersected with ``$A$ is a \emph{direct predecessor} of $B$" forms a tree called the
-\emph{dominance tree} of the CFG. % -- this can be computed in nearly linear time
-\cite{cytron-ssa-intro-91}.
+\emph{dominates} $P$. The relation on basic blocks ``$A$ dominates $B$" can in fact be viewed as a
+tree rooted at the entry block: every pair of basic blocks $A, B$ have a least common ancestor $C$
+which dominates them both; we call this tree the \emph{dominator tree} \cite{cytron-ssa-intro-91}.
 
-Even though three address code was designed to simplify flow analysis, many optimizations remain difficult to express in this format. Because a variable's value may be set by multiple definitions throughout the program's execution, variables do not have stable values, and so it is not in general safe to substitute a definition for a variable. To improve our ability to reason about programs, we introduce the \emph{static single assignment} restriction, originally proposed by \citet{alpern-ssa-original-88}, which states that every variable must be defined at exactly one point in the program. Because there is a unique definition for each variable, substitution is valid.
+Even though three address code was designed to simplify flow analysis, many optimizations remain
+difficult to express in this format. Because a variable's value may be set by multiple definitions
+throughout the program's execution, variables do not have stable values, and so it is not in general
+safe to substitute a definition for a variable. To improve our ability to reason about programs, we
+introduce the \emph{static single assignment} restriction, originally proposed by
+\citet{alpern-ssa-original-88}, which states that every variable must be defined at exactly one
+point in the program. Because there is a unique definition for each variable, substitution is valid.
 
-We can we  intuitively think of each variable as being defined by an immutable \ms{let}-binding, and a variable $x$ is in scope at a program point $P$, if and only if it sunique definition site $D_x$ strictly dominates $P$.
+We can we  intuitively think of each variable as being defined by an immutable \ms{let}-binding, and
+a variable $x$ is in scope at a program point $P$, if and only if it sunique definition site $D_x$
+strictly dominates $P$.
 
 A given basic block can be converted to SSA form by numbering each definition of a variable,
 effectively changing references to $x$ to references to $x_t$, i.e. ``$x$ at time $t$.'' For
@@ -2512,8 +2521,9 @@ on an arbitrary control-flow graph.
   \Description{}
   \label{fig:dinat-struct-cfg}
 \end{figure}
+\TODO{work on wording here, point back to reviews}
 It turns out that being able to do this is essential, as it allows us to relate unary and $n$-ary
-control-flow graphs and, in particular, use this relationship to interconvert between data-flow and
+\ms{where}-blocks and, in particular, use this relationship to interconvert between data-flow and
 control-flow. This means we now have enough machinery to justify the elimination of arbitrary nested
 \ms{where}-blocks, and hence to justify the rule
 \begin{equation}
@@ -2887,8 +2897,8 @@ The specification of these functions is given by the following lemma
 
 \subsubsection{From (Lexical) SSA to SSA}
 
-We now come to the final part of our argument: that strict regions are equivalent to standard SSA,
-where we take the basic-blocks-with-arguments dialect described in Figure~\ref{fig:bba-grammar} as
+We now come to the final part of our argument: that lexical SSA is equivalent to standard SSA, where
+we take the basic-blocks-with-arguments dialect described in Figure~\ref{fig:bba-grammar} as
 standard. We begin by recalling how, in Figure~\ref{fig:ssa-data}, we illustrated how a lexical SSA
 region can alternatively be interpreted as a tuple of: 
 \begin{itemize}
@@ -2905,26 +2915,26 @@ $r$'s entry block and children as follows
   \begin{aligned}
     \toentry{\letstmt{x}{a}{r}} &= (\letstmt{x}{a}{\toentry{r}}) \\
     \toentry{\letstmt{(x, y)}{a}{r}} &= (\letstmt{(x, y)}{a}{\toentry{r}}) \\
-    \toentry{\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}} &= r
+    \toentry{\where{\tau}{(\wbranch{\ell_i}{x_i}{t_i},)_i}} &= \tau
   \end{aligned}
 \end{equation}
 \begin{equation}
   \begin{aligned}
     \todom{\letstmt{x}{a}{r}} &= \todom{r} \\
     \todom{\letstmt{(x, y)}{a}{r}} &= \todom{r} \\
-    \todom{\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}} &= [\wbranch{\ell_i}{x_i}{\todom{t_i}},]_i
+    \todom{\where{\tau}{(\wbranch{\ell_i}{x_i}{t_i},)_i}} &= [\wbranch{\ell_i}{x_i}{t_i},]_i
   \end{aligned}
 \end{equation}
-We can similarly define a function to construct a strict region from an entry block and a set
-of children as follows:
+We can similarly define a function to construct a lexical SSA program from a basic block $\beta$ and
+a set of children as follows:
 \begin{equation}
   \begin{aligned}
-  \adddom{\letstmt{x}{a}{r}}{G} &= \letstmt{x}{a}{\adddom{r}}{G} \\
-  \adddom{\letstmt{(x, y)}{a}{r}}{G} &= \letstmt{(x, y)}{a}{\adddom{r}}{G} \\
-  \adddom{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i} &= \where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}
+  \adddom{\letstmt{x}{a}{\beta}}{L} &= \letstmt{x}{a}{\adddom{\beta}}{L} \\
+  \adddom{\letstmt{(x, y)}{a}{\beta}}{L} &= \letstmt{(x, y)}{a}{\adddom{\beta}}{L} \\
+  \adddom{\tau}{L} &= \where{\tau}{L}
   \end{aligned}
 \end{equation}
-It is easy to see that these functions are mutually inverse: for any strict region $r$, we have
+It is easy to see that these functions are mutually inverse: for any lexical SSA region $r$, we have
 \begin{equation}
   r = \adddom{\toentry{r}}{\todom{r}}
 \end{equation}
@@ -2958,17 +2968,18 @@ Some other useful facts about $\adddom{\cdot}{\cdot}$ include:
     \label{eqn:pull-where}
   \end{equation}
 \end{itemize}
-It is easy to see that removing \ms{where}-blocks from a strict region, gives us a function
-$\tocfg{\cdot}$ from strict regions $r$ to control-flow graphs $G$ defined as follows:
+We may hence define a function $\tocfg{\cdot}$ from lexical SSA programs $r$ to control-flow graphs
+$G$ as follows:
 \begin{equation}
     \tocfg{r} = \toentry{r}, (\wbranch{\ell_i}{x_i}{\tocfg{t_i}},)_{
       (\wbranch{\ell_i}{x_i}{t_i}) \in \todom{r}}
 \end{equation}
-where
+where we recursively flatten
 \begin{equation}
   G, \wbranch{\ell}{x}{\beta, G'} := G, \wbranch{\ell}{x}{\beta}, G' 
 \end{equation}
-An SSA program is \emph{well-formed} if:
+At the level of program text, all this function is doing is ``removing \ms{where}-blocks;'' so we'll
+call the result \emph{reased}. An SSA program is \emph{well-formed} if:
 \begin{itemize}
   \item All variable uses are well-typed
   \item All variable uses respect dominance-based scoping
@@ -2976,8 +2987,10 @@ An SSA program is \emph{well-formed} if:
 It is easy to see that any erased program is well-formed, since our typing rules guarantee every
 expression is well-typed, while our lexical scoping for values ensures that variables are only
 visible in the children of the block $\beta$ in which they are defined, which the lexical scoping of
-labels guarantees are dominated by $\beta$. On the other hand, we may give an algorithm to convert
-any well-formed SSA program $G$ into a well-typed strict region $r = \toreg{G}$ as follows:
+labels guarantees are dominated by $\beta$. 
+
+On the other hand, we may give an algorithm to convert any well-formed SSA program $G$ into a
+well-typed lexical SSA program $r = \toreg{G}$ as follows:
 \begin{enumerate}
   \item Compute the dominance tree of $G$, rooted at its entry block $\beta$.
   \item For each child $\wbranch{\ell_i}{x_i}{\beta_i}$ of $\beta$, let $G_i$ denote the CFG
@@ -2985,30 +2998,30 @@ any well-formed SSA program $G$ into a well-typed strict region $r = \toreg{G}$ 
   appear in $G$. Recursively compute $r_i = \toreg{G_i}$.
   \item Return the program $\adddom{\beta}{(\wbranch{\ell_i}{x_i}{r_i},)_i}$
 \end{enumerate}
-We will write $G \simeq G'$ to mean ``$G$ is a permutation of $G'$'' (that is, $G$ and $G'$
-have the same entry block, but the other labels may be reordered). It is easy to see that this algorithm
-gives a strict SSA region
-which erases to a permutation of $G$, i.e., $\tocfg{\toreg{G}} \simeq G$, as desired. To complete
-our argument, it hence suffices to show that, given strict regions $\shaslb{\Gamma}{r}{\ms{L}}$,
-$\shaslb{\Gamma}{r'}{\ms{L}}$, such that $\tocfg{r} \simeq \tocfg{r'}$, we have that
-$\lbeq{\Gamma}{r}{r'}{\ms{L}}$. We break this down into two lemmas:
+We will write $G \simeq G'$ to mean ``$G$ is a permutation of $G'$'' (that is, $G$ and $G'$ have the
+same entry block, but the other labels may be reordered). It is easy to see that this algorithm
+yields a lexical SSA program which erases to a permutation of $G$, i.e., $\tocfg{\toreg{G}} \simeq
+G$, as desired. To complete our argument, it hence suffices to show that, given lexical SSA regions
+$\haslb{\Gamma}{r}{\ms{L}}$, $\haslb{\Gamma}{r'}{\ms{L}}$, such that $\tocfg{r} \simeq \tocfg{r'}$,
+we have that $\lbeq{\Gamma}{r}{r'}{\ms{L}}$. We break this down into two lemmas:
 \begin{lemma}[name=Permutation Invariance, restate=cfgperminvar]
-  If $G \simeq G'$ and $\shaslb{\Gamma}{\toreg{G}}{\ms{L}}$, then 
-    $\shaslb{\Gamma}{\toreg{G'}}{\ms{L}}$ and $\lbeq{\Gamma}{\toreg{G}}{\toreg{G'}}{\ms{L}}$
+  If $G \simeq G'$ and $\haslb{\Gamma}{\toreg{G}}{\ms{L}}$, then
+    $\haslb{\Gamma}{\toreg{G'}}{\ms{L}}$ and $\lbeq{\Gamma}{\toreg{G}}{\toreg{G'}}{\ms{L}}$
 \end{lemma}
 \begin{proof}
   See Appendix~\ref{proof:cfg-perm-invar}
 \end{proof}
 \begin{lemma}[name=CFG Conversion, restate=cfgconversion]
-  If $\shaslb{\Gamma}{r}{\ms{L}}$, then $\lbeq{\Gamma}{r}{\toreg{\tocfg{r}}}{\ms{L}}$.
+  Given a lexical SSA region $r$ (i.e., assuming $\isssa{r}$) s.t. $\haslb{\Gamma}{r}{\ms{L}}$, we
+  have that $\lbeq{\Gamma}{r}{\toreg{\tocfg{r}}}{\ms{L}}$.
 \end{lemma}
 \begin{proof}
   See Appendix~\ref{proof:cfg-conversion}
 \end{proof}
 
-We may now conclude that, given $\shaslb{\Gamma}{r}{\ms{L}}$ and $\shaslb{\Gamma}{r'}{\ms{L}}$, if
-$\tocfg{r} \simeq \tocfg{r'}$, we have that $\lbeq{\Gamma}{r}{r'}{\ms{L}}$, as desired, since in
-particular
+It follows that, given lexical SSA regions $\haslb{\Gamma}{r}{\ms{L}}$ and
+$\haslb{\Gamma}{r'}{\ms{L}}$, if $\tocfg{r} \simeq \tocfg{r'}$, we have that
+$\lbeq{\Gamma}{r}{r'}{\ms{L}}$, as desired, since in particular
 \begin{equation}
   r \teqv \toreg{\tocfg{r}} \teqv \toreg{\tocfg{r'}} \teqv r'
 \end{equation}
@@ -3151,7 +3164,7 @@ If we generalize this structure to an arbitrary premonoidal category, we get the
     \item $\mc{C}_\bot$ contains all associators, unitors, and symmetries
     \item $I$ is a terminal object in $\mc{C}_\bot$
     \item For each $A$, there exists a pure morphism $\dmor{A} : A \to A \otimes A$ forming a
-          comonoid with the terminal morphism $\tmor{A} : A \to I$, i.e: $\dmor{A} ; \tmor{A}
+          comonoid with the (pure) terminal morphism $\tmor{A} : A \to I$, i.e: $\dmor{A} ; \tmor{A}
           \otimes A ; \rho = \dmor{A} ; A \otimes \tmor {A} ; \lambda = \ms{id}_A$
     \item For every pure morphism $f : A \to_\bot B$, $f ; \dmor{B} = \dmor{A} ; f \otimes f$
           and $f ; !_B = !_A$.  
@@ -4431,6 +4444,9 @@ It follows that every strong Elgot monad over a CCC with all coproducts is an \i
 amass a large collection of \isotopessa{} models from the literature on strong Elgot monads (see
 e.g. \cite{goncharov-18-guarded-traced}, \cite{goncharov-21-uniform-elgot}).
 
+\TODO{add a note for the constructive $\ms{Partial}\;A := \Sigma \phi : \ms{Prop} . \phi \to A$
+option?}
+
 Probably the simplest example of an \isotopessa{} model is given by the
 \emph{option monad} $\ms{Option}\;A = A + \mb{1}$, with fixpoint operation
 $$
@@ -4607,10 +4623,11 @@ demonstrate this, we will show how to build a simple model of TSO weak memory ba
 
 \label{ssec:tso}
 
-To start, we need to construct an appropriate stream action monoid to take our traces over. For
-simplicity, we will consider an infinite set of named locations \(x, y, z \in \ms{Loc}\) which are
-subject to concurrent modification by all threads via TSO reads, writes, and fences. We begin with
-the following definitions:
+Rather than a sequential trace consisting of a stream of events (here, \emph{actions}) $a_1, a_2,
+a_3, ...$, we would like to model concurrency by considering a \emph{partially ordered multiset}, or
+\emph{pomset}, of actions. The incomparable actions in our pomset are then precisely those which are
+executed in parallel. More formally, we define:
+
 \begin{definition}[Pomset] 
   A \emph{pomset} \(\alpha\) over a set of actions \(\mc{A}\) with a distinguished null action
   "\emph{tick}" \(\delta \in \mc{A}\) is a \textit{nonempty} partially-ordered \emph{carrier set}
@@ -4620,6 +4637,7 @@ the following definitions:
   infinite pomsets. We will write unordered pomsets using multiset notation, e.g. \(\{a, a, b\}\),
   and linearly ordered pomsets using list notation, e.g. \([a, a, b]\).
 \end{definition}
+
 (Finite) pomsets form a monoid under sequential composition \(\alpha;\beta\), which is defined by
 the function \([\alpha, \beta]: \ms{trim}(P + Q) \to \mc{A}\), where \(P + Q\) is given the
 lexicographic ordering and \(\ms{trim}(R)\) removes all elements of \(R\) with infinitely many
@@ -4634,12 +4652,16 @@ lexicographic order. In particular, choosing \(N = \nats\) makes \(\Sigma:
 \ms{Pom}_{\ms{fin}}^\omega \to \ms{Pom}\) into a stream action monoid w.r.t the sequential
 composition monoid on finite pomsets. 
 
-We define a \emph{program order pomset} to be a pomset with \(\mc{A}_{\ms{PO}} = \mc{A}_w \cup
-\mc{A}_r \cup \{\delta\}\), where \(\mc{A}_r\) consists of \textit{reads} of the form \(x = v\) and
-\(\mc{A}_w\) consists of \textit{writes} of the form \(x := v\) for locations \(x\) and values \(v
-\in \ms{Word}\). We define the \emph{program order monad} \(\ms{PO}\;A = \ms{Traces}\;\Sigma\;A\),
-where \(\Sigma\) is taken as a stream action on finite program order pomsets. This yields an
-\isotopessa{} model with support for concurrent read and write operations \(\ms{read}_x:
+For simplicity, we will consider an infinite set of named locations \(x, y, z \in \ms{Loc}\) which
+are subject to concurrent modification by all threads via TSO reads, writes, and fences. In
+particular, we define a \emph{program order pomset} to be a pomset with \(\mc{A}_{\ms{PO}} =
+\mc{A}_w \cup \mc{A}_r \cup \{\delta\}\), where \(\mc{A}_r\) consists of \textit{reads} of the form
+\(x = v\) and \(\mc{A}_w\) consists of \textit{writes} of the form \(x := v\) for locations \(x\)
+and values \(v \in \ms{Word}\). 
+
+We may now define the \emph{program order monad} \(\ms{PO}\;A = \ms{Traces}\;\Sigma\;A\), where
+\(\Sigma\) is taken as a stream action on finite program order pomsets. This yields an \isotopessa{}
+model with support for concurrent read and write operations \(\ms{read}_x:
 \mc{I}^\varnothing_0(\mb{1}, \ms{Word})\), \(\ms{write}_x: \mc{I}^\varnothing_0(\ms{Word}, \mb{1})\)
 with semantics
 \(
@@ -5084,11 +5106,13 @@ TSO, while \citet{release-acquire} gives a Brookes model of release-acquire.
 
 We have formalized many of the lemmas and theorems presented in this paper in the Lean 4 proof
 assistant; as of now, our main formalization, \texttt{debruijn-ssa}
-(\url{https://github.com/imbrem/debruijn-ssa}), weighs about \~29k LoC. Each formalized theorem is
-tagged as such in the respective proof. It was also necessary to fork Mathlib's monoidal category
-implementation to support Freyd categories, distributivity, and Elgot structure: the resulting
-library, \texttt{discretion} (\url{https://github.com/imbrem/discretion}), weighs about \~27k LoC.
-We are currently trying to upstream support for premonoidal categories into Mathlib.
+(\url{https://github.com/imbrem/debruijn-ssa}), weighs about ~29 kloc. While our paper uses named
+variables for simplicity, all our rules and syntax are formalized using de-Bruijn indices. Each
+formalized theorem is tagged as such in the respective proof. It was also necessary to fork
+Mathlib's monoidal category implementation to support Freyd categories, distributivity, and Elgot
+structure: the resulting library, \texttt{discretion} (\url{https://github.com/imbrem/discretion}),
+weighs about ~27 kloc. We are currently trying to upstream support for premonoidal categories into
+Mathlib.
 
 \subsection{SSA, FP and IRs}
 
@@ -6497,7 +6521,7 @@ We may now state our desired result as follows:
   \label{fig:ssa-subst-def}
 \end{figure}
 
-\subsection{Strict SSA}
+\subsection{Lexical SSA and ANF}
 
 \anfconversion*
 
@@ -6674,7 +6698,7 @@ We may now state our desired result as follows:
     = \toreg{\tocfg{\adddom{\beta}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}}
     = \adddom{\beta}{(\wbranch{\kappa_i}{y_i}{\toreg{G_i}},)_i}
   \end{equation}
-  Now, define the strict regions
+  Now, define the lexical SSA regions
   \begin{equation}
     r_i = \adddom{\beta_i}{
       ((\wbranch{\kappa_{i, j}}{y_{i, j}}{t_{\rho_{i, j}}},)_j, \todom{t_i})
@@ -6712,6 +6736,11 @@ We may now state our desired result as follows:
 \end{proof}
 
 \subsection{B\"ohm-Jacopini}
+
+\TODO{
+  The way we would mechanize this section is with locally nameless... but that time has passed.
+  The way we \emph{did} work with things like this is with de-Bruijn indices, having a single hole.
+}
 
 \begin{lemma}
   The following facts hold:
