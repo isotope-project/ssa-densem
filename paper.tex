@@ -2748,7 +2748,6 @@ introduce the following predicates on syntax:
         We note that $\isvalex{a} \implies \isopex{a}$.
 \end{itemize}
 We can define a syntactic function to convert an \isotopessa{} region to ANF inductively as follows:
-\todo{make this a linear-space transformation, and mention it}
 \begin{equation}
   \begin{aligned}
     \toanf{\brb{\ell}{a}} &= \letanf{x}{a}{\brb{\ell}{x}} \\
@@ -2762,7 +2761,7 @@ We can define a syntactic function to convert an \isotopessa{} region to ANF ind
 where we define $\letanf{x}{a}{r}$ by induction on expressions $a$ as follows
 \begin{equation}
   \begin{aligned}
-    \letanf{x}{a}{r} &= (\letstmt{x}{a}{r}) \hspace{8em} \text{if}\;a\;\text{atomic} \\
+    \letanf{x}{a}{r} &= (\letstmt{x}{a}{r}) \hspace{8em} \text{if}\;\isopex{a} \\
     \letanf{x}{f\;e}{r} &= \letanf{y}{e}{\letstmt{x}{f\;y}{r}} \\
     \letanf{x}{(\letexpr{y}{e}{a})}{r} &= \letanf{y}{e}{\letanf{x}{a}{r}} \\
     \letanf{x}{(e_1, e_2)}{r} &= \letanf{y_1}{e_1}{\letanf{y_2}{e_2}{\letanf{x}{(y_1,y_2)}{r}}} \\
@@ -2771,10 +2770,22 @@ where we define $\letanf{x}{a}{r}$ by induction on expressions $a$ as follows
     \letanf{x}{\linl{e}}{r} &= \letanf{y}{e}{(\letstmt{x}{\linl{y}}{r})} \\
     \letanf{x}{\linr{e}}{r} &= \letanf{y}{e}{(\letstmt{x}{\linr{y}}{r})} \\
     \letanf{x}{\caseexpr{e}{y}{a}{z}{b}}{r} &= 
-      \letanf{w}{e}{\\ & \qquad \casestmt{w}{y}{\letanf{x}{a}{r}}{z}{\letanf{x}{b}{r}}} \\
+      \letanf{w}{e}{
+        \where{\casestmt{w \\ & \qquad}
+          {y}{\letanf{x}{a}{\brb{\ell}{x}}}
+          {z}{\letanf{x}{b}{\brb{\ell}{x}}} \\ & \qquad}
+        {\wbranch{\ell}{x}{\toanf{r}}}
+      } 
+    \\
     \letanf{x}{\labort{e}}{r} &= \letanf{y}{e}{(\letstmt{x}{\labort{y}}{r})}
   \end{aligned}
 \end{equation}
+\TODO{reword}
+We note the \ms{case} branch is a little more complex than strictly necessary: to get to ANF, we
+don't actually need the new label, and can instead replace each branch with $\letanf{x}{a}{r}$.
+However, in the worst case, this can cause exponential blowup in the size of our program text,
+complicating our claim of equivalence between ANF and \isotopessa{}.
+
 The specification of these functions is given by the following lemma:
 \begin{lemma}[name=A-normalization, restate=anfconversion]
   Given an arbitrary region $r$, we have that
@@ -5047,8 +5058,6 @@ formalized theorem is tagged as such in the respective proof. It was also necess
 Mathlib's monoidal category implementation to support Freyd categories, distributivity, and Elgot
 structure: the resulting library, \texttt{discretion}, weighs about \~27k LoC. We are currently
 trying to upstream support for premonoidal categories into Mathlib.
-
-\todo{What has been mechanized?}
 
 \subsection{SSA, FP and IRs}
 
