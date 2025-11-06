@@ -378,6 +378,12 @@ This is exactly what we provide in this paper. Concretely, our contributions are
   between compiler IRs and category theory. (In fact, our calculus is also the first syntactic presentation
   of distributive Elgot categories.) 
 
+  \TODO{using completeness, we can freely mix equational reasoning and semantic reasoning, depending
+  on what is convenient for the product at hand.}
+
+  \TODO{completeness also makes it easy to use categorical methods to treat \emph{other} syntaxes,
+  like $\lambda_{\ms{iter}}$, but we probably can't fit that in this narrative}
+
 \item We proceed in Section~\ref{sec:concrete} to show that this
   denotational axiomatization is useful in practice. We give a model
   of TSO weak memory based on~\citet{sparky} in
@@ -394,6 +400,8 @@ This is exactly what we provide in this paper. Concretely, our contributions are
   mechanized proofs of substitution for our type theory, as well as proofs that the syntax forms the
   initial model, and that the SPARC TSO semantics forms a valid model of SSA. The denotational
   semantics and its proof of the soundness of substitution are done on paper. 
+
+  \TODO{note this in reviewer response for ``soundness of substitution''}
 \end{itemize}
 
 
@@ -2565,6 +2573,11 @@ Also very convenient is the variant
 Rather than justify these rules directly, it turns out to be much more convenient to do so using our
 denotational semantics, which, due to our completeness result in Section~\ref{ssec:completeness}, is
 sound. A proof can be found in Lemma~\ref{lem:where-fusion} in the appendix.
+
+\TODO{this is not a point against our equational theory \emph{per-se}: we can use the semantics to
+prove \emph{new} rules sound, adding them to the set of valid principles, rather than having more
+rules to check at the beginning. This is rather a point \emph{for} completeness, since it lets us
+\emph{mix} equational and semantic reasoning as convenient. Link back to discussion about this.} 
 
 There are some other basic rules we may want to use which turn out to be
 derivable from our existing set. For example, while re-ordering labels in a \ms{where}-block looks
@@ -5048,16 +5061,34 @@ More complex states (e.g. involving per-thread buffers) and closure operators ca
 weak memory models. In particular, \citet{jagadeesan-brookes-relaxed-12} gives a Brookes model of
 TSO, while \citet{release-acquire} gives a Brookes model of release-acquire.
 
+\subsection{Non-examples}
+
+\TODO{
+\begin{itemize}
+  \item Many of the design choices in \citet{leaky-semicolon} are motivated by the desire to have
+  $\dnt{(S_1 ; S_2) ; S_3} = \dnt{S_1 ; (S_2 ; S_3)}$.
+  \item Other first attempts at compositional weak memory models, like \citet{jagadeesan-pwp-20}, do
+  not satisfy even this condition
+  \item On the other hand, monadic approaches, like \citet{release-acquire}, get these conditions
+  ``for free'' from the monad laws; verifying the Conway iteration axioms is still important, like
+  is done in \citet{xia-itrees-20}.
+  \item What we've done is pare away the very minimal conditions required if you \emph{don't} have a
+  monad; it is unlikely that a non-monadic compositional model not specifically designed to have
+  our required properties will do so, but most weak memory models are not even compositional!
+\end{itemize}
+}
+
 \section{Discussion and Related Work}
 
 \subsection{Lean Formalization}
 
 We have formalized many of the lemmas and theorems presented in this paper in the Lean 4 proof
-assistant; as of now, our main formalization, \texttt{debruijn-ssa}, weighs about \~29k LoC. Each
-formalized theorem is tagged as such in the respective proof. It was also necessary to fork
-Mathlib's monoidal category implementation to support Freyd categories, distributivity, and Elgot
-structure: the resulting library, \texttt{discretion}, weighs about \~27k LoC. We are currently
-trying to upstream support for premonoidal categories into Mathlib.
+assistant; as of now, our main formalization, \texttt{debruijn-ssa}
+(\url{https://github.com/imbrem/debruijn-ssa}), weighs about \~29k LoC. Each formalized theorem is
+tagged as such in the respective proof. It was also necessary to fork Mathlib's monoidal category
+implementation to support Freyd categories, distributivity, and Elgot structure: the resulting
+library, \texttt{discretion} (\url{https://github.com/imbrem/discretion}), weighs about \~27k LoC.
+We are currently trying to upstream support for premonoidal categories into Mathlib.
 
 \subsection{SSA, FP and IRs}
 
