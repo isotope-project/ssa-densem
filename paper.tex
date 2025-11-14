@@ -1387,20 +1387,33 @@ things typecheck in a context $\Delta$, and $\Gamma$ contains all the variables 
 $\Gamma \leq \Delta$, pronounced ``$\Gamma$ \emph{weakens} $\Delta$''), then these things should
 typecheck in the context $\Gamma$ as well. That is, ``$\Gamma$ typechecks more terms than
 $\Delta$''.
- 
-Making things more formal, we introduce the rules for weakening $\Gamma \leq \Delta$ in the first
-part of Figure \ref{fig:ssa-meta-rules}: \brle{wk-nil} says that the empty context weakens itself,
-\brle{wk-skip} says that if $\Gamma$ weakens $\Delta$, then $\Gamma$ with an arbitrary variable
-added also weakens $\Delta$, and \brle{wk-cons} says that if $\Gamma$ weakens $\Delta$, then
-$\Gamma$ with $\bhyp{x}{A}$ added weakens $\Delta, \bhyp{x}{A}$. It is easy to see that weakening
-defined in this manner induces a partial order on contexts.
+%
+We give the (standard) formal rules for weakening $\Gamma \leq \Delta$ in the first part of Figure
+\ref{fig:ssa-meta-rules}. 
+\begin{itemize}
+  \item \brle{wk-nil} says that the empty context weakens itself,
+  \item \brle{wk-skip} says that if $\Gamma$ weakens $\Delta$, then $\Gamma, x: A$ also weakens
+  $\Delta$ for arbitrary (fresh) $x$, and
+  \item \brle{wk-cons} says that if $\Gamma$ weakens $\Delta$, then $\Gamma$ with $\bhyp{x}{A}$
+  added weakens $\Delta, \bhyp{x}{A}$.
+\end{itemize}
+It is easy to see that weakening defined in this manner induces a partial order on contexts.
+Weakening for label-contexts $\ms{L} \leq \ms{K}$ is precisely the dual of this: $\ms{L} \leq
+\ms{K}$ precisely when $\ms{L}$ has \emph{fewer} labels than $\ms{K}$, but they otherwise agree. In
+particular,
+\begin{itemize}
+  \item \brle{lwk-nil} says that the empty label-context weakens itself,
+  \item \brle{lwk-skip} says that if $\ms{L}$ weakens $\ms{K}$, then $\ms{L}$ also weakens $\ms{K},
+  \lhyp{\ell}{A}$ for arbitrary (fresh) $\ell$, and
+  \item \brle{lwk-cons} says that if $\ms{L}$ weakens $\ms{K}$, then $\ms{L}$ with $\lhyp{\ell}{A}$
+  added weakens $\ms{K}, \lhyp{\ell}{A}$.
+\end{itemize}
 
-We may go further and introduce weakening for \emph{label contexts} $\ms{L} \leq \ms{K}$
-analogously, except that we will flip the ordering such that $\ms{L}$ weakens $\ms{K}$ if it
-contains \emph{fewer}, rather than \emph{more}, labels than $\ms{K}$. 
-Note that $\ms{L}$ types \emph{fewer} regions than $\ms{K}$. This makes the
-metatheory come out more clearly, since label-contexts
-are ``on the right'' (with variable contexts ``on the left'').
+Likewise, we proceed to define weakening for \emph{label contexts} $\ms{L} \leq \ms{K}$ analogously,
+except that we will flip the ordering such that $\ms{L}$ weakens $\ms{K}$ if it contains
+\emph{fewer}, rather than \emph{more}, labels than $\ms{K}$. Note that $\ms{L}$ types \emph{fewer}
+regions than $\ms{K}$. This makes the metatheory come out more clearly, since label-contexts are
+``on the right'' (with variable contexts ``on the left'').
 
 
 In particular, in Figure
@@ -1409,6 +1422,27 @@ context weakens itself, \brle{lwk-skip}, which says that if $\ms{L}$ weakens $\m
 weakens $\ms{K}$ with an arbitrary label added, and \brle{lwk-cons}, which says that if $\ms{L}$
 weakens $\ms{K}$, then $\ms{L}$ with a label $\lhyp{\ell}{A}$ added weakens $\ms{K}$ with the same
 label added. It is easy to see that this induces a partial order on label contexts.
+%
+We may now state weakening formally as follows:
+\begin{lemma}[Weakening]
+  Given $\Gamma \leq \Delta$, $\epsilon \leq \epsilon'$, we have that:
+  \begin{enumerate}[label=(\alph*)]
+    \item If $\hasty{\Delta}{\epsilon}{a}{A}$, then $\hasty{\Gamma}{\epsilon'}{a}{A}$
+    \item If $\ms{L} \leq \ms{K}$ and $\haslb{\Delta}{r}{\ms{L}}$, then $\haslb{\Gamma}{r}{\ms{K}}$
+    \item If $\issubst{\gamma}{\Delta}{\Xi}$, then $\issubst{\gamma}{\Gamma}{\Xi}$
+    \item If $\lbsubst{\Delta}{\sigma}{\ms{L}}{\ms{K}}$, then
+    $\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}$
+  \end{enumerate}
+\end{lemma}
+\begin{proof}
+  These are formalized as:
+  \begin{enumerate}[label=(\alph*)]
+    \item \texttt{Term.Wf.wk} in \texttt{Typing/Term/Basic.lean}
+    \item \texttt{Region.Wf.wk} in \texttt{Typing/Region/Basic.lean}
+    \item Follows from \texttt{Term.Subst.Wf.comp} in \texttt{Typing/Term/Subst.lean}
+    \item Follows from \texttt{Region.Subst.Wf.vsubst} in \texttt{Typing/Region/LSubst.lean}
+  \end{enumerate}
+\end{proof}
 
 \begin{figure}
   \begin{gather*}
@@ -1439,26 +1473,6 @@ label added. It is easy to see that this induces a partial order on label contex
   \Description{}
   \label{fig:ssa-meta-rules}
 \end{figure}
-
-We can now state weakening formally as follows:
-\begin{lemma}[Weakening]
-  Given $\Gamma \leq \Delta$, $\epsilon \leq \epsilon'$, and $\ms{L} \leq \ms{K}$, we have that:
-  \begin{enumerate}[label=(\alph*)]
-    \item $\hasty{\Delta}{\epsilon}{a}{A} \implies \hasty{\Gamma}{\epsilon'}{a}{A}$
-    \item $\haslb{\Delta}{r}{\ms{L}} \implies \haslb{\Gamma}{r}{\ms{K}}$
-    \item $\issubst{\gamma}{\Delta}{\Xi} \implies \issubst{\gamma}{\Gamma}{\Xi}$
-    \item $\lbsubst{\Delta}{\sigma}{\ms{L}}{\ms{K}} \implies \lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}$
-  \end{enumerate}
-\end{lemma}
-\begin{proof}
-  These are formalized as:
-  \begin{enumerate}[label=(\alph*)]
-    \item \texttt{Term.Wf.wk} in \texttt{Typing/Term/Basic.lean}
-    \item \texttt{Region.Wf.wk} in \texttt{Typing/Region/Basic.lean}
-    \item Follows from \texttt{Term.Subst.Wf.comp} in \texttt{Typing/Term/Subst.lean}
-    \item Follows from \texttt{Region.Subst.Wf.vsubst} in \texttt{Typing/Region/LSubst.lean}
-  \end{enumerate}
-\end{proof}
 
 If we look at the proof of variable weakening, we might arrive at the alternate statement that all
 the variables in $\Delta$ are also available with the same type in $\Gamma$, i.e., if

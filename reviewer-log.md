@@ -232,13 +232,17 @@ syntax of λSSA is introduced.
 
   Yes, but we postpone any discussion of category theory until Section 5.
 
-Substitutions and label-substitutions are being used on page 11 but
-aren't introduced until pages 12 and 14.
+* Substitutions and label-substitutions are being used on page 11 but
+  aren't introduced until pages 12 and 14.
 
-In Lemma 3.1, the statement of this theorem seems to imply that case d
-only holds if L ≤ K. Is that actually necessary? I would have assumed
-that the rule would be that if Δ ⊢ σ : L ~~> K and Γ ≤ Δ and K ≤ K'
-then Γ ⊢ σ : L ~~> K' but maybe I'm misunderstanding.
+  TODO: address? hmm?
+
+* In Lemma 3.1, the statement of this theorem seems to imply that case d
+  only holds if L ≤ K. Is that actually necessary? I would have assumed
+  that the rule would be that if Δ ⊢ σ : L ~~> K and Γ ≤ Δ and K ≤ K'
+  then Γ ⊢ σ : L ~~> K' but maybe I'm misunderstanding.
+
+  We have re-stated the lemma for clarity
 
 Is it really necessary to recapitulate capture-avoiding substitution
 in the body of the paper? Seems fine to relegate to the appendix.
