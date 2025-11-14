@@ -104,27 +104,44 @@ Direct comments by Section:
   between "denotational model" and "model of SSA" is here, it seems
   redundant
 
-  TODO: rephrase 
+  We have rephrased this
 
 * Line 66-70: there don't seem to be any applications of a completeness
   result given, only of the soundness. Is there any significance of this
   result for compiler writers?  Usually it would be used to provide
   semantic proof techniques for meta-theoretic properties.
 
-  TODO: explain some more 
+  We briefly explain that, as shown in the paper, completeness allows us
+  to freely mix equational and semantic reasoning depending on what is
+  convenient for the problem at hand, so long as our semantic reasoning
+  remains model-independent.
 
-Line 75-79: this summary is unclear/confusing. What is a "proof of
-substitution"? How can you prove something forms an initial model
-without defining denotational semantics? What is "soundness of
-substitution"?
+* Line 75-79: this summary is unclear/confusing. What is a "proof of
+  substitution"? How can you prove something forms an initial model
+  without defining denotational semantics? What is "soundness of
+  substitution"?
 
-Is the model in 6.3 actually interesting from a memory model POV? Does
-SSA even manipulate memory?
+  We clarify that we: prove syntactic substitution, give a denotational
+  semantics, and then prove the soundness of substitution w.r.t. this
+  semantics.
 
-The introduction of the paper is very short and doesn't give an
-overview of many of the technical developments. This makes the paper
-difficult to read as entire sections are self-contained asides that
-don't seem to contribute to the goals laid out in the Introduction.
+* Is the model in 6.3 actually interesting from a memory model POV? Does
+  SSA even manipulate memory?
+
+  SSA is often used as an intermediate representation for low-level 
+  languages such as C which manipulate memory via pointers, and hence
+  expose memory manipulation operations as primitive instructions. We
+  show that we can handle the semantics of these, even under weak memory
+  conditions. TSO is in some sense the simplest non-SC model of 
+  concurrency, and is used primarily as a proof-of-concept.
+
+* The introduction of the paper is very short and doesn't give an
+  overview of many of the technical developments. This makes the paper
+  difficult to read as entire sections are self-contained asides that
+  don't seem to contribute to the goals laid out in the Introduction.
+
+  We have rewritten the introduction, and some of the earlier sections,
+  to clarify the line of argument being laid out.
 
 * Section 2
 
@@ -154,13 +171,13 @@ involves arithmetic, as mentioned in the prose.
 Fig 7 description says "from 7c to 7a and therefore to 6c", but I
 think the ultimate examples is intended to be 7b to 7c to 7a/6b to 6c?
 
-Line 391: missing a period
-
 It seems against the spirit of a compiler IR to me to rely on the
 existence of product types for branching with multiple
 arguments/multiple phi nodes or sum types for conditional
 branching. This seems like an infelicity to realistic IRs that I
 suspect makes the completeness theorem easier.
+
+TODO: reply to this pls Neel
 
 * Section 3
 
@@ -187,32 +204,33 @@ only allowed to be in tail position. This was mentioned in passing in
 section 2 but would be welcome to be re-emphasized here when the
 syntax of λSSA is introduced.
 
-Line 436: I think there should be an "and" between "A = B" and "ϵ ≤ ϵ'"
+* Line 439: Seems against the spirit of an IR to have implicit
+  evaluation order. Isn't part of the translation to MNF, ANF, CPS and
+  SSA specifying evaluation order explicitly?
 
-Line 437: "An primitive" should be "A primitive"
+  TODO: fix this
 
-Line 439: Seems against the spirit of an IR to have implicit
-evaluation order. Isn't part of the translation to MNF, ANF, CPS and
-SSA specifying evaluation order explicitly?
+  We have reworked our narrative to clarify the distinction between
+  lexical ("strict") SSA, ANF, and our slightly generalized 
+  type-theoretic SSA. Lexical SSA and ANF both have explicit evaluation
+  order; the introduction of type-theoretic SSA is to simplify rewriting.
 
-Bottom of page 12: there is an extended discussion here where
-technical definitions of basic block and terminator are introduced,
-but it's not clear to the reader why any of this matters, e.g., what
-it is used for. This makes the claim in 507 that some particular
-choice "greatly simplifies rewriting" very confusing because it's not
-clear how any of this relates to rewriting at all.
+* Bottom of page 12: there is an extended discussion here where
+  technical definitions of basic block and terminator are introduced,
+  but it's not clear to the reader why any of this matters, e.g., what
+  it is used for. This makes the claim in 507 that some particular
+  choice "greatly simplifies rewriting" very confusing because it's not
+  clear how any of this relates to rewriting at all.
 
-Line 507: "this feature" what feature?
+  We have rewritten both this section and the introduction to clarify
+  this.
 
-line 524,525: "less" labels/regions is improper English. It should be
-"fewer" labels/regions
+* Line 527: denotationally isn't it because the weakening of contexts
+  corresponds to a function between product types consisting of
+  projections, whereas weakening of labels corresponds to a function
+  between sum types consisting of injections?
 
-Line 527: denotationally isn't it because the weakening of contexts
-corresponds to a function between product types consisting of
-projections, whereas weakening of labels corresponds to a function
-between sum types consisting of injections?
-
-Line 537c should be γ I think
+  Yes, but we postpone any discussion of category theory until Section 5.
 
 Substitutions and label-substitutions are being used on page 11 but
 aren't introduced until pages 12 and 14.

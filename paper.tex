@@ -367,34 +367,31 @@ This is exactly what we provide in this paper. Concretely, our contributions are
   imperative computations,  we use coproducts to model conditionals, and we use Conway iteration to model
   looping. 
 
-  We show that any category with this categorical structure is a model of SSA. This establishes that all of
-  the equations we give are sound with respect to the categorical structure.
+  We show that any category with this structure is a model of SSA. This establishes that all of the
+  equations we give are sound with respect to the categorical structure.
 
 \item We also show, in Section~\ref{ssec:completeness}, that syntax quotiented by the equational
   theory yields the initial distributive Elgot category. This establishes that our set of syntactic
   equations is complete, and that there are no equations which the denotational semantics validates,
-  but which cannot be proved syntactically. This leads us to the surprising discovery that SSA is actually
-  a syntactic presentation of distributive Elgot categories, thereby establishing a surprising connection
-  between compiler IRs and category theory. (In fact, our calculus is also the first syntactic presentation
-  of distributive Elgot categories.) 
+  but which cannot be proved syntactically. 
+  
+  Theoretically, this leads us to the surprising discovery that SSA is actually a syntactic
+  presentation of distributive Elgot categories, thereby establishing a surprising connection
+  between compiler IRs and category theory. (In fact, our calculus is also the first syntactic
+  presentation of distributive Elgot categories.) 
+  
+  Practically, it means that we can freely mix equational and semantic reasoning depending on what
+  is convenient for the problem at hand: a semantic proof which holds in all \isotopessa{}-models
+  guarantees the existence of a corresponding syntactic sequence of rewrites.
 
-  \TODO{using completeness, we can freely mix equational reasoning and semantic reasoning, depending
-  on what is convenient for the product at hand.}
-
-  \TODO{completeness also makes it easy to use categorical methods to treat \emph{other} syntaxes,
-  like $\lambda_{\ms{iter}}$, but we probably can't fit that in this narrative}
-
-\item We proceed in Section~\ref{sec:concrete} to show that this
-  denotational axiomatization is useful in practice. We give a model
-  of TSO weak memory based on~\citet{sparky} in
-  Section~\ref{ssec:tso}, We also give a family of concrete models
-  based on Brookes-style traces~\cite{brookes-full-abstraction-96}, which can be
-  instantiated to support the release/acquire model
-  of~\citet{release-acquire}. This demonstrates that it is possible to
-  give realistic weak memory models, in a variety of semantic styles,
-  which do not disturb the structure of SSA in fundamental ways.
-  Furthermore, our results constitute the first proof that SSA-based loop transformations
-  are compatible with weak memory. 
+\item We proceed in Section~\ref{sec:concrete} to show that this denotational axiomatization is
+  useful in practice. We give a model of TSO weak memory based on~\citet{sparky} in
+  Section~\ref{ssec:tso}, We also give a family of concrete models based on Brookes-style
+  traces~\cite{brookes-full-abstraction-96}, which can be instantiated to support the
+  release/acquire model of~\citet{release-acquire}. This demonstrates that it is possible to give
+  realistic weak memory models, in a variety of semantic styles, which do not disturb the structure
+  of SSA in fundamental ways. Furthermore, our results constitute the first proof that SSA-based
+  loop transformations are compatible with weak memory. 
 
 \item Finally, we have substantially mechanized our proofs using the Lean 4 proof assistant. We have
   mechanized proofs of substitution for our type theory, as well as proofs that the syntax forms the
