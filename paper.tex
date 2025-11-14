@@ -2479,12 +2479,12 @@ and
   )
 \end{multline*}
 Rewrites like this are an instance of the principle we call \emph{dinaturality}, which, for
-structured control-flow, can be best expressed as an equivalence between the control-flow graphs
-in Figure~\ref{fig:dinat-struct-cfg}. Unlike in the case of uniformity, however, this is true even
-when the program fragment $P$ is \emph{impure}, since we do not commute $P$ over an infinite number
-of iterations. Our final rewriting rule, \brle{dinat}, generalises the
-above rewrite from sequential composition on a structured control-flow graph to label substitution
-on an arbitrary control-flow graph. 
+structured control-flow, can be best expressed as an equivalence between the control-flow graphs in
+Figure~\ref{fig:dinat-struct-cfg}. Unlike in the case of uniformity, however, this is true even when
+the program fragment $P$ is \emph{impure}, since, unlike in the case of general uniformity, we do
+not commute $P$ over an infinite number of iterations. Our final rewriting rule, \brle{dinat},
+generalises the above rewrite from sequential composition on a structured control-flow graph to
+label substitution on an arbitrary control-flow graph. 
 
 \begin{figure}
   \begin{tikzpicture}
@@ -2530,8 +2530,8 @@ on an arbitrary control-flow graph.
   \Description{}
   \label{fig:dinat-struct-cfg}
 \end{figure}
-\TODO{work on wording here, point back to reviews}
-It turns out that being able to do this is essential, as it allows us to relate unary and $n$-ary
+
+We require a separate rule for impure dinaturality as it allows us to relate unary and $n$-ary
 \ms{where}-blocks and, in particular, use this relationship to interconvert between data-flow and
 control-flow. This means we now have enough equations to derive the flattening of nested
 \ms{where}-blocks:
@@ -2589,11 +2589,13 @@ Also very convenient is the variant
     }
     \label{eqn:where-fusion-2}
 \end{equation}
+
 Rather than directly giving derivation trees for these auxilliary rules, it is more convenient to
-give a denotational proof. However, the completeness of our equational theory (proved in Section~\ref{ssec:completeness})
-means that the semantic equality implies the existence of the requisite derivation tree. A proof can be
-found in Lemma~\ref{lem:where-fusion} in the appendix. This is one of the benefits of having a completeness
-result: it lets us switch freely between equational and denotational modes of reasoning. 
+give a denotational proof. However, the completeness of our equational theory (proved in
+Section~\ref{ssec:completeness}) means that the semantic equality implies the existence of the
+requisite derivation tree. A proof can be found in Lemma~\ref{lem:where-fusion} in the appendix.
+This is one of the benefits of having a completeness result: it lets us switch freely between
+equational and denotational modes of reasoning. 
 
 % \TODO{this is not a point against our equational theory \emph{per-se}: we can use the semantics to
 % prove \emph{new} rules sound, adding them to the set of valid principles, rather than having more
