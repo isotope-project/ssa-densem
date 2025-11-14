@@ -1638,8 +1638,7 @@ We also include the following \emph{type-directed} rules as part of our congruen
 \begin{itemize}
   \item \brle{initial}, which equates \emph{all} terms in a context containing the empty type
   $\mb{0}$, since we will deem any such context to be \emph{unreachable} by control flow. In
-  particular, any instruction or function call returning $\mb{0}$ is assumed to diverge, similarly
-  to Rust's ``never type'' ``$!$".
+  particular, any instruction or function call returning $\mb{0}$ is assumed to diverge. 
   \item \brle{terminal}, which equates all \emph{pure} terms of unit type $\mb{1}$. Note that
   \emph{impure} terms may be disequal, since while their result values are the same, their side
   effects may differ!

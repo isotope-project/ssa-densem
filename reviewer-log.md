@@ -15,6 +15,9 @@ Comments to the Author
   mention many aspects of the paper that then later come as complete
   surprises (effect system? Bohm-Jacopini theorem?).
 
+  We have rewritten the introduction, as well as sections 2 and 3, in 
+  order to make the paper more accessible. 
+
 * The paper is pitched as modeling SSA, but the fact that the
   type-theoretic SSA is so much more flexible than SSA makes me wonder
   what property makes this type theory "SSA" rather than "Monadic
@@ -74,6 +77,8 @@ Comments to the Author
 * Streamline the presentation overall, moving some overly technical
   definitions (e.g., Section 4.5) into the appendix.
 
+  We have done this. 
+
 * Add a section to the discussion to more clearly describe which
   theorems are formalized in Lean and which are not.
 
@@ -96,7 +101,9 @@ Direct comments by Section:
   satisfy the equations of SSA...: How do we know if this is a useful
   criterion? Does it rule out any known bad models?
 
-  TODO: add some models that don't work. 
+  At the end of section 6, we explain how a number of models from the 
+  literature fail to satisfy common equations used by compilers (and
+  which are required by our axiomatization). 
 
 
 * Line 63-65: "We show that any denotational model with this categorical
@@ -104,7 +111,7 @@ Direct comments by Section:
   between "denotational model" and "model of SSA" is here, it seems
   redundant
 
-  We have rephrased this
+  We have rephrased this. 
 
 * Line 66-70: there don't seem to be any applications of a completeness
   result given, only of the soundness. Is there any significance of this
@@ -145,75 +152,39 @@ Direct comments by Section:
 
 * Section 2
 
-This section is mostly a nice overview of the known correspondence
-between functional IRs/basic blocks with arguments and traditional SSA
-form.
+We have completely rewritten this section to take reviewer comments into
+account 
 
-The end of Section 2 describing the benefits for reasoning is very
-unclear, there is only about a paragraph of prose here. Most of the
-work is on the reader to figure out what is going on in the
-examples. The ultimate example seems to be rewriting the example in 7b
-to the one in 6c, which doesn't seem like much of an optimizaiton. I
-would try to find a better optimization as an example of the
-dinaturality property.
+* It seems against the spirit of a compiler IR to me to rely on the
+  existence of product types for branching with multiple
+  arguments/multiple phi nodes or sum types for conditional
+  branching. This seems like an infelicity to realistic IRs that I
+  suspect makes the completeness theorem easier.
 
-Also it hardly seems necessary to repeat example 6b as 7a, this just
-adds to the confusion in my opinion.
-
-Fig 6 part b description doesn't make sense: "Programs 6a and 6b after
-substitution; since the result is the same, both programs must be
-equivalent". This is introducing Program 6b, so how can it be 6a and
-6b after substitution? "since the result is the same" result of what?
-
-Fig 7 part c says "equivalent to 7a by substitution" but it also
-involves arithmetic, as mentioned in the prose.
-
-Fig 7 description says "from 7c to 7a and therefore to 6c", but I
-think the ultimate examples is intended to be 7b to 7c to 7a/6b to 6c?
-
-It seems against the spirit of a compiler IR to me to rely on the
-existence of product types for branching with multiple
-arguments/multiple phi nodes or sum types for conditional
-branching. This seems like an infelicity to realistic IRs that I
-suspect makes the completeness theorem easier.
-
-TODO: reply to this pls Neel
+  In fact, the internal type systems of many compiler IRs do support
+  these types!  The SSA IR in the MLton compiler, the SIL IR used in
+  the Swift compiler, and the SSA IR in the Jikes Java compiler all
+  have tagged and composite datatypes. If one desires to booleans, we
+  can simply specialize all the sum types to 1 + 1 to get the desired
+  equations and semantics. However, having sum types makes it much
+  easier to express transformations that change control-flow to
+  dataflow or vice-versa.
+ 
 
 * Section 3
 
-The introduction of effects here without any prior mention or
-motivation is very jarring. I honestly don't know why effects are
-included at all. They certainly aren't linked by the authors to
-anything to do with existing SSA-based IRs.
-
-Additionally no examples of what primitive instructions are used for
-is given. I suppose this includes primitives like addition and
-comparisons. But these presumably are pure so we haven't seen an
-example of an impure primitive instruction.
-
-Unless I'm missing something, it's not even described how a λSSA
-program produces a result. Presumably it is by modeling "return" using
-a distinguished output label.
-
-Figure 8: Unless I am misunderstanding,
-1. The two cases of a case expression should be expressions, not regions
-2. abort a should also be a region
-
-The distinction between expressions and regions is that branches are
-only allowed to be in tail position. This was mentioned in passing in
-section 2 but would be welcome to be re-emphasized here when the
-syntax of λSSA is introduced.
+We have also rewritten this section, and simplified the effect system
+to a pure/impure distinction. 
 
 * Line 439: Seems against the spirit of an IR to have implicit
   evaluation order. Isn't part of the translation to MNF, ANF, CPS and
   SSA specifying evaluation order explicitly?
 
-  TODO: fix this
-
-  We have reworked our narrative to clarify the distinction between
-  lexical ("strict") SSA, ANF, and our slightly generalized 
-  type-theoretic SSA. Lexical SSA and ANF both have explicit evaluation
-  order; the introduction of type-theoretic SSA is to simplify rewriting.
+  It is straightforward to make the effect system more restrictive and
+  rule out terms with effectful subexpressions, but allowing them
+  simplifies equational transformations of programs by permitting more
+  intermediate forms. This is in line with our decision to permit
+  composite expressions at all.
 
 * Bottom of page 12: there is an extended discussion here where
   technical definitions of basic block and terminator are introduced,
@@ -225,104 +196,98 @@ syntax of λSSA is introduced.
   We have rewritten both this section and the introduction to clarify
   this.
 
-* Line 527: denotationally isn't it because the weakening of contexts
-  corresponds to a function between product types consisting of
-  projections, whereas weakening of labels corresponds to a function
-  between sum types consisting of injections?
-
-  Yes, but we postpone any discussion of category theory until Section 5.
-
 * Substitutions and label-substitutions are being used on page 11 but
   aren't introduced until pages 12 and 14.
 
-  TODO: address? hmm?
+  We have rewritten sections 2 and 3. 
 
 * In Lemma 3.1, the statement of this theorem seems to imply that case d
   only holds if L ≤ K. Is that actually necessary? I would have assumed
   that the rule would be that if Δ ⊢ σ : L ~~> K and Γ ≤ Δ and K ≤ K'
   then Γ ⊢ σ : L ~~> K' but maybe I'm misunderstanding.
 
-  We have re-stated the lemma for clarity
+  We have re-stated the lemma for clarity. 
 
-Is it really necessary to recapitulate capture-avoiding substitution
-in the body of the paper? Seems fine to relegate to the appendix.
+* Is it really necessary to recapitulate capture-avoiding substitution
+  in the body of the paper? Seems fine to relegate to the appendix.
+
+  This is now in the appendix. 
 
 * Section 4
 
-Minor teminological point: Fig 14 is called "Congruence rules" but the
-last two rules are not congruence rules, they are η
-equivalences. Additionally the first 3 rules (refl/trans/symm) are not
-congruence rules.
+* cfg-β₁: why does the expression a have to be pure? Shouldn't this be
+  valid for any a?
 
-Line 721: reference to Rust seems a bit out of place
+  Branches are only allowed to provide a pure argument to make label 
+  substitution simpler. 
 
-Line 840: How is the completeness theorem "relatively powerful" ?
-Relative to what?
+* Line 929: this notation is ambiguous: in ∀ i. Γ, x: Aᵢ ⊢ tᵢ ▷ L,
+  (lⱼ(Aⱼ),)ⱼ it isn't clear what i or j range over. In particular it
+  appeared to me at first that they index over different sets but now I
+  think they are both ranging over the same set?
 
-Line 834: "for other the other"
+  They range over different sets. We've added explict domains (i ∈ I, j ∈ J)
+  whenever we quantify over two sets. 
 
-Fig 17: again only half of these rules are congruence rules
+* Also, in the notation for a where block do we really need the trailing
+  comma in (lᵢ(Aᵢ),)ᵢ ?
 
-cfg-β₁: why does the expression a have to be pure? Shouldn't this be
-valid for any a?
+  We write it as a comma-separated list, and neither keeping or omitting 
+  it "looks right," so we picked the less-ambiguous one. 
 
-Line 929: this notation is ambiguous: in ∀ i. Γ, x: Aᵢ ⊢ tᵢ ▷ L,
-(lⱼ(Aⱼ),)ⱼ it isn't clear what i or j range over. In particular it
-appeared to me at first that they index over different sets but now I
-think they are both ranging over the same set?
+* I don't really see why I should think of cfg-η as an η rule at
+  all. Where blocks aren't given by a universal property in the
+  semantics so I don't think it's appropriate to call any of their rules
+  β/η rules.
 
-Also, in the notation for a where block do we really need the trailing
-comma in (lᵢ(Aᵢ),)ᵢ ?
+* Line 1017-1018: What does "r where t" mean? Also why do we have a
+  typing side condition for r here but not e,s,t?
 
-I don't really see why I should think of cfg-η as an η rule at
-all. Where blocks aren't given by a universal property in the
-semantics so I don't think it's appropriate to call any of their rules
-β/η rules.
+  TODO
 
-Line 1017-1018: What does "r where t" mean? Also why do we have a
-typing side condition for r here but not e,s,t?
+* Line 1108-1111: if we are appealing to the completeness theorem to
+  prove equivalences in the theory is the theory really all that
+  convenient to use?
 
-Line 1075: "It turns out that this being able to do this"
+  First, when writing a compiler, the equations are all we have, so it's
+  valuable to know we have a complete set. Second, even when doing things by
+  hand, there are other cases where it's easier to work syntactically than to 
+  work in the model. 
 
-Line 1108-1111: if we are appealing to the completeness theorem to
-prove equivalences in the theory is the theory really all that
-convenient to use?
+* In my opinion, since the article is supposed to be about SSA,
+  Section 4 should *start* with the description of strict SSA and
+  Figure 26 and then introduce the "type-theoretic SSA" as a
+  generalization, then return to their equivalence, paralleling the
+  structure of Section 2.
 
-Line 1108-1111: this seems to be the first mention of an application
-of the completeness theorem
+  We have rewritten section 4.4. along these lines. 
 
-In my opinion, since the article is supposed to be about SSA, Section
-4 should *start* with the description of strict SSA and Figure 26 and
-then introduce the "type-theoretic SSA" as a generalization, then
-return to their equivalence, paralleling the structure of Section 2.
 
-Section 4.4 is structured in a way that is difficult to follow. You
-say you "introduce" strict regions, then you make several claims about
-it, but you don't actually introduce strict regions for several pages.
-This is the part of the article where the authors explain how their
-type-theoretic calculus is related to ordinary SSA, but the structure
-here makes it difficult for the reader to understand what the strict
-region subset of the language is, because the description depends on
-several different figures and a third version of the calculus, ANF.
+* Line 1250: this version of the translation into ANF is in the worst
+  case exponential in the size of the input program, because it
+  duplicates the continuation r in the translation of a case
+  expression. To avoid this you can create a *join point*. This doesn't
+  affect the correctness of the translation but it would be better if
+  you verified the non-naive version (which I think you should be able
+  to).
 
-Line 1174: "as an strict region"
+  We have replaced it with the linear-time algorithm. 
 
-Line 1250: this version of the translation into ANF is in the worst
-case exponential in the size of the input program, because it
-duplicates the continuation r in the translation of a case
-expression. To avoid this you can create a *join point*. This doesn't
-affect the correctness of the translation but it would be better if
-you verified the non-naive version (which I think you should be able
-to).
+* Fig 26: Why does your standard SSA allow for the branches of a case
+  to be arbitrary terminators (so including case as well?). Maybe it's
+  a typo. It seems unrealistic and also doesn't seem to be necessary
+  as your translation to strict SSA never has nested cases
 
-Fig 26: Why does your standard SSA allow for the branches of a case to
-be arbitrary terminators (so including case as well?). Maybe it's a
-typo. It seems unrealistic and also doesn't seem to be necessary as
-your translation to strict SSA never has nested cases
+  Many SSA IRs have an n-ary exit form to defer deciding whether
+  C-style switch statements or pattern matching should be compiled
+  with jump tables or a sequence of conditionals. We can represent
+  n-ary branches with nested cases. 
 
-Section 4.5: this is all very technical but ultimately
-straightforward. Does it really need to be in this much detail in the
-body of the paper?
+* Section 4.5: this is all very technical but ultimately
+  straightforward. Does it really need to be in this much detail in the
+  body of the paper?
+
+  We have taken it out of the main body. 
 
 * Section 5
 Section 5: This is a pretty nice introduction to Premonoidal/Freyd
