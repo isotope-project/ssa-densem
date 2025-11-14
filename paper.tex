@@ -2816,13 +2816,11 @@ where we define $\letanf{x}{a}{r}$ by induction on expressions $a$ as follows
     \letanf{x}{\labort{e}}{r} &= \letanf{y}{e}{(\letstmt{x}{\labort{y}}{r})}
   \end{aligned}
 \end{equation}
-\TODO{reword}
-We note the \ms{case} branch is a little more complex than strictly necessary: to get to ANF, we
-don't actually need the new label, and can instead replace each branch with $\letanf{x}{a}{r}$.
-However, in the worst case, this can cause exponential blowup in the size of our program text,
-complicating our claim of equivalence between ANF and \isotopessa{}.
-
-The specification of these functions is given by the following lemma:
+We note that, to get to ANF, we don't actually need the new label, and can instead replace each
+branch with $\letanf{x}{a}{r}$; introducing the label is only necessary to guarantee that the
+transformation to ANF is \emph{linear-space}.
+%
+The specification of the functions we just defined is given by the following lemma:
 \begin{lemma}[name=A-normalization, restate=anfconversion]
   Given an arbitrary region $r$, we have that
   \begin{itemize}
@@ -2865,10 +2863,10 @@ The specification of these functions is given by the following lemma:
 
 \subsubsection{From ANF to (Lexical) SSA}
 
-We would now like to define a syntactic linear-space transformation from regions $r$ to equivalent lexical SSA
-regions $\tossa{r}$. We do this by giving a pair of mutually syntactic transformations $\tossa{r}$
-converting a region to SSA, and $\ssawhere{r}{L}$
-from ANF regions $r$ \emph{targeting} labels in $L$ to lexical SSA.
+We would now like to define a syntactic linear-space transformation from regions $r$ to equivalent
+lexical SSA regions $\tossa{r}$. We do this by giving a pair of mutually syntactic transformations
+$\tossa{r}$ converting a region to SSA, and $\ssawhere{r}{L}$ from ANF regions $r$ \emph{targeting}
+labels in $L$ to lexical SSA.
 \begin{equation}
   \begin{aligned}
     \tossa{r} & = \ssawhere{\toanf{r}}{\cdot} \\[1em]
@@ -2885,8 +2883,7 @@ from ANF regions $r$ \emph{targeting} labels in $L$ to lexical SSA.
       &= \ssawhere{r}{(L, (\wbranch{\ell_i}{x_i}{\tossa{t_i}},)_i)}
   \end{aligned}
 \end{equation}
-
-The specification of these functions is given by the following lemma
+The specification of these functions is as follows:
 \begin{lemma}[name=SSA conversion, restate=ssaconversion]
   Given an arbitrary region $r$,
   \begin{itemize}
