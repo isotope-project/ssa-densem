@@ -1383,47 +1383,37 @@ We now move on to \emph{regions}, which can be typed as follows:
 
 We can now begin to state the syntactic metatheory of \isotopessa{}. One of the most important
 metatheorems, and a basic sanity check of our type theory, is \emph{weakening}; essentially, if
-things typecheck in a context $\Delta$, and $\Gamma$ contains all the variables of $\Delta$ (written
-$\Gamma \leq \Delta$, pronounced ``$\Gamma$ \emph{weakens} $\Delta$''), then these things should
-typecheck in the context $\Gamma$ as well. That is, ``$\Gamma$ typechecks more terms than
-$\Delta$''.
-%
-We give the (standard) formal rules for weakening $\Gamma \leq \Delta$ in the first part of Figure
-\ref{fig:ssa-meta-rules}. 
+something typechecks in a context $\Delta$, and $\Gamma$ contains all the variables of $\Delta$
+(written $\Gamma \leq \Delta$, pronounced ``$\Gamma$ \emph{weakens} $\Delta$''), then it should
+typecheck in the context $\Gamma$ as well. Here, the context with fewer variables appears on the
+\emph{right}, allowing us to compose typing judgements likeso
+\begin{equation*}
+  \Gamma \leq \Delta \implies \haslb{\Delta}{r}{\ms{L}} \implies \haslb{\Gamma}{r}{\ms{L}}
+\end{equation*}
+As our theory has two types of context; we'd also like to define \emph{label-weakening} $\ms{L} \leq
+\ms{K}$, which we should be able to apply in the same manner:
+\begin{equation*}
+  \haslb{\Gamma}{r}{\ms{L}} \implies \ms{L} \leq \ms{K} \implies \haslb{\Gamma}{r}{\ms{K}}
+\end{equation*}
+If a region $r$ typechecks with exit labels $\ms{L}$, and $\ms{K}$ contains every label in $\ms{L}$,
+then $r$ should obviously also typecheck in $\ms{K}$. It follows that in the judgement $\ms{L} \leq
+\ms{K}$ the context with fewer labels appears on the \emph{left}-hand side of the judgement: this
+corresponds precisely to the fact that label-weakening (injection into a coproduct) is semantically
+dual to variable-weakening (projection from a product), and hence the order is flipped.
+
+We give the (standard) formal rules for weakening $\Gamma \leq \Delta$, and their duals, in the
+first part of Figure \ref{fig:ssa-meta-rules}.
 \begin{itemize}
-  \item \brle{wk-nil} says that the empty context weakens itself,
+  \item \brle{wk-nil} and \brle{lwk-nil} say that the empty (label) context weakens itself,
   \item \brle{wk-skip} says that if $\Gamma$ weakens $\Delta$, then $\Gamma, x: A$ also weakens
-  $\Delta$ for arbitrary (fresh) $x$, and
+  $\Delta$ for arbitrary (fresh) $x$. Dually, \brle{lwk-skip} says that if $\ms{L}$ weakens
+  $\ms{K}$, then $\ms{L}$ also weakens $\ms{K}, \lhyp{\ell}{A}$ for arbitrary (fresh) $\ell$.
   \item \brle{wk-cons} says that if $\Gamma$ weakens $\Delta$, then $\Gamma$ with $\bhyp{x}{A}$
-  added weakens $\Delta, \bhyp{x}{A}$.
+  added weakens $\Delta, \bhyp{x}{A}$. Likewise, \brle{lwk-cons} says that if $\ms{L}$ weakens
+  $\ms{K}$, then $\ms{L}$ with $\lhyp{\ell}{A}$ added weakens $\ms{K}, \lhyp{\ell}{A}$.
 \end{itemize}
-It is easy to see that weakening defined in this manner induces a partial order on contexts.
-Weakening for label-contexts $\ms{L} \leq \ms{K}$ is precisely the dual of this: $\ms{L} \leq
-\ms{K}$ precisely when $\ms{L}$ has \emph{fewer} labels than $\ms{K}$, but they otherwise agree. In
-particular,
-\begin{itemize}
-  \item \brle{lwk-nil} says that the empty label-context weakens itself,
-  \item \brle{lwk-skip} says that if $\ms{L}$ weakens $\ms{K}$, then $\ms{L}$ also weakens $\ms{K},
-  \lhyp{\ell}{A}$ for arbitrary (fresh) $\ell$, and
-  \item \brle{lwk-cons} says that if $\ms{L}$ weakens $\ms{K}$, then $\ms{L}$ with $\lhyp{\ell}{A}$
-  added weakens $\ms{K}, \lhyp{\ell}{A}$.
-\end{itemize}
-
-Likewise, we proceed to define weakening for \emph{label contexts} $\ms{L} \leq \ms{K}$ analogously,
-except that we will flip the ordering such that $\ms{L}$ weakens $\ms{K}$ if it contains
-\emph{fewer}, rather than \emph{more}, labels than $\ms{K}$. Note that $\ms{L}$ types \emph{fewer}
-regions than $\ms{K}$. This makes the metatheory come out more clearly, since label-contexts are
-``on the right'' (with variable contexts ``on the left'').
-
-
-In particular, in Figure
-\ref{fig:ssa-meta-rules}, we introduce the rules \brle{lwk-nil}, which says that the empty label
-context weakens itself, \brle{lwk-skip}, which says that if $\ms{L}$ weakens $\ms{K}$, then $\ms{L}$
-weakens $\ms{K}$ with an arbitrary label added, and \brle{lwk-cons}, which says that if $\ms{L}$
-weakens $\ms{K}$, then $\ms{L}$ with a label $\lhyp{\ell}{A}$ added weakens $\ms{K}$ with the same
-label added. It is easy to see that this induces a partial order on label contexts.
-%
-We may now state weakening formally as follows:
+It is easy to see that (label) weakening defined in this manner induces a partial order on (label)
+contexts. Our weakening lemma is then as follows:
 \begin{lemma}[Weakening]
   Given $\Gamma \leq \Delta$, $\epsilon \leq \epsilon'$, we have that:
   \begin{enumerate}[label=(\alph*)]
@@ -1474,15 +1464,21 @@ We may now state weakening formally as follows:
   \label{fig:ssa-meta-rules}
 \end{figure}
 
-If we look at the proof of variable weakening, we might arrive at the alternate statement that all
-the variables in $\Delta$ are also available with the same type in $\Gamma$, i.e., if
-$\hasty{\Delta}{\epsilon}{x}{A} \implies \hasty{\Gamma}{\epsilon}{x}{A}$, then anything which can be
-typed in $\Delta$ can be typed in $\Gamma$. More generally, we might ask if every variable
-$\hasty{\Delta}{\epsilon}{x}{A}$ in $\Delta$ can be associated with a \emph{pure} term
-$\hasty{\Gamma}{\bot}{\gamma_x}{A}$ which is well-typed in $\Gamma$. An assignment of such variables
-$\gamma : x \mapsto \gamma_x$ is called a \emph{substitution}, which we can type with the judgement
-$\issubst{\gamma}{\Gamma}{\Delta}$ as per the rules given in Figure \ref{fig:ssa-reg-rules}. In
-particular,
+The validity of variable weakening hinges on the fact that all the variables in $\Delta$ are also
+available with the same type in $\Gamma$, i.e., if $\hasty{\Delta}{\epsilon}{x}{A} \implies
+\hasty{\Gamma}{\epsilon}{x}{A}$, then anything which can be typed in $\Delta$ can be typed in
+$\Gamma$. So while weakening on \emph{terms} is just the identity, weakening on \emph{derivations}
+is essentially replacing ``variables from $\Gamma$'' with ``variables from $\Delta$.'' Since none of
+our typing rules, other than $\ms{var}$, make use of variable names, we might ask whether we can
+repeat essentially the same reasoning to reason about the well-typedness of replacing variables in
+$\Gamma$ with \emph{different} variables in $\Delta$ of the same type, or, more generally, arbitrary
+
+More generally, we might instead ask whether things still type-check if every variable
+$\hasty{\Delta}{\epsilon}{x}{A}$ in $\Delta$ is replaced with an (arbitrary) \emph{pure} term
+$\hasty{\Gamma}{\bot}{\gamma_x}{A}$ which is well-typed in $\Gamma$, whether things still
+type-check. An assignment of such variables $\gamma : x \mapsto \gamma_x$ is called a
+\emph{substitution}, which we can type with the judgement $\issubst{\gamma}{\Gamma}{\Delta}$ as per
+the rules given in Figure \ref{fig:ssa-reg-rules}. In particular,
 \begin{itemize}
   \item \brle{sb-nil} says that the empty substitution takes every context to the empty context.
   \item \brle{sb-cons} says that if $\gamma$ takes $\Gamma$ to $\Delta$ and
