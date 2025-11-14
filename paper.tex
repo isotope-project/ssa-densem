@@ -4454,11 +4454,13 @@ It follows that every strong Elgot monad over a CCC with all coproducts is an \i
 amass a large collection of \isotopessa{} models from the literature on strong Elgot monads (see
 e.g. \cite{goncharov-18-guarded-traced}, \cite{goncharov-21-uniform-elgot}).
 
-\TODO{add a note for the constructive $\ms{Partial}\;A := \Sigma \phi : \ms{Prop} . \phi \to A$
-option?}
-
 Probably the simplest example of an \isotopessa{} model is given by the
-\emph{option monad} $\ms{Option}\;A = A + \mb{1}$, with fixpoint operation
+\emph{option monad} $\ms{Option}\;A = A + \mb{1}$
+\footnote{
+  In a constructive setting, we may equivalently use the partial values monad 
+  $\ms{Partial}\;A := \Sigma \phi : \ms{Prop} . \phi \to A$.
+},
+with fixpoint operation
 $$
   f^\dagger = \ms{some}\;b \quad \text{if} \quad \exists n, f^n\;a = \ms{some}\;(\iota_l\;b)
   \qquad
