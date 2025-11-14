@@ -1370,9 +1370,9 @@ We now move on to \emph{regions}, which can be typed as follows:
       {\haslb{\Gamma, \bhyp{y}{B}}{s}{\ms{L}}}
       {\haslb{\Gamma}{\casestmt{e}{x}{r}{y}{s}}{\ms{L}}} \\
     \prftree[r]{\rle{cfg}}
-      {\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
-      {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
-      {\haslb{\Gamma}{\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}}}
+      {\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_{i \in I}}}
+      {\forall i \in I. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_{j \in I}}}
+      {\haslb{\Gamma}{\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_{i \in I}}}{\ms{L}}}
   \end{gather*}
   \caption{Rules for typing \isotopessa{} regions}
   \Description{}
@@ -1983,11 +1983,12 @@ not necessary, as these are derivable from binding and the $\eta$-rules for expr
       {\lbeq{\Gamma}{\caseexpr{e}{x}{r}{y}{s}}{\caseexpr{e'}{x}{r'}{y}{s'}}{\ms{L}}}
     \\
     \prftree[r]{\rle{cfg}}
-      {\lbeq{\Gamma}{r}{r'}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
-      {\forall i. \lbeq{\Gamma, \bhyp{x_i}{A_i}}{t_i}{t_i'}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+      {\lbeq{\Gamma}{r}{r'}{\ms{L}, (\lhyp{\ell_i}{A_i},)_{i \in I}}}
+      {\forall i \in I. \lbeq{\Gamma, \bhyp{x_i}{A_i}}{t_i}{t_i'}
+        {\ms{L}, (\lhyp{\ell_j}{A_j},)_{j \in I}}}
       {\lbeq{\Gamma}
-        {\where{r}{(\wbranch{\ell_i}{x_i: A_i}{t_i},)_i}}
-        {\where{r'}{(\wbranch{\ell_i}{x_i: A_i}{t_i'},)_i}}
+        {\where{r}{(\wbranch{\ell_i}{x_i: A_i}{t_i},)_{i \in I}}}
+        {\where{r'}{(\wbranch{\ell_i}{x_i: A_i}{t_i'},)_{i \in I}}}
         {\ms{L}}
       }
     \\
@@ -2131,9 +2132,9 @@ In general, we may derive, for any label-context $\ms{L}$ (assuming $\cfgsubst{\
 on the labels $\kappa$ in $\ms{L}$ as described above), the following rule:
 \begin{equation}
   \prftree[r]{\rle{cfgs}}
-    {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+    {\forall i \in I. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_{j \in I}}}
     {\lbsubst{\Gamma}
-      {\cfgsubst{(\wbranch{\ell_i}{x_i}{t_i},)_i}}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}{\ms{L}}}
+      {\cfgsubst{(\wbranch{\ell_i}{x_i}{t_i},)_{i \in I}}}{\ms{L}, (\lhyp{\ell_j}{A_j},)_{j \in I}}{\ms{L}}}
 \end{equation}
 Our $\eta$-rule, \brle{cfg-$\eta$}, says that any \ms{where}-block of the form
 $\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}$ has the same semantics as the label-substitution
@@ -2266,29 +2267,29 @@ equivalent to
   \begin{gather*}
       \prftree[r]{\rle{cfg-$\beta_1$}}
         {\hasty{\Gamma}{\bot}{a}{A_k}}
-        {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+        {\forall i \in I. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_{j \in I}}}
         {\lbeq{\Gamma}
-          {\where{\brb{\ell_k}{a}}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
-          {\where{(\letstmt{x_k}{a}{t_k})}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
+          {\where{\brb{\ell_k}{a}}{(\wbranch{\ell_i}{x_i}{t_i},)_{i \in I}}}
+          {\where{(\letstmt{x_k}{a}{t_k})}{(\wbranch{\ell_i}{x_i}{t_i},)_{i \in I}}}
           {\ms{L}}}
       \\
       \prftree[r]{\rle{cfg-$\beta_2$}}
         {\hasty{\Gamma}{\bot}{b}{B}}
-        {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+        {\forall i \in I. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_{j \in I}}}
         {\ms{L}\;\kappa = B}
-        {\kappa \notin \{(\ell_i,)_i\}}
+        {\kappa \notin \{\ell_i \mid i \in I\}}
         {\lbeq{\Gamma}
-          {\where{\brb{\kappa}{b}}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
+          {\where{\brb{\kappa}{b}}{(\wbranch{\ell_i}{x_i}{t_i},)_{i \in I}}}
           {\brb{\kappa}{b}}
           {\ms{L}}}
       \\
         \prftree[r]{\rle{cfg-$\eta$}}
-        {\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
-        {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+        {\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_{i \in I}}}
+        {\forall i \in I. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_{j \in I}}}
         {
           \lbeq{\Gamma}
-            {\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
-            {[\cfgsubst{(\wbranch{\ell_i}{x_i}{t_i},)_i}]r}
+            {\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_{i \in I}}}
+            {[\cfgsubst{(\wbranch{\ell_i}{x_i}{t_i},)_{i \in I}}]r}
             {\ms{L}}
         }
       \\
@@ -2336,18 +2337,19 @@ equivalent to
       \\
       \\
       \prftree[r]{\rle{dinat}}
-        {
-          \haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}
+        {\prfStackPremises{
+          \haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_{i \in I}}
         }{
-          \lbsubst{\Gamma}{\sigma}{(\lhyp{\ell_i}{A_i},)_i}{(\lhyp{\kappa_j}{B_j},)_j}
+          \lbsubst{\Gamma}{\sigma}{(\lhyp{\ell_i}{A_i},)_{i \in I}}{(\lhyp{\kappa_j}{B_j},)_{j \in J}}
+        }
         }{
-          \forall i. \haslb{\Gamma, \bhyp{x_i}{B_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}
+          \forall j \in J. \haslb{\Gamma, \bhyp{x_j}{B_j}}{t_j}{\ms{L}, (\lhyp{\ell_i}{A_i},)_{i \in I}}
         }{
-          \lbeq{\Gamma}
-            {\where{([\lupg{\sigma}]r)}{(\wbranch{\kappa_i}{x_i}{[\lupg{\sigma}]t_i},)_i}}
-            {\where{r}
-              {(\wbranch{\ell_i}{x_i}{[\lupg{(\kappa_j(x_j) \mapsto t_j,)}](\sigma_i\;x_i)},)_i}}
-            {\ms{L}}
+          \prfStackPremises
+            {\Gamma \vdash \where{([\lupg{\sigma}]r)}{(\wbranch{\kappa_j}{x_j}{[\lupg{\sigma}]t_j},)_{j \in J}}}
+            {\hspace{8em} \teqv \where{r}
+              {(\wbranch{\ell_i}{x_i}
+                {[\lupg{(\kappa_j(x_j) \mapsto t_j,)_{j \in J}}](\sigma_i\;x_i)},)_{i \in I}}}
         }
   \end{gather*}
   \Description{}
@@ -2537,60 +2539,31 @@ control-flow. This means we now have enough equations to derive the flattening o
 \ms{where}-blocks:
 \begin{equation}
   \prftree[r]{\rle{cfg-fuse}}
-    {\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i, (\lhyp{\kappa_j}{B_j},)_j}}
+    {\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_{i \in I}, (\lhyp{\kappa_j}{B_j},)_{j \in I}}}
     {
       \prfStackPremises{
-        \forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{
-        \ms{L}, (\lhyp{\ell_j}{A_j},)_j}
+        \forall i \in I. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{
+        \ms{L}, (\lhyp{\ell_j}{A_j},)_{j \in I}}
       }{
-        \forall i. \haslb{\Gamma, \bhyp{y_i}{B_i}}{s_i}{
-        \ms{L}, (\lhyp{\ell_j}{A_j},)_j, (\lhyp{\kappa_k}{B_k},)_k}
+        \forall i \in I. \haslb{\Gamma, \bhyp{y_i}{B_i}}{s_i}{
+        \ms{L}, (\lhyp{\ell_j}{A_j},)_{j \in J}, (\lhyp{\kappa_k}{B_k},)_{k \in K}}
       }
     }
     {
       \prfStackPremises{
         \Gamma \vdash 
-          \where{(\where{r}{(\wbranch{\kappa_i}{y_i}{s_i}),})_i}{(\wbranch{\ell_j}{x_j}{t_j}),)_j}
+          \where{(\where{r}{(\wbranch{\kappa_k}{y_k}{s_k}),})_{k \in K}}
+            {(\wbranch{\ell_i}{x_i}{t_i}),)_{i \in I}}
       }{
         \hspace{8em}
-        \teqv \where{r}{(\wbranch{\kappa_i}{y_i}{s_i},)_i, (\wbranch{\ell_j}{x_j}{t_j}),)_j}
+        \teqv \where{r}{(\wbranch{\kappa_k}{y_k}{s_k},)_{k \in K}, 
+                (\wbranch{\ell_i}{x_i}{t_i}),)_{i \in I}}
         \rhd \ms{L}
       }
     }
     \label{eqn:where-fusion-1}
 \end{equation}
-Also very convenient is the variant
-\begin{equation}
-  \prftree[r]{\rle{cfg-fuse$_2$}}
-    {\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i, \kappa(B)}}
-    {
-      \prfStackPremises{
-        \forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{
-          \ms{L}, (\lhyp{\ell_j}{A_j},)_j, \kappa(B)}
-      }{
-        \haslb{\Gamma, \bhyp{y}{B}}{s}{
-          \ms{L}, (\lhyp{\ell_j}{A_j},)_j, \kappa(B), (\lhyp{\ell_j'}{A_j'},)_j,}
-      }{
-        \forall i. \haslb{\Gamma, \bhyp{x_i'}{A_i'}}{t_i'}{
-          \ms{L}, (\lhyp{\ell_j}{A_j},)_j, \kappa(B), (\lhyp{\ell_j'}{A_j'},)_j}
-      }
-    }
-    {
-      \prfStackPremises{
-        \Gamma \vdash 
-          \where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i, 
-            \wbranch{\kappa}{y}{\where{s}{(\wbranch{\ell_i'}{x_i'}{t_i'},)_i}}}
-      }{
-        \hspace{8em}
-        \teqv \where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i, 
-            \wbranch{\kappa}{y}{s}, (\wbranch{\ell_i'}{x_i'}{t_i'},)_i}
-        \rhd \ms{L}
-      }
-    }
-    \label{eqn:where-fusion-2}
-\end{equation}
-
-Rather than directly giving derivation trees for these auxilliary rules, it is more convenient to
+Rather than directly giving derivation trees for such auxilliary rules, it is more convenient to
 give a denotational proof. However, the completeness of our equational theory (proved in
 Section~\ref{ssec:completeness}) means that the semantic equality implies the existence of the
 requisite derivation tree. A proof can be found in Lemma~\ref{lem:where-fusion} in the appendix.
@@ -6394,7 +6367,7 @@ We may now state our desired result as follows:
     \item \emph{Codiagonal:} given $f : R \otimes A \to (B + A) + A$, we have
     \begin{equation}
       \begin{aligned}
-        \rfix{\rfix{f}} 
+        & \rfix{\rfix{f}} \\
         & = (\dmor{R} \otimes A ; \alpha \
             ; R \otimes ((\rcase{f})^\dagger ; \pi_r) ; \delta^{-1})^\dagger 
           ; \pi_r \\
@@ -8997,8 +8970,39 @@ We may now state our desired result as follows:
 \end{proof}
 
 \begin{lemma}[\ms{where}-fusion]
-  The rewrite rules \brle{cfg-fuse$_1$} (Eqn.~\ref{eqn:where-fusion-1}) and \brle{cfg-fuse$_2$}
-  (Eqn.~\ref{eqn:where-fusion-2}) are sound.
+  The rewrite rules \brle{cfg-fuse$_1$} (Eqn.~\ref{eqn:where-fusion-1}) and \brle{cfg-fuse$_2$} are
+  sound, where we define
+  \begin{equation}
+  \prftree[r]{\rle{cfg-fuse$_2$}}
+    {\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i, \kappa(B)}}
+    {
+      \prfStackPremises{
+        \forall i \in I. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{
+          \ms{L}, (\lhyp{\ell_j}{A_j},)_{j \in I}, \kappa(B)}
+      }{
+        \haslb{\Gamma, \bhyp{y}{B}}{s}{
+          \ms{L}, (\lhyp{\ell_j}{A_j},)_{j \in I}, \kappa(B), 
+            (\lhyp{\ell_{j'}'}{A_{j'}'},)_{j' \in I'},}
+      }{
+        \forall i' \in I'. \haslb{\Gamma, \bhyp{x_{i'}'}{A_{i'}'}}{t_{i'}'}{
+          \ms{L}, (\lhyp{\ell_j}{A_j},)_{j \in I}, \kappa(B), 
+            (\lhyp{\ell_{j'}'}{A_{j'}'},)_{j' \in I'}}
+      }
+    }
+    {
+      \prfStackPremises{
+        \Gamma \vdash 
+          \where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_{i \in I}, 
+            \wbranch{\kappa}{y}{\where{s}{(\wbranch{\ell_{i'}'}{x_{i'}'}{t_{i'}'},)_{i' \in I'}}}}
+      }{
+        \hspace{8em}
+        \teqv \where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_{i \in I}, 
+            \wbranch{\kappa}{y}{s}, (\wbranch{\ell_{i'}'}{x_{i'}'}{t_{i'}'},)_{i' \in I'}}
+        \rhd \ms{L}
+      }
+    }
+    \label{eqn:where-fusion-2}
+  \end{equation}
   \label{lem:where-fusion}
 \end{lemma}
 \begin{proof}
