@@ -5097,23 +5097,25 @@ TSO, while \citet{release-acquire} gives a Brookes model of release-acquire.
 
 \subsection{Non-examples}
 
-Many of the design choices in \citet{leaky-semicolon} are motivated by the desire for sequential
-composition to be associative; i.e., to have $\dnt{(S_1 ; S_2) ; S_3} = \dnt{S_1 ; (S_2 ; S_3)}$:
-earlier attempts at compositional weak memory models, such as that in \citet{jagadeesan-pwp-20},
-often failed to maintain even this basic invariant. More complex properties, such as distributivity,
-which corresponds to the equation
+Weak memory is very complicated, and it has been very difficult to build models which  satisfy
+even ``obvious'' properties. For example, the model of \citet{jagadeesan-pwp-20} fails to even
+satisfy the associativity of sequencing (i.e., $\dnt{(S_1 ; S_2) ; S_3} = \dnt{S_1 ; (S_2 ; S_3)}$),
+and it took a nontrivial effort by \citet{leaky-semicolon} to establish this property. However,
+properties like distributivity
 \begin{equation*}
   \dnt{S ; \ite{b}{T_1}{T_2}} = \dnt{\ite{b}{S ; T_1}{S ; T_2}}
 \end{equation*}
-are similarly unlikely to hold unless the model is specifically designed with them in mind, and
-loops are often not handled at all, making them unsuitable as models of SSA without extensive
-adaptation. One of the easiest ways to build a model with ``nice'' properties is to make the model
+do not hold, and there is often no semantics of 
+loops at all. This makes them impossible to apply to SSA without extensive
+adaptation.
+
+One of the easiest ways to build a model with ``nice'' properties is to make the model
 monadic; indeed, all the models presented in the above section are an example of this technique.
 This handles sequencing and distributivity ``for free'' via the monad laws and the fact that monads
 always preserve coproducts; however, this still requires us to verify the Conway iteration axioms to
-support loops, as is done in \citet{xia-itrees-20}. Our work simply pares away the minimal
+support loops, as is done in \citet{xia-itrees-20}. Our work identifies the minimal
 conditions required to have a compositional model of general \emph{first-order} side effects
-compatible with the standard interpretation of SSA; the higher-order analogue is precisely an Elgot
+compatible with the standard interpretation of SSA. The higher-order analogue is precisely an Elgot
 monad.
 
 \section{Discussion and Related Work}
