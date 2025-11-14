@@ -2449,24 +2449,25 @@ and therefore that
 In particular, for example, we can then easily derive the rewrite from Figure~\ref{fig:fact-dinat}
 to Figure~\ref{fig:fact-zero} by noting the \emph{equalities} (an equivalence would be enough, of
 course)
-\TODO{split it onto two lines}
-\begin{multline*}
-  \ms{if}\;i_0 < n\;\{
+\begin{align*}
+  & \ms{if}\;i_0 < n\;\{ \\ & \quad
     \ms{br}\;\ms{loop}(
       \letexpr{(x, y)}{(i_0, a_0)}{(x + 1, y * x + 1)}
-    )
+    ) \\ &
   \}\;\ms{else}\;\{
     \ms{ret}(a_0)
-  \} \\
-  =
-  [\ms{loop}(i_0, a_0) \mapsto \letexpr{(x, y)}{(i_0, a_0)}{(x + 1, y * x + 1)}](
-    \ms{if}\;i_0 < n\;\{
-      \ms{br}\;\ms{loop}(i_0, a_0)
+  \} \\ &
+  = \\ &
+  [\ms{loop}(i_0, a_0) \mapsto \letexpr{(x, y)}{(i_0, a_0)}{(x + 1, y * x + 1)}]
+  (
+    \ms{if}\;i_0 < n\;\{ 
+    \\ & \qquad
+      \ms{br}\;\ms{loop}(i_0, a_0) \\ & \quad
     \}\;\ms{else}\;\{
       \ms{ret}(a_0)
     \}
   )
-\end{multline*}
+\end{align*}
 and
 \begin{multline*}
   \letstmt{n}{10}{\ms{br}\;\ms{loop}(
