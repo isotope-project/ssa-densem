@@ -2581,12 +2581,12 @@ like a no-op in our named syntax, to rigorously justify the following rule actua
 dinaturality (with the permutation done via a label-substitution):
 \begin{equation}
   \prftree[r]{\rle{perm-cfg}}
-    {\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i}}
-    {\forall i. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_j}}
+    {\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_{i \in I}}}
+    {\forall i \in I. \haslb{\Gamma, \bhyp{x_i}{A_i}}{t_i}{\ms{L}, (\lhyp{\ell_j}{A_j},)_{j \in I}}}
     {\sigma\;\text{permutation}}
     {\lbeq{\Gamma}
-      {\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}}
-      {\where{r}{(\wbranch{\ell_{\sigma_i}}{x_{\sigma_i}}{t_{\sigma_i}},)_i}}{\ms{L}}}
+      {\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_{i \in I}}}
+      {\where{r}{(\wbranch{\ell_{\sigma_i}}{x_{\sigma_i}}{t_{\sigma_i}},)_{i \in I}}}{\ms{L}}}
 \end{equation}
 Note the implicit use of the fact that if some region $r$ typechecks in some label-context $\ms{L}$,
 then it typechecks in any permutation of $\ms{L}$, which is again proven by label-substitution.
@@ -6626,29 +6626,29 @@ We may now state our desired result as follows:
 
 \begin{proof}
   We proceed by induction on the size of $G$. If $G$ consists only of an entry block, there is only
-  one permutation, so we are done. Otherwise, assume $G = \beta, (\wbranch{\ell_i}{x_i}{t_i},)_i$.
-  Furthermore, let:
+  one permutation, so we are done. Otherwise, assume $G = \beta, (\wbranch{\ell_i}{x_i}{t_i},)_{i
+  \in I}$. Furthermore, let:
   \begin{itemize}
     \item $\wbranch{\ell_i}{x_i}{\beta_i}$ be the children of $\beta$ in $G$ in order
-    \item $G_i = (\wbranch{\kappa_{i, j}}{y_{i, j}}{t_{i, j}},)_j$ be the CFG composed of the
-    descendants of $\beta_i$ in $G$, with $\beta_i$ as entry block, in order
+    \item $G_i = (\wbranch{\kappa_{i, j}}{y_{i, j}}{t_{i, j}},)_{j \in I}$ be the CFG composed of
+    the descendants of $\beta_i$ in $G$, with $\beta_i$ as entry block, in order
     \item $\wbranch{\ell_i'}{x_i'}{\beta_i'}$ be the children of $\beta$ in $G'$ in order
     \item $G_i'$ be the CFG composed of the descendants of $\beta_i'$ in $G'$, with $\beta_i'$ as
     entry block, in order
   \end{itemize}
-  By assumption, there exists some permutation $\sigma$ such that $G' = \beta,
-  (\wbranch{\ell_{\sigma_i}}{x_{\sigma_i}}{t_{\sigma_i}},)_i$. It follows that, since the dominance
-  relation on labels is permutation-invariant, there exists some permutation $\rho$ such that
-  $\wbranch{\ell_i'}{x_i'}{\beta_i'} = \wbranch{\ell_{\rho_i}}{x_{\rho_i}}{\beta_{\rho_i}}$, as well
-  as permutations $\tau_i$ such that $G_i' = (\wbranch{\ell_{\rho_i, \tau_{ij}}}{x_{\rho_i,
-  \tau_{ij}}}{t_{\rho_i, \tau_{ij}}},)_j$, implying in particular that $G_i' \simeq G_{\rho_i}$. By
-  induction, we hence have that, for all $i$, $\toreg{G_i'} \teqv \toreg{G_{\rho_i}}$, and hence
-  that
+  By assumption, there exists some permutation $\sigma: I \to I$ such that $G' = \beta,
+  (\wbranch{\ell_{\sigma_i}}{x_{\sigma_i}}{t_{\sigma_i}},)_{i \in I}$. It follows that, since the
+  dominance relation on labels is permutation-invariant, there exists some permutation $\rho$ such
+  that $\forall i \in I, \wbranch{\ell_i'}{x_i'}{\beta_i'} =
+  \wbranch{\ell_{\rho_i}}{x_{\rho_i}}{\beta_{\rho_i}}$, as well as permutations $\tau_i$ such that
+  $G_i' = (\wbranch{\ell_{\rho_i, \tau_{ij}}}{x_{\rho_i, \tau_{ij}}}{t_{\rho_i, \tau_{ij}}},)_{j \in
+  I}$, implying in particular that $G_i' \simeq G_{\rho_i}$. By induction, we hence have that, for
+  all $i$, $\toreg{G_i'} \teqv \toreg{G_{\rho_i}}$, and hence that
   \begin{equation}
     \begin{aligned}
-    \toreg{G'} &:= \adddom{\beta}{(\wbranch{\ell_{\rho_i}}{x_{\rho_i}}{\toreg{G_i'}},)_i} \\
-    &\teqv \adddom{\beta}{(\wbranch{\ell_{\rho_i}}{x_{\rho_i}}{\toreg{G_{\rho_i}}},)_i} \\
-    &\teqv \adddom{\beta}{(\wbranch{\ell_i}{x_i}{\toreg{G_i}},)_i} \teqv \toreg{G}
+    \toreg{G'} &:= \adddom{\beta}{(\wbranch{\ell_{\rho_i}}{x_{\rho_i}}{\toreg{G_i'}},)_{i \in I}} \\
+    &\teqv \adddom{\beta}{(\wbranch{\ell_{\rho_i}}{x_{\rho_i}}{\toreg{G_{\rho_i}}},)_{i \in I}} \\
+    &\teqv \adddom{\beta}{(\wbranch{\ell_i}{x_i}{\toreg{G_i}},)_{i \in I}} \teqv \toreg{G}
     \end{aligned}
   \end{equation}
 \end{proof}
@@ -6660,8 +6660,8 @@ We may now state our desired result as follows:
 \begin{proof}
   We will proceed by induction on the length of $G = \tocfg{r}$. If $G$ consists of only an entry
   block $\beta$, then we trivially have that $r = \toreg{\tocfg{r}}$, and so we are done. Otherwise,
-  assume $r = \adddom{\beta}{(\wbranch{\ell_i}{x_i}{t_i},)_i}$. Clearly, $\tocfg{r}$ will have entry
-  block $\beta$; moreover, since every block in $\tocfg{r}$ other than those of the form
+  assume $r = \adddom{\beta}{(\wbranch{\ell_i}{x_i}{t_i},)_{i \in I}}$. Clearly, $\tocfg{r}$ will
+  have entry block $\beta$; moreover, since every block in $\tocfg{r}$ other than those of the form
   $\toentry{t_i}$ can only be reached from within the region $t_i$ (due to lexical scoping of
   labels), we have $\beta_i = \toentry{t_{\rho_i}}$ for some injection $\rho$, where $\beta_i$ are
   the children of $\beta$ in the dominance tree of $G$. In particular, we can write
@@ -6677,8 +6677,8 @@ We may now state our desired result as follows:
   As in the algorithm to compute $\toreg{\cdot}$, let $G_i$ denote the control-flow graph with 
   entry block $\beta_i$ consisting of all blocks dominated by $\beta_i$. We may write
   \begin{equation}
-    G \simeq \beta, (\wbranch{\kappa_i}{y_i}{G_i},)_i \qquad
-    \forall i, G_i = \beta_i, (\wbranch{\kappa_{i, j}}{y_{i, j}}{\beta_{i, j}},)_j, R_i
+    G \simeq \beta, (\wbranch{\kappa_i}{y_i}{G_i},)_{i \in I} \qquad
+    \forall i \in I, G_i = \beta_i, (\wbranch{\kappa_{i, j}}{y_{i, j}}{\beta_{i, j}},)_{j \in I}, R_i
   \end{equation} 
   where $R_i$ is the ``remainder'' of the control-flow graph $G_i$. Note the equations for $G_i$ are
   actually equalities, rather than being equivalence up to permutation $\simeq$, since the
