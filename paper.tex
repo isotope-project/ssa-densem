@@ -398,10 +398,10 @@ This is exactly what we provide in this paper. Concretely, our contributions are
   initial model, and that the SPARC TSO semantics forms a valid model of SSA. The denotational
   semantics and its proof of the soundness of substitution are done on paper. 
 
-  \TODO{note this in reviewer response for ``soundness of substitution''}
+%   \TODO{note this in reviewer response for ``soundness of substitution''}
 \end{itemize}
 
-\TODO{mention refinement early on?}
+% \TODO{mention refinement early on?}
 
 
 \section{Static Single Assignment Form}
@@ -1468,15 +1468,16 @@ The validity of variable weakening hinges on the fact that all the variables in 
 available with the same type in $\Gamma$, i.e., if $\hasty{\Delta}{\epsilon}{x}{A} \implies
 \hasty{\Gamma}{\epsilon}{x}{A}$, then anything which can be typed in $\Delta$ can be typed in
 $\Gamma$. So while weakening on \emph{terms} is just the identity, weakening on \emph{derivations}
-is essentially replacing ``variables from $\Gamma$'' with ``variables from $\Delta$.'' Since none of
+is essentially replacing ``variables from $\Delta$'' with ``variables from $\Gamma$.'' Since none of
 our typing rules, other than $\ms{var}$, make use of variable names, we might ask whether we can
 repeat essentially the same reasoning to reason about the well-typedness of replacing variables in
-$\Gamma$ with \emph{different} variables in $\Delta$ of the same type, or, more generally, arbitrary
-
-More generally, we might instead ask whether things still type-check if every variable
-$\hasty{\Delta}{\epsilon}{x}{A}$ in $\Delta$ is replaced with an (arbitrary) \emph{pure} term
-$\hasty{\Gamma}{\bot}{\gamma_x}{A}$ which is well-typed in $\Gamma$, whether things still
-type-check. An assignment of such variables $\gamma : x \mapsto \gamma_x$ is called a
+$\Gamma$ with arbitrary pure expressions of the same type (i.e., perform a substitution).  
+%
+% More generally, we might instead ask whether things still type-check if every variable
+% $\hasty{\Delta}{\epsilon}{x}{A}$ in $\Delta$ is replaced with an (arbitrary) \emph{pure} term
+% $\hasty{\Gamma}{\bot}{\gamma_x}{A}$ which is well-typed in $\Gamma$, whether things still
+% type-check.
+An assignment of such variables $\gamma : x \mapsto \gamma_x$ is called a
 \emph{substitution}, which we can type with the judgement $\issubst{\gamma}{\Gamma}{\Delta}$ as per
 the rules given in Figure \ref{fig:ssa-reg-rules}. In particular,
 \begin{itemize}
@@ -1486,7 +1487,7 @@ the rules given in Figure \ref{fig:ssa-reg-rules}. In particular,
   adjoined takes $\Gamma$ to $\Delta, \bhyp{x}{A}$
 \end{itemize}
 To \emph{use} a substitution, we simply need to perform standard capture-avoiding substitution (see
-Figure \ref{fig:ssa-subst-def} in the appendix). We can now go ahead and state the
+Figure \ref{fig:ssa-subst-def} in the appendix). Substitution satisfies the
 \emph{substitution lemma} as follows:
 \begin{lemma}[Substitution]
   Given $\issubst{\gamma}{\Gamma}{\Delta}$, we have that:
@@ -2166,7 +2167,7 @@ nested \ms{where}-block; this is given as the rule \brle{codiag}.
 
 To be able to soundly perform equational rewriting, we will need the \emph{uniformity} property,
 which is described by the rule \brle{uni}. In essence, this lets us commute pure expressions with
-loop bodies, enabling rewrites like
+loop bodies, enabling rewrites (in imperative style) like
 \begin{equation}
   \ms{loop}\;\{ x = x + 1; \ms{if}\;p\;3x\;\{\ms{ret}\;3x\} \}
   \qquad \teqv \qquad 
@@ -2448,6 +2449,7 @@ and therefore that
 In particular, for example, we can then easily derive the rewrite from Figure~\ref{fig:fact-dinat}
 to Figure~\ref{fig:fact-zero} by noting the \emph{equalities} (an equivalence would be enough, of
 course)
+\TODO{split it onto two lines}
 \begin{multline*}
   \ms{if}\;i_0 < n\;\{
     \ms{br}\;\ms{loop}(
@@ -2479,8 +2481,7 @@ Rewrites like this are an instance of the principle we call \emph{dinaturality},
 structured control-flow, can be best expressed as an equivalence between the control-flow graphs
 in Figure~\ref{fig:dinat-struct-cfg}. Unlike in the case of uniformity, however, this is true even
 when the program fragment $P$ is \emph{impure}, since we do not commute $P$ over an infinite number
-of iterations; hence, we cannot simply use uniformity to derive this rewrite rule in its most
-general form. We instead postulate our final rewriting rule, \brle{dinat}, which generalises the
+of iterations. Our final rewriting rule, \brle{dinat}, generalises the
 above rewrite from sequential composition on a structured control-flow graph to label substitution
 on an arbitrary control-flow graph. 
 
@@ -2531,8 +2532,8 @@ on an arbitrary control-flow graph.
 \TODO{work on wording here, point back to reviews}
 It turns out that being able to do this is essential, as it allows us to relate unary and $n$-ary
 \ms{where}-blocks and, in particular, use this relationship to interconvert between data-flow and
-control-flow. This means we now have enough machinery to justify the elimination of arbitrary nested
-\ms{where}-blocks, and hence to justify the rule
+control-flow. This means we now have enough equations to derive the flattening of nested
+\ms{where}-blocks:
 \begin{equation}
   \prftree[r]{\rle{cfg-fuse}}
     {\haslb{\Gamma}{r}{\ms{L}, (\lhyp{\ell_i}{A_i},)_i, (\lhyp{\kappa_j}{B_j},)_j}}
@@ -2587,14 +2588,16 @@ Also very convenient is the variant
     }
     \label{eqn:where-fusion-2}
 \end{equation}
-Rather than justify these rules directly, it turns out to be much more convenient to do so using our
-denotational semantics, which, due to our completeness result in Section~\ref{ssec:completeness}, is
-sound. A proof can be found in Lemma~\ref{lem:where-fusion} in the appendix.
+Rather than directly giving derivation trees for these auxilliary rules, it is more convenient to
+give a denotational proof. However, the completeness of our equational theory (proved in Section~\ref{ssec:completeness})
+means that the semantic equality implies the existence of the requisite derivation tree. A proof can be
+found in Lemma~\ref{lem:where-fusion} in the appendix. This is one of the benefits of having a completeness
+result: it lets us switch freely between equational and denotational modes of reasoning. 
 
-\TODO{this is not a point against our equational theory \emph{per-se}: we can use the semantics to
-prove \emph{new} rules sound, adding them to the set of valid principles, rather than having more
-rules to check at the beginning. This is rather a point \emph{for} completeness, since it lets us
-\emph{mix} equational and semantic reasoning as convenient. Link back to discussion about this.} 
+% \TODO{this is not a point against our equational theory \emph{per-se}: we can use the semantics to
+% prove \emph{new} rules sound, adding them to the set of valid principles, rather than having more
+% rules to check at the beginning. This is rather a point \emph{for} completeness, since it lets us
+% \emph{mix} equational and semantic reasoning as convenient. Link back to discussion about this.} 
 
 There are some other basic rules we may want to use which turn out to be
 derivable from our existing set. For example, while re-ordering labels in a \ms{where}-block looks
