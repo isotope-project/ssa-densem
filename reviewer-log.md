@@ -290,47 +290,71 @@ to a pure/impure distinction.
   We have taken it out of the main body. 
 
 * Section 5
-Section 5: This is a pretty nice introduction to Premonoidal/Freyd
-categories and recursion, but the lack of citations gives the
-misleading and unintentional impression that these are new
-concepts. In particular, Power and Robinson MSCS 1997 which introduces
-premonoidal categories and Levy, Power and Thielecke Information and
-Computation 2003 which introduces Freyd categories are not cited
-anywhere in the paper, even though they provide similar soundness and
-completeness results to those formalized in this work.
 
-Especially the formulation of Elgot structure should be discussed and
-compared with (co)-cartesian Traced monoidal categories, which were
-studied in Hasegawa TLCA 1997 and Simpson and Plotkin LICS 2000.
+* Section 5: This is a pretty nice introduction to Premonoidal/Freyd
+  categories and recursion, but the lack of citations gives the
+  misleading and unintentional impression that these are new
+  concepts. In particular, Power and Robinson MSCS 1997 which introduces
+  premonoidal categories and Levy, Power and Thielecke Information and
+  Computation 2003 which introduces Freyd categories are not cited
+  anywhere in the paper, even though they provide similar soundness and
+  completeness results to those formalized in this work.
 
-Theorem 5.2: what does it mean for a subcategory to be an equivalence
-relation? I think you just want to say that it is a thin subcategory
+  We have added this citation
 
-1855-56: what is meant by "continuous" here? homomorphism of join
-semilattices?
+* Especially the formulation of Elgot structure should be discussed and
+  compared with (co)-cartesian Traced monoidal categories, which were
+  studied in Hasegawa TLCA 1997 and Simpson and Plotkin LICS 2000.
 
-2077-78: this was already defined on page 30
+  We reworked this section slightly to give more context, but felt discussing
+  traces was better left to the later section on string diagrams, where we
+  already had a citation for Hasegawa CTCS 2002 in which the correspondence
+  between traces on the coproduct and fixpoints is laid out.
+
+* Theorem 5.2: what does it mean for a subcategory to be an equivalence
+  relation? I think you just want to say that it is a thin subcategory
+
+  We give the definition immediately afterwards.
+
+* 1855-56: what is meant by "continuous" here? homomorphism of join
+  semilattices?
+
+  We have simplified the definition to remove this complication
+
+* 2077-78: this was already defined on page 30
+
+  TODO: confused
 
 * Section 6
 
-2302: "literature on strong Elgot monads": no citation????
+* 2302: "literature on strong Elgot monads": no citation????
 
-2304: Maybe worth pointing out this is not constructive. This can be
-done constructively if you use the partial elements monad Partial A := Σ(ϕ : Prop) ϕ ⇒ A.
+  We have reworked this slightly, and added a citation
 
-2513: fewer not less
+* 2304: Maybe worth pointing out this is not constructive. This can be
+  done constructively if you use the partial elements monad Partial A := Σ(ϕ : Prop) ϕ ⇒ A.
 
-Section 6.3: I am not an expert on weak memory and found this section
-very hard to follow, and again I don't know which parts are novel
-contributions and which are taken from prior work (Kavanagh and
-Brookes 2017).
+  We have added a footnote
+
+* Section 6.3: I am not an expert on weak memory and found this section
+  very hard to follow, and again I don't know which parts are novel
+  contributions and which are taken from prior work (Kavanagh and
+  Brookes 2017).
+
+  We have reworked this section slightly, and adjusted our wording to make it
+  clear that we only slightly adapt Brookes' model to our framework
+
 
 * Section 7
 
-2814-2815: then why is the more general setting included at all?
+* 2814-2815: then why is the more general setting included at all?
 
-7.4.3: this section doesn't explain what guarded iteration is in
-enough detail to be self-contained
+  TODO: confused
+
+* 7.4.3: this section doesn't explain what guarded iteration is in
+  enough detail to be self-contained
+
+  TODO: Neel halp
 
 Referee: 2
 
@@ -413,6 +437,8 @@ thoroughly revised.
   Section 5, I kind of ran out of steam about checking at that level of detail,
   so I'm not confident that I've caught errors at that point. 
 
+  We have went over the paper and have attempted to correct typos and clarify
+  our exposition.
 
 - Given the length of the paper and the comments below about the rest of the
   paper; I haven't read the technical appendix carefully enough to be confident
@@ -421,10 +447,18 @@ thoroughly revised.
   similar mistakes.) Ideally, all of the results in the paper would be verified
   in Lean, including the claims of the appendix.
 
+  Unfortunately, we have not been able to fully formalize all the theorems in the 
+  appendix due to time constraints.
+
+  TODO: mention POPL? Probably not...
+
 - The mechanized proofs in Lean mentioned in the intro and in a few theorems
   later in the paper weren't available for this reviewer to inspect. Access to
   them should somehow be made available somehow -- can you at least point to a
   git repo?
+
+  We have added a section with links to the Git repository, and a description
+  of the formalization.
 
 - Nowwhere in this paper does it discuss some other important, practical choices
   made for "real" implementations of SSA, such as found in LLVM's
@@ -441,6 +475,8 @@ thoroughly revised.
   acknowledge that there are other implementation issues at play when SSA is
   used (beyond just the semantics of the constructs).
 
+  TODO: neel help
+
 - The first part of the "story" of Section 2 on pages 2--4 is a nice way to
   arrive at SSA, but later, when you then introduce ANF, and note that it
   doesn't have good substitution properties, you (line 290) "relax the
@@ -455,7 +491,9 @@ thoroughly revised.
   I think that it would help to be more explicit about your aim to produce
   $\lambda_{SSA}$, which is a well-behaved _superset_ of "real" SSA, but for
   which it is easy to show how to translate *into* "real" SSA.
-  
+
+  We have rewritten this section completely in an attempt to clarify the
+  narrative.
   
 - Section 4.6: the B{\"o}hm-Jacobini theorem could really benefit from some kind
   of example.  My intuition is that this involves doing a lot of code copying to
@@ -474,6 +512,8 @@ thoroughly revised.
   theorem, but without giving any intuitions about what the $WH$ and $PW$
   transformations do (e.g., why are $WH$ and $PW$ even the acronyms?)
 
+  We ended up moving our discussion of the B{\"o}hm-Jacobini theorem to the
+  appendix as part of cleaning up our narrative.
 
 - Section 5: It wasn't completely clear to me what part of this section is "new"
   and what part is just a presentation of existing work.  Surely the concepts of
@@ -491,6 +531,9 @@ thoroughly revised.
   theory (sometimes people write $id_{A}$, for instance); similarly for `;` for
   composition rather than `circ`, so a brief recap of what category theory
   notation you adopt would be welcome here too.
+
+  We added some more citations, reworded this section somewhat, and began the 
+  section with a recap and a primer on notation.
   
 - Section 6.3: This TSO weak memory model is a *lot* of added complexity on top
   of an already *very* technical and dense paper.  I'm not sure that it is
@@ -499,6 +542,8 @@ thoroughly revised.
   semantics, but there isn't really any "punchline"---can you justify an
   interesting/important program transformation using this model?  Is there a
   clear example of that?  
+
+  TODO: neel
 
 # Additional / more-comprehensive related work:
 
@@ -511,37 +556,43 @@ thoroughly revised.
   for LLVM IR, particularly K-LLVM [LG20] and Crellvm [KKSJ+18] (see references
   below).
     
-  More egregiously, it seems to be missing any discussion of *very* related
-  work.  Although it cites the Vellvm project's POPL 2012 paper, it neglects the
-  much more relevant work from ICFP 2021 [ZB+21] which gives a *denotational*
-  semantics to LLVM IR based on the ITrees paper presented in POPL 2020
-  [XZHH+20]. There is also recent follow-on work that addresses concurrency
-  [CHZ25].
-  
-  In particular, as shown in the POPL 2020 paper, ITrees (and monad transformers
-  based on them) satisfy the Freyd Elgot structure requirements in a way that is
-  a generalization (to coninductive trees rather than streams) of the trace
-  models presented in this paper's Section 6.2.  The ITrees paper even states
-  the same set of equations for working with Elgot structure (i.e., codiagonal,
-  etc.). The ICFP 2021 paper uses that structure to give a semantics to LLVM IR
-  in almost the same way as done in this paper: the denotation of a control flow
-  graph is via their `iter` operation, which corresponds to the use of your
-  `rfix` on line 2007.
-  
-  However, there are also some differences: they build the `rfix` operation in a
-  different way: by interpreting via the state transformer after applying
-  `iter`/fix.  They also give a different treatment of phi nodes.  However,
-  their semantics also embeds the SSA control-flow-graph semantics into a domain
-  in which mutually-recursive functions can also be denoted, so they are able to
-  interpret `call` operations that appear on the right-hand-sides.
-  
-  Beyond just doing a thorough comparison to "modern Vellvm" in the related work
-  of your paper, I think that it bolsters your case to point to those results as
-  another concrete model that can be seen as an instance of your framework.
-  Indeed, I see the fact that other researchers exploit more-or-less the same
-  structure as a good indicator that the ideas presented by your paper are "on
-  the right track"!
+  * More egregiously, it seems to be missing any discussion of *very* related
+    work.  Although it cites the Vellvm project's POPL 2012 paper, it neglects the
+    much more relevant work from ICFP 2021 [ZB+21] which gives a *denotational*
+    semantics to LLVM IR based on the ITrees paper presented in POPL 2020
+    [XZHH+20]. There is also recent follow-on work that addresses concurrency
+    [CHZ25].
 
+    We have added citations to both papers.
+  
+  
+  * In particular, as shown in the POPL 2020 paper, ITrees (and monad transformers
+    based on them) satisfy the Freyd Elgot structure requirements in a way that is
+    a generalization (to coninductive trees rather than streams) of the trace
+    models presented in this paper's Section 6.2.  The ITrees paper even states
+    the same set of equations for working with Elgot structure (i.e., codiagonal,
+    etc.). The ICFP 2021 paper uses that structure to give a semantics to LLVM IR
+    in almost the same way as done in this paper: the denotation of a control flow
+    graph is via their `iter` operation, which corresponds to the use of your
+    `rfix` on line 2007.
+    
+    However, there are also some differences: they build the `rfix` operation in a
+    different way: by interpreting via the state transformer after applying
+    `iter`/fix.  They also give a different treatment of phi nodes.  However,
+    their semantics also embeds the SSA control-flow-graph semantics into a domain
+    in which mutually-recursive functions can also be denoted, so they are able to
+    interpret `call` operations that appear on the right-hand-sides.
+  
+    Beyond just doing a thorough comparison to "modern Vellvm" in the related work
+    of your paper, I think that it bolsters your case to point to those results as
+    another concrete model that can be seen as an instance of your framework.
+    Indeed, I see the fact that other researchers exploit more-or-less the same
+    structure as a good indicator that the ideas presented by your paper are "on
+    the right track"!
+
+    We add a brief discussion of this in Section 6.
+
+    TODO: Neel
 
 # Detailed Comments
 
@@ -550,7 +601,7 @@ thoroughly revised.
   else branch of the 3-address code.  That looks a bit nonstandard by comparison
   to "strict" SSA.
 
-  
+  TODO: Neel
 
 - line 128: I don't think this description of the dominance tree is correct --
   you don't want to intersect the strict dominance relation with the direct
@@ -573,66 +624,58 @@ thoroughly revised.
   dominates `B` and, (2) for every other node `C` that also dominates `B`, `C`
   dominates `A`. 
 
-
+  We have fixed the definition
 
 ## Operational semantics for phi nodes
 
-A couple times in the paper, you assert that phi nodes do not have an obvious
-operational semantics. (e.g. line 174).  Is it really that hard?  Yes, the
-operational semantics machine configurations would need to track a bit more
-information than is usual (namely, the label of the currently executing block)
-and, yes, we would need a separate judgment to handle phi nodes, since they
-execute "in parallel" and with respect to the state at the end of the block that
-they were jumped to from, but that doesn't seem too conceptually difficult.
-Something like the following "big step" rules are probably close:
+* A couple times in the paper, you assert that phi nodes do not have an obvious
+  operational semantics. (e.g. line 174).  Is it really that hard?  Yes, the
+  operational semantics machine configurations would need to track a bit more
+  information than is usual (namely, the label of the currently executing block)
+  and, yes, we would need a separate judgment to handle phi nodes, since they
+  execute "in parallel" and with respect to the state at the end of the block that
+  they were jumped to from, but that doesn't seem too conceptually difficult.
+  Something like the following "big step" rules are probably close:
 
-The following rule evaluates a single phi node, having arrived via a branch from
-the `from_lbl` block, being sure to use the original local environment,
-$\sigma_0$, not the one being produced by running the phi nodes.  P is the
-program.
+  The following rule evaluates a single phi node, having arrived via a branch from
+  the `from_lbl` block, being sure to use the original local environment,
+  $\sigma_0$, not the one being produced by running the phi nodes.  P is the
+  program.
 
-```
-<$\sigma_0$, exp_(from_lbl)> ==> v
----------------------------------------------------------------------------------------------------
-P |- $\sigma_0$, <$\sigma$, from_lbl, to_lbl, let x = phi[lbl_i = exp_i]> ==> \sigma[x $\mapsto$ v]
-```
+  ```
+  <$\sigma_0$, exp_(from_lbl)> ==> v
+  ---------------------------------------------------------------------------------------------------
+  P |- $\sigma_0$, <$\sigma$, from_lbl, to_lbl, let x = phi[lbl_i = exp_i]> ==> \sigma[x $\mapsto$ v]
+  ```
 
-The following rule executes a branch, "copying" the local environment so the
-phis can read it in parallel:
+  The following rule executes a branch, "copying" the local environment so the
+  phis can read it in parallel:
 
-```
-P(lbl) = phis ; body; term
+  ```
+  P(lbl) = phis ; body; term
 
-P |- $\sigma_0$, <$\sigma_0$, cur_lbl, lbl, phis> ==> $\sigma_1$
-P |- <$\sigma_1$, body> ==> $\sigma_2$
-P |- <$\sigma_2$, term> ==> $\sigma_3$
----------------------------------------------------
-P |- <$\sigma_0$, cur_lbl, br lbl> ==> $\sigma_3$
-```
+  P |- $\sigma_0$, <$\sigma_0$, cur_lbl, lbl, phis> ==> $\sigma_1$
+  P |- <$\sigma_1$, body> ==> $\sigma_2$
+  P |- <$\sigma_2$, term> ==> $\sigma_3$
+  ---------------------------------------------------
+  P |- <$\sigma_0$, cur_lbl, br lbl> ==> $\sigma_3$
+  ```
 
-So, I'm not sure that giving an operational semantics to phi nodes is that hard.
-However, I would agree that it would probably be hard to *reason about* the
-operational semantics I sketched above (for the same reason that operational
-semantics that introduce auxilliary information into the machine configurations
-are usually hard to work with).
+  So, I'm not sure that giving an operational semantics to phi nodes is that hard.
+  However, I would agree that it would probably be hard to *reason about* the
+  operational semantics I sketched above (for the same reason that operational
+  semantics that introduce auxilliary information into the machine configurations
+  are usually hard to work with).
 
+  TODO: Neel
 
-- line 178: "$i_0$ and $i_1$" --> should be "$a_1$ and $i_1$"
-
-- line 279: "simply introduce new anonymous basic blocks...": Shouldn't that say "simply introduce new basic blocks with fresh names"?  These clearly are not anonymous since they have names.
-
-- line 209: this is where the "story" of the this section started to get lost on
+* line 209: this is where the "story" of the this section started to get lost on
   me.  First you simplified down to SSA, now you pivot to "relaxing" the ssa
   back to a more compositional language
-  
-- line 330 in the caption (b): mentions 6(a) and 6(b), but this *is* 6(b).  Do you mean 5(a) and 5(b)?
 
-- line 340: the branch instructions should have parameters $a$ and $b$, not $x$: 
-  `if e { br l(a) } else {b l(b) } where l(x) : {t}`
-  
-- line 391: missing period
+  We have completely rewritten this section
 
-- line 409 and line 1237: Many variants of SSA (including the one used by LLVM
+* line 409 and line 1237: Many variants of SSA (including the one used by LLVM
   IR) do *not* allow just a variable on right-hand-side of an assignment.
   Conceptually, that forces even more normalization than your $\lambda_{SSA}$
   requires to be considered "strict" SSA as you define in Figure 23 (where you
@@ -641,13 +684,7 @@ are usually hard to work with).
   have such a "trivial" binding.  This might be worth mentioning somewhere in
   your paper.
 
-- line 413 Figure 8: Should include $r$ (used often elsewhere, but specifically
-  mentioned on line 430) in addition to $s$ and $t$ as metavariables.
-
-- line 436: the math at the end is missing an "and" -- there is no space before $\epsilon \leq epsilon'$
-
-- lines 461 and 469: why say "(potentially effectful)" on line 469 and not for
-  line 461, which is describing the analgous evaluation for expressions?
+  We have added a footnote
 
 - line 471: the syntax for the where statement is missing a comma compared to
   the grammar shown on line 415.  This is a good place to mention that you
@@ -671,65 +708,47 @@ are usually hard to work with).
   -----------------------------------------------
   \Gamma \vdash r where (l_i(x_i) : {t_i},)_{i\in I}
   \]
-  
-  
-- line 479: should both clauses here map $defs$ over $r$?  i.e.
-  ```
-  defs(let x = e; r) = (x,e)::(defs r)
-  ```
-  
-- line 521: "L types less regions than K" --> "L types *fewer* regions than K"
 
-- line 537: I believe these $\sigma$'s should be $\gamma$'s (per the rules in Fig. 11)
-
-- line 538: I don't think you intend $L \leq K$ to be a precondition to (d), but
-  the lemma require is.
-
-- line 574: "rules given in Figure 10" --> "rules given in Figure 11"
+  We have made the indexing in our rules more explicit
 
 - lines 570-575 and Fig. 12: the terminology around "empty" versus "identity"
   substitution could be clearer.
+
+  TODO: neel
   
 - lin 585: have you mentioned that you use $\rho$ to also range over
   substitutions?  Why not use $\gamma_1$ and $\gamma_2$ like you do later on
   line 620?
 
-- line 631: The capital $\Gamma$ on this line should be a lower case $\gamma$
-
 - line 634: is the choice of left extension here important?  are you somehow
   indicating that you'll only substitute for the "rightmost" variable in the
   context somehow?
-  
-- line 653: The notation of the judgment on this line is messed up, it should be
-  $\Gamma \vdash \sigma : L ~> K$`
 
-- line 675: "left exension" arrow seems to bind to just the $x$ -- maybe
-  parenthesize?
+  TODO: Neel
 
 - line 704: (very minor) it is a bit redundant to include the exisential
   quantifier in this rule.  It's OK to leave it there, but it does seem a bit
   inconsitent to include it here but not in, e.g., the transitivity case, which
   also has an existentially quantified $b$ (since it appears only in the
   premises)
-  
-- line 891: the congruence rule for cfg's is another place where I'd be careful
-  with the use of indices.
-  
-- line 900: the substitution should be $[a/x]r$ not what is written
 
+  TODO: Neel
+  
 - pg 19 / lines 926-931: I would not include any text beyond just Figures 18 and
   19 on this page -- the small amount of room on the bottom doesn't give you
   enough space.  Also the current layout puts an inference rule there, which
   visually looks like part of Fig. 18
-  
-- line 930: the cfgs rule is another one where the indices could be made clearer
+
+  TODO: Neel
 
 - line 963: Your assertion that you only need to add the ability to get rid of a
   single, trivial where-block isn't completely obvious.  Maybe expand the
   explanation about why that is sufficient?
+
+  TODO: Neel
   
 - line 976: I agree that explaining the rule point-by-point is a good strategy,
-  but you could also conne ct your explanation back to the example introduced
+  but you could also connect your explanation back to the example introduced
   just prior (on lines 973-974).  That is, as you explain each step of the rule,
   instantiate it to show how to derive the result in equations (10) and
   (11). Doing so would help the reader "follow along" in your point-by-point

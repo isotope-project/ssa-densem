@@ -462,6 +462,7 @@ can be a (conditional) branch to another basic block. We give a grammar for 3-ad
 Figure~\ref{fig:3addr-grammar}, with some slight adjustments to the usual presentation:
 \begin{itemize}
   \item \emph{Constants} $c$ are interpreted as nullary instructions $c()$.
+  
   \item \emph{Conditional branches} $\ite{o}{\tau}{\tau'}$ are desugared to case-statements
   $\casestmt{o}{y}{\tau}{z}{\tau'}$ on a sum type $x : \mb{1} + \mb{1}$. This is equivalent in power
   to regular conditional branches, while allowing our work to generalize easily to higher-level
@@ -473,7 +474,8 @@ Figure~\ref{fig:3addr-grammar}, with some slight adjustments to the usual presen
   expressive power, but avoids the proliferation of intermediate basic-blocks.
 
   \item \emph{Return statements} $\ms{ret}\;v$ are desugared to branches $\brb{\ell_{\ms{exit}}}{v}$
-  to a distinguished exit label $\ell_{\ms{exit}}$
+  to a distinguished exit label $\ell_{\ms{exit}}$. In particular, this allows a return-statement to
+  appear in the branch of a case-statement or if-statement.
 \end{itemize}
 
 \begin{figure}[H]
@@ -583,11 +585,12 @@ example, we could rewrite
 This transformation enables algebraic reasoning about expressions involving each $x_t$. However,
 since we can only define a variable once in SSA form, expressing programs with loops and branches
 becomes challenging. For example, na\"ively trying to lower the program in
-Figure~\ref{fig:fact-3addr} into SSA form would not work, since the reference to $i$ in the right-hand-side of the statement $i = i + 1$ can
-refer to \emph{either} the previous value of $i$ from the last iteration of the loop \emph{or} the
-original value $i = 1$. The classical solution is to introduce \emph{$\phi$-nodes}, which select a
-value based on the predecessor block from which control arrived. We give the lowering of our program
-into SSA with $\phi$-nodes in Figure~\ref{fig:fact-ssa}.
+Figure~\ref{fig:fact-3addr} into SSA form would not work, since the reference to $i$ in the
+right-hand-side of the statement $i = i + 1$ can refer to \emph{either} the previous value of $i$
+from the last iteration of the loop \emph{or} the original value $i = 1$. The classical solution is
+to introduce \emph{$\phi$-nodes}, which select a value based on the predecessor block from which
+control arrived. We give the lowering of our program into SSA with $\phi$-nodes in
+Figure~\ref{fig:fact-ssa}.
 
 \citet{cytron-ssa-intro-91} introduced the first efficient algorithm to lower a program in 3-address
 code to valid SSA while introducing a minimum number of $\phi$-nodes, making SSA practical for
@@ -665,7 +668,17 @@ at the jump site. Converting a program from BBA format back to standard SSA form
 is straightforward: introduce a $\phi$-node for each argument of a basic block, and for each branch
 corresponding to the $\phi$-node, add an argument to the jump instruction from the appropriate
 source block. We give a formal grammar for basic blocks-with-arguments SSA in
-Figure~\ref{fig:bba-grammar}. Note that this grammar no longer needs a separate terminator for
+Figure~\ref{fig:bba-grammar}
+\footnote{
+  Unlike our grammar, many variants of SSA, including LLVM IR, do not allow variables to appear 
+  alone on the right-hand side of assignments, as in the fragment $x = y; \beta$. 
+  With this restriction, we are forced to normalize even further and substitute $[y/x]\beta$ 
+  instead. We do not incorporate this restriction, as we want to remain close to 3-address code, 
+  where it makes less sense.
+
+  \todo{Neel}
+}
+. Note that this grammar no longer needs a separate terminator for
 returns: we can treat the return point as a distinguished label (with argument) that a program can
 jump to. 
 
@@ -1343,8 +1356,8 @@ We now move on to \emph{regions}, which can be typed as follows:
   respectively
   
   \item Pattern matching on sum types, typed by \brle{case}. Operationally, we interpret this as
-  executing the (potentially effectful) expression $e$, and then, if $e$ is a left injection
-  $\iota_l\;x$, executing $r$ with its value ($x$), otherwise executing $s$.
+  executing the expression $e$, and then, if $e$ is a left injection $\iota_l\;x$, executing $r$
+  with its value ($x$), otherwise executing $s$.
   
   \item \emph{\ms{where}-blocks} of the form ``$\where{r}{(\wbranch{\ell_i}{x_i}{t_i})_i}$",
   which consist of a collection of mutually recursive regions $\wbranch{\ell_i}{x_i}{t_i}$ and a
@@ -1479,7 +1492,7 @@ $\Gamma$ with arbitrary pure expressions of the same type (i.e., perform a subst
 % type-check.
 An assignment of such variables $\gamma : x \mapsto \gamma_x$ is called a
 \emph{substitution}, which we can type with the judgement $\issubst{\gamma}{\Gamma}{\Delta}$ as per
-the rules given in Figure \ref{fig:ssa-reg-rules}. In particular,
+the rules given in Figure \ref{fig:ssa-meta-rules}. In particular,
 \begin{itemize}
   \item \brle{sb-nil} says that the empty substitution takes every context to the empty context.
   \item \brle{sb-cons} says that if $\gamma$ takes $\Gamma$ to $\Delta$ and
@@ -1494,7 +1507,7 @@ Figure \ref{fig:ssa-subst-def} in the appendix). Substitution satisfies the
   \begin{enumerate}[label=(\alph*)]
     \item $\hasty{\Delta}{\epsilon}{a}{A} \implies \hasty{\Gamma}{\epsilon}{[\gamma]a}{A}$ 
     \item $\haslb{\Delta}{r}{\ms{L}} \implies \haslb{\Gamma}{[\gamma]r}{\ms{L}}$
-    \item $\issubst{\rho}{\Delta}{\Xi} \implies \issubst{[\gamma]\rho}{\Gamma}{\Xi}$
+    \item $\issubst{\gamma_2}{\Delta}{\Xi} \implies \issubst{[\gamma]\gamma_2}{\Gamma}{\Xi}$
     \item $\lbsubst{\sigma}{\Gamma}{\ms{L}}{\ms{K}} \implies \lbsubst{[\gamma]\sigma}{\Delta}{\ms{L}}{\ms{K}}$
   \end{enumerate}
 \end{lemma}
@@ -1576,7 +1589,7 @@ As for variable substitutions, we will often omit $\ms{L}$ when it is clear from
 % , or
 % even omit the $\rupg{\cdot}$ and $\lupg{\cdot}$ operators entirely, due to the fact that for any
 % $\sigma$, we have $[\sigma]r = [\rupg{\sigma}_{\ms{K}}]r = [\lupg{\sigma}_{\ms{K}}]r$. 
-We also define the shorthand $[\ell / \kappa] = [\lupg{\kappa(x) \mapsto \brb{\ell}{x}}]$ for
+We also define the shorthand $[\ell / \kappa] = [\lupg{(\kappa(x) \mapsto \brb{\ell}{x})}]$ for
 single-label substitutions.
 
 \begin{figure}
@@ -2007,7 +2020,7 @@ not necessary, as these are derivable from binding and the $\eta$-rules for expr
     \prftree[r]{\rle{let$_1$-$\beta$}}
       {\hasty{\Gamma}{\bot}{a}{A}}
       {\haslb{\Gamma, \bhyp{x}{A}}{r}{\ms{L}}}
-      {\lbeq{\Gamma}{\letstmt{x}{a}{r}}{[r/x]a}{\ms{L}}}
+      {\lbeq{\Gamma}{\letstmt{x}{a}{r}}{[a/x]r}{\ms{L}}}
     \\
       \prftree[r]{\rle{let$_1$-op}}
       {\isop{f}{A}{B}{\epsilon}}
@@ -2164,6 +2177,8 @@ the rewrite
 However, on it's own, it's not quite enough to get rid of nested \ms{where}-blocks. To enable this,
 it turns out that we only need to add as an axiom the ability to get rid of a single, trivially
 nested \ms{where}-block; this is given as the rule \brle{codiag}.
+
+\TODO{Neel}
 
 To be able to soundly perform equational rewriting, we will need the \emph{uniformity} property,
 which is described by the rule \brle{uni}. In essence, this lets us commute pure expressions with
@@ -3012,6 +3027,48 @@ $\lbeq{\Gamma}{r}{r'}{\ms{L}}$, as desired, since in particular
 
 \label{sec:densem}
 
+Now that we have given an equational theory for SSA, we would like to build a denotational semantics
+for SSA: a mapping from well-typed programs $\haslb{\Gamma}{r}{\ms{L}}$ to mathematical objects
+$\dnt{\haslb{\Gamma}{r}{\ms{L}}}$. This naturally gives us another way to reason about whether two
+programs ``$r$, $r'$'' are ``the same:'' we can ask whether
+$
+\dnt{\haslb{\Gamma}{r}{\ms{L}}} = \dnt{\haslb{\Gamma}{r'}{\ms{L}}}
+$.
+Our goal is to build a denotational semantics which is both \emph{sound} and \emph{complete}; that
+is, such that
+$$
+\lbeq{\Gamma}{r}{r'}{\ms{L}} \iff
+\dnt{\haslb{\Gamma}{r}{\ms{L}}} = \dnt{\haslb{\Gamma}{r'}{\ms{L}}}
+$$
+More specifically, we'll begin by defining a notion of a \emph{model} $\mc{M}$ of SSA, and then
+define the denotational semantics w.r.t. a model $\dnt{\haslb{\Gamma}{r}{\ms{L}}}_{\mc{M}}$. We'll
+then prove that, for \emph{any} model of SSA, if $\lbeq{\Gamma}{r}{r'}{\ms{L}}$, then
+$$
+\dnt{\haslb{\Gamma}{r}{\ms{L}}}_{\mc{M}} = \dnt{\haslb{\Gamma}{r'}{\ms{L}}}_{\mc{M}}
+$$
+In other words, our equational theory is \emph{sound}, and so never allows us to prove an equation
+which does not in fact hold. We'll then give an model $\mc{M}$ such that
+$$
+\dnt{\haslb{\Gamma}{r}{\ms{L}}}_{\mc{M}} = \dnt{\haslb{\Gamma}{r'}{\ms{L}}}_{\mc{M}} \implies
+\lbeq{\Gamma}{r}{r'}{\ms{L}}
+$$
+showing that our equational theory is also \emph{complete}: if an equation holds in an
+\emph{arbitrary} model of SSA, it must in fact be derivable via our theory.
+
+We'd further like our denotational semantics to be \emph{compositional}: the denotation of a program
+should be a fixed function of the denotations of its parts. To do this, we will give SSA a
+\emph{categorical} semantics, interpreting (label) contexts as objects and programs as morphisms
+between them in some target category $\mc{C}$. Different program structures, such as branching and
+sequential composition, will correspond more-or-less directly to structures in our target category.
+
+Before we begin, we fix some notational conventions:
+\begin{itemize}
+  \item We denote the \emph{composition} of two morphisms $f : A \to B$ and $g : B \to C$ as $f ; g
+  : A \to C$
+  \item We denote the coproduct of a morphism $f: B \to C$ with the identity $\ms{id}_A$ as $f + A:
+  B + A \to C + A$ or $A + f: A + B \to A + C$.
+\end{itemize}
+
 \subsection{Freyd-Elgot Categories}
 
 \citet{moggi-91-monad} showed that the Kleisli category of a strong monad over a CCC interprets
@@ -3214,11 +3271,14 @@ For any finite coproduct $\Sigma_iB_i$, we will introduce the notation $\delta_{
 (A \otimes B_i) \to A \otimes \Sigma_i B_i$ and $\delta_{\Sigma}^{-1} : A \otimes \Sigma_i B_i \to
 \Sigma_i (A \otimes B_i)$ to denote the obvious morphisms.
 %
-The last piece of the puzzle, allowing us to model loops in regions, is the existence of an
-\emph{iteration operator}, since we currently cannot represent any nonterminating computations. We
-would further like this operator to be \emph{strong}; that is, compatible with the distributor, so
-that we can soundly access variables in scope in the loop body. Formally, we define a \emph{(strong)
-Conway iteration operator} as follows:
+
+This gives us enough machinery to express any \emph{acyclic} control-flow graph, however, we still
+have no way to model loops. What we would like is to equip our category with an \emph{iteration
+operator} taking a morphism $f: A \to B + A$, representing a ``loop'' which, given input $A$, either
+produces a result $B$ or continues to another iteration with a new $A$, to its \emph{fixpoint}
+$f^\dagger: A \to B$. Naturally, we require that this operator satisfies various properties, and in
+particular is \emph{strong}, that is, compatible with the distributor. Formally, we define a
+\emph{(strong) Conway iteration operator} as follows:
 \begin{definition}[Conway iteration]
   A category $\mc{C}$ with all coproducts is said to have a \emph{iteration operator} if we can
   define an operator $(-)^\dagger$ taking every morphism $f : A \to B + A$ to a morphism $f^\dagger
@@ -4600,15 +4660,15 @@ As we can see, the trace monad is a very powerful tool for quickly constructing 
 somewhat similar to \emph{interaction trees}, which were introduced by \citet{xia-20-itrees} to give
 convenient denotational semantics to imperative programs: these also form an Elgot monad. It turns
 out, however, that the same techniques can be used to tackle much more complex side-effects; to
-demonstrate this, we will show how to build a simple model of TSO weak memory based on that given in
-\citet{sparky}.
+demonstrate this, we will show how the model of TSO weak given in \citet{sparky} can be adapted to
+our framework.
 
 \subsection{TSO weak memory}
 
 \label{ssec:tso}
 
 Rather than a sequential trace consisting of a stream of events (here, \emph{actions}) $a_1, a_2,
-a_3, ...$, we would like to model concurrency by considering a \emph{partially ordered multiset}, or
+a_3, ...$, \citet{sparky} model concurrency by considering a \emph{partially ordered multiset}, or
 \emph{pomset}, of actions. The incomparable actions in our pomset are then precisely those which are
 executed in parallel. More formally, we define:
 
@@ -5247,7 +5307,8 @@ found both in the gated SSA representation as well as practical compilers such a
 \citet{xia-20-itrees} describe a toolkit for building denotational semantics for imperative
 languages, including the standard IMP language and a simple assembly language, using the
 \emph{interaction tree monad} and \emph{continuation tree monad}, which they show to satisfy the
-Elgot axioms.
+Elgot axioms. Recently, \citet{chappe-25-ctrees} introduced \emph{choice trees} (CTrees), which
+extend ITrees to support weak memory concurrency, and use this to model a subset of LLVM IR.
 
 \subsubsection{Mechanizations of SSA}
 
