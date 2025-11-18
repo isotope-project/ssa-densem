@@ -1965,6 +1965,24 @@
   bibsource    = {dblp computer science bibliography, https://dblp.org}
 }
 
+@inproceedings{chappe-25-ctrees,
+author = {Chappe, Nicolas and Henrio, Ludovic and Zakowski, Yannick},
+title = {Monadic Interpreters for Concurrent Memory Models: Executable Semantics of a Concurrent Subset of LLVM IR},
+year = {2025},
+isbn = {9798400713477},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3703595.3705890},
+doi = {10.1145/3703595.3705890},
+abstract = {Monadic interpreters have gained attention as a powerful tool for modeling and reasoning about first order languages.        In particular in the Coq ecosystem, the Choice Tree (CTree) library provides generic tools to craft such interpreters in presence of divergence, stateful effects, failure, and non-determinism.        This monadic approach allows the definition of semantics for programming languages that are modular in its effects, compositional w.r.t. its syntax, and executable.                This paper demonstrates the use of CTrees to formalize a semantics for concurrency and weak memory models.        We instantiate the approach over a minimal concurrent subset of LLVM IR.        Our semantics is built in successive stages, interpreting each aspect of the semantics separately.        In particular, a stage encodes multi-threading as an interleaving semantics, and        another implements a weak memory model that supports various LLVM memory orderings.        Furthermore, the modularity of the approach makes it possible to plug a different source language or memory model by changing a single interpretation phase.        By leveraging the notions of (bi)similarity on CTrees, we establish the equational theory of our constructions,         show how to transport equivalences through our layered construction, and prove simulation results between memory models.        Finally, our model is executable, hence the semantics can be tested by extraction to OCaml.},
+booktitle = {Proceedings of the 14th ACM SIGPLAN International Conference on Certified Programs and Proofs},
+pages = {283–298},
+numpages = {16},
+keywords = {Concurrency, Coq, LLVM, Semantics},
+location = {Denver, CO, USA},
+series = {CPP '25}
+}
+
 @article{adamek-iterative-10,
   author       = {Jir{\'{\i}} Ad{\'{a}}mek and
                   Stefan Milius and
