@@ -290,121 +290,41 @@ to a pure/impure distinction.
   We have taken it out of the main body. 
 
 * Section 5
-Section 5: This is a pretty nice introduction to Premonoidal/Freyd
-categories and recursion, but the lack of citations gives the
-misleading and unintentional impression that these are new
-concepts. In particular, Power and Robinson MSCS 1997 which introduces
-premonoidal categories and Levy, Power and Thielecke Information and
-Computation 2003 which introduces Freyd categories are not cited
-anywhere in the paper, even though they provide similar soundness and
-completeness results to those formalized in this work.
 
-Especially the formulation of Elgot structure should be discussed and
-compared with (co)-cartesian Traced monoidal categories, which were
-studied in Hasegawa TLCA 1997 and Simpson and Plotkin LICS 2000.
+* Section 5: This is a pretty nice introduction to Premonoidal/Freyd
+  categories and recursion, but the lack of citations gives the
+  misleading and unintentional impression that these are new
+  concepts. 
 
-Theorem 5.2: what does it mean for a subcategory to be an equivalence
-relation? I think you just want to say that it is a thin subcategory
+  We have added a number of citations to earlier work. 
 
-1855-56: what is meant by "continuous" here? homomorphism of join
-semilattices?
+* Theorem 5.2: what does it mean for a subcategory to be an equivalence
+  relation? I think you just want to say that it is a thin subcategory
 
-2077-78: this was already defined on page 30
+  We define what we mean immediately afterwards. 
 
 * Section 6
 
-2302: "literature on strong Elgot monads": no citation????
+* 2302: "literature on strong Elgot monads": no citation????
 
-2304: Maybe worth pointing out this is not constructive. This can be
-done constructively if you use the partial elements monad Partial A := Σ(ϕ : Prop) ϕ ⇒ A.
+  We have added citations. 
 
-2513: fewer not less
+* 2304: Maybe worth pointing out this is not constructive. This can be
+  done constructively if you use the partial elements monad Partial A := Σ(ϕ : Prop) ϕ ⇒ A.
 
-Section 6.3: I am not an expert on weak memory and found this section
-very hard to follow, and again I don't know which parts are novel
-contributions and which are taken from prior work (Kavanagh and
-Brookes 2017).
+  We now mention this. 
 
-* Section 7
+* Section 6.3: I am not an expert on weak memory and found this section
+  very hard to follow, and again I don't know which parts are novel
+  contributions and which are taken from prior work (Kavanagh and
+  Brookes 2017).
 
-2814-2815: then why is the more general setting included at all?
+  The model is essentially that of Kavanagh and Brookes, but we
+  additionally show that their model has the structure of an Elgot
+  monad (which they did not prove).
 
-7.4.3: this section doesn't explain what guarded iteration is in
-enough detail to be self-contained
 
 Referee: 2
-
-# Paper Summary
-
-This paper studies the denotational semantics of programs in SSA (Static Single
-Assignment) form.  SSA is an intermediate representation that is widely used in
-practice (for instance in LLVM IR) because its structural properties make it
-especially convenient for computing dataflow analyses and performing program
-optimizations.  Defining any semantics for SSA programs is non-trivial, however.
-Typical representations use "$\phi$-nodes", whose meanings depend on the dynamic
-control-flow behaviors of the program, and SSA isn't fully compositional -- it
-is too restrictive to permit good substitution principles.
-
-This paper builds on prior understanding of SSA as a particular form of stylized
-functional programming, observing that an SSA program can be seen as isomorphic
-to a functional program with mutually-recursive functions that are called only
-in tail position.  The resulting calculus is called $\lambda_{SSA}$.  The
-authors use that structure to define a type system for programs in in this form,
-where the typing judgments track (scoped) SSA variables along with the labels
-(with arguments) that might be jumped to as exits from SSA terminators.
-
-The paper then defines an equational theory over the $\lambda_{SSA}$ terms and
-statements and shows that it is sufficient to express various program
-transformations, including conversion to a "strict" SSA form that corresponds,
-more or less, to the kinds of code supported by, e.g., LLVM IR.  The paper also
-uses the equational theory to prove the B\"ohm-Jacopini theorm for SSA--this
-theorem basically says that every SSA program is equivalent to one that uses
-only well-structured loops, conditionals, and sequential composition.
-
-Next, the paper gives a categorical semantics to $\lambda_{SSA}$, showing how to
-intepret the syntax in any category that satisfies the conditions that make it
-"Freyd Elgot".  Intuitively, "Freyd" categories support the notion of "impure"
-morphisms, such as would be needed to model imperative state, distinguishing
-such morphisms from the "pure" ones.  The operations on Freyd categories soundly
-model the sitution in which pure operations can be commuted with other
-operations, but impure operations (in general) cannot.  On the other hand
-"Elgot" categories support a notion of iteration, providing the way to model the
-(potentially looping) mutually recursive tail calls needed by $\lambda_{SSA}$.
-This categorical semantics is shown to be sound and complete with respect to the
-equational theory introduced earlier. 
-
-Finally, as a last technical contribution the paper considers some concrete
-models that have the needed structure to be Freyd Elgot categories, including
-various kinds of monads, monad transformers, and trace models.  It culminates by
-giving a semantics based on a "total store order" concurrent memory model.
-
-The paper concludes with a survey of related work and possible future
-directions.
-
-# Top-level Review
-
-
-This paper is massive, quite technical, pretty dense, and, I expect, will be
-quite a challenging read for many potential consumers.  However, it has a lot of
-very nice ideas that do form a cohesive and comprehensive story about how to
-give denotational semantics to SSA-style programming languages.  The type system
-for $\lambda_{SSA}$, which is one of the main contributions of the paper, seems
-both novel and nicely structured.  I can therefore see that the technologly
-introduced in this paper would be used, potentially by language/compiler
-implementors, since it might lead to nice IR representations, but probably more
-so by people interested in *formalizing* related SSA-based languages.
-
-There are lots of minor typos and unclear details that I describe below, but, on
-the whole, I am pretty confident that the technical claims made in this paper
-are correct (or at least "morally correct").
-
-The main way that this paper could be improved would be to make the exposition
-more accessible, generally, through the use of more concrete examples and by
-introducing more explanatory intuitions at appropriate points.  I've tried to
-indicate a few such places in the comments below.
-
-Over all, I would be happy to recommend this for publicationi after it has been
-thoroughly revised.
 
 
 # Higher-level Comments
