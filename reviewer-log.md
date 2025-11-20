@@ -602,9 +602,13 @@ Referee: 2
   putting parentheses around the $( \box : [\Gamma] )$ before the turnstile, or
   just adding a bit more space would help?
 
+  TODO: Neel
+
 - line 1539 equation (56): Say something about $\ell$ fresh here too?  Again,
   I'm not sure how these distinguished variables work out if the operation is
   applied several times.
+
+  TODO: Neel
   
 - line 1557 / loop: I found this rule hard to follow, though I understand the
   intent. The occurrences of distinguished variable $\box$ in this rule aren't
@@ -618,20 +622,13 @@ Referee: 2
   
   If you were to try to mechanize this part of the paper, how would you deal
   with the "distinguished" variable?
-  
-- line 1583: I think this should be $pack_{\ell}^{+} (L) (a)$ -- the subsript
-  $\ell$ goes with `pack`
+
+  TODO: Neel, copy above
 
 - line 1596: It would be helpful to also explain the base case of the PW
   transformation, since that is where the use of `pack` occurs.
   
-- line 1603: Again, please don't separate judgment by just `,` -- that makes it
-  very hard to parse!
-  
-- line 1646: I believe the last alpha should be $\alpha_{B,C,D}$ not $A,B,C$.
-
-- line 1686 (and elsewhere): Do you have a citation for the definition of a
-  Freyd category?
+  TODO: Neel
   
 - line 1698: You use the $\to_{\bot}$ notation for a "pure morphism" here, but
   not in the previous bullet where $\Delta_A$ is also "pure".  You don't
@@ -640,19 +637,18 @@ Referee: 2
   near line 1688?  That way it is "in scope" everywhere you need it.  Also, use
   it consistently everywhere.
   
-
 - line 1697: Is $!_A$ also required to be "pure"?
 
 - line 1875 (Fig 31): red vs. black lines may be had to distinguish if printed
   and also for color-blind readers.  Maybe make the red lines dotted instead?
   
+  We have fixed this
+
 - line 2049 Lemma 5.6.  I'm not sure about the "Givens" here.  Don't you mean $L
   \leq K$ instead of, or in addition to? $K' \leq K$, and don't you also need to
   assume $\Gamma' \leq Delta$?
-  
-- line 2185: Object ... *are* types $A, B, C$
 
-- line 2244: I think you don' need `br ret $\box$`, just `ret $\box$`
+  We have made our quantifiers explicit
 
 - line 2307: This use of the `Option` monad seems very "classical" -- i.e. the
   fixpoint definition doesn't seem to be very computable, thanks to the
@@ -660,20 +656,26 @@ Referee: 2
   might be a bit unsatisfactory from an implementation point of view.  It might
   be more satisfying to use Capretta's "Delay" monad instead, or, as I suggested
   in the  "more related work comments", ITrees.
+
+  We have added a footnote, and citations in the related work and at the end of the section.
   
 - line 2345: Definition 6.1 Elgot submonad: This part claims that "Elgot
   submonads" are an "important source of models", but doesn't say anything about
   *why* such models are important?  Can you give at least some intuition /
   examples / justification for why that is the case?
+
+  We have expanded this section
   
 - line 2415: I would move this paragraph down into 6.3, since it is introducing
   the idea of building a TSO model
 
+  We have rewritten this section slightly
+
 - line 2458 equation (97): should the $f_0 a$ on line 2459 be $f_0 a_0$?  Also,
   please give at least some kind of intuition about what this definition is
   trying to capture.  
-  
-- line 2815: "latter" --> "former" having effect $\bot$
+
+  We have attempted to add more context
 
 - line 2847: I was wondering thoughout the paper about "refinement" versus
   "equivalence".  In practice, refinement might be more useful to model than
@@ -683,9 +685,13 @@ Referee: 2
   intro?) that you're not going to focus on refinement in this paper. (And then
   point to the future work discussion?)
 
+  TODO: neel
+
 - line 2863 guarded iteration: I wonder how ITrees and other
   coinductively-defined structures connect to this discussion of the future
   work.
+
+  TODO: neel
 
 # Bib References
 

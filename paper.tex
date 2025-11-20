@@ -3187,7 +3187,7 @@ follows:
   $$
   \alpha_{A, I, B} ; A \otimes \lambda_B = \rho_A \otimes B \qquad
   \alpha_{A \otimes B, C, D} ; \alpha_{A, B, C \otimes D}
-  = \alpha_{A, B, C} \otimes D ; \alpha_{A, B \otimes C, D} ; A \otimes \alpha_{A, B, C}
+  = \alpha_{A, B, C} \otimes D ; \alpha_{A, B \otimes C, D} ; A \otimes \alpha_{B, C, D}
   $$
   We say a premonoidal category is \emph{symmetric} if it is also equipped with a central, natural
   involution $\sigma_{A, B} : A \otimes B \to B \otimes A$, the \textit{symmetry}, satisfying the
@@ -3257,10 +3257,14 @@ If we generalize this structure to an arbitrary premonoidal category, we get the
   $\mc{C}_\bot \subseteq \mc{C}$ of \emph{pure} morphisms such that
   \begin{itemize}
     \item $\mc{C}_\bot$ contains all associators, unitors, and symmetries
-    \item $I$ is a terminal object in $\mc{C}_\bot$
+    \item $I$ is a terminal object in $\mc{C}_\bot$. In particular, this implies the terminal
+    morphisms $!_A: A \to I$ are pure.
     \item For each $A, B$, $A \otimes B$ is a cartesian product of $A, B$ in $\mc{C}_\bot$
     \item For pure morphisms $f, g$, $f \otimes g = \langle \pi_l; f, \pi_r ; g  \rangle$
   \end{itemize}
+  Where $\mc{C}$ is clear from context, we will write $A \to_\bot B$ to denote a pure morphism
+  $\mc{C}_\bot(A, B)$.
+
   Alternatively, it is equivalent to require
   \begin{itemize}
     \item $\mc{C}_\bot$ contains all associators, unitors, and symmetries
@@ -3702,11 +3706,11 @@ now drawn as diagrams in Figure~\ref{fig:elgot-ax-string-diagrams}.
 Unfortunately, unmodified string diagrams do not work for premonoidal categories, and hence for
 Freyd categories. The reason is because, since not all morphisms are central, premonoidal categories
 do not in general validate \emph{sliding}. However, this is easy enough to fix: we can postulate a
-``state'' wire, drawn in red, which all impure morphisms require as an input and output, as in
+(dashed red) ``state'' wire which all impure morphisms require as an input and output, as in
 Figure~\ref{fig:premonoidal-string-diagram}. Since the state wire linearly threads through all
 impure boxes, it establishes a unique order in which they must be executed; this construction is
 shown to be sound in \citet{promonad}. Pure morphisms do not have a state wire, so a diagram
-representing a pure morphism will simply have a red ``stripe'' on the side. This gives us a
+representing a pure morphism will simply have a dashed red ``stripe'' on the side. This gives us a
 convenient way to distinguish between string diagrams using the monoidal structure induced by the
 coproduct and those using the premonoidal structure induced by the tensor product in a category
 having both (such as a distributive premonoidal category): the latter will have a state wire, while
@@ -3737,7 +3741,7 @@ the former will not.
       codiagb = { south = print2b.north.2, east = addb.north },
       addb = { south = print1b.north.2 },
     }{}
-    \wires[red]{
+    \wires[dashed, red]{
       SIa = { south = print1a.north.1 },
       print1a = { south = print2a.north.1 },
       print2a = { south = SOa.north },
@@ -4042,9 +4046,11 @@ can then be used to derive the following weakening lemmas:
 \begin{lemma}[name=(Label) Weakening, restate=weakeninglem]
   Given $\Gamma \leq \Gamma'$ and $\ms{L}' \leq \ms{L}$, $\ms{K}' \leq \ms{K}$, we have
   \begin{enumerate}[label=(\alph*)]
-    \item $\dnt{\Gamma \leq \Delta} = \dnt{\Gamma \leq \Gamma'};\dnt{\Gamma' \leq \Delta}$
+    \item For all $\Gamma \leq \Delta$, $\dnt{\Gamma \leq \Delta} = \dnt{\Gamma \leq
+    \Gamma'};\dnt{\Gamma' \leq \Delta}$
       \label{itm:varwk}
-    \item $\dnt{\ms{L}' \leq \ms{K}} = \dnt{\ms{L}' \leq \ms{L}};\dnt{\ms{L} \leq \ms{K}}$
+    \item For all $\ms{L} \leq \ms{K}$, $\dnt{\ms{L}' \leq \ms{K}} = \dnt{\ms{L}' \leq
+    \ms{L}};\dnt{\ms{L} \leq \ms{K}}$
       \label{itm:lbwk}
     \item $\dnt{\hasty{\Gamma}{\epsilon}{a}{A}} 
       = \dnt{\Gamma \leq \Gamma'};\dnt{\hasty{\Gamma'}{\epsilon}{a}{A}}$
@@ -4054,10 +4060,10 @@ can then be used to derive the following weakening lemmas:
       ; \dnt{\haslb{\Gamma'}{r}{\ms{L}'}}
       ; \dnt{\ms{L}' \leq \ms{L}}$
       \label{itm:regwk}
-    \item $\dnt{\issubst{\gamma}{\Gamma}{\Delta}}
-      = \dnt{\Gamma \leq \Gamma'};\dnt{\issubst{\gamma}{\Gamma'}{\Delta}}$
+    \item For all $\issubst{\gamma}{\Gamma}{\Delta}$, $\dnt{\issubst{\gamma}{\Gamma}{\Delta}} =
+      \dnt{\Gamma \leq \Gamma'};\dnt{\issubst{\gamma}{\Gamma'}{\Delta}}$
       \label{itm:substwk}
-    \item $\dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}}
+    \item For all $\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}$, $\dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}}
       = \dnt{\Gamma \leq \Gamma'} \otimes \dnt{\ms{L}}
       ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}'}}
       ; \dnt{\ms{K}' \leq \ms{K}}
@@ -4326,7 +4332,7 @@ We'll begin by going over the entire proof of completeness for expressions, whic
 case. In particular, we may define the category $\ms{Th}_\epsilon^\otimes(\Gamma)$ of expressions
 with effect $\epsilon$ as follows:
 \begin{itemize}
-  \item Objects $|\ms{Th}^\otimes(\Gamma)|$ types $A, B, C$
+  \item Objects $|\ms{Th}^\otimes(\Gamma)|$ are types $A, B, C$
   \item Morphisms $\ms{Th}^\otimes(\Gamma)_\epsilon(A, B) = \{e \mid \hasty{\Gamma,
     \bhyp{\invar}{A}}{\epsilon}{e}{B}\}$ quotiented by $\tmeq{\Gamma,
     \bhyp{\invar}{A}}{\epsilon}{e}{e'}{B}$
@@ -4425,8 +4431,8 @@ We define the category $\ms{Th}(\Gamma, \ms{L})$ of regions as follows:
   \item Morphisms $\ms{Th}(\Gamma, \ms{L})(A, B) = 
     \{r \mid \haslb{\Gamma, \bhyp{\invar}{A}}{r}{\ms{L}, \outlb(B)}\}$ 
     quotiented by $\lbeq{\Gamma, \bhyp{\invar}{A}}{r}{r'}{\ms{L}, \outlb(B)}$
-  \item Identity $\haslb{\Gamma, \bhyp{\invar}{A}}{\ms{br}\;\ms{ret}\;\invar}{\ms{L}, \outlb(A)}$
-    where $\ms{ret}\;a := \brb{\outlb}{a}$
+  \item Identity $\haslb{\Gamma, \bhyp{\invar}{A}}{\ms{ret}\;\invar}{\ms{L}, \outlb(A)}$ where
+    $\ms{ret}\;a := \brb{\outlb}{a}$
   \item Composition $r;r' = [\lupg{(\outlb(\invar) \mapsto r')}]r$
 \end{itemize}
 In particular, we may view $\ms{ret}$ as an identity-on-objects functor
@@ -5516,7 +5522,7 @@ where loop unrolling is an equation, at which point it would be a model of our c
 
 Currently, our treatment of effects is relatively primitive, in that, while we postulate a lattice
 of effects, our equational theory only distinguishes between \emph{pure} and \emph{impure}
-functions, the latter having effect $\bot$. \citet{fuhrmann-direct-1999} studies languages with
+functions, the former having effect $\bot$. \citet{fuhrmann-direct-1999} studies languages with
 semantics given in an \emph{abstract Kleisli category}. In particular, he introduces the notion of
 \begin{itemize}
   \item \emph{Central} operations, which commute with all other operations; we like to call such
@@ -5760,7 +5766,7 @@ Finally, fixing a distinguished variable $\invar$, it will be very useful to def
 a ``\emph{variable packing}'' operation on expressions and regions as follows:
 \begin{equation}
   \haslb{\Gamma}{r}{\ms{L}} \implies 
-  \haslb{\invar : [\Gamma]}{\pckd{r}^\otimes := [\ms{unpack}_{\invar}^\otimes(\Gamma)]r}{\ms{L}}
+  \haslb{\invar : [\Gamma]}{(\pckd{r}^\otimes := [\ms{unpack}_{\invar}^\otimes(\Gamma)]r)}{\ms{L}}
 \end{equation}
 In particular, for $\Gamma$ pure, the packing operation $[\cdot]$ is an injection on expressions and
 regions w.r.t. the equational theory, since $\ms{unpack}_{\invar}^\otimes(\Gamma)$ has an inverse.
@@ -5809,7 +5815,7 @@ so that we can build up an inductive set of structured regions. We will be maxim
 allow branching to an exit label in $\ms{L}$ only as the terminal statement in a structured program
 (and, in particular, not from within a loop!). It is obvious that we can represent conditional
 branching using \ms{case}-statements, but we need convenient primitives for sequencing and looping.
-Sequencing can be expressed using a \ms{where}-block as follows:
+Sequencing can be expressed using a \ms{where}-block as follows (with $\ell$ fresh):
 \begin{equation}
   \prftree[r]{\rle{seq}}
     {\haslb{\Gamma}{r}{\outlb(A)}}
@@ -5852,7 +5858,7 @@ equivalent structured region $\towhile{\ms{L}}{r}$. In particular, we define
 where we define
 \begin{equation}
   \begin{aligned}
-    \topwhile{\ms{L}}{\ms{br}\;\ell\;a} &= \ms{pack}^+(\ms{L})_\ell(a) \\
+    \topwhile{\ms{L}}{\ms{br}\;\ell\;a} &= \ms{pack}^+_\ell(\ms{L})(a) \\
     \topwhile{\ms{L}}{\letstmt{x}{a}{r}} &= \letstmt{x}{a}{\topwhile{\ms{L}}{r}} \\
     \topwhile{\ms{L}}{\letstmt{(x, y)}{a}{r}} &= \letstmt{(x, y)}{a}{\topwhile{\ms{L}}{r}} \\
     \topwhile{\ms{L}}{\casestmt{e}{x}{r}{y}{s}} 
@@ -5885,8 +5891,8 @@ $\hasty{\Gamma}{\bot}{\ms{ua}_{\ms{L}}\;e}{[L] + [R]}$.)
 The B\"ohm-Jacopini theorem for SSA can then
 be written:
 \begin{theorem}[name=B\"ohm-Jacopini for SSA, restate=bohmjacopini]
-  For all $\haslb{\Gamma}{r}{\ms{L}}$, $\shaslb{\Gamma}{\towhile{\ms{L}}{r}}{\ms{L}}$ is structured,
-  and $\lbeq{\Gamma}{r}{\towhile{\ms{L}}{r}}{\ms{L}}$. In particular, we have that
+  For all $\haslb{\Gamma}{r}{\ms{L}}$, we have that $\shaslb{\Gamma}{\towhile{\ms{L}}{r}}{\ms{L}}$
+  is structured, and $\lbeq{\Gamma}{r}{\towhile{\ms{L}}{r}}{\ms{L}}$. In particular, we have that
   $\shaslb{\Gamma}{\topwhile{\ms{L}}{r}}{\outlb(\pckd{\ms{L}})}$ is structured, and
   $\lbeq{\Gamma}{\pckd{r}^+}{\topwhile{r}}{\outlb(\pckd{\ms{L}})}$.
 \end{theorem}
@@ -6125,7 +6131,7 @@ We can define
         C = { south = C'.north },
         f = { south.2 = A'.north },
       }{}
-      \wires[red]{
+      \wires[dashed, red]{
         E = { south = f.north.1 },
         f = { south.1 = E'.north }
       }{}
@@ -6152,7 +6158,7 @@ We can define
         C = { south = C'.north },
         g = { south.2 = B'.north },
       }{}
-      \wires[red]{
+      \wires[dashed, red]{
         E = { south = g.north.1 },
         g = { south.1 = E'.north }
       }{}
@@ -6179,7 +6185,7 @@ We can define
         C = { south = h.north.3 },
         h = { south.2 = C'.north },
       }{}
-      \wires[red]{
+      \wires[dashed, red]{
         E = { south = h.north.1 },
         h = { south.1 = E'.north }
       }{}
