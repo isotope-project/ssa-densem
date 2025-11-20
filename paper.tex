@@ -2171,11 +2171,10 @@ the rewrite
           {\wbranch{\ell}{x}{s}, \wbranch{\ell'}{y}{t}} \rhd \ms{L}}
     }
 \end{equation}
-However, on it's own, it's not quite enough to get rid of nested \ms{where}-blocks. To enable this,
-it turns out that we also need to add as an axiom the ability to get rid of a single, trivially
-nested \ms{where}-block; this is given as the rule \brle{codiag}.
+In addition, we also add as an axiom the ability to get rid of a
+single, trivially nested \ms{where}-block; this is given as the rule
+\brle{codiag}.
 
-\TODO{Neel}
 
 To be able to soundly perform equational rewriting, we will need the \emph{uniformity} property,
 which is described by the rule \brle{uni}. In essence, this lets us commute pure expressions with
