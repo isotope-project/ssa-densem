@@ -1,6 +1,12 @@
-* Please also provide a way for reviewers to access your mechanized proofs when you submit the revised version.
+* Please also provide a way for reviewers to access your mechanized proofs when you submit the revised version. 
 
+* The main formalization: 
 
+  https://github.com/imbrem/debruijn-ssa
+
+* The formalization of premonoidal categories:
+
+  https://github.com/imbrem/discretion 
 
 - - - - - - - - - -
 
@@ -168,7 +174,8 @@ account
   can simply specialize all the sum types to 1 + 1 to get the desired
   equations and semantics. However, having sum types makes it much
   easier to express transformations that change control-flow to
-  dataflow or vice-versa.
+  dataflow or vice-versa, such as the proof of the Bohm-Jacopini 
+  theorem in the appendix. 
  
 
 * Section 3
@@ -243,7 +250,7 @@ to a pure/impure distinction.
 * Line 1017-1018: What does "r where t" mean? Also why do we have a
   typing side condition for r here but not e,s,t?
 
-  TODO
+  This is a typo, now fixed. Furthermore, all the side-conditions are listed now. 
 
 * Line 1108-1111: if we are appealing to the completeness theorem to
   prove equivalences in the theory is the theory really all that
@@ -320,10 +327,6 @@ to a pure/impure distinction.
   semilattices?
 
   We have simplified the definition to remove this complication
-
-* 2077-78: this was already defined on page 30
-
-  TODO: confused
 
 * Section 6
 
@@ -491,24 +494,25 @@ Referee: 2
   me.  First you simplified down to SSA, now you pivot to "relaxing" the ssa
   back to a more compositional language
 
-  We have completely rewritten this section
+  We have completely rewritten this section. 
 
 * line 409 and line 1237: Many variants of SSA (including the one used by LLVM
   IR) do *not* allow just a variable on right-hand-side of an assignment.
 
-  We have added a footnote explaining this. . 
+  We have added a footnote explaining this. 
 
 - line 471: the syntax for the where statement is missing a comma compared to
   the grammar shown on line 415.  This is a good place to mention that you
   should explicitly spell out your "indexing" scheme for the use of subscripts.
 
-  We have made the indexing in our rules more explicit
+  We have made the indexing in our rules more explicit. 
 
 - line 634: is the choice of left extension here important?  are you somehow
   indicating that you'll only substitute for the "rightmost" variable in the
   context somehow?
 
-  Because weakening and exchange are both admissible, it doesn't really matter.  
+  Because weakening and exchange are both admissible, it doesn't
+  really matter.
 
   
 - line 963: Your assertion that you only need to add the ability to get rid of a
@@ -538,7 +542,7 @@ Referee: 2
   clear that even though syntactically it looks like the hi could be run,
   semantically it never will be.
 
-  We have done this
+  We have done this. 
 
 - line 1047: I think that should just be $\sigma$ and not $\sigma_i$ in the
   dinat rule.  (I'm not sure what $\sigma_i$ would mean here.)
@@ -563,7 +567,7 @@ Referee: 2
   $t_i$'s -- those *are* the children, right?  (doing so would contradict
   equation (24), I think)
 
-  This was a typo, and has been fixed
+  This was a typo, and has been fixed. 
   
 - line 1410 / Fig. 26: This figure gets buried in the text.  I would put it at
   the top of the page to make it more prominent.  Also, here is where I was
@@ -576,7 +580,7 @@ Referee: 2
   pointer to the instruction that defines the variable.
 
   We have moved it to the beginning of the introduction, which we have rewritten
-  to clearly define SSA
+  to clearly define SSA. 
   
 - Section 4.5: This is a very dense bunch of definitions with no concrete
   examples.  Maybe introduce a simple running example that has a record with
@@ -648,16 +652,18 @@ Referee: 2
   
 - line 1697: Is $!_A$ also required to be "pure"?
 
+  Yes. This is clarified now. 
+
 - line 1875 (Fig 31): red vs. black lines may be had to distinguish if printed
   and also for color-blind readers.  Maybe make the red lines dotted instead?
   
-  We have fixed this
+  We have fixed this. 
 
 - line 2049 Lemma 5.6.  I'm not sure about the "Givens" here.  Don't you mean $L
   \leq K$ instead of, or in addition to? $K' \leq K$, and don't you also need to
   assume $\Gamma' \leq Delta$?
 
-  We have made our quantifiers explicit
+  We have made our quantifiers explicit. 
 
 - line 2307: This use of the `Option` monad seems very "classical" -- i.e. the
   fixpoint definition doesn't seem to be very computable, thanks to the
@@ -708,63 +714,4 @@ Referee: 2
   fixed points can be formed. Consequently it is largely orthogonal 
   to how a model represents infinite sets of traces (coinductive types,
   impredicative propositions on the type of traces, etc). 
-
-# Bib References
-
-```
-@inproceedings{LG20,
-  author    = {Liyi Li and Elsa Gunter},
-  title     = {K-LLVM: A Relatively Complete Semantics of LLVM IR},
-  doi = "10.4230/LIPIcs.ECOOP.2020.7",
-  booktitle = {34rd European Conference on Object-Oriented Programming, {ECOOP} 2020, Berlin, Germany},
-  year      = {2020},
-}
-
-@inproceedings{KKSJ+18,
-author = {Kang, Jeehoon and Kim, Yoonseung and Song, Youngju and Lee, Juneyoung and Park, Sanghoon and Shin, Mark Dongyeon and Kim, Yonghyun and Cho, Sungkeun and Choi, Joonwon and Hur, Chung-Kil and Yi, Kwangkeun},
-title = {Crellvm: Verified Credible Compilation for LLVM},
-year = {2018},
-isbn = {9781450356985},
-publisher = {Association for Computing Machinery},
-address = {New York, NY, USA},
-url = {https://doi.org/10.1145/3192366.3192377},
-doi = {10.1145/3192366.3192377},
-booktitle = {Proceedings of the 39th ACM SIGPLAN Conference on Programming Language Design and Implementation},
-pages = {631–645},
-numpages = {15},
-keywords = {credible compilation, LLVM, relational Hoare logic, translation validation, Coq, compiler verification},
-location = {Philadelphia, PA, USA},
-series = {PLDI 2018}
-}
-
-@Article{XZHH+20,
-  author = 	 {{Li-yao} Xia and Yannick Zakowski and Paul He and {Chung-Kil} Hur and Gregory Malecha and Benjamin C. Pierce and Steve Zdancewic},
-  title = 	 {Interaction Trees},
-  journal = 	 {Proceedings of the ACM on Programming Languages},
-  doi = "10.1145/3371119",
-  year = 	 2020,
-  volume = 	 4,
-  number = 	 {POPL},
-}
-
-@Article{ZB+21,
-  author = 	 {Yannick Zakowski and Calvin Beck and Irene Yoon and Ilya Zaichuk and Vadim Zaliva and Steve Zdancewic},
-  title = 	 {Modular, Compositional, and Executable Formal Semantics for LLVM IR},
-  journal = 	 {Proceedings of the ACM on Programming Languages},
-  year = 	 2021,
-  volume = 	 5,
-  number = 	 {ICFP}
-}
-
-@inproceedings{CHZ25,
-author = {Chappe, Nicolas and Henrio, Ludovic and Zakowski, Yannick},
-title = {Monadic interpreters for concurrent memory models: Executable semantics of a concurrent subset of LLVM IR},
-year = {2025},
-publisher = {Association for Computing Machinery},
-url = {https://perso.ens-lyon.fr/nicolas.chappe/muvellvm-concurrency-draft.pdf},
-series = {CPP 2025}
-}
-
-
-```
 
