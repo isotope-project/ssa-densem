@@ -2218,7 +2218,7 @@ That is, the following two programs are equivalent:
   \item Given input $x$, evaluate $e$ and, taking it's output to be input $y$, evaluate $s$,
   (implicitly) yielding as output a new value of $y$. In imperative pseudocode,
   $$
-    y = e; x = s
+    y = e; y = s
   $$
   \item Given input $x$, evaluate $t$ and, taking it's output to be the \emph{new} value of $x$,
   evaluate $e$, (implicitly) yielding as output a new value $y$. In imperative pseudocode,
@@ -2234,33 +2234,24 @@ $$
 $$
 i.e., in imperative pseudocode,
 \begin{align}
-  x = r; y = e; \ms{loop}\;\{ y = s \}  & \teqv x = r; \ms{loop}\;\{ x = t \} \\ 
-  \intertext{
-    where $s$ and $t$ may branch out of the loop. The reason why we require $e$ to be \emph{pure} is
-    that impure expressions do not necessarily commute with infinite loops, even if they commute 
-    with any finite number of iterations of the loop. For example, if $\ms{hi}$ is some effectful 
-    operation (say, printing ``hello''), it is quite obvious that,
-  }
-  \ms{hi} ; x = x + 1 ; \ms{if}\;x = y\;\{\ms{ret}\;y\}
-  & \teqv 
-  x = x + 1 
-  ; \ms{if}\;x = y\;\{\ms{hi} ; \ms{ret}\;y\} 
-  ;  \ms{hi} \\
-  \intertext{whereas}
-  \ms{hi} ; \ms{loop} \{ x = x + 1 ; \ms{if}\;x = y\;\{\ms{ret}\;y\} \} 
-  &\not\teqv
-  \ms{loop} \{ x = x + 1 ;  \ms{if}\;x = y\;\{\ms{hi} ; \ms{ret}\;y\} \} ;
+  x = r; y = e; \ms{loop}\;\{ y = s \}  & \teqv x = r; \ms{loop}\;\{ x = t \}
 \end{align}
-since, in particular, we may have $y \leq x$, in which case the loop will never exit and hence
-$\ms{hi}$ will never be executed.
+since
+\begin{align}
+  y = e ; y = s ; y = s ; \ldots 
+  \;\;\teqv\;\;
+  x = t ; y = e ; y = s ; \ldots 
+  \;\;\teqv\;\;
+  x = t ; x = t ; y = e ; \ldots 
+  \;\;\teqv\;\; \cdots
+\end{align}
+where $s$ and $t$ may branch out of the loop. 
 %
 Note that, due to \brle{let$_1$-$\beta$}, \brle{cfg-$\eta$}, and \brle{cfg-$\beta_1$}, this is
-equivalent to
+equivalent to the rule
 \begin{equation}
+\begin{gathered}
 \prftree[r]{\rle{uni'}}
-{
-  \haslb{\Gamma}{r}{\ms{L}, \ell(A)}
-}
 {
   \lbeq{\Gamma, \bhyp{x}{A}}
     {[e/y]s}
@@ -2270,9 +2261,23 @@ equivalent to
 {
   \lbeq{\Gamma}
     {(\where{([\ell(x) \mapsto \brb{\kappa}{e}]r)}{\wbranch{\kappa}{y}{s}})}
-    {(\where{r}{t})}
+    {(\where{r}{\wbranch{\ell}{x}{t}})}
     {\ms{L}}
+} \\
+\text{where} \qquad
+{
+  \haslb{\Gamma}{r}{\ms{L}, \ell(A)} 
+} \qquad
+{
+  \hasty{\Gamma, \bhyp{x}{A}}{\bot}{e}{B} 
+} \qquad
+{
+  \haslb{\Gamma, \bhyp{y}{B}}{s}{\ms{L}, \kappa(B)}
+} \qquad
+{
+  \haslb{\Gamma, \bhyp{x}{A}}{t}{\ms{L}, \ell(A)}
 }
+\end{gathered}
 \label{eqn:uni-variant}
 \end{equation}
 Going back to our concrete example from Equation~\ref{eqn:loop-comm-ssa}, if we first substitute the
@@ -2310,6 +2315,24 @@ $(\where{r}{t})$ are syntactically equal to the \emph{RHS} and \emph{LHS} of our
   & \teqv [\ell(x) \mapsto \brb{\kappa}{e}]t
 \end{align*}
 as desired.
+%
+The reason why we require $e$ to be \emph{pure} in the uniformity rule is that impure expressions do
+not necessarily commute with infinite loops, even if they commute with any finite number of
+iterations of the loop. For example, if $\ms{hi}$ is some effectful operation (say, printing
+``hello''), it is quite obvious that,
+\begin{align}
+  \ms{hi} ; x = x + 1 ; \ms{if}\;x = y\;\{\ms{ret}\;y\}
+  & \teqv 
+  x = x + 1 
+  ; \ms{if}\;x = y\;\{\ms{hi} ; \ms{ret}\;y\} 
+  ;  \ms{hi} \\
+  \intertext{whereas}
+  \ms{hi} ; \ms{loop} \{ x = x + 1 ; \ms{if}\;x = y\;\{\ms{ret}\;y\} \} 
+  &\not\teqv
+  \ms{loop} \{ x = x + 1 ;  \ms{if}\;x = y\;\{\ms{hi} ; \ms{ret}\;y\} \} ;
+\end{align}
+since, in particular, we may have $y \leq x$, in which case the loop will never exit and hence
+$\ms{hi}$ will never be executed.
 
 \begin{figure}
   \begin{gather*}

@@ -523,6 +523,9 @@ Referee: 2
   instantiate it to show how to derive the result in equations (10) and
   (11). Doing so would help the reader "follow along" in your point-by-point
   explanation.
+
+  We adjusted the explanation as suggested, except that we apply the _variant_
+  rule.
   
 - line 990: "a new output value of $y$" -- Shouldn't this be $x$? (in the
   pseudocode you assign to $x$)
