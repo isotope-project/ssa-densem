@@ -5700,12 +5700,12 @@ with typing rule
     {\ms{L}(\ell) = A}
     {\hasty{\Gamma}{\epsilon}{\iota_{\ms{L}, \ell}\;e}{\pckd{\ms{L}}}}
 \end{equation}
-Similarly, we can define $n$-ary case-statements on enums as follows:
+Similarly, we can define $n$-ary case-statements on enums by induction as follows:
 \begin{equation}
   \begin{aligned}
   \ms{case}_\cdot\;e\;\{\} &= \infty \\
   \ms{case}_{\ms{L}, \kappa(A)}\;e\;\{(\ell_i(x_i): t_i)_i, \kappa(y): s\}
-  &= \casestmt{e}{x}{\ms{case}_{\ms{L}}\;e\;\{(\ell_i(A_i): t_i)_i\}}{y}{s}
+  &= \casestmt{e}{x}{\ms{case}_{\ms{L}}\;x\;\{(\ell_i(A_i): t_i)_i\}}{y}{s}
   \end{aligned}
 \end{equation}
 with typing rule
@@ -5736,9 +5736,7 @@ where we have
 \begin{equation}
   \prftree[r]{\rle{unpack$^+$}}
     {\hasty{\Gamma}{\epsilon}{e}{\ms{L}}}
-    {\haslb{\Gamma}{\ms{unpack}^+(\ms{L})\;e}{\ms{L}}} \qquad
-  \prftree[r]{$\infty$}
-    {\haslb{\Gamma}{\infty := \where{\brb{\ell}{()}}{\wbranch{\ell}{x}{\brb{\ell}{x}}}}{\ms{L}}}
+    {\haslb{\Gamma}{\ms{unpack}^+(\ms{L})\;e}{\ms{L}}}
 \end{equation}
 defined as follows:
 \begin{equation}

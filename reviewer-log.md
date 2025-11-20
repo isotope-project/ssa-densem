@@ -582,12 +582,8 @@ Referee: 2
   just three fields and/or and enum with just a couple cases and show the
   results of the encoding by `pack`, etc.?
 
-  
-- line 1469: the `case_L e` should be `case_L x`, I think.
+  We have moved this discussion to the appendix, as it is a bit technical.
 
-- line 1486: This equation (48) seems to duplicate the definition of $\infty$
-  shown in equation (45).
-  
 - line 1496+: I found the use of "fixing a distinguished variable $\box$" (and
   later a distinguished label) a bit tricky to think about throughout this
   section.  First, SSA doesn't allow variable re-use, and second, I think there
@@ -595,7 +591,11 @@ Referee: 2
   I think that you somehow mean for these operations that introduce $\box$ to
   stand for a "macro" that picks a sufficiently fresh variable each time it is 
   invoked.
-  
+
+  The correct way to think of this is as a locally-nameless SSA program, in which 
+  one variable de-Bruijn index and one label de-Bruijn index is exposed. As our
+  formalization uses de-Bruijn indices
+ 
 - line 1500 equation (51): I found it quite hard to even parse the part after
   the ==> here.  Maybe saying in the sentene above that the "variable packing"
   operator is written as $\langle r \rangle^{\otimes}$ would help.  Maybe
