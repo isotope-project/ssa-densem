@@ -464,9 +464,9 @@ Figure~\ref{fig:3addr-grammar}, with some slight adjustments to the usual presen
   \item \emph{Constants} $c$ are interpreted as nullary instructions $c()$.
   
   \item \emph{Conditional branches} $\ite{o}{\tau}{\tau'}$ are desugared to case-statements
-  $\casestmt{o}{y}{\tau}{z}{\tau'}$ on a sum type $x : \mb{1} + \mb{1}$. This is equivalent in power
-  to regular conditional branches, while allowing our work to generalize easily to higher-level
-  settings as well.
+  $\casestmt{o}{y}{\tau}{z}{\tau'}$ on a Boolean value $o : \mb{1} + \mb{1}$. This is equivalent in
+  power to regular conditional branches, while allowing our work to generalize easily to
+  higher-level settings as well.
 
   Furthermore, we allow case-statements (and hence if-statements) in a terminator to be
   \emph{nested}, allowing us to emulate switch-statements $\ms{switch}(o) \{c_1 : \tau_1 ,
@@ -691,7 +691,7 @@ jump to.
       \;|\; \(\letstmt{(x, y)}{o}{\beta}\)
       \;|\; \(\tau\)
 
-      <\(\tau\)> ::= \(\brb{\ell}{v}\) \;|\; $\casestmt{x}{y}{\tau}{z}{\tau'}$
+      <\(\tau\)> ::= \(\brb{\ell}{o}\) \;|\; $\casestmt{o}{y}{\tau}{z}{\tau'}$
       
       <\(G\)> ::= \(G \;\; \ell(x) : \beta\) \;|\; \(\beta\)
     \end{grammar}
