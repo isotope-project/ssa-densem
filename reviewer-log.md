@@ -517,10 +517,6 @@ Referee: 2
 
   TODO: Neel
 
-
-
-
-
 - line 976: I agree that explaining the rule point-by-point is a good strategy,
   but you could also connect your explanation back to the example introduced
   just prior (on lines 973-974).  That is, as you explain each step of the rule,

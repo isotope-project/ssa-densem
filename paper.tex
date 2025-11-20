@@ -2190,17 +2190,19 @@ Note that substitution alone would not allow us to derive Equation~\ref{eqn:simp
 since $x$ and $y$ change each iteration, and hence, in SSA, would need to become parameters as
 follows:
 \begin{multline}
-  \where{\brb{\ell}{x}}{\wbranch{\ell}{x}
-    {\letexpr{x'}{x + 1}{\ms{if}\;p\;3x'\;\{\ms{ret}\;3x'\}\;\ms{else}\;\{\brb{\ell}{x'}\}}}}
+  \where{\brb{\ell}{x}}{\wbranch{\ell}{y}
+    {\letstmt{x'}{y + 1}{\ms{if}\;p\;3x'\;\{\ms{ret}\;3x'\}\;\ms{else}\;\{\brb{\ell}{x'}\}}}}
   \\ \teqv
-  \where{\letexpr{y}{3x}{\brb{\kappa}{y}}}{\wbranch{\kappa}{y}
-    {\letexpr{y'}{y + 3}{\ms{if}\;p\;y'\;\{\ms{ret}\;y'\}\;\ms{else}\;\{\brb{\kappa}{y'}\}}}}
+  \where{\letstmt{y}{3x}{\brb{\kappa}{y}}}{\wbranch{\kappa}{y}
+    {\letstmt{y'}{y + 3}{\ms{if}\;p\;y'\;\{\ms{ret}\;y'\}\;\ms{else}\;\{\brb{\kappa}{y'}\}}}}
+  \label{eqn:loop-comm-ssa}
 \end{multline}
 The actual rule is quite complicated, so let's break it down point by point. Assume we are given:
 \begin{itemize}
   \item A region $\haslb{\Gamma, \bhyp{y}{B}}{s}{\ms{L}, \kappa(B)}$ taking ``input'' $y$ of type
     $B$ and, as ``output,'' jumping to a label $\kappa$ with an argument of type $B$. We'll
-    interpret branches to any other label as a (divergent) ``side effect.''
+    interpret branches to any other label (i.e. any label in $\ms{L}$) as a (divergent) ``side
+    effect.''
   \item A region $\haslb{\Gamma, \bhyp{x}{A}}{t}{\ms{L}, \ell(A)}$ taking ``input'' $x$ of type
     $A$ and, as ``output,'' jumping to a label $\ell$ with an argument of type $A$.
   \item A \emph{pure} expression $\hasty{\Gamma, \bhyp{x}{A}}{\bot}{e}{B}$ parameterised by a value
@@ -2224,7 +2226,6 @@ That is, the following two programs are equivalent:
     x = t; y = e
   $$
 \end{enumerate}
-
 \emph{Then}, for any well-typed entry block $\haslb{\Gamma}{r}{\ms{L}, \ell(A)}$ (which can produce
 an appropriate input $x : A$ at label $\ell$), we have that
 $$
@@ -2251,7 +2252,7 @@ i.e., in imperative pseudocode,
   \ms{loop} \{ x = x + 1 ;  \ms{if}\;x = y\;\{\ms{hi} ; \ms{ret}\;y\} \} ;
 \end{align}
 since, in particular, we may have $y \leq x$, in which case the loop will never exit and hence
-$\ms{hi}$ will never be executed. 
+$\ms{hi}$ will never be executed.
 %
 Note that, due to \brle{let$_1$-$\beta$}, \brle{cfg-$\eta$}, and \brle{cfg-$\beta_1$}, this is
 equivalent to
@@ -2272,7 +2273,43 @@ equivalent to
     {(\where{r}{t})}
     {\ms{L}}
 }
+\label{eqn:uni-variant}
 \end{equation}
+Going back to our concrete example from Equation~\ref{eqn:loop-comm-ssa}, if we first substitute the
+let-binding $y = 3x$ on the RHS, we get
+\begin{multline}
+  \where{\brb{\ell}{x}}{\wbranch{\ell}{y}
+    {\letstmt{x'}{y + 1}{\ms{if}\;p\;3x'\;\{\ms{ret}\;3x'\}\;\ms{else}\;\{\brb{\ell}{x'}\}}}}
+  \\ \teqv
+  \where{\brb{\kappa}{3x}}{\wbranch{\kappa}{y}
+    {\letstmt{y'}{y + 3}{\ms{if}\;p\;y'\;\{\ms{ret}\;y'\}\;\ms{else}\;\{\brb{\kappa}{y'}\}}}}
+  \label{eqn:loop-comm-red}
+\end{multline}
+Now, instantiate $\brle{uni}'$ (Equation~\ref{eqn:uni-variant}) by taking:
+\begin{itemize}
+  \item
+    $s = \letexpr{y'}{y + 3}{\ms{if}\;p\;y'\;\{\ms{ret}\;y'\}\;\ms{else}\;\{\brb{\kappa}{y'}\}}$ 
+    to be the loop body on the RHS
+  \item $e = 3x$
+  \item $r = \brb{\ell}{x}$
+  \item $t = \letstmt{x'}{y + 1}{\ms{if}\;p\;3x'\;\{\ms{ret}\;3x'\}\;\ms{else}\;\{\brb{\ell}{x'}\}}$
+  to be the loop body on the LHS
+\end{itemize}
+It's easy to see that $(\where{([\ell(x) \mapsto \brb{\kappa}{e}]r)}{\wbranch{\kappa}{y}{s}})$ and
+$(\where{r}{t})$ are syntactically equal to the \emph{RHS} and \emph{LHS} of our desired result
+(Equation~\ref{eqn:loop-comm-red}). So, it suffices to verify that
+\begin{align*}
+  \Gamma, \bhyp{x}{A} \vdash 
+  & [e/y]s
+  \teqv \letexpr{y'}{3x + 3}{\ms{if}\;p\;y'\;\{\ms{ret}\;y'\}\;\ms{else}\;\{\brb{\kappa}{y'}\}} \\
+  & \teqv \letexpr{y'}{3(x + 1)}{\ms{if}\;p\;y'\;\{\ms{ret}\;y'\}\;\ms{else}\;\{\brb{\kappa}{y'}\}} \\
+  & \teqv \letexpr{x'}{x + 1}{
+      \letexpr{y'}{3x'}{\ms{if}\;p\;y'\;\{\ms{ret}\;y'\}\;\ms{else}\;\{\brb{\kappa}{y'}\}}} \\
+  & \teqv \letexpr{x'}{x + 1}{
+      \ms{if}\;p\;3x'\;\{\ms{ret}\;3x'\}\;\ms{else}\;\{\brb{\kappa}{3x'}\}} \\
+  & \teqv [\ell(x) \mapsto \brb{\kappa}{e}]t
+\end{align*}
+as desired.
 
 \begin{figure}
   \begin{gather*}
