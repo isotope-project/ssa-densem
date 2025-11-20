@@ -5858,7 +5858,7 @@ equivalent structured region $\towhile{\ms{L}}{r}$. In particular, we define
 where we define
 \begin{equation}
   \begin{aligned}
-    \topwhile{\ms{L}}{\ms{br}\;\ell\;a} &= \ms{pack}^+_\ell(\ms{L})(a) \\
+    \topwhile{\ms{L}}{\ms{br}\;\ell\;a} &= \brb{\outlb}{\iota_{\ms{L}, \ell}\;a} \\
     \topwhile{\ms{L}}{\letstmt{x}{a}{r}} &= \letstmt{x}{a}{\topwhile{\ms{L}}{r}} \\
     \topwhile{\ms{L}}{\letstmt{(x, y)}{a}{r}} &= \letstmt{(x, y)}{a}{\topwhile{\ms{L}}{r}} \\
     \topwhile{\ms{L}}{\casestmt{e}{x}{r}{y}{s}} 
@@ -5880,13 +5880,19 @@ and
         \caseexpr{\ms{ua}_{\ms{L}, \ms{R}}\;x}{z}{\iota_l\;z}{w}{\iota_r\;\iota_l\;w}}
         {y}{\iota_r\;(\iota_r\;y)}
 \end{equation}
+Note that the base case $\topwhile{\ms{L}}{\ms{br}\;\ell\;a}$ is
 %
 The $\topwhile{\ms{L}}{r}$ function does the actual transformation, and we can see that most of the
-cases are trivial except for the $\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}$ case. In this case, we
-replace the set of labels bound by the $\ms{where}$ clause with a tag and a while loop containing a
-case statement branching on the tag. (This uses the $\ms{ua}$ function, which implements
-associativity of n-ary coproducts. That is, given $\hasty{\Gamma}{\bot}{e}{[L, R]}$, we have that
-$\hasty{\Gamma}{\bot}{\ms{ua}_{\ms{L}}\;e}{[L] + [R]}$.)
+cases are trivial except for: 
+\begin{itemize}
+  \item The base case, in which we simply replace a branch $\ms{br}\;\ell\;a$ with a branch to the
+  output label $\outlb$ with the appropriate injection $\iota_{\ms{L}, \ell}\;a$ as parameter.
+  \item The $\where{r}{(\wbranch{\ell_i}{x_i}{t_i},)_i}$ case, in which we replace the set of labels
+  bound by the $\ms{where}$ clause with a tag and a while loop containing a case statement branching
+  on the tag. (This uses the $\ms{ua}$ function, which implements associativity of $n$-ary
+  coproducts. That is, given $\hasty{\Gamma}{\bot}{e}{[L, R]}$, we have that
+  $\hasty{\Gamma}{\bot}{\ms{ua}_{\ms{L}}\;e}{[L] + [R]}$.)
+\end{itemize}
 
 The B\"ohm-Jacopini theorem for SSA can then
 be written:
