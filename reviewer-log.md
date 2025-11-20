@@ -334,7 +334,7 @@ to a pure/impure distinction.
 * 2304: Maybe worth pointing out this is not constructive. This can be
   done constructively if you use the partial elements monad Partial A := Σ(ϕ : Prop) ϕ ⇒ A.
 
-  We have added a footnote
+  We have added a footnote to this effect.
 
 * Section 6.3: I am not an expert on weak memory and found this section
   very hard to follow, and again I don't know which parts are novel
@@ -515,7 +515,8 @@ Referee: 2
   single, trivial where-block isn't completely obvious.  Maybe expand the
   explanation about why that is sufficient?
 
-  TODO: Neel
+  Honestly, we don't have a crisp explanation. This is what we needed
+  to make our completeness proof work.
 
 - line 976: I agree that explaining the rule point-by-point is a good strategy,
   but you could also connect your explanation back to the example introduced
@@ -592,23 +593,28 @@ Referee: 2
   stand for a "macro" that picks a sufficiently fresh variable each time it is 
   invoked.
 
-  The correct way to think of this is as a locally-nameless SSA program, in which 
-  one variable de-Bruijn index and one label de-Bruijn index is exposed. As our
-  formalization uses de-Bruijn indices
+  This translation has been moved to the appendix. 
+
+  Our formalization uses de-Bruijn indices exclusively, so names do
+  not actually matter. We tried to translate this as faithfully as
+  possible to the named version, but this point is one where we follow
+  tradition and rely on the reader to correct the slight imprecision.
  
 - line 1500 equation (51): I found it quite hard to even parse the part after
-  the ==> here.  Maybe saying in the sentene above that the "variable packing"
+  the ==> here.  Maybe saying in the sentence above that the "variable packing"
   operator is written as $\langle r \rangle^{\otimes}$ would help.  Maybe
   putting parentheses around the $( \box : [\Gamma] )$ before the turnstile, or
   just adding a bit more space would help?
 
-  TODO: Neel
+  We've added brackets to this. 
 
 - line 1539 equation (56): Say something about $\ell$ fresh here too?  Again,
   I'm not sure how these distinguished variables work out if the operation is
   applied several times.
 
-  TODO: Neel
+  We added a note explaining that $\ell$ is fresh. In general, we
+  follow the usual convention that we freely alpha-vary to ensure
+  every variable is unique.
   
 - line 1557 / loop: I found this rule hard to follow, though I understand the
   intent. The occurrences of distinguished variable $\box$ in this rule aren't
@@ -623,12 +629,15 @@ Referee: 2
   If you were to try to mechanize this part of the paper, how would you deal
   with the "distinguished" variable?
 
-  TODO: Neel, copy above
+  In our mechanization, everything is in de Bruijn form. This has also been
+  moved to the appendix. 
 
 - line 1596: It would be helpful to also explain the base case of the PW
   transformation, since that is where the use of `pack` occurs.
   
-  TODO: Neel
+  We have moved this to the appendix, and clarified that the pack
+  turns a branch into returning a tagged sum telling the outer case in
+  the big loop body which branch to execute.
   
 - line 1698: You use the $\to_{\bot}$ notation for a "pure morphism" here, but
   not in the previous bullet where $\Delta_A$ is also "pure".  You don't
@@ -664,7 +673,7 @@ Referee: 2
   *why* such models are important?  Can you give at least some intuition /
   examples / justification for why that is the case?
 
-  We have expanded this section
+  We have expanded this section. 
   
 - line 2415: I would move this paragraph down into 6.3, since it is introducing
   the idea of building a TSO model
@@ -675,7 +684,7 @@ Referee: 2
   please give at least some kind of intuition about what this definition is
   trying to capture.  
 
-  We have attempted to add more context
+  We have attempted to add more context. 
 
 - line 2847: I was wondering thoughout the paper about "refinement" versus
   "equivalence".  In practice, refinement might be more useful to model than
@@ -685,13 +694,20 @@ Referee: 2
   intro?) that you're not going to focus on refinement in this paper. (And then
   point to the future work discussion?)
 
-  TODO: neel
+  This is indeed future work, and we will clarify that refinement can
+  be modeled via interpreting SSA in poset-enriched categories. In
+  fact, we have some prelimary results to this effect, and will post
+  something on the arXiv in the near future. 
 
 - line 2863 guarded iteration: I wonder how ITrees and other
   coinductively-defined structures connect to this discussion of the future
   work.
 
-  TODO: neel
+  Guarded iteration does not (only) refer to guardedness in the sense
+  of step-indexing, but is a more general method for restricting what
+  fixed points can be formed. Consequently it is largely orthogonal 
+  to how a model represents infinite sets of traces (coinductive types,
+  impredicative propositions on the type of traces, etc). 
 
 # Bib References
 
