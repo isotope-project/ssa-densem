@@ -2329,7 +2329,7 @@ iterations of the loop. For example, if $\ms{hi}$ is some effectful operation (s
   \intertext{whereas}
   \ms{hi} ; \ms{loop} \{ x = x + 1 ; \ms{if}\;x = y\;\{\ms{ret}\;y\} \} 
   &\not\teqv
-  \ms{loop} \{ x = x + 1 ;  \ms{if}\;x = y\;\{\ms{hi} ; \ms{ret}\;y\} \} ;
+  \ms{loop} \{ x = x + 1 ;  \ms{if}\;x = y\;\{\ms{hi} ; \ms{ret}\;y\} \} ; \ms{hi}
 \end{align}
 since, in particular, we may have $y \leq x$, in which case the loop will never exit and hence
 $\ms{hi}$ will never be executed.
@@ -2420,7 +2420,7 @@ $\ms{hi}$ will never be executed.
             {\Gamma \vdash \where{([\lupg{\sigma}]r)}{(\wbranch{\kappa_j}{x_j}{[\lupg{\sigma}]t_j},)_{j \in J}}}
             {\hspace{8em} \teqv \where{r}
               {(\wbranch{\ell_i}{x_i}
-                {[\lupg{(\kappa_j(x_j) \mapsto t_j,)_{j \in J}}](\sigma_i\;x_i)},)_{i \in I}}}
+                {[\lupg{(\kappa_j(x_j) \mapsto t_j,)_{j \in J}}](\sigma\;\ell_i\;x_i)},)_{i \in I}}}
         }
   \end{gather*}
   \Description{}
@@ -2492,17 +2492,21 @@ $\ms{hi}$ will never be executed.
   \Description{}
   \label{fig:fact-dinat-rewrites}
 \end{figure}
-
-
-This format illuminates a very important potential use for uniformity; namely, formalizing rewrites
-like those in Figure~\ref{fig:fact-dinat-rewrites}. In particular, consider a program of the form
+The derivable rule \brle{uni'} (Equation~\ref{eqn:uni-variant}) illuminates a very important
+potential use for uniformity; namely, formalizing rewrites like those in
+Figure~\ref{fig:fact-dinat-rewrites}. In particular, consider a program of the form 
 \begin{equation*}
   \haslb{\Gamma}{\where{([\ell(x) \mapsto \brb{\kappa}{e}]r)}{
     \wbranch{\kappa}{y}{[\ell(x) \mapsto \brb{\kappa}{e}]s}
   }}{\ms{L}}
 \end{equation*}
-where $\haslb{\Gamma}{r}{\ms{L}, \ell(A)}$, $\haslb{\Gamma, y : B}{s}{\ms{L}, \ell(A)}$, and
-$\hasty{\Gamma, \bhyp{x}{A}}{\bot}{e}{B}$ is pure. Then we have that
+where 
+\begin{itemize}
+  \item $\haslb{\Gamma}{r}{\ms{L}, \ell(A)}$
+  \item $\haslb{\Gamma, y : B}{s}{\ms{L}, \ell(A)}$
+  \item $\hasty{\Gamma, \bhyp{x}{A}}{\bot}{e}{B}$ is pure
+\end{itemize} 
+Then we have that
 \begin{multline*}
   [e/y][\ell(x) \mapsto \brb{\kappa}{(e)}]s 
   \\ \teqv
@@ -2671,7 +2675,7 @@ our equivalence relation, as stated in the following lemma:
   Given $\Gamma \leq \Delta$, $\ms{L} \leq \ms{K}$, and $\epsilon \leq \epsilon'$, we have that
   \begin{enumerate}[label=(\alph*)]
     \item $\tmeq{\Delta}{\epsilon}{a}{a'}{A} \implies \tmeq{\Gamma}{\epsilon'}{a}{a'}{A}$
-    \item $\lbeq{\Delta}{r}{r'}{\ms{L}} \implies \lbeq{\Gamma}{r}{r'}{\ms{L}'}$
+    \item $\lbeq{\Delta}{r}{r'}{\ms{L}} \implies \lbeq{\Gamma}{r}{r'}{\ms{K}}$
   \end{enumerate}
 \end{lemma}
 \begin{proof}
@@ -2682,17 +2686,14 @@ our equivalence relation, as stated in the following lemma:
     \item \texttt{Region.InS.vwk_congr} and \texttt{Region.InS.lwk_congr} in
     \texttt{Rewrite/Region/Setoid.lean}
   \end{enumerate}
-\end{proof}
-In particular, note that this lemma uses an equivalence relation on substitutions and
-label-substitutions: this is just the obvious pointwise extension of the equivalence relation on
-terms and regions respectively. We give the rules for this relation in
-Figure~\ref{fig:ssa-subst-equiv} in the interests of explicitness. It is straightforward to verify
-that these are indeed equivalence relations.  In fact, it turns out that substitution and
-label-substitution both respect these equivalences, in the following precise sense:
+\end{proof} 
+It is straightforward to verify that these are indeed equivalence relations.  In fact, it turns out
+that substitution and label-substitution both respect these equivalences, in the following precise
+sense:
 \begin{lemma}[Congruence (Substitution)]
   Given $\tmseq{\gamma}{\gamma'}{\Gamma}{\Delta}$, we have that
   \begin{enumerate}[label=(\alph*)]
-    \item $\tmeq{\Delta}{\epsilon}{a}{a'}{A} 
+    \item $\tmeq{\Delta}{\epsilon}{a}{a'}{A}
       \implies \tmeq{\Gamma}{\epsilon}{[\gamma]a}{[\gamma']a'}{A}$
     \item $\lbeq{\Delta}{r}{r'}{\ms{L}} 
       \implies \lbeq{\Gamma}{[\gamma]r}{[\gamma']r'}{\ms{L}}$
@@ -2711,6 +2712,11 @@ label-substitution both respect these equivalences, in the following precise sen
     \item \texttt{Region.Subst.InS.vsubst_congr} in \texttt{Rewrite/Region/LSubst.lean}
   \end{enumerate}
 \end{proof}
+In particular, note that this lemma uses an equivalence relation on substitutions and
+label-substitutions: this is just the obvious pointwise extension of the equivalence relation on
+terms and regions respectively. We give the rules for this relation in
+Figure~\ref{fig:ssa-subst-equiv} in the interests of explicitness.
+
 \begin{lemma}[Congruence (Label Substitution)]
   Given $\lbseq{\sigma}{\sigma'}{\Gamma}{\ms{L}}{\ms{K}}$, we have that
   \begin{enumerate}[label=(\alph*)]
@@ -8106,12 +8112,12 @@ We may now state our desired result as follows:
     \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}} 
     = \dnt{\Gamma} \otimes \alpha_{\Sigma_i\dnt{A_i}} 
     ; \delta^{-1}_{\Sigma}
-    ; [\dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\sigma_i\;x_i}{\ms{K}}},]_i
+    ; [\dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\sigma\;\ell_i\;x_i}{\ms{K}}},]_i
   \end{equation}
   and therefore
   \begin{equation}
     \delta^{-1}_{\Sigma}
-    ; [\dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\sigma_i\;x_i}{\ms{K}}},]_i
+    ; [\dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\sigma\;\ell_i\;x_i}{\ms{K}}},]_i
     = \alpha_{\dnt{\ms{L}}}
     ; \dnt{\lbsubst{\Gamma}{\sigma}{\ms{L}}{\ms{K}}} 
   \end{equation}
@@ -8962,37 +8968,37 @@ We may now state our desired result as follows:
     \begin{equation}
       \begin{aligned}
         & \dnt{\haslb
-          {\Gamma, \bhyp{x_i}{A_i}}{[\lupg{(\kappa_j(x_j) \mapsto t_j,)_j}](\sigma_i\;x_i)}
+          {\Gamma, \bhyp{x_i}{A_i}}{[\lupg{(\kappa_j(x_j) \mapsto t_j,)_j}](\sigma\;\ell_i\;x_i)}
           {\ms{L}, \ms{R}}} \\
-        & = \lmor{\dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\sigma_i\;x_i}{\ms{L}, \ms{R}'}}}
+        & = \lmor{\dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\sigma\;\ell_i\;x_i}{\ms{L}, \ms{R}'}}}
           ; \dnt{\lbsubst{\Gamma, \bhyp{x_i}{A_i}}{\lupg{(\kappa_j(x_j) \mapsto t_j,)_j}}
             {\ms{L}, \ms{R}'}{\ms{L}, \ms{R}}} \\
-        & = \lmor{\dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\sigma_i\;x_i}{\ms{L}, \ms{R}'}}}
+        & = \lmor{\dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\sigma\;\ell_i\;x_i}{\ms{L}, \ms{R}'}}}
           ; \pi_l \otimes \dnt{\ms{L}, \ms{R'}} 
           ; \dnt{\lbsubst{\Gamma}{\lupg{(\kappa_j(x_j) \mapsto t_j,)_j}}
             {\ms{L}, \ms{R}'}{\ms{L}, \ms{R}}} \\
-        & = \rlmor{\dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\sigma_i\;x_i}{\ms{L}, \ms{R}'}}}
+        & = \rlmor{\dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\sigma\;\ell_i\;x_i}{\ms{L}, \ms{R}'}}}
         ; \dnt{\Gamma} \otimes \alpha^+_{\dnt{\ms{L}} + \dnt{\ms{R}'}}
         ; \delta^{-1}
         ; [\pi_r ; \iota_l ; \alpha^+_{\dnt{\ms{L}, \ms{R}}} , G]
          \\
         & = \rlmor{
-          \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\sigma_i\;x_i}{\ms{L}, \ms{R}'}}
+          \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\sigma\;\ell_i\;x_i}{\ms{L}, \ms{R}'}}
           ; \alpha^+_{\dnt{\ms{L}} + \dnt{\ms{R}'}}
         } ; \delta^{-1} 
         ; [\pi_r ; \iota_l ; \alpha^+_{\dnt{\ms{L}, \ms{R}}} , G] \\
         & = \rcase{
-          \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\sigma_i\;x_i}{\ms{L}, \ms{R}'}}
+          \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\sigma\;\ell_i\;x_i}{\ms{L}, \ms{R}'}}
           ; \alpha^+_{\dnt{\ms{L}} + \dnt{\ms{R}'}}
         }
         ; [\pi_r ; \iota_l ; \alpha^+_{\dnt{\ms{L}, \ms{R}}} , G] \\
         & = \rcase{
-          \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\sigma_i\;x_i}{\ms{R}'}}
+          \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\sigma\;\ell_i\;x_i}{\ms{R}'}}
           ; \iota_r
         }
         ; [\pi_r ; \iota_l ; \alpha^+_{\dnt{\ms{L}, \ms{R}}} , G] \\
         & = \rlmor{
-          \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\sigma_i\;x_i}{\ms{R}'}}
+          \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\sigma\;\ell_i\;x_i}{\ms{R}'}}
         } ; G \\
       \end{aligned}
     \end{equation}
@@ -9000,34 +9006,34 @@ We may now state our desired result as follows:
     \begin{equation}
       \begin{aligned}
         & \loopmor{\Gamma}
-          {(\wbranch{\ell_i}{x_i}{[\lupg{(\kappa_j(x_j) \mapsto t_j,)}](\sigma_i\;x_i)},)_i}
+          {(\wbranch{\ell_i}{x_i}{[\lupg{(\kappa_j(x_j) \mapsto t_j,)}](\sigma\;\ell_i\;x_i)},)_i}
           {\ms{L}}
         \\
         & = \delta^{-1}_\Sigma 
           ; [ \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}
-                  {[\lupg{(\kappa_j(x_j) \mapsto t_j,)_j}](\sigma_i\;x_i)}{\ms{L}, \ms{R}}}, ]_i
+                  {[\lupg{(\kappa_j(x_j) \mapsto t_j,)_j}](\sigma\;\ell_i\;x_i)}{\ms{L}, \ms{R}}}, ]_i
           ; \alpha^+_{\dnt{\ms{L}} + \Sigma_i \dnt{A_i}}   \\
         & = \delta^{-1}_\Sigma 
           ; [ \rlmor{
-                \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\sigma_i\;x_i}{\ms{R}'}}
+                \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\sigma\;\ell_i\;x_i}{\ms{R}'}}
               } ; G ]_i
           ; \alpha^+_{\dnt{\ms{L}} + \Sigma_i \dnt{A_i}}   \\
         & = \delta^{-1}_\Sigma 
           ; [ \rlmor{
-                \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\sigma_i\;x_i}{\ms{R}'}}
+                \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\sigma\;\ell_i\;x_i}{\ms{R}'}}
               } ; G ]_i
           ; \alpha^+_{\dnt{\ms{L}} + \Sigma_i \dnt{A_i}}   \\
         & = \delta^{-1}_\Sigma 
           ; [\rlmor{
-                \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\sigma_i\;x_i}{\ms{R}'}}
+                \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\sigma\;\ell_i\;x_i}{\ms{R}'}}
               }]_i ; G ; \alpha^+_{\dnt{\ms{L}} + \Sigma_i \dnt{A_i}}  \\
         & = \rlmor{\delta^{-1}_\Sigma 
           ; [
-                \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\sigma_i\;x_i}{\ms{R}'}}
+                \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\sigma\;\ell_i\;x_i}{\ms{R}'}}
             ]_i} ; G ; \alpha^+_{\dnt{\ms{L}} + \Sigma_i \dnt{A_i}}   \\
         & = \rlmor{\delta^{-1}_\Sigma 
           ; [
-                \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\sigma_i\;x_i}{\ms{R}'}}
+                \dnt{\haslb{\Gamma, \bhyp{x_i}{A_i}}{\sigma\;\ell_i\;x_i}{\ms{R}'}}
             ]_i} ; G ; \alpha^+_{\dnt{\ms{L}} + \Sigma_i \dnt{A_i}}   \\
         & = \rlmor{\dnt{\Gamma} \otimes \alpha_{\dnt{\ms{R}}} ; S} ; G 
           ; \alpha^+_{\dnt{\ms{L}} + \Sigma_i \dnt{A_i}} \\
@@ -9075,10 +9081,10 @@ We may now state our desired result as follows:
           \pi_r,
           \rfix{
             \loopmor{\Gamma}{(\wbranch{\ell_i}{x_i}
-                    {[\lupg{(\kappa_j(x_j) \mapsto t_j,)}](\sigma_i\;x_i)},)_i}{\ms{L}}}
+                    {[\lupg{(\kappa_j(x_j) \mapsto t_j,)}](\sigma\;\ell_i\;x_i)},)_i}{\ms{L}}}
         ] \\
         & = \dnt{\haslb{\Gamma}
-          {\where{r}{[\lupg{(\kappa_j(x_j) \mapsto t_j,)}](\sigma_i\;x_i)},)_i}{\ms{L}}}
+          {\where{r}{[\lupg{(\kappa_j(x_j) \mapsto t_j,)}](\sigma\;\ell_i\;x_i)},)_i}{\ms{L}}}
       \end{aligned}
     \end{equation}
     as desired.

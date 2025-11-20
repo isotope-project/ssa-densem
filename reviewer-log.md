@@ -529,53 +529,40 @@ Referee: 2
   
 - line 990: "a new output value of $y$" -- Shouldn't this be $x$? (in the
   pseudocode you assign to $x$)
+
+  The pseudocode is a typo; it should in fact be $y$, since we branch to $κ(B)$
   
 - line 103 / equation (14): you might make your case even more forcefully if you
   include the `; hi` too (after the "end" of the loop).  That would make it
   clear that even though syntactically it looks like the hi could be run,
   semantically it never will be.
-  
-- line 1015: the word "this" here is, I think, refering to the "uni" rule, but
-  that is a bit far away since it was introduced way back on line 967.  Just say
-  "the uni rule is equivalent to..."
-  
-- line 1023: please don't just use $,$ to separate judgments -- help the reader
-  with parsing by using "and" or some other bit of text
+
+  We have done this
 
 - line 1047: I think that should just be $\sigma$ and not $\sigma_i$ in the
   dinat rule.  (I'm not sure what $\sigma_i$ would mean here.)
+
+  We have clarified that this means $\sigma\;\ell_i\;x_i$
   
 - line 1057: I don't think you've defined the terminology "unary" and "n-ary"
   control-flow graphs.  Maybe inline the definitions or explain more clearly
   what you mean?
-  
-- lines 1095-1107 / equations (16) and (17): I would have appreciated a brief
-  description of what these rules accomplish rather than having to try to wade
-  through the nested `where` clauses to see what's going on.  Maybe explain them
-  in terms of merging scopes of control-flow graphs?
 
-- line 1129: I believe that $L'$ should be $K$ in Lemma 4.1(b)
-
-- line 1135: "note that this lemma" -- I think that the "this" here actually
-  refers to the next lemma, Lemma 4.2 that actually uses an equivalence relation
-  on substitutions?  (not Lemma 4.1?)
+  We meant where-blocks; we have clarified this.
   
 - line 1166: Strict SSA - I had been wondering about this for a long time by
   this point in the paper.  Please do more signposting up front.
 
+  We have rewritten both this section and the introduction to clarify.
+
 - line 1255: Lemma 4.4: Maybe swap the order of the bullet points to keep them
   consistent with the earlier part of lemma claims?
-  
-- lines 1293-1298: This `struct` definition of basic blocks seems quite out of
-  place at this point in the paper. It also doesn't seem to be very surprising,
-  since we know that we can structure the blocks according to the dominator
-  tree.  I might cut this inductive representation from this part of the paper
-  -- maybe move it to a discussion section at the end, where you could talk
-  about what your theory suggests about implementing SSA-based IRs?
   
 - line 1308: I think you *don't* want to recursively invoke `children` on the
   $t_i$'s -- those *are* the children, right?  (doing so would contradict
   equation (24), I think)
+
+  This was a typo, and has been fixed
   
 - line 1410 / Fig. 26: This figure gets buried in the text.  I would put it at
   the top of the page to make it more prominent.  Also, here is where I was
@@ -586,6 +573,9 @@ Referee: 2
   *one* variable.  That is a result of conflating addresses with variable names
   in "real" implementations of SSA IRs, in which a "variable name" is just a
   pointer to the instruction that defines the variable.
+
+  We have moved it to the beginning of the introduction, which we have rewritten
+  to clearly define SSA
   
 - Section 4.5: This is a very dense bunch of definitions with no concrete
   examples.  Maybe introduce a simple running example that has a record with
