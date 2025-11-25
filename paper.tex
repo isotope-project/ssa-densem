@@ -506,8 +506,9 @@ Figure~\ref{fig:fact-3addr}, by:
 \begin{itemize}
   \item Converting structured control flow (e.g., \ms{while}) into unstructured jumps between basic
   blocks.
-  \item Converting composite expressions like $a * (i + 1)$ into a sequence of definitions naming each
-  subexpression. 
+  \item Converting composite expressions like $a * (i + 1)$ into a sequence of definitions naming
+  each subexpression. 
+  Here, expressions like $a + b$ are syntactic sugar for primitive operations $+ (a, b)$.
 \end{itemize}
 
 \begin{figure}
