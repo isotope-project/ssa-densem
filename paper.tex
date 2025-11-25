@@ -463,19 +463,14 @@ Figure~\ref{fig:3addr-grammar}, with some slight adjustments to the usual presen
 \begin{itemize}
   \item \emph{Constants} $c$ are interpreted as nullary instructions $c()$.
   
-  \item \emph{Conditional branches} $\ite{o}{\tau}{\tau'}$ are desugared to case-statements
-  $\casestmt{o}{y}{\tau}{z}{\tau'}$ on a Boolean value $o : \mb{1} + \mb{1}$. This is equivalent in
-  power to regular conditional branches, while allowing our work to generalize easily to
-  higher-level settings as well.
-
-  Furthermore, we allow case-statements (and hence if-statements) in a terminator to be
-  \emph{nested}, allowing us to emulate switch-statements $\ms{switch}(o) \{c_1 : \tau_1 ,
-  ... , c_n : \tau_n\}$ as nested case-statements. This does not add any additional
-  expressive power, but avoids the proliferation of intermediate basic-blocks.
-
-  \item \emph{Return statements} $\ms{ret}\;v$ are desugared to branches $\brb{\ell_{\ms{exit}}}{v}$
-  to a distinguished exit label $\ell_{\ms{exit}}$. In particular, this allows a return-statement to
-  appear in the branch of a case-statement or if-statement.
+  \item We only support nullary tuples $()$ and binary tuples $(v, v')$ as composite values; $n$-ary
+  tuples $(x, y, z)$ can be encoded as nested binary tuples $((x, y), z)$.
+  
+  \item We allow conditional branches $\ite{o}{\tau}{\tau'}$ to be \emph{nested}.  
+  This allows us to emulate switch-statements $\ms{switch}(o) \{c_1 : \tau_1 ,
+  ... , c_n : \tau_n\}$ as nested if-statements without introducing spurious basic blocks.
+  %
+  Likewise, for uniformity, a return-statement may appear in the branch of a conditional branch.
 \end{itemize}
 
 \begin{figure}[H]
@@ -490,7 +485,7 @@ Figure~\ref{fig:3addr-grammar}, with some slight adjustments to the usual presen
       \;|\; \((x, y) = o ; \beta\)
       \;|\; \(\tau\)
 
-      <\(\tau\)> ::= \(\ms{br}\;\ell\) \;|\; $\casestmt{o}{y}{\tau}{z}{\tau'}$
+      <\(\tau\)> ::= \(\ms{br}\;\ell\) \;|\; \(\ms{ret}\;v\) \;|\; $\ite{o}{\tau}{\tau'}$
       
       <\(G\)> ::= \(\beta\) \;|\; \(G ;\; \ell : \beta\)
     \end{grammar}
@@ -668,17 +663,18 @@ $\phi$-node as equivalent to an argument for the basic block, with the correspon
 at the jump site. Converting a program from BBA format back to standard SSA form with $\phi$-nodes
 is straightforward: introduce a $\phi$-node for each argument of a basic block, and for each branch
 corresponding to the $\phi$-node, add an argument to the jump instruction from the appropriate
-source block. We give a formal grammar for basic blocks-with-arguments SSA in
-Figure~\ref{fig:bba-grammar}
-\footnote{ Many variants of SSA do not allow variables to appear alone
-  on the right-hand side of assignments, such as
-  $x = y; \beta$.  We do not
-  incorporate this restriction, though we could by 
-  normalizing even further and substituting $[y/x]\beta$ instead. 
-}
-. Note that this grammar no longer needs a separate terminator for
-returns: we can treat the return point as a distinguished label (with argument) that a program can
-jump to. 
+source block. 
+
+We give a formal grammar for basic blocks-with-arguments SSA in Figure~\ref{fig:bba-grammar}
+\footnote{ Many variants of SSA do not allow variables to appear alone on the right-hand side of
+assignments, such as $x = y; \beta$.  We do not incorporate this restriction, though we could by
+normalizing even further and substituting $[y/x]\beta$ instead. }. One of the other changes we make
+is replacing conditional branches $\ite{o}{\tau}{\tau'}$ with \emph{case-statements}
+$\casestmt{o}{y}{\tau}{z}{\tau'}$. In particular, a case-statement $\ite{o}{\tau}{\tau'}$ may be
+desugared into a case-statement on a Boolean value $o : \mb{1} + \mb{1}$.
+
+Note that this grammar no longer needs a separate terminator for returns: we can treat the return
+point as a distinguished label (with argument) that a program can jump to. 
 
 \begin{figure}[H]
   \begin{center}
