@@ -492,7 +492,7 @@ Figure~\ref{fig:3addr-grammar}, with some slight adjustments to the usual presen
 
       <\(\tau\)> ::= \(\ms{br}\;\ell\) \;|\; $\casestmt{o}{y}{\tau}{z}{\tau'}$
       
-      <\(G\)> ::= \(\beta\) \;|\; \(G \;\; \ell : \beta\)
+      <\(G\)> ::= \(\beta\) \;|\; \(G ;\; \ell : \beta\)
     \end{grammar}
   \end{center}
   \caption{Grammar for 3-address code}
@@ -505,7 +505,7 @@ Figure~\ref{fig:fact-program}. We can normalize our code into 3-address code, as
 Figure~\ref{fig:fact-3addr}, by:
 \begin{itemize}
   \item Converting structured control flow (e.g., \ms{while}) into unstructured jumps between basic
-  blocks labelled \ms{start}, \ms{loop}, and \ms{body}.
+  blocks.
   \item Converting composite expressions like $a * (i + 1)$ into a sequence of definitions naming each
   subexpression. 
 \end{itemize}
@@ -527,14 +527,14 @@ Figure~\ref{fig:fact-3addr}, by:
   \end{subfigure}%
   \begin{subfigure}[t]{.5\textwidth}
     \begin{align*}
-      %\ms{start}:\quad  
+      %\ms{entry}:\quad  
                         & n = 10; \\
                         & i = 1; \\
                         & a = 1; \\
-                        & \ms{br}\;\ms{loop} \\
+                        & \ms{br}\;\ms{loop}; \\
       \ms{loop}: \quad  & \ms{if}\;i < n\;
                           \{\;\ms{br}\;\ms{body}\;\}\;
-                          \ms{else}\;\{\;\ms{ret}\;a\;\} \\
+                          \ms{else}\;\{\;\ms{ret}\;a\;\}; \\
       \ms{body}: \quad  & t = i + 1; \\
                         & a = a * t; \\
                         & i = i + 1; \\
@@ -597,30 +597,30 @@ code to valid SSA while introducing a minimum number of $\phi$-nodes, making SSA
 widespread use as an intermediate representation. Unfortunately, $\phi$-nodes do not have an obvious
 operational semantics.
 
-Additionally, they require us to adopt more complex scoping rules than simple
-dominance-based scoping. For example, in the basic block \ms{loop} in Figure~\ref{fig:fact-ssa},
-$i_0$ evaluates to 1 if we came from \ms{start} and to $i_1$ if we came from \ms{body}. Similarly,
-$a_0$ evaluates to either 1 or $a_1$ based on the predecessor block. This does not obey
-dominance-based scoping, since $i_0$ and $i_1$ are defined \emph{after} the $\phi$-nodes $i_0$,
-$a_0$ that reference them, which seems counterintuitive -- after all, variables are typically used
-after they are defined. In fact, since the value of a $\phi$-node is determined by which basic block
-is our immediate predecessor, we instead need to use the rule that expressions in $\phi$-node
-branches with source $S$ can use any variable $y$ defined at the \emph{end} of $S$. Note that this
-is a strict superset of the variables visible for a normal instruction $x$, which can only use
-variables $y$ which \emph{dominate} $x$ -- i.e., such that \emph{every} path from the entry block to
-the definition of $x$ goes through $y$, rather than only those paths which also go through $S$.
+Additionally, they require us to adopt more complex scoping rules than simple dominance-based
+scoping. For example, in the basic block \ms{loop} in Figure~\ref{fig:fact-ssa}, $i_0$ evaluates to
+1 if we came from the entry block and to $i_1$ if we came from \ms{body}. Similarly, $a_0$ evaluates
+to either 1 or $a_1$ based on the predecessor block. This does not obey dominance-based scoping,
+since $i_0$ and $i_1$ are defined \emph{after} the $\phi$-nodes $i_0$, $a_0$ that reference them,
+which seems counterintuitive -- after all, variables are typically used after they are defined. In
+fact, since the value of a $\phi$-node is determined by which basic block is our immediate
+predecessor, we instead need to use the rule that expressions in $\phi$-node branches with source
+$S$ can use any variable $y$ defined at the \emph{end} of $S$. Note that this is a strict superset
+of the variables visible for a normal instruction $x$, which can only use variables $y$ which
+\emph{dominate} $x$ -- i.e., such that \emph{every} path from the entry block to the definition of
+$x$ goes through $y$, rather than only those paths which also go through $S$.
 
 \begin{figure}
   \begin{subfigure}[t]{.5\textwidth}
     \begin{align*}
-      %\ms{start}:\quad  
+      %\ms{entry}:\quad  
                         & n = 10; \\
                         & i = 1; \\
                         & a = 1; \\
-                        & \ms{br}\;\ms{loop} \\
+                        & \ms{br}\;\ms{loop}; \\
       \ms{loop}: \quad  & \ms{if}\;i < n\;
                           \{\;\ms{br}\;\ms{body}\;\}\;
-                          \ms{else}\;\{\;\ms{ret}\;a\;\} \\
+                          \ms{else}\;\{\;\ms{ret}\;a\;\}; \\
       \ms{body}: \quad  & \ms{let}\;t = i + 1; \\
                         & a = a * t; \\
                         & i = i + 1; \\
@@ -630,14 +630,14 @@ the definition of $x$ goes through $y$, rather than only those paths which also 
   \end{subfigure}%
   \begin{subfigure}[t]{.5\textwidth}
     \begin{align*}
-      %\ms{start}:\quad  
+      %\ms{entry}:\quad  
                         & \ms{let}\;n = 10; \\
                         & \ms{br}\;\ms{loop} \\
-      \ms{loop}: \quad  & \ms{let}\;i_0 = \phi(\ms{start}: 1, \ms{body}: i_1) \\
-                        & \ms{let}\;a_0 = \phi(\ms{start}: 1, \ms{body}: a_1) \\
+      \ms{loop}: \quad  & \ms{let}\;i_0 = \phi(\ms{entry}: 1, \ms{body}: i_1); \\
+                        & \ms{let}\;a_0 = \phi(\ms{entry}: 1, \ms{body}: a_1); \\
                         & \ms{if}\;i_0 < n\;
                           \{\;\ms{br}\;\ms{body}\;\}\;
-                          \ms{else}\;\{\;\ms{ret}\;a_0\;\} \\
+                          \ms{else}\;\{\;\ms{ret}\;a_0\;\}; \\
       \ms{body}: \quad  & \ms{let}\;t = i_0 + 1 \\
                         & \ms{let}\;a_1 = a_0 * t \\
                         & \ms{let}\;i_1 = i_0 + 1 \\
@@ -707,29 +707,29 @@ is defined, starting from the point of its definition. It continues to be visibl
 blocks $P$ that are strictly dominated by $D$ in the control-flow graph (CFG). For example, in
 Figure~\ref{fig:fact-bba}:
 \begin{itemize}
-  \item \ms{start} strictly dominates \ms{loop} and \ms{body}; thus, the variable $n$ defined in
-  \ms{start} is visible in \ms{loop} and \ms{body}.
+  \item The entry block strictly dominates all other blocks by definition; thus, the variable $n$ is
+  visible in \ms{loop} and \ms{body}.
   \item \ms{loop} strictly dominates \ms{body}; therefore, the parameters $i_0$, $a_0$ to \ms{loop}
   are visible in \ms{body} without the need to pass them as parameters.
-  \item \ms{body} does \emph{not} strictly dominate \ms{loop}, since there is a path from \ms{start}
-  to \ms{loop} that does not pass through \ms{body}.
+  \item \ms{body} does \emph{not} strictly dominate \ms{loop}, since there is a path from the entry
+  block to \ms{loop} that does not pass through \ms{body}.
 \end{itemize}
 
 \begin{figure}
   \begin{subfigure}[t]{.5\textwidth}
     \centering
     \begin{align*}
-      %\ms{start}:\quad  
+      %\ms{entry}:\quad  
                         & \ms{let}\;n = 10; \\
-                        & \ms{br}\;\ms{loop} \\
+                        & \ms{br}\;\ms{loop}; \\
       \ms{loop}: \quad  & \begingroup \color{red}
-                          \ms{let}\;i_0 = \phi(\ms{start}: 1, \ms{body}: i_1) 
+                          \ms{let}\;i_0 = \phi(\ms{entry}: 1, \ms{body}: i_1);
                           \endgroup \\
                         & \begingroup \color{blue}
-                          \ms{let}\;a_0 = \phi(\ms{start}: 1, \ms{body}: a_1) 
+                          \ms{let}\;a_0 = \phi(\ms{entry}: 1, \ms{body}: a_1); 
                           \endgroup \\
                         & \ms{if}\;i_0 < n\;\{\;\ms{br}\;\ms{body}\;\} \\
-                        & \ms{else}\;\{\;\ms{ret}\;a_0\;\} \\
+                        & \ms{else}\;\{\;\ms{ret}\;a_0\;\}; \\
       \ms{body}: \quad  & \ms{let}\;t = i_0 + 1 \\
                         & \ms{let}\;a_1 = a_0 * t \\
                         & \ms{let}\;i_1 = i_0 + 1 \\
@@ -741,16 +741,16 @@ Figure~\ref{fig:fact-bba}:
   \begin{subfigure}[t]{.5\textwidth}
     \centering
     \begin{align*}
-      %\ms{start}:\quad            
+      %\ms{entry}:\quad            
                                   & \ms{let}\;n = 10; \\
-                                  & \ms{br}\;\ms{loop}(\textcolor{red}{1}, \textcolor{blue}{1}) \\
+                                  & \ms{br}\;\ms{loop}(\textcolor{red}{1}, \textcolor{blue}{1}); \\
       \ms{loop}(\textcolor{red}{i_0}, \textcolor{blue}{a_0}): \quad  
                                   & \ms{if}\;i_0 < n\; \{\;\ms{br}\;\ms{body}\;\} \\
-                                  & \ms{else}\;\{\;\ms{ret}\;a_0\;\} \\
+                                  & \ms{else}\;\{\;\ms{ret}\;a_0\;\}; \\
       \ms{body}: \quad            & \ms{let}\;t = i_0 + 1 \\
                                   & \ms{let}\;a_1 = a_0 * t \\
                                   & \ms{let}\;i_1 = i_0 + 1 \\
-                                  & \ms{br}\;\ms{loop}(\textcolor{red}{i_1}, \textcolor{blue}{a_1}) 
+                                  & \ms{br}\;\ms{loop}(\textcolor{red}{i_1}, \textcolor{blue}{a_1})
                                   \\ \\
     \end{align*}
     \caption{Basic-blocks with arguments}
@@ -858,7 +858,7 @@ isomorphism between lexical SSA and standard SSA.
   \centering
   \begin{subfigure}[t]{.5\textwidth}
     \begin{align*}
-      %\ms{start}:\quad            
+      %\ms{entry}:\quad            
                                   & \ms{let}\;n = 10; \\
                                   & \ms{br}\;\ms{loop}(1, 1) \\
       \ms{loop}(i_0, a_0): \quad  & \ms{if}\;i_0 < n\; \{\;\ms{br}\;\ms{body}\;\} \\
